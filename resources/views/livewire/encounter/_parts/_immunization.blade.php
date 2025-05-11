@@ -6,9 +6,13 @@
                   modalImmunization: new Immunization(),
                   newImmunization: false,
                   item: 0,
-                  dictionary: $wire.dictionaries['eHealth/ICPC2/actions'],
+                  vaccineCodesDictionary: $wire.dictionaries['eHealth/vaccine_codes'],
+                  immunizationReportOriginsDictionary: $wire.dictionaries['eHealth/immunization_report_origins'],
                   reasonExplanationsDictionary: $wire.dictionaries['eHealth/reason_explanations'],
                   reasonNotGivenExplanationsDictionary: $wire.dictionaries['eHealth/reason_not_given_explanations'],
+                  immunizationDosageUnitsDictionary: $wire.dictionaries['eHealth/immunization_dosage_units'],
+                  vaccinationRoutesDictionary: $wire.dictionaries['eHealth/vaccination_routes'],
+                  immunizationBodySites: $wire.dictionaries['eHealth/immunization_body_sites']
               }"
     >
         <legend class="legend">
@@ -30,16 +34,23 @@
             <template x-for="(immunization, index) in immunizations">
                 <tr>
                     <td class="td-input"
-                    ></td>
-                    <td class="td-input"
-                    ></td>
-                    <td class="td-input"
+                        x-text="`${ immunization.vaccineCode.coding[0]['code'] } - ${ vaccineCodesDictionary[immunization.vaccineCode.coding[0]['code']] }`"
                     ></td>
                     <td class="td-input"
                         x-text="
-                            immunization.explanation.reasons[0].coding[0].code !== ''
-                            ? `${ reasonExplanationsDictionary[immunization.explanation.reasons[0].coding[0].code] }`
-                            : `${ reasonNotGivenExplanationsDictionary[immunization.explanation.reasonsNotGiven.coding[0].code] }`
+                            immunization.doseQuantity?.value && immunization.doseQuantity?.unit
+                                ? `${immunization.doseQuantity.value} ${immunization.doseQuantity.unit}`
+                                : ''
+                            "
+                    ></td>
+                    <td class="td-input"
+                        x-text="immunization.notGiven === false ? 'проведена' : 'не проведена'"
+                    ></td>
+                    <td class="td-input"
+                        x-text="
+                            immunization.explanation.reasons?.[0]?.coding?.[0]?.code
+                                ? reasonExplanationsDictionary[immunization.explanation.reasons[0].coding[0].code]
+                                : reasonNotGivenExplanationsDictionary[immunization.explanation.reasonsNotGiven?.coding?.[0]?.code]
                         "
                     ></td>
                     <td class="td-input" x-text="immunization.date"></td>
@@ -175,6 +186,8 @@
                             {{-- Content --}}
                             <form>
                                 @include('livewire.encounter.immunization_parts.data')
+                                @include('livewire.encounter.immunization_parts.information_about')
+                                @include('livewire.encounter.immunization_parts.vaccination_protocol')
 
                                 <div class="mt-6 flex justify-between space-x-2">
                                     <button type="button"
@@ -192,10 +205,9 @@
                                                 openModal = false;
                                             "
                                             class="button-primary"
-                                            x-data="console.log(modalImmunization)"
                                             :disabled="!(modalImmunization.date.trim().length > 0 &&
                                                 modalImmunization.time.trim().length > 0
-                                                && (modalImmunization.explanation.reasons[0].coding[0].code.trim().length > 0 || modalImmunization.explanation.reasonsNotGiven.coding[0].code.trim().length > 0))
+                                                && (modalImmunization.explanation?.reasons?.[0]?.coding?.[0]?.code?.trim?.().length > 0 || modalImmunization.explanation?.reasonsNotGiven?.coding?.[0]?.code?.trim?.().length > 0))
                                             "
                                     >
                                         {{ __('forms.save') }}
@@ -218,6 +230,9 @@
         date = new Date().toISOString().split('T')[0];
         time = new Date().toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit', hour12: false });
         notGiven = false;
+        vaccineCode = {
+            coding: [{ system: 'eHealth/vaccine_codes', code: '' }]
+        };
         explanation = {
             reasons: [
                 {
@@ -228,7 +243,6 @@
                 coding: [{ system: 'eHealth/reason_not_given_explanations', code: '' }]
             }
         };
-
         primarySource = true;
         performer = {
             identifier: {
@@ -246,6 +260,24 @@
             ],
             text: ''
         };
+        manufacturer = null;
+        lotNumber = null;
+        expirationDate = null;
+        site = {
+            coding: [{ system: 'eHealth/immunization_body_sites', code: '' }],
+            text: ''
+        };
+        route = {
+            coding: [{ system: 'eHealth/vaccination_routes', code: '' }],
+            text: ''
+        };
+        doseQuantity = {
+            value: null,
+            unit: null,
+            system: 'eHealth/immunization_dosage_units',
+            code: ''
+        };
+        vaccinationProtocols = [];
 
         constructor(obj = null) {
             if (obj) {
