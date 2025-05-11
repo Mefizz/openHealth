@@ -11,7 +11,7 @@ class Arr extends \Illuminate\Support\Arr
         $result = [];
 
         foreach ($array as $key => $value) {
-            $newKey = \Illuminate\Support\Str::snake($key);
+            $newKey = Str::snake($key);
 
             if (is_array($value)) {
                 $result[$newKey] = self::toSnakeCase($value);

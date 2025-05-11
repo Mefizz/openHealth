@@ -135,7 +135,7 @@
                     >
                         <h2 class="text-xl font-semibold mb-6" :id="$id('modal-title')">
                             <span
-                                x-text="!scienceDegree ? '{{ __('Додати науковий ступінь') }}' : '{{ __('Редагувати науковий ступінь') }}'"></span>
+                                x-text="!scienceDegree ? '{{ __('forms.addScienceDegree') }}' : '{{ __('forms.edit') . ' ' . __('forms.scienceDegree') }}'"></span>
                         </h2>
 
                         <form>
@@ -143,13 +143,10 @@
                                 <div>
                                     <label for="scienceDegreeType"
                                            class="block mb-1 text-sm font-medium">{{ __('forms.degree') }}</label>
-                                    <select x-model="modalScienceDegree.degree" id="scienceDegreeType"
-                                            class="input-modal bg-gray-700 text-white border border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                                            required>
-                                        <option value="" disabled>{{ __('forms.select') }}</option>
-                                        <template x-for="(label, val) in dictionary" :key="val">
-                                            <option :value="val" x-text="label"></option>
-                                        </template>
+                                    <select x-model="modalScienceDegree.degree" id="scienceDegreeType" class="input-modal" required>
+                                        @foreach($this->dictionaries['SCIENCE_DEGREE'] as $typeValue => $typeDescription)
+                                            <option value="{{$typeValue}}">{{$typeDescription}}</option>
+                                        @endforeach
                                     </select>
                                     <p class="text-red-500 text-xs mt-1"
                                        x-show="!modalScienceDegree.degree">{{ __('forms.field_empty') }}</p>
@@ -176,19 +173,9 @@
                                        x-show="!modalScienceDegree.institution_name">{{ __('forms.field_empty') }}</p>
                                 </div>
 
-{{--                                <div>--}}
-{{--                                    <label for="scienceSpeciality"--}}
-{{--                                           class="block mb-1 text-sm font-medium">{{ __('forms.speciality') }}</label>--}}
-{{--                                    <input type="text" id="scienceSpeciality" x-model="modalScienceDegree.speciality"--}}
-{{--                                           class="input-modal bg-gray-700 text-white border border-gray-600 focus:ring-blue-500 focus:border-blue-500"--}}
-{{--                                           required>--}}
-{{--                                    <p class="text-red-500 text-xs mt-1"--}}
-{{--                                       x-show="!modalScienceDegree.speciality">{{ __('forms.field_empty') }}</p>--}}
-{{--                                </div>--}}
-
                                 <div>
-                                    <label for="specialityType" class="block mb-1 text-sm font-medium">
-                                        {{ __('Спеціальність') }}
+                                    <label for="scienceSpeciality" class="block mb-1 text-sm font-medium">
+                                        {{ __('forms.speciality') }}
                                     </label>
 
                                     <select id="scienceSpeciality"

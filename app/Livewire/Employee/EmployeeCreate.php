@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Employee;
 
+use App\Livewire\LegalEntity\LegalEntity;
 use App\Models\Employee\EmployeeRequest;
-use App\Models\LegalEntity;
 use App\Models\Relations\Document;
 use App\Models\Relations\Education;
 use App\Models\Relations\Party;
@@ -24,8 +24,7 @@ class EmployeeCreate extends EmployeeComponent
      */
     public function save(): void
     {
-
-        $validated = $this->form->validate(); // validate() вже повертає snake_case масив
+        $validated = $this->form->validate();
 
         DB::transaction(function () use ($validated) {
             // 1. Створення Party

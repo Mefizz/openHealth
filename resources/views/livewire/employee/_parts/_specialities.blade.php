@@ -133,7 +133,7 @@
                     >
                         <h2 class="text-xl font-semibold mb-6" :id="$id('modal-title')">
                             <span
-                                x-text="newSpeciality ? '{{ __('Додати спеціальність') }}' : '{{ __('Редагувати спеціальність') }}'"></span>
+                                x-text="newSpeciality ? '{{ __('forms.addSpeciality') }}' : '{{ __('forms.edit') . ' ' . __('forms.speciality') }}'"></span>
                         </h2>
 
                         <form>
@@ -153,20 +153,17 @@
                                         @endforeach
                                     </select>
 
-                                    <!-- Перевірка: чи значення з dictionary -->
                                     <p class="text-red-500 text-xs mt-1"
                                        x-show="modalSpeciality.speciality && !Object.keys(dictionary).includes(modalSpeciality.speciality)">
                                         {{ __('forms.invalid_selection') }}
                                     </p>
 
-                                    <!-- Перевірка: чи вибрано значення -->
                                     <p class="text-red-500 text-xs mt-1"
                                        x-show="!modalSpeciality.speciality">
                                         {{ __('forms.field_empty') }}
                                     </p>
                                 </div>
 
-                                <!-- Основна спеціалізація (чекбокс) -->
                                 <div class="flex flex-col justify-end">
                                     <label class="inline-flex items-center mt-6">
                                         <input type="checkbox" x-model="modalSpeciality.speciality_officio"
@@ -190,18 +187,35 @@
                                 </div>
 
                                 <div>
-                                    <label for="specLevel"
-                                           class="block mb-1 text-sm font-medium">{{ __('Рівень спеціальності') }}</label>
-                                    <input type="text" id="specLevel" x-model="modalSpeciality.level"
-                                           class="input-modal bg-gray-700 text-white border border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                                           required>
+                                    <label for="specLevel" class="block mb-1 text-sm font-medium">
+                                        {{ __('forms.speciality_level') }}
+                                    </label>
+
+                                    <select id="specLevel"
+                                            x-model="modalSpeciality.level"
+                                            class="input-modal"
+                                            required>
+                                        <option value="">{{ __('forms.speciality_level') }}</option>
+                                        @foreach($this->dictionaries['SPECIALITY_LEVEL'] as $typeValue => $typeDescription)
+                                            <option value="{{ $typeValue }}">{{ $typeDescription }}</option>
+                                        @endforeach
+                                    </select>
+
                                     <p class="text-red-500 text-xs mt-1"
-                                       x-show="!modalSpeciality.level">{{ __('forms.field_empty') }}</p>
+                                       x-show="modalSpeciality.level && !Object.keys(dictionary).includes(modalSpeciality.leve
+                                       )">
+                                        {{ __('forms.invalid_selection') }}
+                                    </p>
+
+                                    <p class="text-red-500 text-xs mt-1"
+                                       x-show="!modalSpeciality.level">
+                                        {{ __('forms.field_empty') }}
+                                    </p>
                                 </div>
 
                                 <div>
                                     <label for="specCertificate"
-                                           class="block mb-1 text-sm font-medium">{{ __('Номер свідоцтва') }}</label>
+                                           class="block mb-1 text-sm font-medium">{{ __('forms.certificate_number') }}</label>
                                     <input type="text" id="specCertificate" x-model="modalSpeciality.certificate_number"
                                            class="input-modal bg-gray-700 text-white border border-gray-600 focus:ring-blue-500 focus:border-blue-500">
                                 </div>

@@ -125,7 +125,7 @@
                         >
                             <h3 class="modal-header" :id="$id('modal-title')">
                                 <span
-                                    x-text="newQualification ? '{{ __('Додати підвищення кваліфікації') }}' : '{{ __('Редагувати підвищення кваліфікації') }}'"></span>
+                                    x-text="newQualification ? '{{ __('forms.addQualification') }}' : '{{ __('forms.edit') . ' ' . __('forms.qualification') }}'"></span>
                             </h3>
 
                             <form>
@@ -147,14 +147,6 @@
                                                required>
                                     </div>
 
-{{--                                    <div>--}}
-{{--                                        <label for="qualSpeciality"--}}
-{{--                                               class="block mb-1 text-sm font-medium">{{ __('forms.speciality') }}</label>--}}
-{{--                                        <input type="text" id="qualSpeciality" x-model="modalQualification.speciality"--}}
-{{--                                               class="input-modal bg-gray-700 text-white border border-gray-600 focus:ring-blue-500 focus:border-blue-500"--}}
-{{--                                               required>--}}
-{{--                                    </div>--}}
-
                                     <div>
                                         <label for="specialityType" class="block mb-1 text-sm font-medium">
                                             {{ __('forms.speciality') }}
@@ -165,18 +157,16 @@
                                                 class="input-modal"
                                                 required>
                                             <option value="">{{ __('forms.speciality') }}</option>
-                                            @foreach($this->dictionaries['SPECIALITY_TYPE'] as $typeValue => $typeDescription)
+                                            @foreach($this->dictionaries['SPEC_QUALIFICATION_TYPE'] as $typeValue => $typeDescription)
                                                 <option value="{{ $typeValue }}">{{ $typeDescription }}</option>
                                             @endforeach
                                         </select>
 
-                                        <!-- Перевірка: чи значення з dictionary -->
                                         <p class="text-red-500 text-xs mt-1"
                                            x-show="modalQualification.speciality && !Object.keys(dictionary).includes(modalQualification.speciality)">
                                             {{ __('forms.invalid_selection') }}
                                         </p>
 
-                                        <!-- Перевірка: чи вибрано значення -->
                                         <p class="text-red-500 text-xs mt-1"
                                            x-show="!modalQualification.speciality">
                                             {{ __('forms.field_empty') }}
