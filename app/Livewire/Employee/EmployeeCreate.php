@@ -24,6 +24,7 @@ class EmployeeCreate extends EmployeeComponent
      */
     public function save(): void
     {
+
         $validated = $this->form->validate(); // validate() вже повертає snake_case масив
 
         DB::transaction(function () use ($validated) {

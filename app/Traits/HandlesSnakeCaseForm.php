@@ -2,8 +2,7 @@
 
 namespace App\Traits;
 
-use App\Core\ArrayCaseCaster;
-use Illuminate\Support\Arr;
+use App\Core\Arr;
 use Illuminate\Validation\ValidationException;
 
 trait HandlesSnakeCaseForm
@@ -19,7 +18,7 @@ trait HandlesSnakeCaseForm
 
     public function validatedSnakeCase(): array
     {
-        return ArrayCaseCaster::toSnakeCase($this->validate());
+        return Arr::toSnakeCase($this->validate());
     }
 
     /**

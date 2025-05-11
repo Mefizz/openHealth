@@ -185,7 +185,6 @@
                                                class="label-modal">{{__('forms.document_type')}}</label>
                                         <select x-model="modalDocument.type" id="documentType" class="input-modal"
                                                 type="text" required>
-                                            <option selected>{{__('forms.document_type')}}</option>
                                             @foreach($this->dictionaries['DOCUMENT_TYPE'] as $typeValue => $typeDescription)
                                                 <option value="{{$typeValue}}">{{$typeDescription}}</option>
                                             @endforeach
