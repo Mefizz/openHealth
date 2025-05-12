@@ -24,6 +24,8 @@ class LegalEntity extends Model
 
     public const string TYPE_PRIMARY_CARE = 'PRIMARY_CARE';
 
+    protected $table = 'legal_entities';
+
     protected $fillable = [
         'uuid',
         'accreditation',
@@ -57,7 +59,7 @@ class LegalEntity extends Model
         'residence_address' => 'array',
         'inserted_at' => 'datetime',
         'updated_at' => 'datetime',
-        'id' => 'string',
+        'id' => 'integer',
         'inserted_by' => 'string',
         'updated_by' => 'string',
     ];
@@ -65,14 +67,14 @@ class LegalEntity extends Model
     protected $with = [
         'licenses',
         'address',
-        'phones'
+        'phones',
     ];
 
     protected $attributes = [
         'is_active' => false,
     ];
 
-    public null|object $owner;
+    protected ?object $owner = null;
 
     public function employees(): HasMany
     {
@@ -128,6 +130,10 @@ class LegalEntity extends Model
     // Get Owner Legal Entity
     public function getOwner(): ?object
     {
+        if (!$this->exists) {
+            return null;
+        }
+
         return $this->employees()->where('employee_type', 'OWNER')->first();
     }
 

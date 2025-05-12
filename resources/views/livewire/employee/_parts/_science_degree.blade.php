@@ -37,10 +37,10 @@
                     <td class="td-input" x-text="scienceDegree.speciality"></td>
                     <td class="td-input" x-text="scienceDegree.diploma_number"></td>
                     <td class="td-input">
-                        <div class="flex space-x-2">
-                            <button @click.prevent="openModal = true; modalScienceDegree = new ScienceDegree(scienceDegree)" class="text-blue-600 hover:text-blue-800">✎</button>
-                            <button @click.prevent="scienceDegree = null" class="text-red-600 hover:text-red-800">✕</button>
-                        </div>
+                        <x-dropdown-button
+                            :editAction="'openModal = true; item = index; modalEducation = new Education(education); newEducation = false; close($refs.button)'"
+                            :deleteAction="'educations.splice(index, 1); close($refs.button)'"
+                        />
                     </td>
                 </tr>
                 </tbody>

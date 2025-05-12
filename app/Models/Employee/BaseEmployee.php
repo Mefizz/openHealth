@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @mixin IdeHelperBaseEmployee
@@ -28,6 +29,7 @@ class BaseEmployee extends Model
 {
     use HasFactory;
     use HasCamelCasing;
+    use SoftDeletes;
 
     protected $fillable = [
         'uuid',
@@ -73,7 +75,7 @@ class BaseEmployee extends Model
         return implode(' ', array_filter([
             optional($this->party)->first_name ?? '',
             optional($this->party)->last_name ?? '',
-            optional($this->party)->second_name?? '',
+            optional($this->party)->second_name ?? '',
         ]));
     }
 

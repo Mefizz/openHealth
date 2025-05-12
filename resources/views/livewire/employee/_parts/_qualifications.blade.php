@@ -32,21 +32,10 @@
                     <td class="td-input" x-text="qualification.certificate_number"></td>
                     <td class="td-input">
                         <!-- Кнопки редагування та видалення -->
-                        <button @click.prevent="
-                                                    openModal = true; {
-                                                    item = index;
-                                                    modalDocument = new Qualification(qualifications)
-                                                    newDocument = false;
-                                                "
-                                class="dropdown-button"
-                        >
-                            {{ __('forms.edit') }}
-                        </button>
-
-                        <button @click.prevent="qualifications.splice(index, 1); close($refs.button)"
-                                class="dropdown-button dropdown-delete">
-                            {{ __('forms.delete') }}
-                        </button>
+                        <x-dropdown-button
+                            :editAction="'openModal = true; item = index; modalEducation = new Education(education); newEducation = false; close($refs.button)'"
+                            :deleteAction="'educations.splice(index, 1); close($refs.button)'"
+                        />
                     </td>
                 </tr>
             </template>

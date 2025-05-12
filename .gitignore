@@ -28,3 +28,4 @@ composer.lock
 /Makefile
 /docker-compose.yml
 /.qodo
+pint.json

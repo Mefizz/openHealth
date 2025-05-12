@@ -85,13 +85,12 @@ class EmployeeCreate extends EmployeeComponent
         });
 
         session()->flash('success', __('forms.saved_successfully'));
+        dd($validated);
     }
 
     public function render()
     {
         $pageTitle =  __('Додати співробітника');
-        $currentEmployee = [];
-        // або
         $currentEmployee = $this->newEmployee ?? [];
         return view('livewire.employee.employee-create', compact(['pageTitle', 'currentEmployee']));
     }
