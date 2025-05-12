@@ -81,30 +81,34 @@
                             <form>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label for="qualType" class="block mb-1 text-sm font-medium">{{ __('forms.document_type') }}</label>
+                                        <label for="qualType" class="label-modal">{{ __('forms.document_type') }}</label>
                                         <input type="text" id="qualType" x-model="modalQualification.type"
                                                class="input-modal bg-gray-700 text-white border border-gray-600 focus:ring-blue-500 focus:border-blue-500"
                                                required>
+                                        <p class="text-error text-xs" x-show="!modalQualification.type.trim().length > 0">{{__('forms.field_empty')}}</p>
                                     </div>
 
                                     <div>
-                                        <label for="qualInstitution" class="block mb-1 text-sm font-medium">{{ __('forms.institutionName') }}</label>
+                                        <label for="qualInstitution" class="label-modal">{{ __('forms.institutionName') }}</label>
                                         <input type="text" id="qualInstitution" x-model="modalQualification.institution_name"
                                                class="input-modal bg-gray-700 text-white border border-gray-600 focus:ring-blue-500 focus:border-blue-500"
                                                required>
+                                        <p class="text-error text-xs" x-show="!modalQualification.institution_name.trim().length > 0">{{__('forms.field_empty')}}</p>
                                     </div>
 
                                     <div>
-                                        <label for="qualSpeciality" class="block mb-1 text-sm font-medium">{{ __('forms.speciality') }}</label>
+                                        <label for="qualSpeciality" class="label-modal">{{ __('forms.speciality') }}</label>
                                         <input type="text" id="qualSpeciality" x-model="modalQualification.speciality"
                                                class="input-modal bg-gray-700 text-white border border-gray-600 focus:ring-blue-500 focus:border-blue-500"
                                                required>
+                                        <p class="text-error text-xs" x-show="!modalQualification.speciality.trim().length > 0">{{__('forms.field_empty')}}</p>
                                     </div>
 
                                     <div>
-                                        <label for="qualCertificate" class="block mb-1 text-sm font-medium">{{ __('forms.certificateNumber') }}</label>
+                                        <label for="qualCertificate" class="label-modal">{{ __('forms.certificateNumber') }}</label>
                                         <input type="text" id="qualCertificate" x-model="modalQualification.certificate_number"
                                                class="input-modal bg-gray-700 text-white border border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                                        <p class="text-error text-xs" x-show="!modalQualification.certificate_number.trim().length > 0">{{__('forms.field_empty')}}</p>
                                     </div>
                                 </div>
 
