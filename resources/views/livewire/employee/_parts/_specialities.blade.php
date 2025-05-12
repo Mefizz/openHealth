@@ -25,6 +25,8 @@
             </tr>
             </thead>
             <tbody>
+
+
             <template x-for="(speciality, index) in specialities" :key="index">
                 <tr>
                     <td class="td-input" x-text="specDict[speciality.speciality] || speciality.speciality"></td>
@@ -39,21 +41,23 @@
                     </td>
                 </tr>
             </template>
+
             </tbody>
         </table>
 
         <!-- Кнопка додавання -->
-
         <button @click="
                         openModal = true;
-                        newDocument = true;
-                        modalDocument = new Speciality()
+                        newSpeciality = true;
+                        modalSpeciality = new Speciality()
                     "
                 @click.prevent
                 class="item-add my-5"
         >
-            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5"/>
+            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                 viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M5 12h14m-7 7V5"/>
             </svg>
 
             {{__('forms.addSpeciality')}}
@@ -82,37 +86,90 @@
                          class="w-full max-w-lg bg-gray-800 text-white rounded-lg shadow-lg p-6"
                     >
                         <h2 class="text-xl font-semibold mb-6" :id="$id('modal-title')">
-                            <span x-text="newSpeciality ? '{{ __('Додати спеціальність') }}' : '{{ __('Редагувати спеціальність') }}'"></span>
+                            <span
+                                x-text="newSpeciality ? '{{ __('forms.addSpeciality') }}' : '{{ __('forms.edit') . ' ' . __('forms.speciality') }}'"></span>
                         </h2>
 
                         <form>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label for="specSpeciality" class="block mb-1 text-sm font-medium">{{ __('Спеціальність') }}</label>
-                                    <input type="text" id="specSpeciality" x-model="modalSpeciality.speciality"
-                                           class="input-modal bg-gray-700 text-white border border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                                           required>
-                                    <p class="text-red-500 text-xs mt-1" x-show="!modalSpeciality.speciality">{{ __('forms.field_empty') }}</p>
+                                    <label for="specialityType" class="block mb-1 text-sm font-medium">
+                                        {{ __('Спеціальність') }}
+                                    </label>
+
+                                    <select id="specialityType"
+                                            x-model="modalSpeciality.speciality"
+                                            class="input-modal"
+                                            required>
+                                        <option value="">{{ __('forms.speciality') }}</option>
+                                        @foreach($this->dictionaries['SPECIALITY_TYPE'] as $typeValue => $typeDescription)
+                                            <option value="{{ $typeValue }}">{{ $typeDescription }}</option>
+                                        @endforeach
+                                    </select>
+
+                                    <p class="text-red-500 text-xs mt-1"
+                                       x-show="modalSpeciality.speciality && !Object.keys(dictionary).includes(modalSpeciality.speciality)">
+                                        {{ __('forms.invalid_selection') }}
+                                    </p>
+
+                                    <p class="text-red-500 text-xs mt-1"
+                                       x-show="!modalSpeciality.speciality">
+                                        {{ __('forms.field_empty') }}
+                                    </p>
+                                </div>
+
+                                <div class="flex flex-col justify-end">
+                                    <label class="inline-flex items-center mt-6">
+                                        <input type="checkbox" x-model="modalSpeciality.speciality_officio"
+                                               class="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2">
+                                        <span class="ml-2 text-sm">{{ __('forms.specialityOfficio') }}</span>
+                                    </label>
+                                    <p class="text-red-500 text-xs mt-1"
+                                       x-show="modalSpeciality.speciality_officio === null || modalSpeciality.speciality_officio === undefined">
+                                        {{ __('forms.field_empty') }}
+                                    </p>
                                 </div>
 
                                 <div>
-                                    <label for="specAttestation" class="block mb-1 text-sm font-medium">{{ __('Орган що видав') }}</label>
+                                    <label for="specAttestation"
+                                           class="block mb-1 text-sm font-medium">{{ __('Орган що видав') }}</label>
                                     <input type="text" id="specAttestation" x-model="modalSpeciality.attestation_name"
                                            class="input-modal bg-gray-700 text-white border border-gray-600 focus:ring-blue-500 focus:border-blue-500"
                                            required>
-                                    <p class="text-red-500 text-xs mt-1" x-show="!modalSpeciality.attestation_name">{{ __('forms.field_empty') }}</p>
+                                    <p class="text-red-500 text-xs mt-1"
+                                       x-show="!modalSpeciality.attestation_name">{{ __('forms.field_empty') }}</p>
                                 </div>
 
                                 <div>
-                                    <label for="specLevel" class="block mb-1 text-sm font-medium">{{ __('Рівень спеціальності') }}</label>
-                                    <input type="text" id="specLevel" x-model="modalSpeciality.level"
-                                           class="input-modal bg-gray-700 text-white border border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                                           required>
-                                    <p class="text-red-500 text-xs mt-1" x-show="!modalSpeciality.level">{{ __('forms.field_empty') }}</p>
+                                    <label for="specLevel" class="block mb-1 text-sm font-medium">
+                                        {{ __('forms.speciality_level') }}
+                                    </label>
+
+                                    <select id="specLevel"
+                                            x-model="modalSpeciality.level"
+                                            class="input-modal"
+                                            required>
+                                        <option value="">{{ __('forms.speciality_level') }}</option>
+                                        @foreach($this->dictionaries['SPECIALITY_LEVEL'] as $typeValue => $typeDescription)
+                                            <option value="{{ $typeValue }}">{{ $typeDescription }}</option>
+                                        @endforeach
+                                    </select>
+
+                                    <p class="text-red-500 text-xs mt-1"
+                                       x-show="modalSpeciality.level && !Object.keys(dictionary).includes(modalSpeciality.leve
+                                       )">
+                                        {{ __('forms.invalid_selection') }}
+                                    </p>
+
+                                    <p class="text-red-500 text-xs mt-1"
+                                       x-show="!modalSpeciality.level">
+                                        {{ __('forms.field_empty') }}
+                                    </p>
                                 </div>
 
                                 <div>
-                                    <label for="specCertificate" class="block mb-1 text-sm font-medium">{{ __('Номер свідоцтва') }}</label>
+                                    <label for="specCertificate"
+                                           class="block mb-1 text-sm font-medium">{{ __('forms.certificate_number') }}</label>
                                     <input type="text" id="specCertificate" x-model="modalSpeciality.certificate_number"
                                            class="input-modal bg-gray-700 text-white border border-gray-600 focus:ring-blue-500 focus:border-blue-500">
                                 </div>
@@ -143,6 +200,7 @@
 <script>
     class Speciality {
         speciality = '';
+        speciality_officio = '';
         attestation_name = '';
         level = '';
         certificate_number = '';

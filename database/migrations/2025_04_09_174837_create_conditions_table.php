@@ -24,9 +24,17 @@ return new class extends Migration
             $table->foreignId('code_id')->constrained('codeable_concepts')->cascadeOnDelete();
             $table->enum('clinical_status', ['active', 'finished', 'recurrence', 'remission', 'resolved']);
             $table->enum('verification_status', ['confirmed', 'differential', 'entered_in_error', 'provisional', 'refuted']);
-            $table->foreignId('severity_id')->constrained('codeable_concepts')->cascadeOnDelete();
-            $table->timestampTz('onset_date');
-            $table->timestampTz('asserted_date')->nullable();
+            $table->foreignId('severity_id')->nullable()->constrained('codeable_concepts')->cascadeOnDelete();
+            $table->timestamp('onset_date');
+            $table->timestamp('asserted_date')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('condition_evidences', static function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('condition_id')->constrained('conditions')->cascadeOnDelete();
+            $table->foreignId('codes_id')->nullable()->constrained('codeable_concepts')->cascadeOnDelete();
+            $table->foreignId('details_id')->nullable()->constrained('identifiers')->cascadeOnDelete();
             $table->timestamps();
         });
     }
@@ -36,6 +44,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('condition_evidences');
         Schema::dropIfExists('conditions');
     }
 };

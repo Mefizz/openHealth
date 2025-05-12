@@ -101,11 +101,11 @@
                                     >
                                         <button
                                             @click="
-                    openModal = true;
-                    item = index;
-                    modalDocument = new Doc(document);
-                    newDocument = false;
-                "
+                                                openModal = true;
+                                                item = index;
+                                                modalDocument = new Doc(document);
+                                                newDocument = false;
+                                            "
                                             @click.prevent
                                             class="dropdown-button"
                                         >
@@ -135,7 +135,7 @@
             <button @click="
                         openModal = true; {{-- Open the Modal --}}
                         newDocument = true; {{-- We are adding a new document --}}
-                        modalDocument = new Doc() {{-- Replace the data of the previous document with a new one--}}
+                        modalDocument = new Doc(); {{-- Replace the data of the previous document with a new one--}}
                     "
                     @click.prevent
                     class="item-add my-5"
@@ -175,7 +175,9 @@
                              class="modal-content h-fit"
                         >
                             {{-- Title --}}
-                            <h3 class="modal-header" :id="$id('modal-title')">{{__('forms.add_document')}}</h3>
+                            <h3 class="modal-header" :id="$id('modal-title')">
+                                <span x-text="newDocument ? '{{ __('forms.add_document') }}' : '{{ __('forms.edit') . ' ' . __('forms.document') }}'"></span>
+                            </h3>
 
                             {{-- Content --}}
                             <form>
@@ -185,12 +187,10 @@
                                                class="label-modal">{{__('forms.document_type')}}</label>
                                         <select x-model="modalDocument.type" id="documentType" class="input-modal"
                                                 type="text" required>
-                                            <option selected>{{__('forms.document_type')}}</option>
                                             @foreach($this->dictionaries['DOCUMENT_TYPE'] as $typeValue => $typeDescription)
                                                 <option value="{{$typeValue}}">{{$typeDescription}}</option>
                                             @endforeach
                                         </select>
-                                        {{-- Check if the picked value is the one from the dictionary --}}
                                         <p class="text-error text-xs"
                                            x-show="!Object.keys(dictionary).includes(modalDocument.type)">{{__('forms.field_empty')}}</p>
                                     </div>

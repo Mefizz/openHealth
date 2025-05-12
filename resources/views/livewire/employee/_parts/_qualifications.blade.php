@@ -24,7 +24,8 @@
             </tr>
             </thead>
             <tbody>
-            <template x-for="(qualification, index) in qualifications">
+
+            <template x-for="(qualification, index) in qualifications" :key="index">
                 <tr>
                     <td class="td-input" x-text="qualTypeDict[qualification.type] || qualification.type"></td>
                     <td class="td-input" x-text="qualification.institution_name"></td>
@@ -39,6 +40,7 @@
                     </td>
                 </tr>
             </template>
+
             </tbody>
         </table>
 
@@ -47,8 +49,10 @@
                     @click.prevent
                     class="item-add my-5 text-white"
             >
-                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5"/>
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                     viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M5 12h14m-7 7V5"/>
                 </svg>
                 {{__('forms.addQualification')}}
             </button>
@@ -75,7 +79,8 @@
                              class="modal-content h-fit bg-gray-800 text-white"
                         >
                             <h3 class="modal-header" :id="$id('modal-title')">
-                                <span x-text="newQualification ? '{{ __('Додати підвищення кваліфікації') }}' : '{{ __('Редагувати підвищення кваліфікації') }}'"></span>
+                                <span
+                                    x-text="newQualification ? '{{ __('forms.addQualification') }}' : '{{ __('forms.edit') . ' ' . __('forms.qualification') }}'"></span>
                             </h3>
 
                             <form>

@@ -90,14 +90,20 @@
                              class="modal-content h-fit"
                         >
                             <h3 class="modal-header" :id="$id('modal-title')">
-                                <span x-text="newEducation ? '{{ __('forms.add_education') }}' : '{{ __('forms.edit_education') }}'"></span>
+                                <span x-text="newEducation ? '{{ __('forms.addEducation') }}' : '{{ __('forms.edit') . ' ' . __('forms.education') }}'"></span>
                             </h3>
 
                             <form>
                                 <div class="form-row-modal grid grid-cols-2 gap-4">
                                     <div>
                                         <label for="educationCountry" class="label-modal">{{__('forms.country')}}</label>
-                                        <input x-model="modalEducation.country" type="text" id="educationCountry" class="input-modal" required>
+                                        <select x-model="modalEducation.country" id="educationCountry" class="input-modal" required>
+                                            @foreach($this->dictionaries['COUNTRY'] as $typeValue => $typeDescription)
+                                                <option value="{{$typeValue}}">{{$typeDescription}}</option>
+                                            @endforeach
+                                        </select>
+                                        <p class="text-error text-xs"
+                                           x-show="!Object.keys(dictionary).includes(modalEducation.country)">{{__('forms.field_empty')}}</p>
                                         <p class="text-error text-xs" x-show="!modalEducation.country.trim().length > 0">{{__('forms.field_empty')}}</p>
                                     </div>
                                     <div>
@@ -112,19 +118,23 @@
                                     </div>
                                     <div>
                                         <label for="educationSpeciality" class="label-modal">{{__('forms.speciality')}}</label>
-                                        <input x-model="modalEducation.speciality" type="text" id="educationSpeciality" class="input-modal" required>
-                                        <p class="text-error text-xs" x-show="!modalEducation.speciality.trim().length > 0">{{__('forms.field_empty')}}</p>
+                                        <select x-model="modalEducation.speciality" id="educationSpeciality" class="input-modal" required>
+                                            @foreach($this->dictionaries['SPECIALITY_TYPE'] as $typeValue => $typeDescription)
+                                                <option value="{{$typeValue}}">{{$typeDescription}}</option>
+                                            @endforeach
+                                        </select>
+                                        <p class="text-error text-xs"
+                                           x-show="!Object.keys(dictionary).includes(modalEducation.speciality)">{{__('forms.field_empty')}}</p>
                                     </div>
                                     <div>
                                         <label for="educationDegree" class="label-modal">{{__('forms.degree')}}</label>
                                         <select x-model="modalEducation.degree" id="educationDegree" class="input-modal" required>
-                                            <option value="" disabled selected>{{ __('forms.select') }}</option>
-                                            <option value="BACHELOR">{{ __('forms.bachelor') }}</option>
-                                            <option value="MASTER">{{ __('forms.master') }}</option>
-                                            <option value="PHD">{{ __('forms.phd') }}</option>
-                                            <option value="ASSOCIATE">{{ __('forms.associate') }}</option>
-                                            <option value="SPECIALIST">{{ __('forms.specialist') }}</option>
+                                            @foreach($this->dictionaries['EDUCATION_DEGREE'] as $typeValue => $typeDescription)
+                                                <option value="{{$typeValue}}">{{$typeDescription}}</option>
+                                            @endforeach
                                         </select>
+                                        <p class="text-error text-xs"
+                                           x-show="!Object.keys(dictionary).includes(modalEducation.degree)">{{__('forms.field_empty')}}</p>
                                     </div>
                                     <div>
                                         <label for="educationIssuedDate" class="label-modal">{{__('forms.issuedDate')}}</label>

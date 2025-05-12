@@ -168,7 +168,6 @@ return [
     'addQualification' => 'Додати кваліфікацію',
     'addScienceDegree' => 'Додати науковий ступінь',
     'add_document' => 'Додати документ',
-    'add_qualification' => 'Додати кваліфікацію',
     'close' => 'Закрити',
     'cancel' => 'Скасувати',
     'nameOfInstitution' => 'Назва закладу',
@@ -240,6 +239,7 @@ return [
     'sign_with_KEP' => 'Підписати КЕПом',
     'complete_the_interaction_and_sign' => 'Завершити взаємодію та підписати',
     'patient' => 'Пацієнт',
+    'certificate_number' => 'Номер свідоцтва',
     'yes' => 'Так',
     'no' => 'Ні',
 ];
