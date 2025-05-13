@@ -12,7 +12,7 @@
             </label>
             <div class="relative flex items-center">
                 <svg width="20" height="20"
-                     class="svg-input absolute left-2.5 pointer-events-none"
+                     class="svg-input absolute left-1 pointer-events-none"
                 >
                     <use xlink:href="#svg-calendar-week"></use>
                 </svg>
@@ -21,7 +21,7 @@
                        type="text"
                        name="immunizationDate"
                        id="immunizationDate"
-                       class="datepicker-input input-modal !pl-10"
+                       class="datepicker-input input-modal"
                        autocomplete="off"
                        required
                 >
@@ -39,7 +39,7 @@
 
             <div class="relative flex items-center">
                 <svg width="20" height="20"
-                     class="svg-input absolute left-2.5 pointer-events-none"
+                     class="svg-input absolute right-3 pointer-events-none"
                 >
                     <use xlink:href="#svg-clock"></use>
                 </svg>
@@ -48,12 +48,12 @@
                        type="time"
                        name="immunizationTime"
                        id="immunizationTime"
-                       class="input-modal !pl-10"
+                       class="input-modal pl-10"
                        autocomplete="off"
                        required
                 >
-            </div>
 
+            </div>
             <p class="text-error text-xs" x-show="modalImmunization.time.trim() === ''">
                 {{ __('forms.field_empty') }}
             </p>
@@ -114,12 +114,6 @@
                                     </option>
                                 @endforeach
                             </select>
-
-                            <p class="text-error text-xs"
-                               x-show="!Object.keys(reasonExplanationsDictionary).includes(reason.coding[0].code)"
-                            >
-                                {{ __('forms.field_empty') }}
-                            </p>
                         </div>
 
                         <!-- Remove Button -->
@@ -151,7 +145,7 @@
                 </template>
             </div>
 
-            <div x-show="modalImmunization.notGiven === true" class="form-group group !w-1/2">
+            <div x-show="modalImmunization.notGiven === true" class="form-group group !w-1/3">
                 <label for="reasonsNotGiven" class="label-modal">
                     {{ __('patients.reasons') }}
                 </label>
@@ -168,12 +162,6 @@
                         </option>
                     @endforeach
                 </select>
-
-                <p class="text-error text-xs"
-                   x-show="!Object.keys(reasonNotGivenExplanationsDictionary).includes(modalImmunization.explanation.reasonsNotGiven.coding[0].code)"
-                >
-                    {{ __('forms.field_empty') }}
-                </p>
             </div>
         </div>
     </div>

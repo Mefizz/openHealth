@@ -102,8 +102,7 @@ class LegalEntitiesForms extends Form
     {
         return [
             'edrpou.required' => __('Це поле є обов\'язковим до заповнення'),
-            'edrpou.regex' => __('Поле має хибний формат'),
-            'edrpou.unique_edrpou' => __('Такий номер вже існує'),
+            'edrpou' => __('Поле має хибний формат'),
             'owner.firstName.required' => __('Iм\'я є обов\'язковим до заповнення'),
             'owner.lastName.required' => __('Прізвище є обов\'язковим до заповнення'),
             'owner.firstName' => __('Поле має хибний формат. (Дозволено лише кирилічні символи)'),

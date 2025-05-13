@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 use Illuminate\Support\Str;
 
 return [
@@ -96,8 +94,6 @@ return [
         ],
 
     ],
-
-    'medical_events_db_driver' => env('MEDICAL_EVENTS_DB_DRIVER', 'sql'), // 'sql' or 'mongo'
 
     /*
     |--------------------------------------------------------------------------

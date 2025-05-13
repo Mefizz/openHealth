@@ -165,7 +165,7 @@ return [
     'add' => 'Додати',
     'addEducation' => 'Додати освіту',
     'addSpeciality' => 'Додати спеціальність',
-    'addQualification' => 'Додати кваліфікацію',
+    'addQualification' => 'Додати кваліфікація',
     'addScienceDegree' => 'Додати науковий ступінь',
     'add_document' => 'Додати документ',
     'close' => 'Закрити',
@@ -239,7 +239,6 @@ return [
     'sign_with_KEP' => 'Підписати КЕПом',
     'complete_the_interaction_and_sign' => 'Завершити взаємодію та підписати',
     'patient' => 'Пацієнт',
-    'certificate_number' => 'Номер свідоцтва',
     'yes' => 'Так',
-    'no' => 'Ні',
+    'no' => 'Ні'
 ];

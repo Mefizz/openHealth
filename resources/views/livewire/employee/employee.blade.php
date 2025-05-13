@@ -1,7 +1,7 @@
 <div>
 
     <x-section-navigation class="breadcrumb-form">
-        <x-slot name="title">{{ $pageTitle  }}</x-slot>
+        <x-slot name="title">{{ __('Додати співробітника') }}</x-slot>
     </x-section-navigation>
 
     <section class="section-form">
@@ -12,10 +12,6 @@
         >
             @include('livewire.employee._parts._employee')
             @include('livewire.employee._parts._documents')
-            @include('livewire.employee._parts._education')
-            @include('livewire.employee._parts._specialities')
-            @include('livewire.employee._parts._science_degree')
-            @include('livewire.employee._parts._qualifications')
 
             <div class="form-button-group">
                 <button type="button" class="button-minor">

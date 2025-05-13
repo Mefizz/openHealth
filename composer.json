@@ -12,14 +12,10 @@
         "laravel/framework": "^12.0.1",
         "laravel/jetstream": "^5.3",
         "laravel/tinker": "^2.10.1",
-        "laravel-frontend-presets/tall": "^9.1",
-        "livewire/flux": "^2.1.1",
         "livewire/livewire": "^3.5",
-        "livewire/volt": "^1.7.0",
         "spatie/laravel-permission": "^6.16"
     },
     "require-dev": {
-        "barryvdh/laravel-debugbar": "^3.15",
         "barryvdh/laravel-ide-helper": "^3.5.5",
         "fakerphp/faker": "^1.24.1",
         "laravel/pint": "^1.21.2",

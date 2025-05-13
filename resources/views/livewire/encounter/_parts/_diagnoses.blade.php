@@ -1,3 +1,8 @@
+@php
+    $conditionCodes = $this->dictionaries['eHealth/ICPC2/condition_codes'];
+    ksort($conditionCodes);
+@endphp
+
 {{-- Component to input values to the table through the Modal, built with Alpine --}}
 <fieldset class="fieldset"
           {{-- Binding conditions to Alpine, it will be re-used in the modal.
@@ -5,16 +10,14 @@
           x-data="{
                   conditions: $wire.entangle('form.conditions'),
                   diagnoses: $wire.entangle('form.encounter.diagnoses'),
-                  openModal: false,
-                  showPrimaryWarning: false,
-                  showDuplicateCodeWarning: false,
+                  openModal:false,
                   modalCondition: new Condition(),
                   newCondition: false,
                   item: 0,
                   conditionCodesDictionary: $wire.dictionaries['eHealth/ICPC2/condition_codes'],
                   diagnosisRolesDictionary: $wire.dictionaries['eHealth/diagnosis_roles'],
                   conditionClinicalStatusesRolesDictionary: $wire.dictionaries['eHealth/condition_clinical_statuses'],
-                  conditionVerificationStatusesDictionary: $wire.dictionaries['eHealth/condition_verification_statuses']
+                  conditionVerificationStatusesDictionary: $wire.dictionaries['eHealth/condition_verification_statuses'],
               }"
 >
     <legend class="legend">
@@ -185,10 +188,20 @@
                                     <label for="conditionReasonCode" class="label-modal">
                                         {{ __('patients.icpc-2_status_code') }}
                                     </label>
-                                    <x-select2 modelPath="modalCondition.conditions.code.coding[0].code"
-                                               :dictionary="$this->dictionaries['eHealth/ICPC2/condition_codes']"
-                                               id="conditionReasonCode"
-                                    />
+                                    <select x-model="modalCondition.conditions.code.coding[0].code"
+                                            id="conditionReasonCode"
+                                            class="input-modal"
+                                            type="text"
+                                            required
+                                    >
+                                        <option selected>{{ __('forms.select') }}</option>
+                                        @foreach($conditionCodes as $key => $conditionCode)
+                                            <option value="{{ $key }}" wire:key="{{ $key }}">
+                                                {{ $key }} - {{ $conditionCode }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    {{-- Check if the picked value is the one from the dictionary --}}
                                     <p class="text-error text-xs"
                                        x-show="!Object.keys(conditionCodesDictionary).includes(modalCondition.conditions.code.coding[0].code)"
                                     >
@@ -339,7 +352,7 @@
 
                                 <div class="relative">
                                     <svg width="20" height="20"
-                                         class="svg-input absolute left-2.5 !top-2/3 transform -translate-y-1/2 pointer-events-none"
+                                         class="svg-input absolute left-1 !top-2/3 transform -translate-y-1/2 pointer-events-none"
                                     >
                                         <use xlink:href="#svg-calendar-week"></use>
                                     </svg>
@@ -351,7 +364,7 @@
                                            type="text"
                                            name="onsetDate"
                                            id="onsetDate"
-                                           class="datepicker-input input-modal !pl-10"
+                                           class="datepicker-input input-modal"
                                            autocomplete="off"
                                            required
                                     >
@@ -365,7 +378,7 @@
 
                                 <div class="relative" onclick="document.getElementById('onsetTime').showPicker()">
                                     <svg width="20" height="20"
-                                         class="svg-input absolute left-2.5 !top-2/3 transform -translate-y-1/2 pointer-events-none"
+                                         class="svg-input absolute right-3 !top-2/3 transform -translate-y-1/2 pointer-events-none"
                                     >
                                         <use xlink:href="#svg-clock"></use>
                                     </svg>
@@ -377,7 +390,7 @@
                                            type="time"
                                            name="onsetTime"
                                            id="onsetTime"
-                                           class="input-modal !pl-10"
+                                           class="input-modal"
                                            autocomplete="off"
                                            required
                                     >
@@ -391,7 +404,7 @@
 
                                 <div class="relative">
                                     <svg width="20" height="20"
-                                         class="svg-input absolute left-2.5 !top-2/3 transform -translate-y-1/2 pointer-events-none"
+                                         class="svg-input absolute left-1 !top-2/3 transform -translate-y-1/2 pointer-events-none"
                                     >
                                         <use xlink:href="#svg-calendar-week"></use>
                                     </svg>
@@ -403,7 +416,7 @@
                                            type="text"
                                            name="assertedDate"
                                            id="assertedDate"
-                                           class="datepicker-input input-modal !pl-10"
+                                           class="datepicker-input input-modal"
                                            autocomplete="off"
                                            required
                                     >
@@ -411,7 +424,7 @@
 
                                 <div class="relative" onclick="document.getElementById('assertedTime').showPicker()">
                                     <svg width="20" height="20"
-                                         class="svg-input absolute left-2.5 !top-2/3 transform -translate-y-1/2 pointer-events-none"
+                                         class="svg-input absolute right-3 !top-2/3 transform -translate-y-1/2 pointer-events-none"
                                     >
                                         <use xlink:href="#svg-clock"></use>
                                     </svg>
@@ -423,7 +436,7 @@
                                            type="time"
                                            name="assertedTime"
                                            id="assertedTime"
-                                           class="input-modal !pl-10"
+                                           class="input-modal"
                                            autocomplete="off"
                                            required
                                     >
@@ -449,18 +462,18 @@
                                 </div>
                             </div>
 
-                            <div class="mt-12">
+                            <div x-data="{ primarySource: 'performer' }" class="mt-12">
                                 <div class="flex gap-20 md:mb-5 mb-4">
                                     <h2 class="default-p">{{ __('patients.primary_source') }}</h2>
                                     <div class="flex items-center">
-                                        <input @change="modalCondition.conditions.primarySource = true"
+                                        <input @change="primarySource = 'performer'"
                                                x-model.boolean="modalCondition.conditions.primarySource"
                                                id="performer"
                                                type="radio"
                                                value="true"
                                                name="primarySource"
                                                class="default-radio"
-                                               :checked="modalCondition.conditions.primarySource === true"
+                                               :checked="primarySource === 'performer'"
                                         >
                                         <label for="performer"
                                                class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
@@ -470,14 +483,14 @@
                                     </div>
 
                                     <div class="flex items-center">
-                                        <input @change="modalCondition.conditions.primarySource = false"
+                                        <input @change="primarySource = 'otherSource'"
                                                x-model.boolean="modalCondition.conditions.primarySource"
                                                id="otherSource"
                                                type="radio"
                                                value="false"
                                                name="primarySource"
                                                class="default-radio"
-                                               :checked="modalCondition.conditions.primarySource === false"
+                                               :checked="primarySource === 'otherSource'"
                                         >
                                         <label for="otherSource"
                                                class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
@@ -487,7 +500,7 @@
                                     </div>
                                 </div>
 
-                                <div x-show="modalCondition.conditions.primarySource === true">
+                                <div x-show="primarySource === 'performer'">
                                     <div class="form-row-modal">
                                         <div class="form-group group">
                                                 <textarea x-model="modalCondition.conditions.asserter.identifier.type.text"
@@ -501,7 +514,7 @@
                                     </div>
                                 </div>
 
-                                <div x-show="modalCondition.conditions.primarySource === false">
+                                <div x-show="primarySource === 'otherSource'">
                                     <div class="form-row-modal !mb-12">
                                         <div>
                                             <label for="reportOrigin" class="label-modal">
@@ -527,66 +540,34 @@
                                 </div>
                             </div>
 
-                            <div class="mt-6 flex justify-between space-x-2 items-start">
+                            <div class="mt-6 flex justify-between space-x-2">
                                 <button type="button"
-                                        @click="
-                                            openModal = false;
-                                            showPrimaryWarning = false;
-                                            showDuplicateCodeWarning = false;
-                                        "
-                                        class="button-minor w-auto"
+                                        @click="openModal = false"
+                                        class="button-minor"
                                 >
                                     {{ __('forms.cancel') }}
                                 </button>
 
-                                <div class="flex flex-col items-end">
-                                    <button @click.prevent="
-                                                delete modalCondition.query;
-                                                modalCondition.conditions.code.coding = modalCondition.conditions.code.coding.filter(c => c.code.trim() !== '');
-                                                const primaryExist = diagnoses.some(d => d.role.coding.some(c => c.code === 'primary'));
-                                                const newCode = modalCondition.conditions.code.coding[0]?.code;
-                                                const alreadyHasCode = conditions.some(c => c.code.coding[0]?.code === newCode);
+                                <button @click.prevent="
+                                            delete modalCondition.query;
+                                            modalCondition.conditions.code.coding = modalCondition.conditions.code.coding.filter(c => c.code.trim() !== '');
 
-                                                if (primaryExist) {
-                                                    showPrimaryWarning = true;
-                                                    return;
-                                                }
+                                            if(newCondition !== false) {
+                                                diagnoses.push(modalCondition.conditions.diagnoses);
+                                                conditions.push(modalCondition.conditions);
+                                            } else {
+                                                conditions[item] = modalCondition.conditions;
+                                            }
 
-                                                if (alreadyHasCode) {
-                                                    showDuplicateCodeWarning = true;
-                                                    return;
-                                                }
-
-                                                if (newCondition !== false) {
-                                                    diagnoses.push(modalCondition.conditions.diagnoses);
-                                                    conditions.push(modalCondition.conditions);
-                                                } else {
-                                                    conditions[item] = modalCondition.conditions;
-                                                }
-
-                                                openModal = false;
-                                                showPrimaryWarning = false;
-                                                showDuplicateCodeWarning = false;
-                                            "
-                                            class="button-primary justify-end"
-                                            :disabled="
-                                                !(modalCondition.conditions.clinicalStatus.trim().length > 0 && modalCondition.conditions.verificationStatus.trim().length > 0
-                                                && modalCondition.conditions.code.coding[0].code.trim().length > 0 && modalCondition.conditions.diagnoses.role.coding[0].code
-                                            )"
-                                    >
-                                        {{ __('forms.save') }}
-                                    </button>
-                                    <template x-if="showPrimaryWarning">
-                                        <p class="text-red-600 mt-2 text-sm text-right">
-                                            {!! __('patients.new_primary_diagnose') !!}
-                                        </p>
-                                    </template>
-                                    <template x-if="showDuplicateCodeWarning">
-                                        <p class="text-red-600 mt-2 text-sm text-right">
-                                            {!! __('patients.duplicate_code_warning') !!}
-                                        </p>
-                                    </template>
-                                </div>
+                                            openModal = false;
+                                        "
+                                        class="button-primary"
+                                        :disabled="!(modalCondition.conditions.clinicalStatus.trim().length > 0 && modalCondition.conditions.verificationStatus.trim().length > 0
+                                            && modalCondition.conditions.code.coding[0].code.trim().length > 0 && modalCondition.conditions.diagnoses.role.coding[0].code
+                                        )"
+                                >
+                                    {{ __('forms.save') }}
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -647,9 +628,6 @@
                     coding: [{ system: 'eHealth/diagnosis_roles', code: '' }]
                 },
                 rank: ''
-            },
-            evidences: {
-                codes: []
             }
         };
         query = '';

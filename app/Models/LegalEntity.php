@@ -2,18 +2,17 @@
 
 namespace App\Models;
 
-use App\Models\Relations\Phone;
-use App\Models\Relations\Address;
 use App\Models\Employee\Employee;
-use Illuminate\Support\Collection;
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Employee\EmployeeRequest;
-use Eloquence\Behaviours\HasCamelCasing;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Eloquence\Behaviours\HasCamelCasing;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Relations\Address;
+use App\Models\Relations\Phone;
 
 /**
  * @mixin IdeHelperLegalEntity
@@ -24,8 +23,6 @@ class LegalEntity extends Model
         HasFactory;
 
     public const string TYPE_PRIMARY_CARE = 'PRIMARY_CARE';
-
-    protected $table = 'legal_entities';
 
     protected $fillable = [
         'uuid',
@@ -60,7 +57,7 @@ class LegalEntity extends Model
         'residence_address' => 'array',
         'inserted_at' => 'datetime',
         'updated_at' => 'datetime',
-        'id' => 'integer',
+        'id' => 'string',
         'inserted_by' => 'string',
         'updated_by' => 'string',
     ];
@@ -68,14 +65,14 @@ class LegalEntity extends Model
     protected $with = [
         'licenses',
         'address',
-        'phones',
+        'phones'
     ];
 
     protected $attributes = [
         'is_active' => false,
     ];
 
-    protected ?object $owner = null;
+    public null|object $owner;
 
     public function employees(): HasMany
     {
@@ -123,7 +120,7 @@ class LegalEntity extends Model
         return $this->uuid;
     }
 
-    public function getClientId(): ?string
+    public function getClientId(): string
     {
         return $this->client_id;
     }
@@ -131,10 +128,6 @@ class LegalEntity extends Model
     // Get Owner Legal Entity
     public function getOwner(): ?object
     {
-        if (!$this->exists) {
-            return null;
-        }
-
         return $this->employees()->where('employee_type', 'OWNER')->first();
     }
 
@@ -156,13 +149,5 @@ class LegalEntity extends Model
     public function phones(): MorphMany
     {
         return $this->morphMany(Phone::class, 'phoneable');
-    }
-
-    /**
-     * Scope a query to get an Legal Entity depends on it's UUID
-     */
-    public function scopeByUuid(Builder $query, string $legalEntityUUID): void
-    {
-        $query->where('uuid', $legalEntityUUID);
     }
 }

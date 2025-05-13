@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
 
@@ -178,7 +176,6 @@ return [
         App\Providers\DictionaryServiceProvider::class,
         App\Providers\BladeServiceProvider::class,
         App\Classes\eHealth\Providers\SchemaServiceProvider::class,
-        App\Providers\MedicalEventsDBServiceProvider::class
     ])->toArray(),
 
     /*

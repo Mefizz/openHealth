@@ -59,14 +59,9 @@ class PatientIndex extends Component
     {
         $this->form->rulesForModelValidate('patientsFilter');
 
-        // Search in our DB
-        $this->originalPatients = Person::where(arrayKeysToSnake($this->form->patientsFilter))
-            ->with('phones')
-            ->select([
-                'id', 'uuid', 'first_name', 'last_name', 'second_name', 'birth_date', 'tax_id', 'verification_status'
-            ])
-            ->get()
-            ->toArray();
+        // Search in eHealth
+        $buildSearchRequest = PatientRequestApi::buildSearchForPerson($this->form->patientsFilter);
+        $this->originalPatients = PersonApi::searchForPersonByParams($buildSearchRequest);
 
         // Don't use phone when searching locally.
         unset($this->form->patientsFilter['phoneNumber']);
@@ -78,22 +73,25 @@ class PatientIndex extends Component
             ->get()
             ->toArray();
 
-        // If found in our DB, show that result
         if (!empty($this->originalPatients)) {
             $this->patients = array_merge(
                 $this->setPersonStatus($personRequests, 'APPLICATION'),
-                $this->originalPatients = array_map(static function ($patient) {
-                    return array_merge($patient, ['status' => $patient['verification_status']]);
-                }, $this->originalPatients)
+                $this->originalPatients = $this->setPersonStatus($this->originalPatients, 'eHEALTH'),
             );
         } else {
-            // Otherwise search in eHealth
-            $buildSearchRequest = PatientRequestApi::buildSearchForPerson($this->form->patientsFilter);
-            $this->originalPatients = PersonApi::searchForPersonByParams($buildSearchRequest);
+            $this->originalPatients = Person::where(arrayKeysToSnake($this->form->patientsFilter))
+                ->with('phones')
+                ->select([
+                    'id', 'uuid', 'first_name', 'last_name', 'second_name', 'birth_date', 'tax_id', 'verification_status'
+                ])
+                ->get()
+                ->toArray();
 
             $this->patients = array_merge(
                 $this->setPersonStatus($personRequests, 'APPLICATION'),
-                $this->originalPatients = $this->setPersonStatus($this->originalPatients, 'eHEALTH'),
+                $this->originalPatients = array_map(function ($patient) {
+                    return array_merge($patient, ['status' => $patient['verification_status']]);
+                }, $this->originalPatients)
             );
         }
 
