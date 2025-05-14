@@ -12,6 +12,8 @@ return [
     |
     */
     'edrpou'=>'Edrpou',
-    'step'=> 'Step :currentSteep with :totalSteps'
+    'step'=> 'Step :currentSteep with :totalSteps',
+    'add_employee' => 'Add a new employee',
+    'edit_employee' => 'Change employee details',
 
 ];

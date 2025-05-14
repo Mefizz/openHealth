@@ -19,6 +19,7 @@ return [
     'signature' => 'Підписання',
     'type_mobile' => 'Обрати тип номера',
     'add_employee' => 'Додати співробітника',
+    'edit_employee' => 'Зміна данних співробітника',
     'add_phone' => 'Додати номер',
     'owner' => 'Власник',
     'accreditation' => 'Акредитація',
