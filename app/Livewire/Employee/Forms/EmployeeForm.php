@@ -4,159 +4,166 @@ namespace App\Livewire\Employee\Forms;
 
 use App\Rules\BirthDate;
 use App\Rules\Name;
-use Illuminate\Validation\ValidationException;
 use Livewire\Form;
 
-use function Livewire\of;
-
+/**
+ * @property-read array $rules
+ */
 class EmployeeForm extends Form
 {
-
     public string $status = 'NEW';
 
     public array $party = [
-        'position' => '',
-        'employee_type' => '',
-        'start_date' => '',
-        'phones' => [
-            ['type' => '', 'number' => '']
+        'position'      => '',
+        'employeeType'  => '',
+        'phones'        => [
+            [
+                'type'   => '',
+                'number' => '',
+            ]
         ],
-        'documents' => [],
-        'tax_id' => '',
-        'no_tax_id' => false,
-        'first_name' => '',
-        'last_name' => '',
-        'second_name' => '',
-        'birth_date' => '',
-        'gender' => '',
-        'email' => '',
-        'working_experience' => null,
-        'about_myself' => '',
     ];
 
-    public array $doctor = [
-        'educations' => [],
-        'qualifications' => [],
-        'specialities' => [],
-        'science_degree' => [
-            'country' => '',
-            'city' => '',
-            'degree' => '',
-            'institution_name' => '',
-            'diploma_number' => '',
-            'speciality' => '',
-            'issued_date' => '',
-        ],
-    ];
+    public array $documents = [];
+
+    public array $educations = [];
+
+    public array $specialities = [];
+
+    public array $scienceDegree = [];
+
+    public array $qualifications = [];
 
     protected function rules(): array
     {
+        return array_merge(
+            $this->partyRules(),
+            $this->documentsRules(),
+            $this->educationsRules(),
+            $this->specialitiesRules(),
+            $this->scienceDegreesRules(),
+            $this->qualificationsRules(),
+        );
+    }
+
+    protected function partyRules(): array
+    {
         return [
-            // Основне
-            'division_id' => 'required|uuid',
-            'legal_entity_id' => 'required|uuid',
-            'position' => 'required|string',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date',
-            'status' => 'required|in:NEW,REJECTED,APPROVED',
-            'employee_type' => 'required|string',
+            'party.lastName'         => ['required', new Name()],
+            'party.firstName'        => ['required', new Name()],
+            'party.secondName'       => [new Name()],
+            'party.gender'           => ['required'],
+            'party.birthDate'        => ['required', 'date', new BirthDate()],
+            'party.phones.*.number'  => 'required|string|digits:13',
+            'party.phones.*.type'    => 'required|string',
+            'party.email'            => 'required|email',
+            'party.taxId'            => 'required|min:8|max:10',
+            'party.employeeType'     => 'required|string',
+            'party.position'         => 'required|string',
+            'party.startDate'        => 'date',
+        ];
+    }
 
-            // Party
-            'party.first_name' => ['required', new Name()],
-            'party.last_name' => ['required', new Name()],
-            'party.second_name' => [new Name()],
-            'party.birth_date' => ['required', 'date', new BirthDate()],
-            'party.gender' => ['required', 'in:MALE,FEMALE'],
-            'party.no_tax_id' => 'required|boolean',
-            'party.tax_id' => 'required_if:party.no_tax_id,false|string|min:8|max:10',
-            'party.email' => 'required|email',
-            'party.phones' => 'required|array|min:1',
-            'party.phones.*.type' => 'required|string|in:MOBILE,LAND_LINE', // уточни типи
-            'party.phones.*.number' => 'required|string|regex:/^\+380\d{9}$/',
-            'party.documents' => 'required|array|min:1',
-            'party.documents.*.type' => 'required|string|min:3',
-            'party.documents.*.number' => 'required|string|min:3',
-            'party.documents.*.issued_by' => 'required|string|min:3',
-            'party.documents.*.issued_at' => 'required|date',
-            'party.working_experience' => 'nullable|numeric|min:0',
-            'party.about_myself' => 'nullable|string|min:3',
+    protected function documentsRules(): array
+    {
+        return [
+            'documents'           => 'required|array|min:1',
+            'documents.*.type'    => 'required|string|min:3',
+            'documents.*.number'  => 'required|string|min:3',
+            'documents.*.issuedBy'=> 'nullable|string',
+            'documents.*.issuedAt'=> 'nullable|date',
+        ];
+    }
 
-            // Doctor — education
-            'doctor.educations' => 'required|array|min:1',
-            'doctor.educations.*.country' => 'required|string|size:2',
-            'doctor.educations.*.city' => 'required|string|min:2',
-            'doctor.educations.*.institution_name' => 'required|string|min:3',
-            'doctor.educations.*.issued_date' => 'required|date',
-            'doctor.educations.*.diploma_number' => 'required|string|min:3',
-            'doctor.educations.*.degree' => 'required|string|min:3',
-            'doctor.educations.*.speciality' => 'required|string|min:3',
+    protected function educationsRules(): array
+    {
+        return [
+            'educations'                            => 'array',
+            'educations.*.country'                  => 'required|string',
+            'educations.*.city'                     => 'required|string|min:3',
+            'educations.*.institution_name'         => 'required|string|min:3',
+            'educations.*.speciality'               => 'required|string|min:3',
+            'educations.*.degree'                   => 'required|string|min:3',
+            'educations.*.issued_date'              => 'required|date',
+            'educations.*.diploma_number'           => 'required|string|min:3',
+        ];
+    }
 
-            // Doctor — qualifications
-            'doctor.qualifications' => 'nullable|array',
-            'doctor.qualifications.*.type' => 'required|string|min:3',
-            'doctor.qualifications.*.institution_name' => 'required|string|min:3',
-            'doctor.qualifications.*.speciality' => 'required|string|min:3',
-            'doctor.qualifications.*.issued_date' => 'required|date',
-            'doctor.qualifications.*.certificate_number' => 'required|string|min:3',
-            'doctor.qualifications.*.valid_to' => 'required|date',
-            'doctor.qualifications.*.additional_info' => 'nullable|string',
+    protected function specialitiesRules(): array
+    {
+        return [
+            'specialities'                          => 'array',
+            'specialities.*.speciality'             => 'required|string|min:3',
+            'specialities.*.level'                  => 'required|string|min:3',
+            'specialities.*.attestation_name'       => 'required|string|min:3',
+            'specialities.*.certificate_number'     => 'required|string|min:3',
+            'specialities.*.speciality_officio'     => 'required|boolean',
+        ];
+    }
 
-            // Doctor — specialities
-            'doctor.specialities' => 'required|array|min:1',
-            'doctor.specialities.*.speciality' => 'required|string|min:3',
-            'doctor.specialities.*.speciality_officio' => 'required|boolean',
-            'doctor.specialities.*.level' => 'required|string|min:3',
-            'doctor.specialities.*.qualification_type' => 'required|string|min:3',
-            'doctor.specialities.*.attestation_name' => 'required|string|min:3',
-            'doctor.specialities.*.attestation_date' => 'required|date',
-            'doctor.specialities.*.valid_to_date' => 'required|date',
-            'doctor.specialities.*.certificate_number' => 'required|string|min:3',
+    protected function scienceDegreesRules(): array
+    {
+        return [
+            'scienceDegrees'                            => 'array',
+            'scienceDegrees.*.country'                  => 'nullable|string',
+            'scienceDegrees.*.city'                     => 'nullable|string',
+            'scienceDegrees.*.degree'                   => 'nullable|string',
+            'scienceDegrees.*.institution_name'         => 'nullable|string',
+            'scienceDegrees.*.diploma_number'           => 'nullable|string',
+            'scienceDegrees.*.speciality'               => 'nullable|string',
+        ];
+    }
 
-            // Doctor — science degree
-            'doctor.science_degree.country' => 'required|string|size:2',
-            'doctor.science_degree.city' => 'required|string|min:2',
-            'doctor.science_degree.degree' => 'required|string|min:2',
-            'doctor.science_degree.institution_name' => 'required|string|min:3',
-            'doctor.science_degree.diploma_number' => 'required|string|min:3',
-            'doctor.science_degree.speciality' => 'required|string|min:3',
-            'doctor.science_degree.issued_date' => 'required|date',
+    protected function qualificationsRules(): array
+    {
+        return [
+            'qualifications'                            => 'array',
+            'qualifications.*.type'                     => 'nullable|string',
+            'qualifications.*.institution_name'         => 'nullable|string',
+            'qualifications.*.speciality'               => 'nullable|string',
+            'qualifications.*.issuedDate'               => 'nullable|date',
+            'qualifications.*.certificate_number'       => 'nullable|string',
         ];
     }
 
     /**
-     * @throws ValidationException
+     * Валідація конкретного блоку форми (не повна форма)
      */
     public function rulesForModelValidate(string $model): array
     {
         return $this->validate($this->rulesForModel($model)->toArray());
     }
 
+    /**
+     * Додаткова валідація перед відправкою форми на API
+     */
     public function validateBeforeSendApi(): array
     {
         $doctorTypes = config('ehealth.doctors_type');
 
-        if (empty($this->party['documents'])) {
+        if (empty($this->documents)) {
             return [
                 'error' => true,
                 'message' => __('validation.custom.documentsEmpty'),
             ];
         }
 
-        if (!$this->party['no_tax_id'] && empty($this->party['tax_id'])) {
+        if (isset($this->party['taxId']) && empty($this->party['taxId'])) {
             return [
                 'error' => true,
-                'message' => __('validation.custom.taxIdMissing'),
+                'message' => __('validation.custom.documentsEmpty'),
             ];
         }
 
-        if (in_array($this->party['employee_type'], $doctorTypes)) {
-            if (empty($this->doctor['specialities'])) {
+        if (in_array($this->party['employeeType'], $doctorTypes)) {
+            if (empty($this->specialities)) {
                 return [
                     'error' => true,
                     'message' => __('validation.custom.specialityTable'),
                 ];
             }
-            if (empty($this->doctor['educations'])) {
+
+            if (empty($this->educations)) {
                 return [
                     'error' => true,
                     'message' => __('validation.custom.educationTable'),
@@ -164,12 +171,9 @@ class EmployeeForm extends Form
             }
         }
 
-        return ['error' => false, 'message' => ''];
+        return [
+            'error' => false,
+            'message' => '',
+        ];
     }
-
-    public function validated(): array
-    {
-        return $this->validate($this->rules());
-    }
-
 }

@@ -188,12 +188,6 @@
                                         @endforeach
                                     </select>
 
-                                    <!-- Перевірка: чи значення з dictionary -->
-                                    <p class="text-red-500 text-xs mt-1"
-                                       x-show="modalScienceDegree.speciality && !Object.keys(dictionary).includes(modalScienceDegree.speciality)">
-                                        {{ __('forms.invalid_selection') }}
-                                    </p>
-
                                     <!-- Перевірка: чи вибрано значення -->
                                     <p class="text-red-500 text-xs mt-1"
                                        x-show="!modalScienceDegree.speciality">

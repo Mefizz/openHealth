@@ -18,6 +18,7 @@ return [
     'step' => 'Крок :currentSteep з :totalSteps',
     'signature' => 'Підписання',
     'type_mobile' => 'Обрати тип номера',
+    'add_employee' => 'Додати співробітника',
     'add_phone' => 'Додати номер',
     'owner' => 'Власник',
     'accreditation' => 'Акредитація',

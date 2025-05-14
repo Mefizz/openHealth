@@ -26,7 +26,7 @@ class ScienceDegree extends Model
     ];
 
 
-    public function science_degreeable(): MorphTo
+    public function scienceDegreeable(): MorphTo
     {
         return $this->morphTo();
     }
