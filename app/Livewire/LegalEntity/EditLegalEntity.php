@@ -2,6 +2,7 @@
 
 namespace App\Livewire\LegalEntity;
 
+use App\Models\Relations\Party;
 use Illuminate\Support\Arr;
 
 class EditLegalEntity extends LegalEntity
@@ -84,13 +85,14 @@ class EditLegalEntity extends LegalEntity
         $owner = $this->legalEntity->getOwner();
 
         if ($owner->exists()) {
-            $ownerArray = $owner->toArray();
-            $ownerParty = $ownerArray['party'] ?? [];
-
-            $ownerParty['position'] = $ownerArray['position'] ?? null;
-            $ownerParty['documents'] = !empty($ownerParty['documents']) ? $this->convertArrayKeysToCamelCase($ownerParty['documents'][0]) : [];
-
-            $this->legalEntityForm->owner = array_merge($this->legalEntityForm->owner ?? [], $ownerParty);
+            $ownerAttributes = $owner->attributesToArray();
+            $partyId = $ownerAttributes['partyId'];
+            $ownerParty = Party::find($partyId);
+            $ownerPartyArray = $ownerParty->toArray() ?? [];
+            $ownerPartyArray['documents'] = $ownerParty->documents->toArray() ?? null;
+            $ownerPartyArray['documents'] = !empty($ownerPartyArray['documents']) ? $this->convertArrayKeysToCamelCase($ownerPartyArray['documents'][0]) : [];
+            $ownerPartyArray['position'] = $ownerParty->position ?? null;
+            $this->legalEntityForm->owner = array_merge($this->legalEntityForm->owner ?? [], $ownerPartyArray);
         }
     }
 
