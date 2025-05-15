@@ -3,7 +3,7 @@
               {{-- Binding documents to Alpine, it will be re-used in the modal.
                 Note that it's necessary for modal to work properly --}}
               x-data="{
-                  scienceDegree: $wire.entangle('form.science_degree'),
+                  scienceDegree: $wire.entangle('form.scienceDegree'),
                   openModal: false,
                   modalScienceDegree: new ScienceDegree(),
                   dictionary: {
@@ -19,7 +19,6 @@
             <h2>{{ __('forms.scienceDegree') }}</h2>
         </legend>
 
-
         <template x-if="true">
             <table class="table-input w-full">
                 <thead class="thead-input">
@@ -33,7 +32,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr x-show="scienceDegree, index) in scienceDegrees" :key="index">
+                <tr x-show="scienceDegree">
                     <td class="td-input" x-text="dictionary[scienceDegree.degree] || scienceDegree.degree"></td>
                     <td class="td-input" x-text="scienceDegree.issued_date"></td>
                     <td class="td-input" x-text="scienceDegree.institution_name"></td>
@@ -43,7 +42,7 @@
                         <!-- Кнопки редагування та видалення -->
                         <x-dropdown-button
                             :editAction="'openModal = true; item = index; modalScienceDegree = new ScienceDegree(sciencedegree); newScienceDegree = false; close($refs.button)'"
-                            :deleteAction="'scienceDegrees.splice(index, 1); close($refs.button)'"
+                            :deleteAction="'scienceDegree = null; close($refs.button)'"
                         />
                     </td>
                 </tr>
