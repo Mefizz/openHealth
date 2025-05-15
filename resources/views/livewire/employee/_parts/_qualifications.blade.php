@@ -46,9 +46,8 @@
         </table>
 
         <div>
-
-            {{-- Button to trigger the modal --}}
-            <button @click="
+            <!-- Кнопка додавання -->
+            <button @click=" {{-- Button to trigger the modal --}}
                     openModal = true; {{-- Open the Modal --}}
                     newQualification = true; {{-- We are adding a new qualification --}}
                     modalQualification = new Qualification(); {{-- Replace the data of the previous ualification with a new one--}}
