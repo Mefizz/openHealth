@@ -13,9 +13,10 @@
                   }
               }"
     >
-        <h5 class="mb-5 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            {{ __('forms.scienceDegree') }}
-        </h5>
+        <legend class="legend">
+            <h2>{{ __('forms.scienceDegree') }}</h2>
+        </legend>
+
 
         <template x-if="true">
             <table class="table-input w-full">

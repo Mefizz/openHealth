@@ -10,9 +10,9 @@
                   levelDict: $wire.dictionaries['SPECIALITY_LEVEL']
               }"
     >
-        <h5 class="mb-5 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            {{ __('forms.specialities') }}
-        </h5>
+        <legend class="legend">
+            <h2>{{ __('forms.specialities') }}</h2>
+        </legend>
 
         <table class="table-input w-full">
             <thead class="thead-input">
