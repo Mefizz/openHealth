@@ -2,7 +2,7 @@
 
 namespace App\Livewire\LegalEntity;
 
-use App\Models\Relations\Party;
+use App\Models\Relations\Party as RelationsParty;
 use Illuminate\Support\Arr;
 
 class EditLegalEntity extends LegalEntity
@@ -87,7 +87,7 @@ class EditLegalEntity extends LegalEntity
         if ($owner->exists()) {
             $ownerAttributes = $owner->attributesToArray();
             $partyId = $ownerAttributes['partyId'];
-            $ownerParty = Party::find($partyId);
+            $ownerParty = RelationsParty::find($partyId);
             $ownerPartyArray = $ownerParty->toArray() ?? [];
             $ownerPartyArray['documents'] = $ownerParty->documents->toArray() ?? null;
             $ownerPartyArray['documents'] = !empty($ownerPartyArray['documents']) ? $this->convertArrayKeysToCamelCase($ownerPartyArray['documents'][0]) : [];

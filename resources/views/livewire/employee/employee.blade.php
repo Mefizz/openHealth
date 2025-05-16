@@ -23,6 +23,7 @@
                     @include('livewire.employee._parts._specialities')
                     @include('livewire.employee._parts._science_degree')
                     @include('livewire.employee._parts._qualifications')
+                    @include('livewire.components._public_offer')
                 </div>
             </template>
 

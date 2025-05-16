@@ -2,18 +2,23 @@
 
 namespace App\Livewire\Employee;
 
+use App\Classes\Cipher\Traits\Cipher;
 use App\Models\LegalEntity;
 use App\Repositories\EmployeeRepository;
 use App\Traits\FormTrait;
 use App\Models\Employee\Employee;
 use Livewire\Component;
 use App\Livewire\Employee\Forms\EmployeeForm as Form;
+use Livewire\WithFileUploads;
 
 class EmployeeComponent extends Component
 {
-    use FormTrait {
+    use Cipher,
+        WithFileUploads,
+        FormTrait {
         getDictionary as traitGetDictionary;
     }
+
 
     public Form $form;
 
