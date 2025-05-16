@@ -6,15 +6,20 @@ use App\Classes\eHealth\Api\EmployeeApi;
 use App\Livewire\Employee\Forms\Api\EmployeeRequestApi;
 use App\Livewire\Employee\Forms\EmployeeForm as Form;
 use App\Models\Division;
+use App\Models\Employee\Employee;
 use App\Models\Employee\EmployeeRequest;
+use App\Models\LegalEntity;
 use App\Classes\Cipher\Traits\Cipher;
 use App\Repositories\EmployeeRepository;
+use App\Repositories\PartyRepository;
 use App\Traits\FormTrait;
 use App\Traits\InteractsWithCache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use JetBrains\PhpStorm\NoReturn;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use App\Livewire\Employee\Forms\EmployeeForm as EmployeeFormState;
 
 class EmployeeForm extends Component
 {
@@ -23,13 +28,19 @@ class EmployeeForm extends Component
     use WithFileUploads;
     use InteractsWithCache;
 
-    const CACHE_PREFIX = 'register_employee_form';
+    const string CACHE_PREFIX = 'register_employee_form';
 
     public Form $employeeRequest;
 
+    public EmployeeFormState $form;
+
     protected string $employeeCacheKey;
 
+    public Employee $employee;
+
     public object $employees;
+
+    public LegalEntity $legalEntity;
 
     public string $mode = 'create';
 
@@ -103,7 +114,7 @@ class EmployeeForm extends Component
         $this->getDictionaries();
     }
 
-    public function getHealthcareServices($id)
+    public function getHealthcareServices($id): void
     {
         $this->healthcareServices = Division::find($id)
             ->healthcareService()
@@ -151,19 +162,19 @@ class EmployeeForm extends Component
     }
 
 
-    public function getLegalEntity()
+    public function getLegalEntity(): void
     {
         $this->legalEntity = auth()->user()->legalEntity;
     }
 
-    public function getDivisions()
+    public function getDivisions(): void
     {
         $this->divisions = $this->legalEntity->division()
             ->where('status', 'ACTIVE')
             ->get();
     }
 
-    public function openModalModel($model, $singleProperty = '')
+    public function openModalModel($model, $singleProperty = ''): void
     {
         $this->showModal = $model;
         $this->singleProperty = $singleProperty;
@@ -176,6 +187,7 @@ class EmployeeForm extends Component
             $this->singleProperty = $singleProperty;
         }
         $this->employeeRequest->{$model} = [];
+        dd($model);
         $this->openModal($model);
         $this->getEmployee();
         $this->dictionaryUnset();
@@ -226,7 +238,7 @@ class EmployeeForm extends Component
             $this->employeeCacheKey,
             $model,
             'employeeRequest',
-            ['party', 'scienceDegree']
+            ['party', 'scienceDegrees']
         );
     }
 
@@ -309,13 +321,13 @@ class EmployeeForm extends Component
             unset($this->employeeRequest->specialities);
             unset($this->employeeRequest->qualifications);
             unset($this->employeeRequest->educations);
-            unset($this->employeeRequest->scienceDegree);
+            unset($this->employeeRequest->scienceDegrees);
         }
         return schemaService()
             ->setDataSchema(['employee_request' => $this->employeeRequest->toArray()],app(EmployeeApi::class))
             ->mapFields(['position', 'employeeType', 'startDate'], 'party', 'employee_request')
             ->mapFields([
-                'doctor' => ['specialities', 'qualifications', 'educations', 'scienceDegree'],
+                'doctor' => ['specialities', 'qualifications', 'educations', 'scienceDegrees'],
                 'party'  => ['documents']
             ],'','employee_request')
             ->requestSchemaNormalize()
@@ -352,7 +364,6 @@ class EmployeeForm extends Component
 
     }
 
-
     //Response from api
     public function apiResponse($response):void
     {
@@ -384,7 +395,7 @@ class EmployeeForm extends Component
         if (!in_array( $this->employeeRequest->party['employeeType'],config('ehealth.doctors_type',[]))) {
             $this->employeeRequest->educations = [];
             $this->employeeRequest->qualifications = [];
-            $this->employeeRequest->scienceDegree = [];
+            $this->employeeRequest->scienceDegrees = [];
             $this->employeeRequest->specialities = [];
         }
         $this->employeeRequest->party['position'] = '';

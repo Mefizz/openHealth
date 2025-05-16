@@ -5,6 +5,7 @@ namespace App\Models\Relations;
 use Eloquence\Behaviours\HasCamelCasing;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
@@ -29,5 +30,10 @@ class Speciality extends Model
     public function specialityable(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    public function qualifications(): MorphMany
+    {
+        return $this->morphMany(Qualification::class, 'qualificationable');
     }
 }

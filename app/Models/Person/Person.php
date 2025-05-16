@@ -8,6 +8,7 @@ use App\Models\Employee\Employee;
 use App\Models\MedicalEvents\Sql\Encounter;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 
 /**
  * @mixin IdeHelperPerson
@@ -18,6 +19,15 @@ class Person extends BasePerson
     {
         parent::__construct();
         $this->mergeFillable(['death_date']);
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function ($party) {
+            if (empty($party->uuid)) {
+                $party->uuid = (string) Str::uuid();
+            }
+        });
     }
 
     protected $table = 'persons';

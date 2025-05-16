@@ -8,7 +8,9 @@
                   modalQualification: new Qualification(),
                   newQualification: false,
                   item: 0,
-                  qualTypeDict: $wire.dictionaries['QUALIFICATION_TYPE']
+                  qualTypeDict: $wire.dictionaries['QUALIFICATION_TYPE'],
+                  qualSpecDict: $wire.dictionaries['SPEC_QUALIFICATION_TYPE'],
+                  countryDict: @js($this->dictionaries['COUNTRY']),
               }"
     >
         <legend class="legend">
@@ -19,6 +21,7 @@
             <thead class="thead-input">
             <tr>
                 <th scope="col" class="th-input">{{ __('forms.document_type') }}</th>
+                <th scope="col" class="th-input">{{ __('forms.country') }}</th>
                 <th scope="col" class="th-input">{{ __('forms.institutionName') }}</th>
                 <th scope="col" class="th-input">{{ __('forms.speciality') }}</th>
                 <th scope="col" class="th-input">{{ __('forms.certificateNumber') }}</th>
@@ -29,6 +32,7 @@
             <template x-for="(qualification, index) in qualifications" :key="index">
                 <tr>
                     <td class="td-input" x-text="qualTypeDict[qualification.type] || qualification.type"></td>
+                    <td class="td-input" x-text="countryDict[qualification.country] || qualification.country"></td>
                     <td class="td-input" x-text="qualification.institution_name"></td>
                     <td class="td-input" x-text="qualification.speciality"></td>
                     <td class="td-input" x-text="qualification.certificate_number"></td>
@@ -99,14 +103,44 @@
                             {{-- Content --}}
                             <form>
                                 <div class="form-row-modal">
+
                                     <div>
                                         <label for="qualType"
-                                               class="label-modal">{{ __('forms.document_type') }}
+                                               class="label-modal">
+                                            {{ __('forms.qualification_type') }}
                                         </label>
-                                        <input type="text" id="qualType" x-model="modalQualification.type"
-                                               class="input-modal bg-gray-700 text-white border border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                                               required>
-                                        <p class="text-error text-xs" x-show="!modalQualification.type.trim().length > 0">{{__('forms.field_empty')}}</p>
+
+                                        <select id="qualType"
+                                                x-model="modalQualification.type"
+                                                class="input-modal"
+                                                required>
+                                            <option value="">{{ __('forms.qualification_type') }}</option>
+                                            @foreach($this->dictionaries['QUALIFICATION_TYPE'] as $typeValue => $typeDescription)
+                                                <option value="{{ $typeValue }}">{{ $typeDescription }}</option>
+                                            @endforeach
+                                        </select>
+
+                                        <p class="text-red-500 text-xs mt-1"
+                                           x-show="modalQualification.type && !Object.keys(dictionary).includes(modalQualification.type)">
+                                            {{ __('forms.invalid_selection') }}
+                                        </p>
+
+                                        <p class="text-red-500 text-xs mt-1"
+                                           x-show="!modalQualification.type">
+                                            {{ __('forms.field_empty') }}
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <label for="qualCountry" class="label-modal">{{__('forms.country')}}</label>
+                                        <select x-model="modalQualification.country" id="qualCountry" class="input-modal" required>
+                                            @foreach($this->dictionaries['COUNTRY'] as $typeValue => $typeDescription)
+                                                <option value="{{$typeValue}}">{{$typeDescription}}</option>
+                                            @endforeach
+                                        </select>
+                                        <p class="text-error text-xs"
+                                           x-show="!Object.keys(dictionary).includes(modalQualification.country)">{{__('forms.field_empty')}}</p>
+                                        <p class="text-error text-xs" x-show="!modalQualification.country.trim().length > 0">{{__('forms.field_empty')}}</p>
                                     </div>
 
                                     <div>
@@ -155,7 +189,7 @@
                                     </div>
                                 </div>
 
-                                <div class="mt-6 flex justify-end gap-4">
+                                <div class="mt-6 flex justify-between space-x-2">
                                     <button type="button"
                                             @click="openModal = false"
                                             class="button-minor"
@@ -183,6 +217,7 @@
 <script>
     class Qualification {
         type = '';
+        country = '';
         institution_name = '';
         speciality = '';
         certificate_number = '';
