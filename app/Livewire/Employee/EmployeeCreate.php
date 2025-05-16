@@ -177,6 +177,7 @@ class EmployeeCreate extends EmployeeComponent
 
     public function render()
     {
+
         $pageTitle = __('forms.add_employee');
 
         return view('livewire.employee.employee-create', compact('pageTitle'));

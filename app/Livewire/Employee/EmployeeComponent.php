@@ -2,21 +2,20 @@
 
 namespace App\Livewire\Employee;
 
-use App\Classes\Cipher\Traits\Cipher;
 use App\Models\LegalEntity;
 use App\Repositories\EmployeeRepository;
 use App\Traits\FormTrait;
+use App\Traits\HandlesLegalEntity;
 use App\Models\Employee\Employee;
 use Livewire\Component;
 use App\Livewire\Employee\Forms\EmployeeForm as Form;
-use Livewire\WithFileUploads;
+use App\Classes\Cipher\Traits\Cipher;
 
 class EmployeeComponent extends Component
 {
-    use Cipher,
-        WithFileUploads,
-        FormTrait {
-        getDictionary as traitGetDictionary;
+    use Cipher, HandlesLegalEntity, FormTrait {
+        HandlesLegalEntity::resolveLegalEntity as traitResolveLegalEntity;
+        FormTrait::getDictionary as traitGetDictionary;
     }
 
 
@@ -62,7 +61,8 @@ class EmployeeComponent extends Component
     public function mount(): void
     {
         $this->getDictionary();
-        $this->legalEntity = auth()->user()->legalEntity;
+        $this->legalEntity = $this->traitResolveLegalEntity();
+        $this->setCertificateAuthority();
     }
 
     public function boot(EmployeeRepository $employeeRepository): void
@@ -87,5 +87,10 @@ class EmployeeComponent extends Component
             $keys = config("ehealth.employee_type.{$employeeType}.position", []);
             $this->employeeTypePosition[$employeeType] = $this->getDictionariesFields($keys, 'POSITION');
         }
+    }
+
+    public function setCertificateAuthority(): array|null
+    {
+        return $this->getCertificateAuthority = $this->getCertificateAuthority();
     }
 }
