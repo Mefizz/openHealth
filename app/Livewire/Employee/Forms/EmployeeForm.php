@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Employee\Forms;
 
+use App\Core\Arr;
 use App\Rules\BirthDate;
 use App\Rules\Name;
 use Livewire\Form;
@@ -30,7 +31,7 @@ class EmployeeForm extends Form
 
     public array $specialities = [];
 
-    public array $scienceDegree = [];
+    public array $scienceDegrees = [];
 
     public array $qualifications = [];
 
@@ -169,11 +170,23 @@ class EmployeeForm extends Form
                     'message' => __('validation.custom.educationTable'),
                 ];
             }
+
+            if (empty($this->scienceDegrees)) {
+                return [
+                    'error' => true,
+                    'message' => __('validation.custom.science_degreesTable'),
+                ];
+            }
         }
 
         return [
             'error' => false,
             'message' => '',
         ];
+    }
+
+    public function validated(): array
+    {
+        return Arr::snakeKeys($this->validate());
     }
 }

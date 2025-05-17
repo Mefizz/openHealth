@@ -8,7 +8,7 @@ use Illuminate\Contracts\View\View;
 use Livewire\Component;
 use App\Livewire\Encounter\Forms\Encounter as EncounterForm;
 
-class EncounterComponent extends Component
+class Encounter extends Component
 {
     public EncounterForm $form;
 

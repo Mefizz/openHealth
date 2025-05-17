@@ -5,19 +5,15 @@ namespace App\Livewire\Employee;
 use App\Models\LegalEntity;
 use App\Repositories\EmployeeRepository;
 use App\Traits\FormTrait;
-use App\Traits\HandlesLegalEntity;
 use App\Models\Employee\Employee;
 use Livewire\Component;
 use App\Livewire\Employee\Forms\EmployeeForm as Form;
-use App\Classes\Cipher\Traits\Cipher;
 
 class EmployeeComponent extends Component
 {
-    use Cipher, HandlesLegalEntity, FormTrait {
-        HandlesLegalEntity::resolveLegalEntity as traitResolveLegalEntity;
-        FormTrait::getDictionary as traitGetDictionary;
+    use FormTrait {
+        getDictionary as traitGetDictionary;
     }
-
 
     public Form $form;
 
@@ -61,8 +57,7 @@ class EmployeeComponent extends Component
     public function mount(): void
     {
         $this->getDictionary();
-        $this->legalEntity = $this->traitResolveLegalEntity();
-        $this->setCertificateAuthority();
+        $this->legalEntity = auth()->user()->legalEntity;
     }
 
     public function boot(EmployeeRepository $employeeRepository): void
@@ -87,10 +82,5 @@ class EmployeeComponent extends Component
             $keys = config("ehealth.employee_type.{$employeeType}.position", []);
             $this->employeeTypePosition[$employeeType] = $this->getDictionariesFields($keys, 'POSITION');
         }
-    }
-
-    public function setCertificateAuthority(): array|null
-    {
-        return $this->getCertificateAuthority = $this->getCertificateAuthority();
     }
 }

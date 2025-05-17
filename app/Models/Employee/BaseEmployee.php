@@ -42,7 +42,8 @@ class BaseEmployee extends Model
         'party_id',
         'employee_type',
         'user_id',
-        'division_id'
+        'division_id',
+        'inserted_at'
     ];
 
     protected $casts = [

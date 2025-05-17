@@ -127,7 +127,7 @@
                                     <div>
                                         <label for="documentIssuedAt"
                                                class="label-modal">{{__('forms.document_issued_at')}}</label>
-                                        <input x-model="modalDocument.issuedAt" type="text" name="documentIssuedAt"
+                                        <input x-model="modalDocument.issuedAt" name="documentIssuedAt"
                                                id="documentIssuedAt" class="input-modal datepicker-input"
                                                autocomplete="off">
                                     </div>

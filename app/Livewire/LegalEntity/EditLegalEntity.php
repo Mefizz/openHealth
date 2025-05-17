@@ -2,7 +2,7 @@
 
 namespace App\Livewire\LegalEntity;
 
-use App\Models\Relations\Party as RelationsParty;
+use App\Models\Relations\Party;
 use Illuminate\Support\Arr;
 
 class EditLegalEntity extends LegalEntity
@@ -84,16 +84,45 @@ class EditLegalEntity extends LegalEntity
     {
         $owner = $this->legalEntity->getOwner();
 
-        if ($owner->exists()) {
-            $ownerAttributes = $owner->attributesToArray();
-            $partyId = $ownerAttributes['partyId'];
-            $ownerParty = RelationsParty::find($partyId);
-            $ownerPartyArray = $ownerParty->toArray() ?? [];
-            $ownerPartyArray['documents'] = $ownerParty->documents->toArray() ?? null;
-            $ownerPartyArray['documents'] = !empty($ownerPartyArray['documents']) ? $this->convertArrayKeysToCamelCase($ownerPartyArray['documents'][0]) : [];
-            $ownerPartyArray['position'] = $ownerParty->position ?? null;
-            $this->legalEntityForm->owner = array_merge($this->legalEntityForm->owner ?? [], $ownerPartyArray);
+        if (!$owner->exists()) {
+            return;
         }
+
+        $ownerParty = $this->getOwnerParty($owner);
+
+        if (!$ownerParty) {
+            return;
+        }
+
+        $ownerData = $this->prepareOwnerData($ownerParty);
+        $this->legalEntityForm->owner = array_merge($this->legalEntityForm->owner ?? [], $ownerData);
+    }
+
+    private function getOwnerParty($owner): ?Party
+    {
+        $ownerAttributes = $owner->attributesToArray();
+        return Party::find($ownerAttributes['partyId'] ?? null);
+    }
+
+    private function prepareOwnerData(Party $ownerParty): array
+    {
+        $ownerData = $ownerParty->toArray() ?? [];
+
+        $ownerData['documents'] = $this->prepareDocumentsData($ownerParty);
+        $ownerData['position'] = $ownerParty->position ?? null;
+
+        return $ownerData;
+    }
+
+    private function prepareDocumentsData(Party $ownerParty): array
+    {
+        $documents = $ownerParty->documents->toArray() ?? [];
+
+        if (empty($documents)) {
+            return [];
+        }
+
+        return $this->convertArrayKeysToCamelCase($documents[0]);
     }
 
     public function updateLegalEntity(): void

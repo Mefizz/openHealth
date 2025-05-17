@@ -16,6 +16,7 @@ class ScienceDegreeRepository
     public function addScienceDegrees(object $model, array $scienceDegreeData): void
     {
         if (!empty($scienceDegreeData)) {
+            logger()->debug('ScienceDegrees received:', $scienceDegreeData);
 //            foreach ($scienceDegrees as $scienceDegreeData) {
                 $scienceDegree = ScienceDegree::firstOrNew(
                     [
