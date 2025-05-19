@@ -4,7 +4,6 @@ namespace App\Livewire\Employee;
 
 use App\Classes\eHealth\Api\EmployeeApi;
 use App\Livewire\Employee\Forms\Api\EmployeeRequestApi;
-use App\Livewire\Employee\Forms\EmployeeForm as Form;
 use App\Models\Division;
 use App\Models\Employee\Employee;
 use App\Models\Employee\EmployeeRequest;
@@ -19,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use JetBrains\PhpStorm\NoReturn;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use App\Livewire\Employee\Forms\EmployeeForm as Form;
 use App\Livewire\Employee\Forms\EmployeeForm as EmployeeFormState;
 
 class EmployeeForm extends Component
@@ -154,6 +154,7 @@ class EmployeeForm extends Component
                 $this->employeeRequest->fill($employeeData[$this->requestId]);
             }
         }
+        $this->form->fill($this->employeeRequest->toArray());
     }
 
     public function updatedFile(): void

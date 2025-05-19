@@ -9,7 +9,7 @@ use App\Traits\HandlesLegalEntity;
 use App\Models\Employee\Employee as EmployeeModel;
 use Livewire\Component;
 use App\Livewire\Employee\Forms\EmployeeForm;
-use App\Livewire\Employee\EmployeeForm as Form;
+//use App\Livewire\Employee\EmployeeForm as Form;
 use App\Classes\Cipher\Traits\Cipher;
 
 class EmployeeComponent extends Component
@@ -19,7 +19,7 @@ class EmployeeComponent extends Component
         FormTrait::getDictionary as traitGetDictionary;
     }
 
-    public Form $form;
+//    public Form $form;
     public EmployeeForm $employeeRequest; // <-- це Livewire форма
     public ?int $employeeId = null;
     protected ?EmployeeModel $employee = null;
@@ -68,6 +68,7 @@ class EmployeeComponent extends Component
 //        $this->legalEntity = $this->traitResolveLegalEntity();
         $this->setCertificateAuthority();
         $this->employeeRequest = new EmployeeForm($this, 'employeeRequest');
+        $this->form = new Form();
     }
 
     public function boot(EmployeeRepository $employeeRepository): void
@@ -127,10 +128,9 @@ class EmployeeComponent extends Component
                 'qualifications' => $this->employee->qualifications->toArray(),
             ];
 
-            //        $this->form->status = $this->employee->status->value;
-            $this->form->party = $employeeData;
             // Заповнюємо форму
             $this->employeeRequest->fill($employeeData);
+            $this->form->fill($employeeData);
         }
     }
 }

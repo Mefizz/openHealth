@@ -19,12 +19,15 @@ class EmployeeEdit extends EmployeeComponent
     protected function getEmployeeForm(): void
     {
         parent::getEmployee(); // Call the parent method from EmployeeComponent to retrieve basic employee data
+
+        dd($this->form->party);
+
+
     }
 
 
     public function render()
     {
-        //dd($this->employee);
         $pageTitle = __('forms.edit_employee') . ' : ' . __($this->employee->getFullNameAttribute());
 
         return view('livewire.employee.employee-edit', compact('pageTitle'));
