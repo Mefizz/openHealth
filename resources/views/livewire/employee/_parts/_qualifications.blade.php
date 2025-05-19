@@ -23,6 +23,7 @@
                 <th scope="col" class="th-input">{{ __('forms.document_type') }}</th>
                 <th scope="col" class="th-input">{{ __('forms.country') }}</th>
                 <th scope="col" class="th-input">{{ __('forms.institutionName') }}</th>
+                <th scope="col" class="th-input">{{ __('forms.issuedDate') }}</th>
                 <th scope="col" class="th-input">{{ __('forms.speciality') }}</th>
                 <th scope="col" class="th-input">{{ __('forms.certificateNumber') }}</th>
                 <th scope="col" class="th-input">{{ __('forms.actions') }}</th>
@@ -34,6 +35,7 @@
                     <td class="td-input" x-text="qualTypeDict[qualification.type] || qualification.type"></td>
                     <td class="td-input" x-text="countryDict[qualification.country] || qualification.country"></td>
                     <td class="td-input" x-text="qualification.institution_name"></td>
+                    <td class="td-input" x-text="qualification.issued_date"></td>
                     <td class="td-input" x-text="qualification.speciality"></td>
                     <td class="td-input" x-text="qualification.certificate_number"></td>
                     <td class="td-input relative">
@@ -154,6 +156,14 @@
                                     </div>
 
                                     <div>
+                                        <label for="qualIssuedDate" class="label-modal">{{ __('forms.issuedDate') }}</label>
+                                        <input id="qualIssuedDate" x-model="modalQualification.issued_date"
+                                               class="input-modal datepicker-input"
+                                               autocomplete="off" required>
+                                        <p class="text-red-500 text-xs mt-1" x-show="!modalQualification.issued_date">{{ __('forms.field_empty') }}</p>
+                                    </div>
+
+                                    <div>
                                         <label for="specialityType"
                                                class="label-modal">
                                             {{ __('forms.speciality') }}
@@ -219,6 +229,7 @@
         type = '';
         country = '';
         institution_name = '';
+        issued_date = '';
         speciality = '';
         certificate_number = '';
 

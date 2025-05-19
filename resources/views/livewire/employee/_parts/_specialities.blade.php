@@ -24,7 +24,7 @@
                 <th class="th-input">{{ __('forms.speciality_level') }}</th>
                 <th class="th-input">{{ __('forms.speciality_officio') }}</th>
                 <th class="th-input">{{ __('forms.certificate_number') }}</th>
-                <th class="th-input">{{ __('forms.specialityAttestationDate') }}</th>
+                <th class="th-input">{{ __('forms.speciality_attestation_date') }}</th>
                 <th class="th-input">{{ __('forms.actions') }}</th>
             </tr>
             </thead>
