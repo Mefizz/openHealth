@@ -2,21 +2,29 @@
 
 namespace App\Livewire\Employee;
 
-use App\Models\Employee\Employee as Employee;
+use App\Models\Employee\Employee as EmployeeModel;
 
 class EmployeeEdit extends EmployeeComponent
 {
-    protected Employee $employee;
+    protected ?EmployeeModel $employee;
 
-    public function mount(int $id = null): void
+    public function mount(?int $id = null): void
     {
-        $this->employee = Employee::findOrFail($id);
-
-        parent::mount();
+        $this->employeeId = $id; // <-- треба передати в базовий клас
+        parent::mount(); // <-- ініціалізуємо форму
+        $this->employee = EmployeeModel::findOrFail($id);
+        $this->getEmployeeForm();
     }
+
+    protected function getEmployeeForm(): void
+    {
+        parent::getEmployee(); // Call the parent method from EmployeeComponent to retrieve basic employee data
+    }
+
 
     public function render()
     {
+        //dd($this->employee);
         $pageTitle = __('forms.edit_employee') . ' : ' . __($this->employee->getFullNameAttribute());
 
         return view('livewire.employee.employee-edit', compact('pageTitle'));

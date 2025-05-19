@@ -6,9 +6,10 @@ use App\Models\LegalEntity;
 use App\Repositories\EmployeeRepository;
 use App\Traits\FormTrait;
 use App\Traits\HandlesLegalEntity;
-use App\Models\Employee\Employee;
+use App\Models\Employee\Employee as EmployeeModel;
 use Livewire\Component;
-use App\Livewire\Employee\Forms\EmployeeForm as Form;
+use App\Livewire\Employee\Forms\EmployeeForm;
+use App\Livewire\Employee\EmployeeForm as Form;
 use App\Classes\Cipher\Traits\Cipher;
 
 class EmployeeComponent extends Component
@@ -19,6 +20,9 @@ class EmployeeComponent extends Component
     }
 
     public Form $form;
+    public EmployeeForm $employeeRequest; // <-- це Livewire форма
+    public ?int $employeeId = null;
+    protected ?EmployeeModel $employee = null;
 
     /**
      * TODO remove when Repo class is implemented
@@ -61,8 +65,9 @@ class EmployeeComponent extends Component
     {
         $this->getDictionary();
         $this->legalEntity = auth()->user()->legalEntity;
-        $this->legalEntity = $this->traitResolveLegalEntity();
+//        $this->legalEntity = $this->traitResolveLegalEntity();
         $this->setCertificateAuthority();
+        $this->employeeRequest = new EmployeeForm($this, 'employeeRequest');
     }
 
     public function boot(EmployeeRepository $employeeRepository): void
@@ -92,5 +97,40 @@ class EmployeeComponent extends Component
     public function setCertificateAuthority(): array|null
     {
         return $this->getCertificateAuthority = $this->getCertificateAuthority();
+    }
+
+    protected function getEmployee(): void
+    {
+        if ($this->employeeId) {
+//            $employee = EmployeeModel::with('party', 'documents', 'educations')->findOrFail($this->employeeId);
+            $this->employee = EmployeeModel::with('party', 'educations')->findOrFail($this->employeeId);
+
+            // Створюємо $employeeData для `fill`
+            $employeeData = [
+                'party' => [
+                    'lastName' => $this->employee->party->last_name,
+                    'firstName' => $this->employee->party->first_name,
+                    'secondName' => $this->employee->party->second_name,
+                    'email' => $this->employee->party->email,
+                    'gender' => $this->employee->party->gender,
+                    'birthDate' => $this->employee->party->birth_date,
+                    'taxId' => $this->employee->party->tax_id,
+                    'employeeType' => $this->employee->employee_type,
+                    'position' => $this->employee->position,
+                    'phones' => $this->employee->party->phones ?? [],
+                    'startDate' => optional($this->employee)->start_date,
+            ],
+//                'documents' => $employee->documents->toArray(),
+                'educations' => $this->employee->educations->toArray(),
+                'specialities' => $this->employee->specialities->toArray(),
+                'scienceDegrees' => $this->employee->scienceDegrees->toArray(),
+                'qualifications' => $this->employee->qualifications->toArray(),
+            ];
+
+            //        $this->form->status = $this->employee->status->value;
+            $this->form->party = $employeeData;
+            // Заповнюємо форму
+            $this->employeeRequest->fill($employeeData);
+        }
     }
 }

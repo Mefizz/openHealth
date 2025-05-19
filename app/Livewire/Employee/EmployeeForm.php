@@ -100,7 +100,7 @@ class EmployeeForm extends Component
         $this->employeeCacheKey = self::CACHE_PREFIX.'-'.Auth::user()->legalEntity->uuid;
     }
 
-    public function mount(Request $request, $id = '')
+    public function mount(Request $request, $id = ''): void
     {
         $this->getLegalEntity();
         if ($request->has('storeId')) {
