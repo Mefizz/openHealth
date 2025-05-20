@@ -193,7 +193,6 @@ class EmployeeForm extends Component
 
     public function signedComplete($model)
     {
-
         $this->getEmployee();
         $open = $this->employeeRequest->validateBeforeSendApi();
         if ($open['error']) {

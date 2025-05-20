@@ -8,8 +8,8 @@
                   modalSpeciality: new Speciality(),
                   newSpeciality: false,
                   item: 0,
-                  specDict: $wire.dictionaries['SPECIALITY_TYPE'],
-                  levelDict: $wire.dictionaries['SPECIALITY_LEVEL']
+                  specDict: @js($this->dictionaries['SPECIALITY_TYPE']),
+                  levelDict: @js($this->dictionaries['SPECIALITY_LEVEL'])
               }"
     >
         <legend class="legend">
@@ -92,7 +92,7 @@
             >
 
                 {{-- Overlay --}}
-                <div x-show="openModal" x-transition.opacity class="fixed inset-0 bg-black/40 z-40"></div>
+                <div x-show="openModal" x-transition.opacity class="fixed inset-0 bg-black/25"></div>
 
                 {{-- Panel --}}
                 <div x-show="openModal"
@@ -114,7 +114,7 @@
                         <form>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label for="specialityType" class="label-modal">{{ __('Спеціальність') }}
+                                    <label for="specialityType" class="label-modal">{{ __('forms.speciality') }}
                                     </label>
 
                                     <select id="specialityType"
@@ -138,21 +138,21 @@
                                     </p>
                                 </div>
 
-                                <div class="flex flex-col justify-end">
-                                    <label class="inline-flex items-center mt-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Додати
+                                        спеціальність</h2>
+                                    <label class="inline-flex items-center">
                                         <input type="checkbox" x-model="modalSpeciality.speciality_officio"
                                                class="h-4 w-4 text-blue-600 dark:text-blue-500 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 focus:ring-2">
-                                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ __('forms.speciality_officio') }}</span>
+                                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                                        {{ __('forms.speciality_officio') }}
+                                        </span>
                                     </label>
-                                    <p class="text-red-500 dark:text-red-400 text-xs mt-1"
-                                       x-show="modalSpeciality.speciality_officio === null || modalSpeciality.speciality_officio === undefined">
-                                        {{ __('forms.field_empty') }}
-                                    </p>
                                 </div>
 
                                 <div>
                                     <label for="specAttestation"
-                                           class="label-modal">{{ __('Орган що видав') }}</label>
+                                           class="label-modal">{{ __('forms.issued_by') }}</label>
                                     <input type="text" id="specAttestation" x-model="modalSpeciality.attestation_name"
                                            class="input-modal bg-gray-700 text-white border border-gray-600 focus:ring-blue-500 focus:border-blue-500"
                                            required>

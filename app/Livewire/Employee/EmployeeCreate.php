@@ -49,7 +49,6 @@ class EmployeeCreate extends EmployeeComponent
 
         } catch (\Exception $e) {
             DB::rollBack();
-            dd('Помилка!', $e->getMessage(), $e->getTraceAsString());
         }
     }
 

@@ -8,8 +8,8 @@
                   modalQualification: new Qualification(),
                   newQualification: false,
                   item: 0,
-                  qualTypeDict: $wire.dictionaries['QUALIFICATION_TYPE'],
-                  qualSpecDict: $wire.dictionaries['SPEC_QUALIFICATION_TYPE'],
+                  qualTypeDict: @js($this->dictionaries['QUALIFICATION_TYPE']),
+                  qualSpecDict: @js($this->dictionaries['SPEC_QUALIFICATION_TYPE']),
                   countryDict: @js($this->dictionaries['COUNTRY']),
               }"
     >
