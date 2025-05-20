@@ -86,7 +86,7 @@
                     >
                         <div @click.stop
                              x-trap.noscroll.inert="openModal"
-                             class="modal-content h-fit"
+                             class="modal-content h-fit w-full max-w-2xl rounded-2xl shadow-lg bg-white"
                         >
 
                         {{-- Title --}}
