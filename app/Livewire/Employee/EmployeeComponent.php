@@ -91,8 +91,8 @@ class EmployeeComponent extends Component
     protected function getEmployee(): void
     {
         if ($this->employeeId) {
-//            $employee = EmployeeModel::with('party', 'documents', 'educations')->findOrFail($this->employeeId);
             $this->employee = EmployeeModel::with('party', 'educations')->findOrFail($this->employeeId);
+//            dd($this->employee);
 
             // Створюємо $employeeData для `fill`
             $employeeData = [
@@ -109,13 +109,14 @@ class EmployeeComponent extends Component
                     'phones' => $this->employee->party->phones ?? [],
                     'startDate' => optional($this->employee)->start_date,
                 ],
-//                'documents' => $employee->documents->toArray(),
+                'documents' => $this->employee->party->documents->toArray(),
                 'educations' => $this->employee->educations->toArray(),
                 'specialities' => $this->employee->specialities->toArray(),
                 'scienceDegrees' => $this->employee->scienceDegrees->toArray(),
                 'qualifications' => $this->employee->qualifications->toArray(),
             ];
 
+//            dd($employeeData);
             // Заповнюємо форму
             $this->form->fill($employeeData);
         }
