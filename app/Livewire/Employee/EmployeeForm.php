@@ -100,7 +100,7 @@ class EmployeeForm extends Component
         $this->employeeCacheKey = self::CACHE_PREFIX.'-'.Auth::user()->legalEntity->uuid;
     }
 
-    public function mount(Request $request, $id = ''): void
+    public function mount(Request $request, $id = '')
     {
         $this->getLegalEntity();
         if ($request->has('storeId')) {
@@ -154,7 +154,6 @@ class EmployeeForm extends Component
                 $this->employeeRequest->fill($employeeData[$this->requestId]);
             }
         }
-        $this->form->fill($this->employeeRequest->toArray());
     }
 
     public function updatedFile(): void
@@ -196,7 +195,6 @@ class EmployeeForm extends Component
 
     public function signedComplete($model)
     {
-
         $this->getEmployee();
         $open = $this->employeeRequest->validateBeforeSendApi();
         if ($open['error']) {

@@ -8,7 +8,7 @@ class EmployeeEdit extends EmployeeComponent
 {
     protected ?EmployeeModel $employee;
 
-    public function mount(?int $id = null): void
+    public function mount(int $id = null): void
     {
         $this->employeeId = $id; // <-- треба передати в базовий клас
         parent::mount(); // <-- ініціалізуємо форму
@@ -21,7 +21,6 @@ class EmployeeEdit extends EmployeeComponent
         parent::getEmployee(); // Call the parent method from EmployeeComponent to retrieve basic employee data
 
     }
-
 
     public function render()
     {

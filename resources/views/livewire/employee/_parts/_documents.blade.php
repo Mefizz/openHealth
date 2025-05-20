@@ -8,7 +8,7 @@
                   modalDocument: new Doc(),
                   newDocument: false,
                   item: 0,
-                  dictionary: $wire.dictionaries['DOCUMENT_TYPE']
+                  dictionary: @js($this->dictionaries['DOCUMENT_TYPE'])
               }"
     >
         <legend class="legend">
@@ -88,7 +88,8 @@
                              x-trap.noscroll.inert="openModal"
                              class="modal-content h-fit"
                         >
-                            {{-- Title --}}
+
+                        {{-- Title --}}
                             <h3 class="modal-header" :id="$id('modal-title')">
                                 <span x-text="newDocument ? '{{ __('forms.add_document') }}' : '{{ __('forms.edit') . ' ' . __('forms.document') }}'"></span>
                             </h3>

@@ -5,22 +5,17 @@ namespace App\Livewire\Employee;
 use App\Models\LegalEntity;
 use App\Repositories\EmployeeRepository;
 use App\Traits\FormTrait;
-use App\Traits\HandlesLegalEntity;
 use App\Models\Employee\Employee as EmployeeModel;
 use Livewire\Component;
-use App\Livewire\Employee\Forms\EmployeeForm;
-//use App\Livewire\Employee\EmployeeForm as Form;
-use App\Classes\Cipher\Traits\Cipher;
+use App\Livewire\Employee\Forms\EmployeeForm as Form;
 
 class EmployeeComponent extends Component
 {
-    use Cipher, HandlesLegalEntity, FormTrait {
-        HandlesLegalEntity::resolveLegalEntity as traitResolveLegalEntity;
-        FormTrait::getDictionary as traitGetDictionary;
+    use FormTrait {
+        getDictionary as traitGetDictionary;
     }
 
-//    public Form $form;
-    public EmployeeForm $employeeRequest; // <-- це Livewire форма
+    public Form $form; // <-- це Livewire форма
     public ?int $employeeId = null;
     protected ?EmployeeModel $employee = null;
 
@@ -65,9 +60,8 @@ class EmployeeComponent extends Component
     {
         $this->getDictionary();
         $this->legalEntity = auth()->user()->legalEntity;
-//        $this->legalEntity = $this->traitResolveLegalEntity();
-        $this->setCertificateAuthority();
-        $this->employeeRequest = new EmployeeForm($this, 'employeeRequest');
+        //$this->employeeRequest = new EmployeeForm($this, 'employeeRequest');
+        $this->form = new Form($this, 'form');
     }
 
     public function boot(EmployeeRepository $employeeRepository): void
@@ -94,11 +88,6 @@ class EmployeeComponent extends Component
         }
     }
 
-    public function setCertificateAuthority(): array|null
-    {
-        return $this->getCertificateAuthority = $this->getCertificateAuthority();
-    }
-
     protected function getEmployee(): void
     {
         if ($this->employeeId) {
@@ -119,7 +108,7 @@ class EmployeeComponent extends Component
                     'position' => $this->employee->position,
                     'phones' => $this->employee->party->phones ?? [],
                     'startDate' => optional($this->employee)->start_date,
-            ],
+                ],
 //                'documents' => $employee->documents->toArray(),
                 'educations' => $this->employee->educations->toArray(),
                 'specialities' => $this->employee->specialities->toArray(),
@@ -128,7 +117,7 @@ class EmployeeComponent extends Component
             ];
 
             // Заповнюємо форму
-            $this->employeeRequest->fill($employeeData);
+            $this->form->fill($employeeData);
         }
     }
 }

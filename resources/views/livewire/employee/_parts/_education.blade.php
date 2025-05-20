@@ -29,6 +29,7 @@
             </tr>
             </thead>
             <tbody>
+
             <template x-for="(education, index) in educations">
                 <tr>
                     <td class="td-input" x-text="countryDict[education.country] || educations.country"></td>

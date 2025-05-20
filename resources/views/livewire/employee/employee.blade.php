@@ -26,8 +26,6 @@
                 </div>
             </template>
 
-            @include('livewire.components._public_offer')
-
             <div class="form-button-group">
                 <button type="button" class="button-minor">
                     {{__('forms.cancel')}}

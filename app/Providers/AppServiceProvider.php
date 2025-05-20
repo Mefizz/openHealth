@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Livewire\LegalEntity\LegalEntity;
 use Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\LegalEntity;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -28,7 +28,6 @@ class AppServiceProvider extends ServiceProvider
             return Auth::user()?->legalEntity;
         });
 
-        // додатково alias для зручного доступу (опційно)
         $this->app->alias(LegalEntity::class, 'legalEntity');
     }
 
