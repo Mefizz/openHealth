@@ -68,7 +68,6 @@ class EmployeeComponent extends Component
 //        $this->legalEntity = $this->traitResolveLegalEntity();
         $this->setCertificateAuthority();
         $this->employeeRequest = new EmployeeForm($this, 'employeeRequest');
-        $this->form = new Form();
     }
 
     public function boot(EmployeeRepository $employeeRepository): void
@@ -130,7 +129,6 @@ class EmployeeComponent extends Component
 
             // Заповнюємо форму
             $this->employeeRequest->fill($employeeData);
-            $this->form->fill($employeeData);
         }
     }
 }

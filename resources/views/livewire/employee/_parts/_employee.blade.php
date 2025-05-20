@@ -6,7 +6,7 @@
     <div class="form-row-3">
         <div class="form-group group relative">
             <input
-                wire:model="form.party.lastName"
+                wire:model="employeeRequest.party.lastName"
                 type="text"
                 name="lastName"
                 id="lastName"
@@ -27,7 +27,7 @@
         </div>
 
         <div class="form-group group">
-            <input wire:model="form.party.firstName"
+            <input wire:model="employeeRequest.party.firstName"
                    type="text"
                    name="firstName"
                    id="firstName"
@@ -48,7 +48,7 @@
 
         <div class="form-group group">
             <input
-                wire:model="form.party.secondName"
+                wire:model="employeeRequest.party.secondName"
                 type="text"
                 name="secondName"
                 id="secondName"
@@ -70,7 +70,7 @@
     <div class="form-row-4">
         <div class="form-group group">
             <label for="employeeGender" class="sr-only">{{__('forms.select')}} {{__('forms.gender')}}</label>
-            <select wire:model="form.party.gender"
+            <select wire:model="employeeRequest.party.gender"
                     id="employeeGender"
                     class="input-select peer @error('form.party.gender') input-error @enderror"
                     required
@@ -93,7 +93,7 @@
                 <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
             </svg>
 
-            <input wire:model="form.party.birthDate"
+            <input wire:model="employeeRequest.party.birthDate"
                    datepicker-max-date="{{ now()->format('Y-m-d') }}"
                    type="text"
                    name="birthDate"
@@ -121,7 +121,7 @@
                 <path d="M20.677 4.117A1.996 1.996 0 0 0 20 4H4c-.225 0-.44.037-.642.105l.758.607L12 10.742 19.9 4.7l.777-.583Z"/>
             </svg>
 
-            <input wire:model="form.party.email"
+            <input wire:model="employeeRequest.party.email"
                    type="text"
                    name="email"
                    id="email"
@@ -141,7 +141,7 @@
         </div>
 
         <div class="form-group group">
-            <input wire:model="form.party.taxId"
+            <input wire:model="employeeRequest.party.taxId"
                    type="text"
                    id="taxId"
                    name="taxId"
@@ -210,7 +210,7 @@
                 <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
             </svg>
 
-            <input wire:model="form.party.startDate"
+            <input wire:model="employeeRequest.party.startDate"
                    datepicker-max-date="{{ now()->format('Y-m-d') }}"
                    type="text"
                    name="startDate"
@@ -232,7 +232,7 @@
         </div>
 
         <div class="form-group group">
-            <input wire:model="form.party.workingExperience"
+            <input wire:model="employeeRequest.party.workingExperience"
                    type="number"
                    id="workingExperience"
                    name="workingExperience"
@@ -260,7 +260,7 @@
                 {{__('forms.aboutMyself')}}
             </label>
 
-            <textarea wire:model="form.party.aboutMyself"
+            <textarea wire:model="employeeRequest.party.aboutMyself"
                       id="aboutMyself"
                       class="textarea"
                       rows="4"

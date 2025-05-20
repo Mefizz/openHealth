@@ -20,9 +20,6 @@ class EmployeeEdit extends EmployeeComponent
     {
         parent::getEmployee(); // Call the parent method from EmployeeComponent to retrieve basic employee data
 
-        dd($this->form->party);
-
-
     }
 
 

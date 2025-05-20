@@ -32,7 +32,7 @@ class EmployeeForm extends Component
 
     public Form $employeeRequest;
 
-    public EmployeeFormState $form;
+    public Form $form;
 
     protected string $employeeCacheKey;
 
