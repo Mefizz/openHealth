@@ -139,8 +139,6 @@
                                 </div>
 
                                 <div class="flex items-center justify-between mb-4">
-                                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Додати
-                                        спеціальність</h2>
                                     <label class="inline-flex items-center">
                                         <input type="checkbox" x-model="modalSpeciality.speciality_officio"
                                                class="h-4 w-4 text-blue-600 dark:text-blue-500 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 focus:ring-2">

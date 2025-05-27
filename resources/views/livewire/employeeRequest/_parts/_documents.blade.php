@@ -35,8 +35,8 @@
                     <td class="td-input relative">
                         <!-- Кнопки редагування та видалення -->
                         <x-dropdown-button
-                            :editAction="'openModal = true; item = index; modalDocument = new Doc(document); newDocument = false; close($refs.button)'"
-                            :deleteAction="'documents.splice(index, 1); close($refs.button)'"                        />
+                                :editAction="'openModal = true; item = index; modalDocument = new Doc(document); newDocument = false; close($refs.button)'"
+                                :deleteAction="'documents.splice(index, 1); close($refs.button)'"/>
                     </td>
                 </tr>
             </template>
@@ -89,9 +89,9 @@
                              class="modal-content h-fit w-full max-w-2xl rounded-2xl shadow-lg bg-white"
                         >
 
-                        {{-- Title --}}
+                            {{-- Title --}}
                             <h3 class="modal-header" :id="$id('modal-title')">
-                                <span x-text="newDocument ? '{{ __('forms.add_document') }}' : '{{ __('forms.edit') . ' ' . __('forms.document') }}'"></span>
+                                <span x-text="newDocument ? '{{ __('forms.add_document') }}' : '{{ __('forms.edit') . ' _documents.blade.php' . __('forms.document') }}'"></span>
                             </h3>
 
                             {{-- Content --}}

@@ -11,9 +11,9 @@ use App\Livewire\Declaration\DeclarationIndex;
 use App\Livewire\Division\DivisionForm;
 use App\Livewire\Division\DivisionIndex;
 use App\Livewire\Division\HealthcareServiceForm;
-use App\Livewire\Employee\EmployeeCreate;
 use App\Livewire\Employee\EmployeeEdit;
 use App\Livewire\Employee\EmployeeIndex;
+use App\Livewire\EmployeeRequest\EmployeeRequestCreate;
 use App\Livewire\Encounter\EncounterCreate;
 use App\Livewire\LegalEntity\CreateLegalEntity;
 use App\Livewire\LegalEntity\EditLegalEntity;
@@ -69,7 +69,7 @@ Route::middleware(['auth:web,ehealth'])->group(function () {
             Route::get('/{id}', EmployeeEdit::class)
                 ->name('employee.edit')
                 ->where('id', '[0-9]+');
-            Route::get('/new', EmployeeCreate::class)->name('employee.create');
+            Route::get('/new', EmployeeRequestCreate::class)->name('employee.create');
         });
 
         Route::prefix('contract')->group(function () {

@@ -4,11 +4,11 @@ namespace App\Repositories;
 
 use App\Classes\eHealth\Api\EmployeeApi;
 use App\Models\Division;
+use App\Models\Employee\EmployeeRequest;
 use Log;
 use Exception;
 use App\Models\Employee\BaseEmployee;
 use App\Models\Employee\Employee;
-use App\Models\Employee\EmployeeRequest;
 use App\Models\LegalEntity;
 use App\Models\Relations\Party;
 use App\Models\User;
@@ -34,7 +34,6 @@ class EmployeeRepository
      */
 
     protected ?UserRepository $userRepository;
-    protected ?EmployeeRepository $employeeRepository;
     protected ?PartyRepository $partyRepository;
     protected ?PhoneRepository $phoneRepository;
     protected ?DocumentRepository $documentRepository;
@@ -69,7 +68,7 @@ class EmployeeRepository
      * @param $data
      * @return Employee
      */
-    public function createOrUpdate($data, Employee|EmployeeRequest $employeeModel, LegalEntity $legalEntity): BaseEmployee
+    public function createOrUpdate($data, Employee $employeeModel, LegalEntity $legalEntity): BaseEmployee
     {
         $employee =  $employeeModel::updateOrCreate(
             [
@@ -84,7 +83,7 @@ class EmployeeRepository
 
     }
 
-    public function saveEmployeeData($request, LegalEntity $legalEntity,  Employee|EmployeeRequest $employeeModel): Employee|EmployeeRequest|null
+    public function saveEmployeeData($request, LegalEntity $legalEntity,  Employee $employeeModel): Employee|EmployeeRequest|null
     {
        try {
             // Create or update User

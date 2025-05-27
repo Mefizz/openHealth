@@ -300,5 +300,5 @@
 
         </x-alert-modal>
     @endif
-    {{--    @include('livewire.employee.Parts.EmployeeForm')--}}
+    {{--    @include('livewire.employee.Parts.EmployeeRequestForm')--}}
 </div>

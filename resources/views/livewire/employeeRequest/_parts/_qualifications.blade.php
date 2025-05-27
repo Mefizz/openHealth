@@ -142,7 +142,6 @@
                                         </select>
                                         <p class="text-error text-xs"
                                            x-show="!Object.keys(dictionary).includes(modalQualification.country)">{{__('forms.field_empty')}}</p>
-                                        <p class="text-error text-xs" x-show="!modalQualification.country.trim().length > 0">{{__('forms.field_empty')}}</p>
                                     </div>
 
                                     <div>

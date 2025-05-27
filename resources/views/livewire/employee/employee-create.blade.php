@@ -1,3 +1,5 @@
 <div>
-    @include('livewire.employee.employee')
+    @include('livewire.employee.employee', [
+      'certificateAuthorities' => $certificateAuthorities,
+  ])
 </div>
