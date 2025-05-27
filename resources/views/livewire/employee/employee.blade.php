@@ -27,9 +27,9 @@
             </template>
 
             <div class="form-button-group">
-                <a href="{{ route('employee.index') }}" class="button-minor">
-                    {{ __('forms.cancel') }}
-                </a>
+                <button type="button" class="button-minor">
+                    {{__('forms.cancel')}}
+                </button>
                 <button type="submit" class="button-primary">
                     {{__('forms.save')}}
                 </button>

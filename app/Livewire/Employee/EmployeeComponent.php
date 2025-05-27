@@ -5,7 +5,7 @@ namespace App\Livewire\Employee;
 use App\Models\LegalEntity;
 use App\Repositories\EmployeeRepository;
 use App\Traits\FormTrait;
-use App\Models\Employee\Employee as EmployeeModel;
+use App\Models\Employee\Employee;
 use Livewire\Component;
 use App\Livewire\Employee\Forms\EmployeeForm as Form;
 
@@ -15,9 +15,7 @@ class EmployeeComponent extends Component
         getDictionary as traitGetDictionary;
     }
 
-    public Form $form; // <-- це Livewire форма
-    public ?int $employeeId = null;
-    protected ?EmployeeModel $employee = null;
+    public Form $form;
 
     /**
      * TODO remove when Repo class is implemented
@@ -60,8 +58,6 @@ class EmployeeComponent extends Component
     {
         $this->getDictionary();
         $this->legalEntity = auth()->user()->legalEntity;
-        //$this->employeeRequest = new EmployeeForm($this, 'employeeRequest');
-        $this->form = new Form($this, 'form');
     }
 
     public function boot(EmployeeRepository $employeeRepository): void
@@ -85,40 +81,6 @@ class EmployeeComponent extends Component
         foreach ($this->dictionaries['EMPLOYEE_TYPE'] as $employeeType => $description) {
             $keys = config("ehealth.employee_type.{$employeeType}.position", []);
             $this->employeeTypePosition[$employeeType] = $this->getDictionariesFields($keys, 'POSITION');
-        }
-    }
-
-    protected function getEmployee(): void
-    {
-        if ($this->employeeId) {
-            $this->employee = EmployeeModel::with('party', 'educations')->findOrFail($this->employeeId);
-//            dd($this->employee);
-
-            // Створюємо $employeeData для `fill`
-            $employeeData = [
-                'party' => [
-                    'lastName' => $this->employee->party->last_name,
-                    'firstName' => $this->employee->party->first_name,
-                    'secondName' => $this->employee->party->second_name,
-                    'email' => $this->employee->party->email,
-                    'gender' => $this->employee->party->gender,
-                    'birthDate' => $this->employee->party->birth_date,
-                    'taxId' => $this->employee->party->tax_id,
-                    'employeeType' => $this->employee->employee_type,
-                    'position' => $this->employee->position,
-                    'phones' => $this->employee->party->phones ?? [],
-                    'startDate' => optional($this->employee)->start_date,
-                ],
-                'documents' => $this->employee->party->documents->toArray(),
-                'educations' => $this->employee->educations->toArray(),
-                'specialities' => $this->employee->specialities->toArray(),
-                'scienceDegrees' => $this->employee->scienceDegrees->toArray(),
-                'qualifications' => $this->employee->qualifications->toArray(),
-            ];
-
-//            dd($employeeData);
-            // Заповнюємо форму
-            $this->form->fill($employeeData);
         }
     }
 }
