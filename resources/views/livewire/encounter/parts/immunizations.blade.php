@@ -8,12 +8,8 @@
                   newImmunization: false,
                   item: 0,
                   vaccineCodesDictionary: $wire.dictionaries['eHealth/vaccine_codes'],
-                  immunizationReportOriginsDictionary: $wire.dictionaries['eHealth/immunization_report_origins'],
                   reasonExplanationsDictionary: $wire.dictionaries['eHealth/reason_explanations'],
-                  reasonNotGivenExplanationsDictionary: $wire.dictionaries['eHealth/reason_not_given_explanations'],
-                  immunizationDosageUnitsDictionary: $wire.dictionaries['eHealth/immunization_dosage_units'],
-                  vaccinationRoutesDictionary: $wire.dictionaries['eHealth/vaccination_routes'],
-                  immunizationBodySites: $wire.dictionaries['eHealth/immunization_body_sites']
+                  reasonNotGivenExplanationsDictionary: $wire.dictionaries['eHealth/reason_not_given_explanations']
               }"
     >
         <legend class="legend">

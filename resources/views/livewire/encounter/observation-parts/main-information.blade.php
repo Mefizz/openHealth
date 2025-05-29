@@ -63,7 +63,7 @@
                     </select>
 
                     <p class="text-error text-xs"
-                       x-show="!Object.keys(reportOriginsDictionary).includes(modalObservation.reportOrigin.coding[0].code)"
+                       x-show="!Object.keys($wire.dictionaries['eHealth/report_origins']).includes(modalObservation.reportOrigin.coding[0].code)"
                     >
                         {{ __('forms.field_empty') }}
                     </p>
@@ -438,7 +438,7 @@
         </template>
 
         {{-- Функції організму (b) --}}
-        <template x-if="modalObservation.code.coding[0].code.startsWith('b')">
+        <template x-if="modalObservation.code.coding[0].code.startsWith('b') && modalObservation.codingSystem === 'icf' && modalObservation.codingSystem === 'icf'">
             <div>
                 <h3 class="default-p font-bold my-10">{{ __('patients.components') }}</h3>
 
@@ -500,7 +500,7 @@
         </template>
 
         {{-- Структури організму (s) --}}
-        <template x-if="modalObservation.code.coding[0].code.startsWith('s')">
+        <template x-if="modalObservation.code.coding[0].code.startsWith('s') && modalObservation.codingSystem === 'icf' && modalObservation.codingSystem === 'icf'">
             <div>
                 <h3 class="default-p font-bold my-10">{{ __('patients.components') }}</h3>
 
@@ -698,7 +698,7 @@
         </template>
 
         {{-- Активність та Участь (d) --}}
-        <template x-if="modalObservation.code.coding[0].code.startsWith('d')">
+        <template x-if="modalObservation.code.coding[0].code.startsWith('d') && modalObservation.codingSystem === 'icf' && modalObservation.codingSystem === 'icf'">
             <div>
                 <h3 class="default-p font-bold my-10">{{ __('patients.components') }}</h3>
 
@@ -725,7 +725,7 @@
                         </select>
 
                         <p class="text-error text-xs"
-                           x-show="!Object.keys(performanceDictionary).includes(modalObservation.components[0].valueCodeableConcept.coding[0].code)"
+                           x-show="!Object.keys($wire.dictionaries['eHealth/ICF/qualifiers/performance']).includes(modalObservation.components[0].valueCodeableConcept.coding[0].code)"
                         >
                             {{ __('forms.field_empty') }}
                         </p>
@@ -794,7 +794,7 @@
                         </select>
 
                         <p class="text-error text-xs"
-                           x-show="!Object.keys(capacityDictionary).includes(modalObservation.components[1].valueCodeableConcept.coding[0].code)"
+                           x-show="!Object.keys($wire.dictionaries['eHealth/ICF/qualifiers/capacity']).includes(modalObservation.components[1].valueCodeableConcept.coding[0].code)"
                         >
                             {{ __('forms.field_empty') }}
                         </p>
@@ -828,7 +828,7 @@
         </template>
 
         {{-- Фактори середовища (e) --}}
-        <template x-if="modalObservation.code.coding[0].code.startsWith('e')">
+        <template x-if="modalObservation.code.coding[0].code.startsWith('e') && modalObservation.codingSystem === 'icf'">
             <div>
                 <h3 class="default-p font-bold my-10">{{ __('patients.components') }}</h3>
 

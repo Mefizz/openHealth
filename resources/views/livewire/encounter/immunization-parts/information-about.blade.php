@@ -185,7 +185,7 @@
 
             <p class="text-error text-xs"
                x-show="(
-                   !Object.keys(vaccinationRoutesDictionary).includes(modalImmunization.route.coding[0].code) &&
+                   !Object.keys($wire.dictionaries['eHealth/vaccination_routes']).includes(modalImmunization.route.coding[0].code) &&
                    (modalImmunization.primarySource === true && modalImmunization.notGiven === false)
                )"
             >
@@ -217,7 +217,7 @@
 
             <p class="text-error text-xs"
                x-show="(
-                   !Object.keys(immunizationBodySites).includes(modalImmunization.site.coding[0].code) &&
+                   !Object.keys($wire.dictionaries['eHealth/immunization_body_sites']).includes(modalImmunization.site.coding[0].code) &&
                    (modalImmunization.primarySource === true && modalImmunization.notGiven === false)
                )"
             >

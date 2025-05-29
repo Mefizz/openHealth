@@ -259,30 +259,9 @@ class Encounter extends Form
             'observations.*.interpretation.coding.*.code' => [
                 'nullable', 'string', new InDictionary('eHealth/observation_interpretations')
             ],
-            'observations.*.issued' => ['required', 'date'],
+            'observations.*.issued' => ['required', 'date', 'before_or_equal:now'],
+            'observations.*.effectiveDateTime' => ['nullable', 'date', 'before_or_equal:now'],
         ];
-    }
-
-    /**
-     * Validate provided models by corresponding rules.
-     *
-     * @param  array  $models
-     * @return array
-     * @throws ValidationException
-     */
-    public function rulesForModelValidate(array $models): array
-    {
-        $rules = [];
-
-        foreach ($models as $model) {
-            $rules += $this->rulesForModel($model)->toArray();
-        }
-
-        $this->addAllowedEpisodeCareManagerEmployeeTypes($rules);
-        $this->addAllowedEncounterClasses($rules);
-        $this->addAllowedEncounterTypes($rules);
-
-        return $this->validate($rules);
     }
 
     /**
@@ -295,7 +274,11 @@ class Encounter extends Form
      */
     public function validateForm(string $formName, array $formData): void
     {
-        $validator = Validator::make($formData, $this->getRulesForModel($formName));
+        $rules = $this->getRulesForModel($formName);
+
+        $this->customizeRulesForModel($formName, $rules);
+
+        $validator = Validator::make($formData, $rules);
 
         if ($validator->fails()) {
             throw new ValidationException($validator);
@@ -311,6 +294,25 @@ class Encounter extends Form
     public function getRulesForModel(string $model): array
     {
         return $this->rulesForModel($model)->toArray();
+    }
+
+    /**
+     * Add custom rules.
+     *
+     * @param  string  $formName
+     * @param  array  $rules
+     * @return void
+     */
+    protected function customizeRulesForModel(string $formName, array &$rules): void
+    {
+        if ($formName === 'encounter') {
+            $this->addAllowedEncounterClasses($rules);
+            $this->addAllowedEncounterTypes($rules);
+        }
+
+        if ($formName === 'episode') {
+            $this->addAllowedEpisodeCareManagerEmployeeTypes($rules);
+        }
     }
 
     /**

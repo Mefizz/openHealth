@@ -6,7 +6,6 @@
     <div class="form-row-3">
         <div class="flex items-center">
             <input x-model="modalObservation.codingSystem"
-                   @change="modalObservation.codingSystem = 'loinc'"
                    id="loincDictionary"
                    type="radio"
                    value="loinc"
@@ -21,7 +20,6 @@
 
         <div class="flex items-center">
             <input x-model="modalObservation.codingSystem"
-                   @change="modalObservation.codingSystem = 'icf'"
                    id="icfDictionary"
                    type="radio"
                    value="icf"

@@ -246,6 +246,12 @@ class EncounterRepository extends BaseRepository
                 ];
                 $condition['context']['identifier']['value'] = $this->encounterUuid;
 
+                // Remove coding with empty code
+                $condition['code']['coding'] = array_values(array_filter(
+                    $condition['code']['coding'],
+                    static fn (array $coding) => !empty($coding['code']) && trim($coding['code']) !== ''
+                ));
+
                 // unset if code not provided
                 if ($condition['severity']['coding'][0]['code'] === '') {
                     unset($condition['severity']);
@@ -268,7 +274,7 @@ class EncounterRepository extends BaseRepository
                     unset($condition['onsetTime'], $condition['assertedTime'], $condition['diagnoses']);
                 }
 
-                if (empty($condition['evidences']['codes'])) {
+                if (empty($condition['evidences'][0]['codes'])) {
                     unset($condition['evidences']);
                 }
 
@@ -463,7 +469,7 @@ class EncounterRepository extends BaseRepository
                 unset($observation['components']);
             }
 
-            if ($observation['components'][0]['interpretation']['coding'][0]['code'] === '') {
+            if (isset($observation['components'][0]['interpretation']['coding'][0]['code']) && $observation['components'][0]['interpretation']['coding'][0]['code'] === '') {
                 unset($observation['components']);
             }
 
