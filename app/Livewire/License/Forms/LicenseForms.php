@@ -6,8 +6,6 @@ use App\Models\LegalEntity;
 use Livewire\Component;
 use App\Models\License;
 use App\Traits\FormTrait;
-use App\Livewire\License\Forms\LicenseRequestApi;
-use App\Helpers\JsonHelper;
 
 class LicenseForms extends Component
 {
@@ -66,7 +64,8 @@ class LicenseForms extends Component
 
         $this->user_id = auth()->user()->id;
         $this->legalEntity = auth()->user()->legalEntity;
-        $this->dictionaries = $this->loadLicenseType();
+        // TODO get license types depending on a legal entity type
+        $this->dictionaries = dictionary()->getDictionaries(['LICENSE_TYPE']);
 
         //! for debug
         if (config('app.debug')) {
@@ -80,19 +79,6 @@ class LicenseForms extends Component
             $this->expiry_date = '2026-02-28';
             $this->what_licensed = 'реалізація наркотичних засобів';
         }
-    }
-
-    public function loadLicenseType(): array
-    {
-        $dataHelper = JsonHelper::searchValue('DICTIONARIES_PATH', [
-            'LICENSE_TYPE',
-        ]);
-        $licenseTypes = $dataHelper['LICENSE_TYPE'];
-        return [
-            'licenseTypes' => [
-                $licenseTypes
-            ],
-        ];
     }
 
     protected function getValidationRules(): array

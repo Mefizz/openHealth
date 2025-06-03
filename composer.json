@@ -28,7 +28,6 @@
     },
     "autoload": {
         "files": [
-            "app/Helpers/JsonHelper.php",
             "app/Helpers/helpers.php"
         ],
         "psr-4": {

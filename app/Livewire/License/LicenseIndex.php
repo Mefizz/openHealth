@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Livewire\License;
 
 use App\Traits\FormTrait;
-use App\Helpers\JsonHelper;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -118,11 +117,7 @@ class LicenseIndex extends Component
 
     public function getLicenseTypes(): void
     {
-        $dataHelper = JsonHelper::searchValue('DICTIONARIES_PATH', [
-            'LICENSE_TYPE',
-        ]);
-
-        $this->licenseTypes = $dataHelper['LICENSE_TYPE'];
+        $this->licenseTypes = dictionary()->getDictionaries(['LICENSE_TYPE']);
     }
 
     public function tableHeaders(): void

@@ -8,7 +8,6 @@
         </x-slot> --}}
     </x-section-navigation>
 
-
     <div class='flex bg-white px-4 py-6 flex-col'>
         <form wire:submit.prevent='save' class='w-full mb-8 p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700'>
             <div class='w-full mr-auto bg-white grid grid-cols-1 gap-9 md:grid-cols-2'>
@@ -21,14 +20,8 @@
                         <option value='' @if ($mode === null) disabled selected @endif>
                             {{ __('Оберіть тип ліцензії') }}
                         </option>
-
-                        @foreach ($dictionaries['licenseTypes'] as $licenseTypes)
-                            @foreach ($licenseTypes as $licenseType => $licenseTypeValue)
-                                <option value="{{ $licenseType }}"
-                                    @if ($licenseType === $type) selected @endif>
-                                    {{ $licenseTypeValue }}
-                                </option>
-                            @endforeach
+                        @foreach ($dictionaries['LICENSE_TYPE'] as $key => $value)
+                            <option value="{{ $key }}">{{ $value }}</option>
                         @endforeach
                     </select>
                     @error('type')

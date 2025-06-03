@@ -4,7 +4,6 @@ namespace App\Livewire\License;
 
 use Livewire\Component;
 use App\Models\License;
-use App\Helpers\JsonHelper;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
@@ -27,12 +26,7 @@ class LicenseShow extends Component
                             ->firstOrFail();
         });
 
-        $dataHelper = JsonHelper::searchValue('DICTIONARIES_PATH', [
-            'LICENSE_TYPE',
-        ]);
-
-        $dataHelper = JsonHelper::searchValue('DICTIONARIES_PATH', ['LICENSE_TYPE']);
-        $licenseTypes = $dataHelper['LICENSE_TYPE'] ?? [];
+        $licenseTypes = dictionary()->getDictionaries([]) ?? [];
 
         $this->license['type_value'] = $licenseTypes[$this->license['type']]
                                     ?? 'LEGAL_ENTITY_' . $this->license['type'] . '_ADDITIONAL_LICENSE_TYPE';
