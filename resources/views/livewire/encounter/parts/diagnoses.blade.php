@@ -207,7 +207,7 @@
                                         {{ __('patients.icd-10') }}
                                     </label>
                                     <input type="text"
-                                           @input.debounce.500ms="
+                                           @input.debounce.300ms="
                                                let value = $event.target.value;
                                                let isEnglish = /^[a-zA-Z]+$/.test(value);
 
@@ -231,7 +231,12 @@
                                         <ul>
                                             <template x-for="(result, index) in results" :key="index">
                                                 <li class="group flex w-full cursor-pointer items-center rounded-md px-2 py-1.5 transition-colors dark:bg-gray-800 dark:text-white"
-                                                    @click="selected = result; modalCondition.query = result.code + ' - ' + result.description; modalCondition.conditions.code.coding[1].code = result.code; showResults = false"
+                                                    @click="
+                                                        selected = result;
+                                                        modalCondition.query = result.code + ' - ' + result.description;
+                                                        modalCondition.conditions.code.coding[1].code = result.code;
+                                                        showResults = false;
+                                                    "
                                                 >
                                                     <span x-text="result.code + ' - ' + result.description"></span>
                                                 </li>
@@ -239,10 +244,11 @@
                                         </ul>
                                     </div>
 
-                                    <p x-show="showResults && results.length == 0"
-                                       class="px-2 py-1.5 text-gray-600">
+                                    <p x-show="showResults && results.length == 0" class="px-2 py-1.5 text-gray-600">
                                         {{ __('forms.nothing_found') }}
                                     </p>
+
+                                    <x-forms.loading/>
                                 </div>
 
                                 <div>
@@ -548,8 +554,6 @@
                                 </button>
 
                                 <button @click.prevent="
-                                            delete modalCondition.query;
-
                                             modalCondition.conditions.code.coding = modalCondition.conditions.code.coding.filter(c => c.code.trim() !== '');
 
                                             // Allow only 1 primary diagnose

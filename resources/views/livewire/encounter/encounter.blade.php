@@ -21,6 +21,7 @@
         @include('livewire.encounter.parts.actions')
         @include('livewire.encounter.parts.additional-data')
         @include('livewire.encounter.parts.immunizations')
+        @include('livewire.encounter.parts.diagnostic-reports')
         @include('livewire.encounter.parts.observations')
 
         <div class="flex gap-8">

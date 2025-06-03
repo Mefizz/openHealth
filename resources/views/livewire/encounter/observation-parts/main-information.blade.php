@@ -880,7 +880,7 @@
                         </select>
 
                         <p class="text-error text-xs"
-                           x-show="!Object.keys(observationInterpretationsDictionary).includes(modalObservation.components[1].interpretation.coding[0].code)"
+                           x-show="!Object.keys(observationInterpretationsDictionary).includes(modalObservation.components[0].interpretation.coding[0].code)"
                         >
                             {{ __('forms.field_empty') }}
                         </p>

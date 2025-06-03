@@ -34,6 +34,7 @@ return [
     'performer' => 'Виконавець',
     'source_link' => 'Посилання на джерело',
     'body_part' => 'Частина тіла',
+    'diagnostic_reports' => 'Діагностичні звіти',
 
     'relation_type' => [
         'primary' => 'Основний',
@@ -118,7 +119,6 @@ return [
     'medical_reports' => 'Медичні висновки',
     'procedures' => 'Процедури',
     'treatment_plans' => 'Плани лікування',
-    'diagnostic_reports' => 'Діагностичні звіти',
     'clinical_assessments' => 'Клінічні оцінки',
 
     // Main data
@@ -158,7 +158,8 @@ return [
     'division_name' => 'Місце надання послуг',
 
     // Immunizations
-    'immunization' => 'Вакцинації',
+    'immunizations' => 'Вакцинації',
+    'immunization' => 'Вакцинація',
     'dosage' => 'Дозування',
     'execution_state' => 'Стан проведення',
     'reason' => 'Причина',
@@ -179,6 +180,18 @@ return [
     'protocol_author' => 'Автор протоколу',
     'series_of_doses_by_protocol' => 'Кількість доз по протоколу',
     'protocol_description' => 'Опис протоколу',
+
+    // Diagnostic reports
+    'diagnostic_report' => 'Діагностичний звіт',
+    'conclusion' => 'Заключення',
+    'conclusion_code' => 'Код заключення(за МКХ-10АМ)',
+    'requisition_type' => 'Тип направлення',
+    'electronic' => 'Електронне',
+    'paper' => 'Паперове',
+    'author' => 'Автор',
+    'edrpou_of_the_issuing_institution' => 'ЄДРПОУ закладу, що виписав',
+    'name_of_the_institution_that_issued_it' => 'Найменування закладу, що виписав',
+    'notes' => 'Нотатки',
 
     // Observations
     'code' => 'Код',

@@ -6,6 +6,7 @@ namespace App\Rules;
 
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Translation\PotentiallyTranslatedString;
 
 class InDictionary implements ValidationRule
@@ -41,8 +42,13 @@ class InDictionary implements ValidationRule
         foreach ($names as $name) {
             if ($name === 'eHealth/ICF/classifiers') {
                 $dictionaryKeys = array_keys(dictionary()
-                    ->getLargeDictionary(['name' => 'eHealth/ICF/classifiers'], false)
+                    ->getLargeDictionary('eHealth/ICF/classifiers', false)
                     ->getFlattenedChildValues());
+            } elseif ($name === 'eHealth/ICD10_AM/condition_codes') {
+                $dictionaryKeys = DB::table('icd_10')
+                    ->select(['code'])
+                    ->pluck('code')
+                    ->toArray();
             } else {
                 $dictionaryKeys = array_keys(dictionary()->getDictionary($name));
             }

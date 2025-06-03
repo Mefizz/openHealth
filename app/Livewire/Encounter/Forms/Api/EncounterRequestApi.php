@@ -138,4 +138,27 @@ class EncounterRequestApi extends PersonApi
             'page_size' => $pageSize
         ];
     }
+
+    /**
+     * Build an array of parameters for getting services dictionary.
+     *
+     * @param  string|null  $code  Service code. Example: JF2 01.
+     * @param  string|null  $name  Service name. Example: Some Name.
+     * @param  int|null  $page  Page number. Example: 2.
+     * @param  int|null  $pageSize  A limit on the number of objects to be returned, between 1 and 300. Default: 50 Example: 50.
+     * @return array
+     */
+    public static function buildGetServicesDictionary(
+        ?string $code = null,
+        ?string $name = null,
+        ?int $page = null,
+        ?int $pageSize = null
+    ): array {
+        return [
+            'code' => $code,
+            'name' => $name,
+            'page' => $page,
+            'page_size' => $pageSize
+        ];
+    }
 }

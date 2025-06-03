@@ -39,6 +39,7 @@ class EncounterCreate extends EncounterComponent
         $formattedConditions = $encounterRepository->formatConditionsRequest($this->form->conditions);
         $formattedImmunizations = !empty($this->form->immunizations) ? $encounterRepository->formatImmunizationsRequest($this->form->immunizations) : null;
         $formattedObservations = !empty($this->form->observations) ? $encounterRepository->formatObservationsRequest($this->form->observations) : null;
+        $formattedDiagnosticReports = !empty($this->form->diagnosticReports) ? $encounterRepository->formatDiagnosticReportsRequest($this->form->diagnosticReports) : null;
 
         // Validate formatted data
         try {
@@ -58,6 +59,12 @@ class EncounterCreate extends EncounterComponent
             if (isset($formattedObservations)) {
                 foreach ($formattedObservations['observations'] as $formattedObservation) {
                     $this->form->validateForm('observations', ['observations' => [$formattedObservation]]);
+                }
+            }
+
+            if (isset($formattedDiagnosticReports)) {
+                foreach ($formattedDiagnosticReports['diagnosticReports'] as $formattedDiagnosticReport) {
+                    $this->form->validateForm('diagnosticReports', ['diagnosticReports' => [$formattedDiagnosticReport]]);
                 }
             }
         } catch (ValidationException $e) {

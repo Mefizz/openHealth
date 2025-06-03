@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Classes\eHealth\Api\DictionaryApi;
+use App\Classes\eHealth\Api\ServiceApi;
 use App\Classes\eHealth\Exceptions\ApiException;
+use App\Livewire\Encounter\Forms\Api\EncounterRequestApi;
 use App\Services\Dictionary\Dictionary;
+use Exception;
 use Illuminate\Support\Facades\Cache;
 use RuntimeException;
 
@@ -60,8 +63,8 @@ class DictionaryService
         return Cache::remember('dictionaries', now()->addDays(7), static function (): array {
             try {
                 return DictionaryApi::getDictionaries();
-            } catch (\Exception $e) {
-                throw new \RuntimeException('Failed to fetch dictionaries data: ' . $e->getMessage());
+            } catch (Exception $e) {
+                throw new RuntimeException('Failed to fetch dictionaries data: ' . $e->getMessage());
             }
         });
     }
@@ -81,7 +84,7 @@ class DictionaryService
         foreach ($searchArray as $value) {
             if (isset($this->rootDictionary[$value])) {
                 $items[$value] = collect($this->rootDictionary[$value])
-                    ->mapWithKeys(static fn(array $item) => [$item['code'] => $item['description']]);
+                    ->mapWithKeys(static fn (array $item) => [$item['code'] => $item['description']]);
             }
         }
 
@@ -101,7 +104,7 @@ class DictionaryService
 
         if (isset($this->rootDictionary[$name])) {
             $items = collect($this->rootDictionary[$name])
-                ->mapWithKeys(static fn(array $item) => [$item['code'] => $item['description']]);
+                ->mapWithKeys(static fn (array $item) => [$item['code'] => $item['description']]);
         }
 
         return $toArray ? collect($items)->toArray() : new Dictionary($items);
@@ -110,31 +113,88 @@ class DictionaryService
     /**
      * In order to get values that belong to a large reference dictionary, we must pass the name of the dictionary in the name parameter.
      *
-     * @param  array  $params
+     * @param  string  $name
      * @param  bool  $toArray
      * @return Dictionary|array
      * @throws ApiException
      */
-    public function getLargeDictionary(array $params, bool $toArray = true): Dictionary|array
+    public function getLargeDictionary(string $name, bool $toArray = true): Dictionary|array
     {
-        $items = DictionaryApi::getDictionaries($params);
+        $items = $this->rootDictionary[$name];
 
-        $formatted = collect($items)
-            ->filter(static fn($item) => isset($item['name'], $item['values']))
-            ->mapWithKeys(static fn($item) => [
-                $item['name'] => collect($item['values'])
-                    ->filter(static fn($value) => isset($value['code'], $value['description']))
-                    ->mapWithKeys(static fn($value) => [
-                        $value['code'] => [
-                            'description' => $value['description'],
-                            'is_active' => $value['is_active'],
-                            'child_values' => $value['child_values']
-                        ]
-                    ])
-                    ->toArray()
-            ])
-            ->toArray();
+        $formatted = [
+            $name => $items
+                ->filter(static fn (array $value) => isset($value['code'], $value['description']))
+                ->mapWithKeys(static fn (array $value) => [
+                    $value['code'] => [
+                        'description' => $value['description'],
+                        'is_active' => $value['is_active'],
+                        'child_values' => $value['child_values']
+                    ]
+                ])
+                ->toArray()
+        ];
 
         return $toArray ? $formatted : new Dictionary($formatted);
+    }
+
+    /**
+     * Receives a dictionary of services with caching for 7 days
+     *
+     * @return array
+     */
+    public function getServiceDictionary(): array
+    {
+        $serviceDictionary = Cache::remember('service_dictionary', now()->addDays(7), static function (): array {
+            try {
+                $params = EncounterRequestApi::buildGetServicesDictionary(pageSize: 300);
+
+                return ServiceApi::getServiceDictionary($params);
+            } catch (Exception $e) {
+                throw new RuntimeException('Failed to fetch dictionaries data: ' . $e->getMessage());
+            }
+        });
+
+        return collect($serviceDictionary)->flatMap(function (array $item) {
+            return $this->flattenServiceItem($item);
+        })->all();
+    }
+
+    /**
+     * Recursively aligns the structure of the service element.
+     *
+     * @param  array  $item
+     * @return array
+     */
+    protected function flattenServiceItem(array $item): array
+    {
+        $result = [];
+
+        $result[] = [
+            'code' => $item['code'],
+            'name' => $item['name'],
+            'id' => $item['id'],
+            'category' => $item['category'] ?? null
+        ];
+
+        // Process groups if they exist
+        if (isset($item['groups'])) {
+            foreach ($item['groups'] as $group) {
+                foreach ($this->flattenServiceItem($group) as $flattened) {
+                    $result[] = $flattened;
+                }
+            }
+        }
+
+        // Process services if they exist
+        if (isset($item['services'])) {
+            foreach ($item['services'] as $service) {
+                foreach ($this->flattenServiceItem($service) as $flattened) {
+                    $result[] = $flattened;
+                }
+            }
+        }
+
+        return $result;
     }
 }

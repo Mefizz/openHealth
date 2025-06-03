@@ -73,6 +73,8 @@ class Encounter extends Form
 
     public array $observations;
 
+    public array $diagnosticReports;
+
     protected function rules(): array
     {
         return [
@@ -261,6 +263,20 @@ class Encounter extends Form
             ],
             'observations.*.issued' => ['required', 'date', 'before_or_equal:now'],
             'observations.*.effectiveDateTime' => ['nullable', 'date', 'before_or_equal:now'],
+
+            'diagnosticReports.*.paperReferral.requisition' => ['nullable', 'string', 'max:255'],
+            'diagnosticReports.*.paperReferral.requesterEmployeeName' => ['nullable', 'string', 'max:255'],
+            'diagnosticReports.*.paperReferral.requesterLegalEntityEdrpou' => ['required', 'string', 'max:255'],
+            'diagnosticReports.*.paperReferral.requesterLegalEntityName' => ['required', 'string', 'max:255'],
+            'diagnosticReports.*.paperReferral.serviceRequestDate' => ['required', 'date'],
+            'diagnosticReports.*.paperReferral.note' => ['nullable', 'string', 'max:255'],
+            'diagnosticReports.*.category.*.coding.*.code' => [
+                'required', 'string', new InDictionary('eHealth/diagnostic_report_categories')
+            ],
+            'diagnosticReports.*.conclusionCode.coding.*.code' => [
+                'nullable', 'string',  new InDictionary('eHealth/ICD10_AM/condition_codes')
+            ],
+            'diagnosticReports.*.conclusion' => ['nullable', 'string'],
         ];
     }
 

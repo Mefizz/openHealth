@@ -94,6 +94,20 @@
                         this.$watch('modalObservation.categories[0].coding[0].code', () => {
                             this.updateIcfOptions(rawData);
                         });
+                    } else if (dictionaryKey === 'custom/services') {
+                        this.$watch('modalDiagnosticReport.category[0].coding[0].code', (newCode) => {
+                            this.options = Object.entries(rawData)
+                                .filter(([_, service]) => {
+                                    return service.category === newCode || service.category === null;
+                                })
+                                .map(([_, service]) => ({
+                                    value: service.id,
+                                    code: service.code,
+                                    label: service.name
+                                }));
+
+                            this.filterOptions();
+                        });
                     } else {
                         this.options = Object.entries(rawData).map(([value, label]) => ({value, label}));
                     }
@@ -177,7 +191,7 @@
             },
 
             highlightedText(option) {
-                const text = `[${option.value}] - ${option.label}`;
+                const text = `[${option.code ?? option.value}] – ${option.label}`;
                 const searchTerm = this.search.toLowerCase().trim();
 
                 if (!searchTerm) return text;
@@ -217,7 +231,7 @@
                     } else {
                         const opt = this.options.find(option => option.value === value);
                         if (opt) {
-                            this.search = `[${opt.value}] – ${opt.label}`;
+                            this.search = `[${opt.code ?? opt.value}] – ${opt.label}`;
                         }
                     }
                 });
