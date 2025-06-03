@@ -69,22 +69,21 @@
 
     <div class="form-row-3">
         <div class="form-group group">
-            <svg class="svg-input" width="20" height="20">
-                <use xlink:href="#svg-calendar-week"></use>
-            </svg>
-            <input wire:model="form.patient.birthDate"
-                   datepicker-max-date="{{ now()->format('Y-m-d') }}"
-                   type="text"
-                   name="birthDate"
-                   id="birthDate"
-                   class="datepicker-input input peer @error('form.patient.birthDate') input-error @enderror"
-                   placeholder=" "
-                   required
-                   autocomplete="off"
-            />
-            <label for="birthDate" class="label">
-                {{ __('forms.birth_date') }}
-            </label>
+            <div class="datepicker-wrapper">
+                <input wire:model="form.patient.birthDate"
+                       datepicker-max-date="{{ now()->format('Y-m-d') }}"
+                       type="text"
+                       name="birthDate"
+                       id="birthDate"
+                       class="datepicker-input with-leading-icon input peer @error('form.patient.birthDate') input-error @enderror"
+                       placeholder=" "
+                       required
+                       autocomplete="off"
+                />
+                <label for="birthDate" class="wrapped-label">
+                    {{ __('forms.birth_date') }}
+                </label>
+            </div>
 
             @error('form.patient.birthDate')
             <p class="text-error">

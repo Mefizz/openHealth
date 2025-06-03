@@ -23,7 +23,7 @@
             </tr>
             </thead>
             <tbody>
-            <template x-for="(evidence, index) in modalCondition.conditions.evidences.codes">
+            <template x-for="(evidence, index) in modalCondition.conditions.evidences[0].codes">
                 <tr>
                     <td class="td-input"
                         x-text="`${evidence.coding[0].code} - ${dictionary[evidence.coding[0].code]}`"
@@ -86,7 +86,11 @@
                                             openModal = true; {{-- Open the modal --}}
                                             item = index; {{-- Identify the item we are corrently editing --}}
                                             {{-- Replace the previous evidence with the current, don't assign object directly (modalEvidenceCode = evidence) to avoid reactiveness --}}
-                                            modalEvidenceCode = new ConditionEvidence(evidence)
+                                            modalEvidenceCode = new ConditionEvidence({
+                                                codes: [{
+                                                    coding: evidence.coding
+                                                }]
+                                            });
                                             newEvidenceCode = false; {{-- This evidence is already created --}}
                                         "
                                             class="dropdown-button"
@@ -185,7 +189,7 @@
 
                                     <button @click.prevent="
                                                 newEvidenceCode !== false
-                                                ? modalCondition.conditions.evidences.codes.push(modalEvidenceCode.codes[0])
+                                                ? modalCondition.conditions.evidences[0].codes.push(modalEvidenceCode.codes[0])
                                                 : modalCondition.conditions.evidences[item] = modalEvidenceCode;
 
                                                 openModal = false;

@@ -9,7 +9,7 @@
            type="search"
            placeholder="{{ __('forms.select') }}"
            x-model="search"
-           @input="showOptions"
+           @input.debounce.150ms="showOptions"
            id="{{ $attributes['id'] ?? '' }}"
            autocomplete="off"
            role="combobox"
@@ -17,17 +17,34 @@
 
     <div class="relative">
         <div x-show="optionsVisible"
-             class="absolute z-50 border p-2 overflow-y-scroll bg-white dark:bg-gray-800 dark:text-white max-h-60 grid"
+             x-transition:enter="transition ease-out duration-100"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-75"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="absolute z-50 border p-2 overflow-y-auto bg-white dark:bg-gray-800 dark:text-white max-h-60 grid shadow-lg rounded-md"
         >
-            <template x-for="(option, index) in filteredOptions" :key="index + option.value">
+            <template x-for="(option, index) in paginatedOptions" :key="`${option.value}-${index}`">
                 <a @click="selectOption(option)"
-                   x-html="highlight('[' + option.value + '] - ' + option.label)"
-                   class="cursor-pointer px-2"
+                   x-html="highlightedText(option)"
+                   class="cursor-pointer px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
                 ></a>
             </template>
 
-            <div x-show="filteredOptions.length === 0" class="px-2 py-1 text-gray-500">
+            <div x-show="filteredOptions.length === 0 && !isLoading" class="px-2 py-1 text-gray-500">
                 {{ __('forms.nothing_found') }}
+            </div>
+
+            <div x-show="isLoading" class="px-2 py-1 text-gray-500">
+                {{ __('general.loading') }}...
+            </div>
+
+            {{-- Show the 'Show more' button if there are more options --}}
+            <div x-show="canLoadMore()" class="px-2 py-1 text-center">
+                <button @click="loadMore" class="text-blue-500 hover:text-blue-700 text-sm">
+                    {{ __('general.show_more') }} (<span x-text="remainingCount()"></span> {{ __('general.remain') }})
+                </button>
             </div>
         </div>
     </div>
@@ -40,35 +57,55 @@
             selected: '',
             optionsVisible: false,
             options: [],
+            filteredOptions: [],
+            paginatedOptions: [],
+            isLoading: false,
+            currentPage: 0,
+            pageSize: 50,
+
+            // Cache for highlightedText
+            highlightCache: new Map(),
+            lastSearchTerm: '',
 
             init() {
-                const rawData = this.$wire.dictionaries?.[dictionaryKey] ?? {};
-
-                if (dictionaryKey === 'eHealth/LOINC/observation_codes') {
-                    const codeMap = this.$wire.observationCodeMap;
-                    const allowedCodes = codeMap.laboratory ?? [];
-
-                    this.options = Object.entries(rawData)
-                        .filter(([value]) => allowedCodes.includes(value))
-                        .map(([value, label]) => ({value, label}));
-                } else if (dictionaryKey === 'eHealth/ICF/classifiers') {
-                    // Initialize the options according to the initial value
-                    this.updateIcfOptions(rawData);
-
-                    this.$watch('modalObservation.categories[0].coding[0].code', () => {
-                        this.updateIcfOptions(rawData);
-                    });
-                } else {
-                    this.options = Object.entries(rawData).map(([value, label]) => ({value, label}));
-                }
-
+                this.initializeOptions();
                 this.watchSelected();
+
+                this.$watch('search', Alpine.debounce(() => {
+                    this.filterOptions();
+                }, 100));
+            },
+
+            async initializeOptions() {
+                this.isLoading = true;
+
+                try {
+                    const rawData = this.$wire.dictionaries?.[dictionaryKey] ?? {};
+
+                    if (dictionaryKey === 'eHealth/LOINC/observation_codes') {
+                        const codeMap = this.$wire.observationCodeMap;
+                        const allowedCodes = codeMap.laboratory ?? [];
+
+                        this.options = Object.entries(rawData)
+                            .filter(([value]) => allowedCodes.includes(value))
+                            .map(([value, label]) => ({value, label}));
+                    } else if (dictionaryKey === 'eHealth/ICF/classifiers') {
+                        this.updateIcfOptions(rawData);
+                        this.$watch('modalObservation.categories[0].coding[0].code', () => {
+                            this.updateIcfOptions(rawData);
+                        });
+                    } else {
+                        this.options = Object.entries(rawData).map(([value, label]) => ({value, label}));
+                    }
+
+                    this.filterOptions();
+                } finally {
+                    this.isLoading = false;
+                }
             },
 
             updateIcfOptions(rawData) {
                 const categoryCode = this.modalObservation?.categories[0].coding[0]?.code;
-
-                // https://e-health-ua.atlassian.net/wiki/spaces/EH/pages/17483628678/D020.+ISO+9999#1.1.3-%D0%A1%D1%82%D1%80%D1%83%D0%BA%D1%82%D1%83%D1%80%D0%B0-%D0%BA%D0%BE%D0%B4%D1%96%D0%B2-%D0%9C%D0%9A%D0%A4
                 const prefixMap = {
                     functions: 'b',
                     structures: 's',
@@ -79,40 +116,98 @@
                 const prefix = prefixMap[categoryCode] ?? null;
 
                 this.options = Object.entries(rawData)
-                    .filter(([key]) => {
-                        // filter by prefix
-                        return key.startsWith(prefix);
-                    })
+                    .filter(([key]) => !prefix || key.startsWith(prefix))
                     .map(([value, label]) => ({value, label}));
+
+                this.filterOptions();
+            },
+
+            filterOptions() {
+                const searchTerm = this.search.toLowerCase().trim();
+
+                if (!searchTerm) {
+                    this.filteredOptions = this.options;
+                } else {
+                    this.filteredOptions = this.options.filter(option => {
+                        const searchText = `${option.label} ${option.value}`.toLowerCase();
+                        return searchText.includes(searchTerm);
+                    });
+                }
+
+                // Remove pagination in new searches
+                this.currentPage = 0;
+                this.updatePaginatedOptions();
+                this.clearHighlightCache();
+            },
+
+            updatePaginatedOptions() {
+                const endIndex = (this.currentPage + 1) * this.pageSize;
+                this.paginatedOptions = this.filteredOptions.slice(0, endIndex);
+            },
+
+            loadMore() {
+                this.currentPage++;
+                this.updatePaginatedOptions();
+            },
+
+            canLoadMore() {
+                return this.paginatedOptions.length < this.filteredOptions.length;
+            },
+
+            remainingCount() {
+                return this.filteredOptions.length - this.paginatedOptions.length;
             },
 
             showOptions() {
                 this.optionsVisible = true;
+                if (this.paginatedOptions.length === 0) {
+                    this.updatePaginatedOptions();
+                }
             },
 
             hideOptions() {
                 this.optionsVisible = false;
+                this.currentPage = 0; // Remove pagination when closing
             },
 
             selectOption(option) {
                 this.selected = option.value;
-                this.search = '[' + option.value + '] – ' + option.label;
+                this.search = `[${option.value}] – ${option.label}`;
                 this.hideOptions();
             },
 
-            highlight(text) {
-                const escaped = this.search.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
-                const re = new RegExp(escaped, 'gi');
+            highlightedText(option) {
+                const text = `[${option.value}] - ${option.label}`;
+                const searchTerm = this.search.toLowerCase().trim();
 
-                return text.replace(re, match => `<span class='bg-purple-300'>${match}</span>`);
+                if (!searchTerm) return text;
+
+                const cacheKey = `${text}-${searchTerm}`;
+
+                if (this.highlightCache.has(cacheKey)) {
+                    return this.highlightCache.get(cacheKey);
+                }
+
+                const escaped = searchTerm.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+                const re = new RegExp(escaped, 'gi');
+                const highlighted = text.replace(re, match =>
+                    `<span class='bg-purple-300 dark:bg-purple-600'>${match}</span>`
+                );
+
+                // Limiting cache size
+                if (this.highlightCache.size > 200) {
+                    this.highlightCache.clear();
+                }
+
+                this.highlightCache.set(cacheKey, highlighted);
+                return highlighted;
             },
 
-            get filteredOptions() {
-                if (!this.search) return this.options;
-
-                return this.options.filter(option =>
-                    (option.label + option.value).toLowerCase().includes(this.search.toLowerCase())
-                );
+            clearHighlightCache() {
+                if (this.lastSearchTerm !== this.search) {
+                    this.highlightCache.clear();
+                    this.lastSearchTerm = this.search;
+                }
             },
 
             watchSelected() {
@@ -122,7 +217,7 @@
                     } else {
                         const opt = this.options.find(option => option.value === value);
                         if (opt) {
-                            this.search = '[' + opt.value + '] – ' + opt.label;
+                            this.search = `[${opt.value}] – ${opt.label}`;
                         }
                     }
                 });

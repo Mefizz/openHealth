@@ -92,13 +92,15 @@ class ImmunizationRepository extends BaseRepository
                     }
 
                     if (isset($datum['explanation']['reasonsNotGiven'])) {
-                        $reasonsNotGiven = Repository::codeableConcept()->store($datum['explanation']['reasonsNotGiven']);
+                        foreach ($datum['explanation']['reasonsNotGiven'] as $reasonNotGiven) {
+                            $reasonsNotGiven = Repository::codeableConcept()->store($reasonNotGiven);
 
-                        ImmunizationExplanation::create([
-                            'immunization_id' => $immunization->id,
-                            'reasons_id' => null,
-                            'reasons_not_given_id' => $reasonsNotGiven->id
-                        ]);
+                            ImmunizationExplanation::create([
+                                'immunization_id' => $immunization->id,
+                                'reasons_id' => null,
+                                'reasons_not_given_id' => $reasonsNotGiven->id
+                            ]);
+                        }
                     }
 
                     if (!empty($datum['vaccinationProtocols'])) {
@@ -185,6 +187,7 @@ class ImmunizationRepository extends BaseRepository
                     ]
                 ];
             }
+
             if (is_null($immunization['doseQuantity'])) {
                 $immunization['doseQuantity']['value'] = null;
                 $immunization['doseQuantity']['code'] = null;

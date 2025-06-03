@@ -226,11 +226,11 @@
                                     />
 
                                     <div x-show="showResults && results.length > 0"
-                                         class="absolute left-0 top-full z-10 max-h-80 w-full overflow-auto overscroll-contain rounded-lg border border-gray-200 bg-white p-1.5 shadow-lg"
+                                         class="absolute left-0 top-full z-10 max-h-80 w-full overflow-auto overscroll-contain rounded-lg border dark:bg-gray-800 border-gray-200 bg-white p-1.5 shadow-lg"
                                     >
                                         <ul>
                                             <template x-for="(result, index) in results" :key="index">
-                                                <li class="group flex w-full cursor-pointer items-center rounded-md px-2 py-1.5 transition-colors"
+                                                <li class="group flex w-full cursor-pointer items-center rounded-md px-2 py-1.5 transition-colors dark:bg-gray-800 dark:text-white"
                                                     @click="selected = result; modalCondition.query = result.code + ' - ' + result.description; modalCondition.conditions.code.coding[1].code = result.code; showResults = false"
                                                 >
                                                     <span x-text="result.code + ' - ' + result.description"></span>
@@ -492,13 +492,13 @@
                                 <div x-show="modalCondition.conditions.primarySource === true">
                                     <div class="form-row-modal">
                                         <div class="form-group group">
-                                                <textarea rows="4"
-                                                          x-model="modalCondition.conditions.asserter.identifier.type.text"
-                                                          id="doctorComment"
-                                                          name="doctorComment"
-                                                          class="textarea"
-                                                          placeholder="{{ __('patients.write_comment_here') }}"
-                                                ></textarea>
+                                            <textarea rows="4"
+                                                      x-model="modalCondition.conditions.asserter.identifier.type.text"
+                                                      id="doctorComment"
+                                                      name="doctorComment"
+                                                      class="textarea"
+                                                      placeholder="{{ __('patients.write_comment_here') }}"
+                                            ></textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -522,6 +522,12 @@
                                                     </option>
                                                 @endforeach
                                             </select>
+
+                                            <p class="text-error text-xs"
+                                               x-show="!Object.keys($wire.dictionaries['eHealth/report_origins']).includes(modalCondition.conditions.reportOrigin.coding[0].code)"
+                                            >
+                                                {{ __('forms.field_empty') }}
+                                            </p>
                                         </div>
                                     </div>
 
@@ -543,22 +549,29 @@
 
                                 <button @click.prevent="
                                             delete modalCondition.query;
+
                                             modalCondition.conditions.code.coding = modalCondition.conditions.code.coding.filter(c => c.code.trim() !== '');
-                                            const matchingPrimaryCount = diagnoses.filter(
-                                                diagnose => diagnose.role.coding[0]?.code === 'primary'
-                                            ).length;
 
-                                            const newCode = modalCondition.conditions.code.coding[0]?.code;
-                                            const matchingCodesCount = conditions.filter(
-                                                c => c.code.coding[0]?.code === newCode
-                                            ).length;
+                                            // Allow only 1 primary diagnose
+                                            const matchingPrimaryCount = diagnoses.filter((diagnose, index) => {
+                                                // If editing — ignore the current index
+                                                if (newCondition === false && index === item) return false;
+                                                return diagnose.role.coding[0]?.code === 'primary'
+                                            }).length;
 
-                                            if (matchingPrimaryCount === 1 && modalCondition.conditions.diagnoses.role.coding[0].code === 'primary') {
+                                            if (matchingPrimaryCount >= 1) {
                                                 showPrimaryWarning = true;
                                                 return;
                                             }
 
-                                            if (matchingCodesCount > 1) {
+                                            const newConditionCode = modalCondition.conditions.code.coding[0]?.code;
+                                            const matchingCodesCount = conditions.filter((condition, index) => {
+                                                // If editing — ignore the current index
+                                                if (newCondition === false && index === item) return false;
+                                                return condition.code.coding[0]?.code === newConditionCode;
+                                            }).length;
+
+                                            if (matchingCodesCount >= 1) {
                                                 showDuplicateCodeWarning = true;
                                                 return;
                                             }

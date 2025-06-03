@@ -12,13 +12,7 @@
                   icfObservationCategoriesDictionary: $wire.dictionaries['eHealth/ICF/observation_categories'],
                   observationCodesDictionary: $wire.dictionaries['eHealth/LOINC/observation_codes'],
                   icfObservationCodesDictionary: $wire.dictionaries['eHealth/ICF/classifiers'],
-                  reportOriginsDictionary: $wire.dictionaries['eHealth/report_origins'],
-                  observationInterpretationsDictionary: $wire.dictionaries['eHealth/observation_interpretations'],
-                  extentOrMagnitudeOfImpairmentDictionary: $wire.dictionaries['eHealth/ICF/qualifiers/extent_or_magnitude_of_impairment'],
-                  natureOfChangeInBodyStructureDictionary: $wire.dictionaries['eHealth/ICF/qualifiers/nature_of_change_in_body_structure'],
-                  anatomicalLocalizationDictionary: $wire.dictionaries['eHealth/ICF/qualifiers/anatomical_localization'],
-                  performanceDictionary: $wire.dictionaries['eHealth/ICF/qualifiers/performance'],
-                  capacityDictionary: $wire.dictionaries['eHealth/ICF/qualifiers/capacity']
+                  observationInterpretationsDictionary: $wire.dictionaries['eHealth/observation_interpretations']
               }"
     >
         <legend class="legend">
@@ -56,11 +50,13 @@
                                 ? (observation.valueBoolean ? 'Так' : 'Ні')
                             : observation.valueString !== undefined
                                 ? observation.valueString
-                            : observation.valueQuantity !== undefined
-                                ? observation.valueQuantity.value
                             : (observation.valueDate !== undefined && observation.valueTime !== undefined)
                                 ? observation.valueDate + ' ' + observation.valueTime
-                            : $wire.dictionaries[observation.dictionaryName]?.[observation.valueCodeableConcept]
+                            : observation.dictionaryName !== ''
+                                ? $wire.dictionaries[observation.dictionaryName]?.[observation.valueCodeableConcept]
+                            : observation.valueQuantity !== undefined
+                                ? observation.valueQuantity.value
+                            : '-'
                         "
                     ></td>
                     <td class="td-input" x-text="observation.issuedDate"></td>
@@ -226,6 +222,9 @@
                                                             if (modalObservation.valueQuantity) {
                                                                 modalObservation.valueQuantity.value = '';
                                                             }
+                                                        } else if(field === 'valueDateTime') {
+                                                            delete modalObservation.valueDate;
+                                                            delete modalObservation.valueTime;
                                                         } else {
                                                             delete modalObservation[field];
                                                         }
@@ -239,6 +238,8 @@
                                                     modalObservation.categories[0].coding[0].system = 'eHealth/ICF/observation_categories';
                                                     modalObservation.code.coding[0].system = 'eHealth/ICF/classifiers';
                                                 }
+
+                                                modalObservation.dictionaryName = $wire.observationValueMap[modalObservation.code.coding[0].code]?.[0];
 
                                                 newObservation !== false
                                                 ? observations.push(modalObservation)

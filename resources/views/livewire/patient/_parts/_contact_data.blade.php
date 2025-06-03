@@ -24,19 +24,18 @@
                 </div>
 
                 <div class="form-group group">
-                    <svg class="svg-input w-5 top-2.5" height="24">
-                        <use xlink:href="#svg-phone"></use>
-                    </svg>
-                    <input x-model="phone.number"
-                           type="tel"
-                           name="phoneNumber"
-                           :id="'phoneNumber-' + index"
-                           class="input peer @error('form.patient.phones.*.number') input-error @enderror"
-                           placeholder=" "
-                    />
-                    <label :for="'phoneNumber-' + index" class="label">
-                        {{ __('forms.phone_number') }}
-                    </label>
+                    <div class="phone-wrapper">
+                        <input x-model="phone.number"
+                               type="tel"
+                               name="phoneNumber"
+                               :id="'phoneNumber-' + index"
+                               class="input with-leading-icon peer @error('form.patient.phones.*.number') input-error @enderror"
+                               placeholder=" "
+                        />
+                        <label :for="'phoneNumber-' + index" class="wrapped-label">
+                            {{ __('forms.phone_number') }}
+                        </label>
+                    </div>
 
                     @error('form.patient.phones.*.number')
                     <p class="text-error">
@@ -46,7 +45,7 @@
                 </div>
                 <template x-if="index == phones.length - 1 & index != 0">
                     {{-- Remove a phone if button is clicked --}}
-                    <button x-on:click="phones.pop(), index--" class="item-remove">
+                    <button @click="phones.pop(), index--" class="item-remove">
                         <svg>
                             <use xlink:href="#svg-minus"></use>
                         </svg>
@@ -55,7 +54,7 @@
                 </template>
                 <template x-if="index == phones.length - 1">
                     {{-- Add new phone if button is clicked --}}
-                    <button x-on:click="phones.push({ type: '', number: '' })"
+                    <button @click="phones.push({ type: '', number: '' })"
                             class="item-add lg:justify-self-start"
                             :class="{ 'lg:justify-self-start': index > 0 }" {{-- Apply this style only if it's not a first phone group --}}
                     >

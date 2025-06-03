@@ -45,24 +45,21 @@
         </div>
 
         <div class="form-group group">
-            <svg class="svg-input" width="20" height="20">
-                <use xlink:href="#svg-calendar-week"></use>
-            </svg>
-
-            <input wire:model="form.patientsFilter.birthDate"
-                   datepicker-max-date="{{ now()->format('Y-m-d') }}"
-                   type="text"
-                   name="filterBirthDate"
-                   id="filterBirthDate"
-                   class="datepicker-input input peer @error('form.patientsFilter.birthDate') input-error @enderror"
-                   placeholder=" "
-                   required
-                   autocomplete="off"
-            />
-
-            <label for="filterBirthDate" class="label">
-                {{ __('forms.birth_date') }}
-            </label>
+            <div class="datepicker-wrapper">
+                <input wire:model="form.patientsFilter.birthDate"
+                       datepicker-max-date="{{ now()->format('Y-m-d') }}"
+                       type="text"
+                       name="filterBirthDate"
+                       id="filterBirthDate"
+                       class="datepicker-input with-leading-icon input peer @error('form.patientsFilter.birthDate') input-error @enderror"
+                       placeholder=" "
+                       required
+                       autocomplete="off"
+                />
+                <label for="filterBirthDate" class="wrapped-label">
+                    {{ __('forms.birth_date') }}
+                </label>
+            </div>
 
             @error('form.patientsFilter.birthDate')
             <p class="text-error">
@@ -79,7 +76,7 @@
             <svg width="16" height="16">
                 <use xlink:href="#svg-adjustments"></use>
             </svg>
-            <span>{{ __('Додаткові параметри пошуку') }}</span>
+            <span>{{ __('patients.additional_search_parameters') }}</span>
         </button>
 
         <template x-if="showAdditionalParams">

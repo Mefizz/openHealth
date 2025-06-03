@@ -94,20 +94,19 @@
                 </div>
 
                 <div class="form-group group">
-                    <svg class="svg-input w-5 top-2.5" width="24" height="24">
-                        <use xlink:href="#svg-phone"></use>
-                    </svg>
-                    <input x-model="phone.number"
-                           type="tel"
-                           name="emergencyContactPhone"
-                           :id="'emergencyContactPhone-' + index"
-                           class="input peer @error('form.patient.emergencyContact.phones.*.number') input-error @enderror"
-                           placeholder=" "
-                           required
-                    />
-                    <label :for="'emergencyContactPhone-' + index" class="label">
-                        {{ __('forms.phone_number') }}
-                    </label>
+                    <div class="phone-wrapper">
+                        <input x-model="phone.number"
+                               type="tel"
+                               name="emergencyContactPhone"
+                               :id="'emergencyContactPhone-' + index"
+                               class="input with-leading-icon peer @error('form.patient.emergencyContact.phones.*.number') input-error @enderror"
+                               placeholder=" "
+                               required
+                        />
+                        <label :for="'emergencyContactPhone-' + index" class="wrapped-label">
+                            {{ __('forms.phone_number') }}
+                        </label>
+                    </div>
 
                     @error('form.patient.emergencyContact.phones.*.number')
                     <p class="text-error">
