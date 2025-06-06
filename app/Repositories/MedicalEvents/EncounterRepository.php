@@ -237,6 +237,7 @@ class EncounterRepository extends BaseRepository
     {
         $conditionForm = array_map(
             function (array $condition, int $index) {
+                unset($condition['query']);
                 // set ID same as diagnose
                 $condition['id'] = $this->diagnoseUuids[$index];
 
@@ -478,6 +479,34 @@ class EncounterRepository extends BaseRepository
 
         return schemaService()
             ->setDataSchema(['observations' => $observationForm], app(PatientApi::class))
+            ->requestSchemaNormalize()
+            ->camelCaseKeys()
+            ->getNormalizedData();
+    }
+
+    /**
+     * Format diagnostic reports data before request.
+     *
+     * @param  array  $diagnosticReports
+     * @return array
+     */
+    public function formatDiagnosticReportsRequest(array $diagnosticReports): array
+    {
+        $diagnosticReportForm = array_map(static function (array $diagnosticReport) {
+            unset($diagnosticReport['query']);
+
+            $diagnosticReport['id'] = Str::uuid()->toString();
+            $diagnosticReport['status'] = 'final';
+
+            if (empty($diagnosticReport['conclusionCode']['coding'][0]['code'])) {
+                unset($diagnosticReport['conclusionCode']);
+            }
+
+            return $diagnosticReport;
+        }, $diagnosticReports);
+
+        return schemaService()
+            ->setDataSchema(['diagnostic_reports' => $diagnosticReportForm], app(PatientApi::class))
             ->requestSchemaNormalize()
             ->camelCaseKeys()
             ->getNormalizedData();

@@ -167,7 +167,8 @@ class EncounterComponent extends Component
         'eHealth/observation_methods',
         'eHealth/observation_interpretations',
         'eHealth/body_sites',
-        'eHealth/ucum/units'
+        'eHealth/ucum/units',
+        'eHealth/diagnostic_report_categories',
     ];
 
     /**
@@ -217,6 +218,7 @@ class EncounterComponent extends Component
         $this->query = $value;
 
         $this->results = DB::table('icd_10')
+            ->select(['code', 'description'])
             ->where('code', 'ILIKE', "%$this->query%")
             ->orWhere('description', 'ILIKE', "%$this->query%")
             ->limit(50)
@@ -266,11 +268,13 @@ class EncounterComponent extends Component
 
         try {
             $this->dictionaries['eHealth/ICF/classifiers'] = dictionary()
-                ->getLargeDictionary(['name' => 'eHealth/ICF/classifiers'], false)
+                ->getLargeDictionary('eHealth/ICF/classifiers', false)
                 ->getFlattenedChildValues();
         } catch (eHealthApiException) {
             $this->flashGeneralError();
         }
+
+        $this->dictionaries['custom/services'] = dictionary()->getServiceDictionary();
 
         $this->codeableConceptValues = collect(config('ehealth.observation_code_values'))
             ->filter(static fn (array $value) => $value[1] === 'valueCodeableConcept')

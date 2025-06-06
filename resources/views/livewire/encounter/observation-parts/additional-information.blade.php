@@ -173,13 +173,13 @@
             </label>
 
             <div>
-            <textarea rows="4"
-                      x-model="modalObservation.comment"
-                      id="observationComment"
-                      name="observationComment"
-                      class="textarea"
-                      placeholder="{{ __('patients.write_comment_here') }}"
-            ></textarea>
+                <textarea rows="4"
+                          x-model="modalObservation.comment"
+                          id="observationComment"
+                          name="observationComment"
+                          class="textarea"
+                          placeholder="{{ __('patients.write_comment_here') }}"
+                ></textarea>
             </div>
         </div>
     </div>

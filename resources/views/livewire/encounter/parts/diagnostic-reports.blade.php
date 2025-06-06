@@ -1,56 +1,36 @@
-<div class="relative" id="immunization-section">
+<div class="relative" id="diagnostic-reports-section">
     <fieldset class="fieldset"
               x-data="{
-                  immunizations: $wire.entangle('form.immunizations'),
+                  diagnosticReports: $wire.entangle('form.diagnosticReports'),
                   openModal: false,
-                  showDuplicateCodeWarning: false,
-                  modalImmunization: new Immunization(),
-                  newImmunization: false,
+                  modalDiagnosticReport: new DiagnosticReport(),
+                  newDiagnosticReport: false,
                   item: 0,
-                  vaccineCodesDictionary: $wire.dictionaries['eHealth/vaccine_codes'],
-                  reasonExplanationsDictionary: $wire.dictionaries['eHealth/reason_explanations'],
-                  reasonNotGivenExplanationsDictionary: $wire.dictionaries['eHealth/reason_not_given_explanations']
+                  diagnosticReportCategoriesDictionary: $wire.dictionaries['eHealth/diagnostic_report_categories'],
+                  servicesDictionary: $wire.dictionaries['custom/services'],
               }"
     >
         <legend class="legend">
-            <h2>{{ __('patients.immunizations') }}</h2>
+            <h2>{{ __('patients.diagnostic_reports') }}</h2>
         </legend>
 
         <table class="table-input w-inherit">
             <thead class="thead-input">
             <tr>
                 <th scope="col" class="th-input">{{ __('patients.code_and_name') }}</th>
-                <th scope="col" class="th-input">{{ __('patients.dosage') }}</th>
-                <th scope="col" class="th-input">{{ __('patients.execution_state') }}</th>
-                <th scope="col" class="th-input">{{ __('patients.reason') }}</th>
+                <th scope="col" class="th-input">{{ __('forms.comment') }}</th>
                 <th scope="col" class="th-input">{{ __('patients.date') }}</th>
                 <th scope="col" class="th-input">{{ __('forms.action') }}</th>
             </tr>
             </thead>
             <tbody>
-            <template x-for="(immunization, index) in immunizations">
+            <template x-for="(diagnosticReport, index) in diagnosticReports">
                 <tr>
                     <td class="td-input"
-                        x-text="`${ immunization.vaccineCode.coding[0]['code'] } - ${ vaccineCodesDictionary[immunization.vaccineCode.coding[0]['code']] }`"
+                        x-text="Object.values(servicesDictionary).find(service => service.id === diagnosticReport.code.identifier.value).name"
                     ></td>
-                    <td class="td-input"
-                        x-text="
-                            immunization.doseQuantity?.value && immunization.doseQuantity?.unit
-                                ? `${immunization.doseQuantity.value} ${immunization.doseQuantity.unit}`
-                                : ''
-                            "
-                    ></td>
-                    <td class="td-input"
-                        x-text="immunization.notGiven === false ? 'проведена' : 'не проведена'"
-                    ></td>
-                    <td class="td-input"
-                        x-text="
-                            immunization.explanation.reasons?.[0]?.coding?.[0]?.code
-                                ? reasonExplanationsDictionary[immunization.explanation.reasons[0].coding[0].code]
-                                : reasonNotGivenExplanationsDictionary[immunization.explanation.reasonsNotGiven[0]?.coding?.[0]?.code]
-                        "
-                    ></td>
-                    <td class="td-input" x-text="immunization.date"></td>
+                    <td class="td-input" x-text="diagnosticReport.conclusion"></td>
+                    <td class="td-input"></td>
                     <td class="td-input">
                         {{-- That all that is needed for the dropdown --}}
                         <div x-data="{
@@ -111,16 +91,17 @@
                                     <button @click.prevent="
                                                 openModal = true; {{-- Open the modal --}}
                                                 item = index; {{-- Identify the item we are corrently editing --}}
-                                                {{-- Replace the previous immunization with the current, don't assign object directly (modalImmunization = immunization) to avoid reactiveness --}}
-                                                modalImmunization = JSON.parse(JSON.stringify(immunizations[index]));
-                                                newImmunization = false; {{-- This immunization is already created --}}
+                                                {{-- Replace the previous diagnosticReport with the current, don't assign object directly (modalDiagnosticReport = diagnosticReport) to avoid reactiveness --}}
+                                                modalDiagnosticReport = JSON.parse(JSON.stringify(diagnosticReports[index]));
+                                                console.log(modalDiagnosticReport);
+                                                newDiagnosticReport = false; {{-- This diagnosticReport is already created --}}
                                             "
                                             class="dropdown-button"
                                     >
                                         {{ __('forms.edit') }}
                                     </button>
 
-                                    <button @click.prevent="immunizations.splice(index, 1); close($refs.button)"
+                                    <button @click.prevent="diagnosticReports.splice(index, 1); close($refs.button)"
                                             class="dropdown-button dropdown-delete"
                                     >
                                         {{ __('forms.delete') }}
@@ -138,8 +119,8 @@
             {{-- Button to trigger the modal --}}
             <button @click.prevent="
                         openModal = true; {{-- Open the Modal --}}
-                        newImmunization = true; {{-- We are adding a new evidence --}}
-                        modalImmunization = new Immunization(); {{-- Replace the data of the previous evidence with a new one--}}
+                        newDiagnosticReport = true; {{-- We are adding a new evidence --}}
+                        modalDiagnosticReport = new DiagnosticReport(); {{-- Replace the data of the previous evidence with a new one--}}
                     "
                     class="item-add my-5"
             >
@@ -178,13 +159,12 @@
                              class="modal-content h-fit w-full lg:max-w-7xl"
                         >
                             {{-- Title --}}
-                            <h3 class="modal-header" :id="$id('modal-title')">{{ __('patients.immunization') }}</h3>
+                            <h3 class="modal-header"
+                                :id="$id('modal-title')">{{ __('patients.diagnostic_report') }}</h3>
 
                             {{-- Content --}}
                             <form>
-                                @include('livewire.encounter.immunization-parts.data')
-                                @include('livewire.encounter.immunization-parts.information-about')
-                                @include('livewire.encounter.immunization-parts.vaccination-protocol')
+                                @include('livewire.encounter.diagnostic-report-parts.main-information')
 
                                 <div class="mt-6 flex justify-between space-x-2">
                                     <button type="button"
@@ -195,37 +175,23 @@
                                     </button>
 
                                     <button @click.prevent="
-                                                const newImmunizationCode = modalImmunization.vaccineCode.coding[0]?.code;
-                                                const matchingImmunizationCodesCount = immunizations.filter(
-                                                    c => c.vaccineCode.coding[0]?.code === newImmunizationCode
-                                                ).length;
-
-                                                if (matchingImmunizationCodesCount >= 1) {
-                                                    showDuplicateCodeWarning = true;
-                                                    return;
+                                                if (!modalDiagnosticReport.isReferralAvailable) {
+                                                    delete modalDiagnosticReport.paperReferral;
                                                 }
 
-                                                newImmunization !== false
-                                                ? immunizations.push(modalImmunization)
-                                                : immunizations[item] = modalImmunization;
+                                                delete modalDiagnosticReport.isReferralAvailable;
 
-                                                showDuplicateCodeWarning = false;
+                                                newDiagnosticReport !== false
+                                                ? diagnosticReports.push(modalDiagnosticReport)
+                                                : diagnosticReports[item] = modalDiagnosticReport;
+
                                                 openModal = false;
                                             "
                                             class="button-primary"
-                                            :disabled="!(modalImmunization.date.trim().length > 0 &&
-                                                modalImmunization.time.trim().length > 0 &&
-                                                (modalImmunization.explanation?.reasons?.[0]?.coding?.[0]?.code?.trim?.().length > 0 || modalImmunization.explanation?.reasonsNotGiven[0]?.coding?.[0]?.code?.trim?.().length > 0))
-                                            "
                                     >
                                         {{ __('forms.save') }}
                                     </button>
                                 </div>
-                                <template x-if="showDuplicateCodeWarning">
-                                    <p class="text-error text-right">
-                                        {!! __('patients.duplicate_code_warning') !!}
-                                    </p>
-                                </template>
                             </form>
                         </div>
                     </div>
@@ -237,66 +203,40 @@
 
 <script>
     /**
-     * Representation of the user's personal immunization
+     * Representation of the user's personal diagnostic report.
      */
-    class Immunization {
-        date = new Date().toISOString().split('T')[0];
-        time = new Date().toLocaleTimeString('uk-UA', {hour: '2-digit', minute: '2-digit', hour12: false});
-        notGiven = false;
-        vaccineCode = {
-            coding: [{system: 'eHealth/vaccine_codes', code: ''}]
-        };
-        explanation = {
-            reasons: [
-                {
-                    coding: [{system: 'eHealth/reason_explanations', code: ''}]
-                }
-            ],
-            reasonsNotGiven: [
-                {
-                    coding: [{system: 'eHealth/reason_not_given_explanations', code: ''}]
-                }
-            ]
-        };
-        primarySource = true;
-        performer = {
+    class DiagnosticReport {
+        category = [
+            {
+                coding: [{ system: 'eHealth/diagnostic_report_categories', code: '' }],
+                text: ''
+            }
+        ];
+        code = {
             identifier: {
                 type: {
-                    coding: [
-                        {system: 'eHealth/resources', code: 'employee'}
-                    ],
+                    coding: [{ system: 'eHealth/resources', code: 'service' }],
                     text: ''
-                }
+                },
+                value: ''
             }
         };
-        reportOrigin = {
+        isReferralAvailable = false;
+        query = '';
+        paperReferral = {
+            requesterLegalEntityEdrpou: '',
+            requesterLegalEntityName: '',
+            serviceRequestDate: ''
+        };
+        conclusionCode = {
             coding: [
-                {system: 'eHealth/immunization_report_origins', code: ''}
-            ],
-            text: ''
+                { system: 'eHealth/ICD10_AM/condition_codes', code: '' }
+            ]
         };
-        manufacturer = null;
-        lotNumber = null;
-        expirationDate = null;
-        site = {
-            coding: [{system: 'eHealth/immunization_body_sites', code: ''}],
-            text: ''
-        };
-        route = {
-            coding: [{system: 'eHealth/vaccination_routes', code: ''}],
-            text: ''
-        };
-        doseQuantity = {
-            value: null,
-            unit: null,
-            system: 'eHealth/immunization_dosage_units',
-            code: ''
-        };
-        vaccinationProtocols = [];
 
         constructor(obj = null) {
             if (obj) {
-                this.immunizations = JSON.parse(JSON.stringify(obj.immunizations || obj));
+                this.diagnosticReports = JSON.parse(JSON.stringify(obj.diagnosticReports || obj));
             }
         }
     }

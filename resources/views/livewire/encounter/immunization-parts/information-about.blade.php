@@ -82,7 +82,7 @@
 
     <div class="form-row-3">
         <div class="form-group group">
-            <label for="immunizationDate" class="label-modal">
+            <label for="expirationDate" class="label-modal">
                 {{ __('patients.expiration_date') }}
             </label>
             <div class="relative flex items-center">

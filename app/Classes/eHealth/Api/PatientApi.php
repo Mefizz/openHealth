@@ -116,7 +116,7 @@ class PatientApi
      * @return array
      * @throws ApiException
      */
-    public static function getApprovedEpisodes(string $patientId, array $params): array
+    public static function getApprovedEpisodes(string $patientId, array $params = []): array
     {
         return new Request(
             HttpRequest::METHOD_GET,
