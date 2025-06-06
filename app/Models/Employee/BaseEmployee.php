@@ -15,6 +15,8 @@ use App\Models\Relations\Education;
 use App\Models\Relations\Speciality;
 use App\Models\Relations\Qualification;
 use App\Models\Relations\ScienceDegree;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Eloquence\Behaviours\HasCamelCasing;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,14 +24,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * @mixin IdeHelperBaseEmployee
  */
 class BaseEmployee extends Model
 {
-    use HasFactory;
     use HasCamelCasing;
 
     protected $fillable = [
@@ -73,13 +73,15 @@ class BaseEmployee extends Model
         'scienceDegrees'
     ];
 
-    public function getFullNameAttribute(): string
+    protected function fullName(): Attribute
     {
-        return implode(' ', array_filter([
-            optional($this->party)->first_name ?? '',
-            optional($this->party)->last_name ?? '',
-            optional($this->party)->second_name?? '',
-        ]));
+        return Attribute::make(
+            get: fn () => implode(' ', array_filter([
+                optional($this->party)->last_name ?? '',
+                optional($this->party)->first_name ?? '',
+                optional($this->party)->second_name ?? '',
+            ]))
+        );
     }
 
     public function getPhoneAttribute(): string
@@ -147,7 +149,8 @@ class BaseEmployee extends Model
         return $this->morphOne(Revision::class, 'revisionable');
     }
 
-    public function scopeDoctor($query)
+    #[Scope]
+    public function doctor(Builder $query): Builder
     {
         return $query->where('employee_type', 'DOCTOR');
     }
@@ -178,11 +181,11 @@ class BaseEmployee extends Model
         $query->where('user_id', $userId)
             ->where('legal_entity_uuid', $legalEntityUUID);
 
-            if ($isInclude) {
-                $query->whereIn('employee_type', $roles);
-            } else {
-                $query->whereNotIn('employee_type', $roles);
-            }
+        if ($isInclude) {
+            $query->whereIn('employee_type', $roles);
+        } else {
+            $query->whereNotIn('employee_type', $roles);
+        }
     }
 
     /**
