@@ -13,7 +13,7 @@
                             id="knedp">
                 <x-slot name="option">
                     <option value="">{{__('forms.select')}}</option>
-                    @foreach($certificateAuthorities as $k => $certificate_type)
+                    @foreach(signatureService()->getCertificateAuthorities() as $k => $certificate_type)
                         <option value="{{ $certificate_type['id'] }}">{{ $certificate_type['name'] }}</option>
                     @endforeach
                 </x-slot>

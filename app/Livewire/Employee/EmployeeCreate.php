@@ -4,7 +4,6 @@ namespace App\Livewire\Employee;
 
 use App\Models\Employee\EmployeeRequest;
 use App\Repositories\EmployeeRepository;
-use App\Services\SignatureService;
 use Exception;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -17,13 +16,6 @@ class EmployeeCreate extends EmployeeComponent
     use WithFileUploads;
 
     public Forms\EmployeeForm $form;
-
-    protected SignatureService $signatureService;
-
-    /**
-     * @var array List of certificate authorities.
-     */
-    public array $certificateAuthorities = [];
 
     /**
      * The currently active EmployeeRequest draft.
@@ -45,8 +37,6 @@ class EmployeeCreate extends EmployeeComponent
     public function boot(EmployeeRepository $employeeRepository): void
     {
         parent::boot($employeeRepository);
-        $this->signatureService = app(SignatureService::class);
-        $this->certificateAuthorities = $this->signatureService->getCertificateAuthorities();
     }
 
     public function save(): void
