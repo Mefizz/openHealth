@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Auth;
 
 use Exception;
@@ -45,11 +47,10 @@ class Login extends Component
     {
         $key = $this->throttleKey();
 
-        $credentials =  $this->validate();
+        $credentials = $this->validate();
 
         /* Check if user doesn't block by attempts exceeding*/
-        if (! $this->ensureIsNotRateLimited($credentials))
-        {
+        if (! $this->ensureIsNotRateLimited($credentials)) {
             /* Number of seconds before login retry */
             $seconds = RateLimiter::availableIn($key);
 
@@ -67,7 +68,7 @@ class Login extends Component
             return back();
         }
 
-        if ($user && !$this->isLocalAuth && $user->isClientId() ) {
+        if ($user && !$this->isLocalAuth && $user->isClientId()) {
             $url = $this->loginUrl($user);
 
             return Redirect::to($url);
@@ -176,7 +177,7 @@ class Login extends Component
         // exchange code to token
         if (config('ehealth.api.callback_prod') === false) {
             $code = request()->input('code');
-            $url =  'http://localhost/ehealth/oauth?code=' . $code;
+            $url = 'http://localhost/ehealth/oauth?code=' . $code;
 
             return redirect($url);
         }
@@ -217,7 +218,7 @@ class Login extends Component
                 return $handleLoginUser->breakAuth('auth.login.error.legal_entity_identity');
             }
 
-            $isFirstLogin = (bool) ! User::where('uuid',$authUserUUID)->first()?->uuid;
+            $isFirstLogin = (bool) ! User::where('uuid', $authUserUUID)->first()?->uuid;
 
             auth()->shouldUse('ehealth');
 
@@ -241,14 +242,14 @@ class Login extends Component
         return Redirect::route('dashboard')->with('success', $isFirstLogin ? __('auth.login.success.new_user_auth') : null);
     }
 
-     /**
-     * Prepare login URL for eHealth depending on the user credentials and redirect URI
-     *
-     * @param $user
-     *
-     * @return string
-     */
-    public static function loginUrl($user): string
+    /**
+    * Prepare login URL for eHealth depending on the user credentials and redirect URI
+    *
+    * @param $user
+    *
+    * @return string
+    */
+    protected function loginUrl($user): string
     {
         // Base URL and client ID
         $baseUrl = config('ehealth.api.auth_host');
@@ -256,8 +257,8 @@ class Login extends Component
 
         // Base query parameters
         $queryParams = [
-            'client_id'     => $user->legalEntity->client_id ?? '',
-            'redirect_uri'  => $redirectUri,
+            'client_id' => $user->legalEntity->client_id ?? '',
+            'redirect_uri' => $redirectUri,
             'response_type' => 'code'
         ];
 

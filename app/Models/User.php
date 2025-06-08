@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Support\Str;
@@ -109,7 +111,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isClientId(): bool
     {
-        return $this->legalEntity->client_id ?? false;
+        return (bool)$this->legalEntity->client_id;
     }
 
     // TODO: Check why need it for??????
@@ -147,7 +149,8 @@ class User extends Authenticatable implements MustVerifyEmail
                 break;
         }
 
-        return $scopes->filter(fn(Permission $permission) =>
+        return $scopes->filter(
+            fn (Permission $permission) =>
             !Str::startsWith($permission->name, $exclude)
         );
     }
