@@ -8,6 +8,7 @@ use App\Livewire\Actions\Logout;
 use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\ForgotPassword;
+use App\Livewire\Employee\EmployeeShow;
 use App\Livewire\Patient\PatientForm;
 use App\Livewire\License\LicenseShow;
 use Illuminate\Support\Facades\Route;
@@ -91,11 +92,13 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
 
         Route::prefix('employee')->group(function () {
             Route::get('/', EmployeeIndex::class)->name('employee.index');
-            Route::get('/{id}', EmployeeEdit::class)
-                ->name('employee.edit')
-                ->where('id', '[0-9]+');
             Route::get('/new', EmployeeCreate::class)->name('employee.create');
+            Route::get('/{employeeId}', EmployeeCreate::class)
+                ->name('employee.edit')
+                ->where('employeeId', '[0-9]+');
         });
+
+        Route::get('/employees/{employee}', EmployeeShow::class)->name('employee.show');
 
         Route::prefix('contract')->group(function () {
             Route::get('/', ContractIndex::class)->name('contract.index');

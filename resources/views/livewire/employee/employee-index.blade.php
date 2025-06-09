@@ -1,5 +1,4 @@
 <div>
-
     <x-section-navigation class="">
         <x-slot name="title">{{ __('Співробітники') }}</x-slot>
         <x-slot name="navigation">
@@ -30,8 +29,8 @@
                 </div>
                 <div class="button-group border-0 ">
                     <a href="{{route('employee.create')}}" type="button"
-                            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
-                        {{__('Додати Співробітника')}}
+                       class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                        {{__('forms.addEmployee')}}
                     </a>
                     <button wire:click="syncEmployees" class="button-sync">
                         {{ __('forms.synchronise_with_eHealth') }}
@@ -81,77 +80,67 @@
                                 </td>
                                 <td class="border-b border-[#eee] py-5 px-4 ">
                                     @if( $employee->status !== \App\Enums\Status::NEW )
-                                    <div class="flex justify-center">
-                                        <div
-                                            x-data="{
-            open: false,
-            toggle() {
-                if (this.open) {
-                    return this.close()
-                }
-
-                this.$refs.button.focus()
-
-                this.open = true
-            },
-            close(focusAfter) {
-                if (! this.open) return
-
-                this.open = false
-
-                focusAfter && focusAfter.focus()
-            }
-        }"
-                                            x-on:keydown.escape.prevent.stop="close($refs.button)"
-                                            x-on:focusin.window="! $refs.panel.contains($event.target) && close()"
-                                            x-id="['dropdown-button']"
-                                            class="relative">
-                                            <button
-                                                x-ref="button"
-                                                x-on:click="toggle()"
-                                                :aria-expanded="open"
-                                                :aria-controls="$id('dropdown-button')"
-                                                type="button"
-                                                class="hover:text-primary">
-                                                <svg class="fill-current" width="18" height="18"
-                                                     xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                     viewBox="0 0 24 24"
-                                                     stroke-width="1.5">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                          d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"/>
-                                                </svg>
-                                            </button>
+                                        <div class="flex justify-center">
                                             <div
-                                                x-ref="panel"
-                                                x-show="open"
-                                                x-transition.origin.top.left
-                                                x-on:click.outside="close($refs.button)"
-                                                :id="$id('dropdown-button')"
-                                                style="display: none;"
-                                                class="absolute right-0 mt-2 w-40 rounded-md bg-white shadow-md z-50">
-                                                @if(!isset($employee->id) && empty($employee->id))
-                                                <a href="{{route('employee.edit', $employee->id)}}"
-                                                   class="flex items-center gap-2 w-full first-of-type:rounded-t-md last-of-type:rounded-b-md px-4 py-2.5 text-left text-sm hover:bg-gray-50 disabled:text-gray-500">
-                                                    {{__('forms.edit')}}
-                                                </a>
-                                                @else
+                                                x-data="{
+                                                open: false,
+                                                toggle() {
+                                                    if (this.open) {
+                                                        return this.close()
+                                                    }
+                                                    this.$refs.button.focus()
+                                                    this.open = true
+                                                },
+                                                close(focusAfter) {
+                                                    if (! this.open) return
+                                                    this.open = false
+                                                    focusAfter && focusAfter.focus()
+                                                }
+                                            }"
+                                                x-on:keydown.escape.prevent.stop="close($refs.button)"
+                                                x-on:focusin.window="! $refs.panel.contains($event.target) && close()"
+                                                x-id="['dropdown-button']"
+                                                class="relative">
+                                                <button
+                                                    x-ref="button"
+                                                    x-on:click="toggle()"
+                                                    :aria-expanded="open"
+                                                    :aria-controls="$id('dropdown-button')"
+                                                    type="button"
+                                                    class="hover:text-primary">
+                                                    <svg class="fill-current" width="18" height="18" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" /></svg>
+                                                </button>
+                                                <div
+                                                    x-ref="panel"
+                                                    x-show="open"
+                                                    x-transition.origin.top.left
+                                                    x-on:click.outside="close($refs.button)"
+                                                    :id="$id('dropdown-button')"
+                                                    style="display: none;"
+                                                    class="absolute right-0 mt-2 w-40 rounded-md bg-white shadow-md z-50">
+
+                                                    {{-- The only change is adding this "View" link --}}
+                                                    <a href="{{ route('employee.show', $employee->id) }}"
+                                                       class="flex items-center gap-2 w-full first-of-type:rounded-t-md last-of-type:rounded-b-md px-4 py-2.5 text-left text-sm hover:bg-gray-50 disabled:text-gray-500">
+                                                        {{__('Перегляд')}}
+                                                    </a>
+
                                                     <a href="{{route('employee.edit', $employee->id)}}"
                                                        class="flex items-center gap-2 w-full first-of-type:rounded-t-md last-of-type:rounded-b-md px-4 py-2.5 text-left text-sm hover:bg-gray-50 disabled:text-gray-500">
                                                         {{__('forms.edit')}}
                                                     </a>
-                                                @endif
-                                                @if($employee->status === \App\Enums\Status::APPROVED)
-                                                <a wire:click="showModalDismissed({{$employee->id}})"
-                                                   class="flex items-center gap-2 w-full first-of-type:rounded-t-md last-of-type:rounded-b-md px-4 py-2.5 text-left text-sm hover:bg-gray-50 disabled:text-gray-500">
-                                                    {{__('forms.dismissed')}}
-                                                </a>
-                                                @endif
+
+                                                    @if($employee->status === \App\Enums\Status::APPROVED)
+                                                        <a wire:click="showModalDismissed({{$employee->id}})"
+                                                           class="flex items-center gap-2 w-full first-of-type:rounded-t-md last-of-type:rounded-b-md px-4 py-2.5 text-left text-sm hover:bg-gray-50 disabled:text-gray-500">
+                                                            {{__('forms.dismissed')}}
+                                                        </a>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
                                     @endif
                                 </td>
-
                             </tr>
                         @endforeach
                     @endif
@@ -159,13 +148,13 @@
             </x-tables.table>
             <div
                 class="sticky bottom-0 right-0 items-center w-full p-4 bg-white border-t border-gray-200 sm:flex sm:justify-between dark:bg-gray-800 dark:border-gray-700">
-                {{--                            {{ $employees->links() }}--}}
+                {{-- Pagination links would go here if you use paginate() instead of get() --}}
             </div>
         @else
             <div
                 class=" bottom-0 right-0 items-center w-full p-4 bg-white border-t border-gray-200 sm:flex sm:justify-between dark:bg-gray-800 dark:border-gray-700">
                 <p class="text-black dark:text-white">
-                    {{__('Нічого не знайдено')}}
+                    {{__('Нічого не знайдено')}}
                 </p>
             </div>
         @endif
@@ -183,15 +172,13 @@
                 <div class="justify-between items-center pt-0 space-y-4 sm:flex sm:space-y-0">
                     <button wire:click="closeModal" type="button"
                             class="py-2 px-4 w-full text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-200 sm:w-auto hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">
-                        {{__('forms.cansel')}}</button>
-                    <button wire:click="dismissed({{$dismissedId}})" type="button"
+                        {{__('forms.cancel')}}</button>
+                    <button wire:click="dismissed({{$dismissed_id}})" type="button"
                             class="py-2 bg-primary px-4 w-full text-sm font-medium text-center text-white rounded-lg bg-primary-700 sm:w-auto hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
                         {{__('forms.confirm')}}
                     </button>
                 </div>
             </x-slot>
-
         </x-alert-modal>
     @endif
-    {{--    @include('livewire.employee.Parts.EmployeeForm')--}}
 </div>

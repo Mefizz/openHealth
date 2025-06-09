@@ -125,18 +125,16 @@
                    type="text"
                    name="email"
                    id="email"
-                   class="input peer @error('form.party.email') input-error @enderror"
+                   class="input peer disabled:bg-gray-100 disabled:cursor-not-allowed @error('form.party.email') input-error @enderror"
                    placeholder=" "
                    required
+                   @if(isset($this->employeeId) && $this->employeeId) disabled @endif
             />
             <label for="email" class="label">
                 {{__('forms.email')}}
             </label>
-
             @error('form.party.email')
-            <p class="text-error">
-                {{$message}}
-            </p>
+            <p class="text-error">{{$message}}</p>
             @enderror
         </div>
 
@@ -145,19 +143,16 @@
                    type="text"
                    id="taxId"
                    name="taxId"
-                   class="input peer @error('form.party.taxId') input-error @enderror"
+                   class="input peer disabled:bg-gray-100 disabled:cursor-not-allowed @error('form.party.taxId') input-error @enderror"
                    placeholder=" "
                    required
+                   @if(isset($this->employeeId) && $this->employeeId) disabled @endif
             />
-
             <label for="taxId" class="label">
                 {{ __('forms.tax_id') }}
             </label>
-
             @error('form.party.taxId')
-            <p class="text-error">
-                {{$message}}
-            </p>
+            <p class="text-error">{{$message}}</p>
             @enderror
         </div>
     </div>
@@ -225,7 +220,7 @@
                 {{__('forms.startDateWork')}}
             </label>
 
-            @error('form.startDate') {{-- ЗМІНЕНО: @error --}}
+            @error('form.startDate')
             <p class="text-error">
                 {{$message}}
             </p>
@@ -307,7 +302,9 @@
                     <label for="phoneNumber-@{{ index }}" class="label">
                         {{__('forms.phone')}}
                     </label>
-                    <p class="text-error" x-text="$wire.form.errors.get('form.party.phones.' + index + '.number')" x-show="$wire.form.errors.has('form.party.phones.' + index + '.number')" style="display: none;"></p>
+                    <p class="text-error text-xs" x-show="$wire.form.errors.has('form.party.phones.' + index + '.number')">
+                        <span x-text="$wire.form.errors.get('form.party.phones.' + index + '.number')"></span>
+                    </p>
                 </div>
 
                 <template x-if="index == phones.length - 1 & index != 0">

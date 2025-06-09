@@ -85,13 +85,14 @@ class EmployeeRepository
     /**
      * Saves or updates employee-related data, including EmployeeRequest, Party, and associated details.
      *
-     * @param array $response
-     * @param LegalEntity $legalEntity
+     * @param array                         $response
+     * @param LegalEntity                   $legalEntity
      * @param Employee|EmployeeRequest|null $employeeModel The model class to create/update (can be null for a new request).
-     * @param string|null $employeeUUID UUID of an existing Employee, if this is an EmployeeRequest that updates.
-     * @param bool $isNewRequest Indicates a new unique EmployeeRequest creation scenario.
+     * @param string|null                   $employeeUUID  UUID of an existing Employee, if this is an EmployeeRequest that updates.
+     * @param bool                          $isNewRequest  Indicates a new unique EmployeeRequest creation scenario.
      *
-     * @return BaseEmployee
+     * @return Employee|EmployeeRequest
+     * @throws Exception
      */
     public function saveEmployeeData(
         array $response,
@@ -99,7 +100,7 @@ class EmployeeRepository
         Employee|EmployeeRequest|null $employeeModel,
         ?string $employeeUUID = null,
         bool $isNewRequest = false
-    ): BaseEmployee
+    ): Employee|EmployeeRequest
     {
         try {
             if ($isNewRequest && empty($response['uuid'])) {
@@ -168,10 +169,8 @@ class EmployeeRepository
                 $this->specialityRepository->addSpecialities($employee, $doctorData['specialities'] ?? []);
             }
 
-            // Bind employee to Party
             $party->employees()->save($employee);
 
-            // Create record in the revisions table depends on the $employeeModel and its id
             if ($isEmployeRequest) {
                 $responseData = [
                     'response' => $response,
@@ -182,12 +181,13 @@ class EmployeeRepository
                 ];
 
                 $this->revisionRepository->saveRevision($employee, [
-                    'data' => $responseData, // Passed as array, model's casts will handle JSON encoding
+                    'data' => $responseData,
                     'status' => Revision::STATUS_PENDING,
                 ]);
             }
 
             return $employee;
+
         } catch (Exception $err) {
             Log::error('Create Employee Error: ' . $err->getMessage(), ['exception' => $err]);
             throw new Exception(__('Create Employee Error') . ' : ' . $err->getMessage());
@@ -199,14 +199,15 @@ class EmployeeRepository
      * bypassing existing general update/create logic when no UUID is provided.
      * This is the dedicated method for the "new request" scenario.
      *
-     * @param array $requestData The full request data from the form.
+     * @param array       $requestData The full request data from the form.
      * @param LegalEntity $legalEntity The legal entity associated with the request.
-     * @return BaseEmployee The newly created EmployeeRequest.
+     *
+     * @return Employee|EmployeeRequest The newly created EmployeeRequest.
      */
     private function handleInitialEmployeeRequestCreation(
         array $requestData,
         LegalEntity $legalEntity
-    ): BaseEmployee
+    ): Employee|EmployeeRequest
     {
         try {
             $partyData = $requestData['party'] ?? [];
@@ -249,7 +250,7 @@ class EmployeeRepository
             ];
 
             $revision = new Revision();
-            $revision->data = $responseDataForRevision; // No manual json_encode here
+            $revision->data = $responseDataForRevision;
             $revision->status = Revision::STATUS_PENDING;
             $employeeRequest->revision()->save($revision);
 
@@ -286,6 +287,42 @@ class EmployeeRepository
         }
 
         return $party;
+    }
+
+    /**
+     * Creates a new "change request" (EmployeeRequest) for an existing Employee.
+     * This is the non-destructive method for the "edit" scenario.
+     */
+    public function createChangeRequestForExistingEmployee(
+        array $preparedData,
+        string $employeeUuid,
+        LegalEntity $legalEntity
+    ): EmployeeRequest {
+        return DB::transaction(function () use ($preparedData, $employeeUuid, $legalEntity) {
+            // 1. Find the existing employee and their party to create associations.
+            $existingEmployee = Employee::with('party')->where('uuid', $employeeUuid)->firstOrFail();
+
+            // 2. Create a new EmployeeRequest instance.
+            $newRequest = new EmployeeRequest();
+            $requestAttributes = Arr::except($preparedData, ['party', 'doctor', 'documents', 'phones']);
+
+            $newRequest->fill($requestAttributes);
+            $newRequest->status = 'NEW'; // Internal DB status for the new request.
+
+            // 3. Associate the new request with the existing employee and party.
+            $newRequest->legalEntity()->associate($legalEntity);
+            $newRequest->employee()->associate($existingEmployee);
+            $newRequest->party()->associate($existingEmployee->party);
+            $newRequest->save();
+
+            // 4. Save the revision with all proposed changes.
+            $this->revisionRepository->saveRevision($newRequest, [
+                'data'   => $preparedData,
+                'status' => Revision::STATUS_PENDING,
+            ]);
+
+            return $newRequest;
+        });
     }
 
     /**
@@ -596,7 +633,7 @@ class EmployeeRepository
      */
     protected function getRevisionEmployeeData(EmployeeRequest $employeeRequest): array
     {
-        $revisionData = json_decode($employeeRequest->revision->data, true);
+        $revisionData = $employeeRequest->revision()->data;
 
         $employee = $employeeRequest->employee;
 
@@ -679,6 +716,7 @@ class EmployeeRepository
             'id' => 'required|string',
             'legal_entity_id' => 'required|string',
             'inserted_at' => 'required|string',
+            'updated_at' => 'required|string',
             'party' => 'required|array',
             'party.birth_date' => 'nullable|string',
             'party.email' => 'nullable|string',
@@ -694,7 +732,7 @@ class EmployeeRepository
             'party.phones.*.number' => 'required_with:party.phones|string',
             'status' => 'required|string',
             'position' => 'required|string',
-            'start_date' => 'required|string',
+            'start_date' => 'nullable|string',
             'end_date' => 'nullable|string',
         ]);
     }

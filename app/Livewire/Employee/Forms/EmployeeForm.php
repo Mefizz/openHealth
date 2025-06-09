@@ -2,18 +2,17 @@
 
 namespace App\Livewire\Employee\Forms;
 
+use App\Models\Employee\Employee;
 use App\Rules\BirthDate;
 use App\Rules\Email;
 use App\Rules\Name;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Form;
 use App\Rules\PhoneNumber;
-use Illuminate\Validation\ValidationException;
 use App\Core\Arr;
+use Exception;
+use Carbon\Carbon;
 
-/**
- * @property-read array $rules
- */
 class EmployeeForm extends Form
 {
     public string $position = '';
@@ -35,10 +34,7 @@ class EmployeeForm extends Form
         'gender' => '',
         'birthDate' => '',
         'phones' => [
-            [
-                'type' => '',
-                'number' => '',
-            ]
+            ['type' => '', 'number' => ''],
         ],
         'taxId' => '',
         'noTaxId' => false,
@@ -48,29 +44,38 @@ class EmployeeForm extends Form
     ];
 
     public array $doctor = [
-        'number' => '',
-        'issued_date' => '',
-        'valid_to' => '',
+        'divisionUuid' => null,
         'specialities' => [],
         'scienceDegrees' => [],
         'qualifications' => [],
         'educations' => [],
     ];
 
-
     /**
-     * Defines the validation rules for the form.
+     * Defines all validation rules for the form.
      * @return array
      */
-    protected function rules(): array
+    public function rulesForSave(): array
     {
         return array_merge(
             $this->rootFieldsRules(),
             $this->partyRules(),
             $this->documentsRules(),
-            $this->doctorRules(),
-            $this->kepRules()
+            $this->doctorRules()
         );
+    }
+
+    /**
+     * Defines validation rules for the signature block only.
+     * @return array
+     */
+    public function rulesForKepOnly(): array
+    {
+        return [
+            'knedp' => ['required', 'string'],
+            'password' => ['required', 'string'],
+            'keyContainerUpload' => ['required', 'file', 'extensions:dat,pfx,pk8,zs2,jks,p7s'],
+        ];
     }
 
     /**
@@ -80,11 +85,11 @@ class EmployeeForm extends Form
     protected function rootFieldsRules(): array
     {
         return [
-            'position' => ['required', 'string'],
-            'employeeType' => ['required', 'string'],
-            'startDate' => ['required', 'date'],
-            'endDate' => ['nullable', 'date'],
-            'status' => ['required', 'string'],
+            'position'      => ['required', 'string'],
+            'employeeType'  => ['required', 'string'],
+            'startDate'     => ['required', 'date'],
+            'endDate'       => ['nullable', 'date'],
+            'status'        => ['required', 'string'],
         ];
     }
 
@@ -95,26 +100,25 @@ class EmployeeForm extends Form
     protected function partyRules(): array
     {
         return [
-            'party.lastName' => ['required', new Name()],
-            'party.firstName' => ['required', new Name()],
-            'party.secondName' => ['nullable', new Name()],
-            'party.gender' => ['required', 'string'],
-            'party.birthDate' => ['required', 'date', new BirthDate()],
-            'party.phones' => ['required', 'array', 'min:1'],
-            'party.phones.*.number' => ['required', new PhoneNumber()],
-            'party.phones.*.type' => ['required', 'string'],
-            'party.taxId' => [
-                'required', 'string',
-            ],
-            'party.noTaxId' => ['boolean'],
-            'party.email' => ['nullable', 'email', new Email()],
+            'party.lastName'         => ['required', new Name()],
+            'party.firstName'        => ['required', new Name()],
+            'party.secondName'       => ['nullable', new Name()],
+            'party.gender'           => ['required', 'string'],
+            'party.birthDate'        => ['required', 'date', new BirthDate()],
+            'party.phones'           => ['required', 'array', 'min:1'],
+            'party.phones.*.number'  => ['required', new PhoneNumber()],
+            'party.phones.*.type'    => ['required', 'string'],
+            'party.taxId'            => ['required', 'string'],
+            'party.noTaxId'          => ['boolean'],
+            'party.email'            => ['nullable', 'email', new Email()],
             'party.workingExperience' => ['nullable', 'numeric'],
-            'party.aboutMyself' => ['nullable', 'string'],
+            'party.aboutMyself'      => ['nullable', 'string'],
         ];
     }
 
     /**
      * Defines validation rules for document-related data (now top-level).
+     * Changed to nullable based on API documentation and repository validation.
      * @return array
      */
     protected function documentsRules(): array
@@ -122,36 +126,47 @@ class EmployeeForm extends Form
         return [
             'documents' => ['required', 'array', 'min:1'],
             'documents.*.type' => ['required', 'string'],
-            'documents.*.number' => ['required', 'string', 'max:255'],
-            'documents.*.issuedAt' => ['required', 'date'],
-            'documents.*.issuedBy' => ['nullable', 'string', 'max:255'],
+            'documents.*.number' => ['required', 'string'],
+            'documents.*.issued_by' => ['nullable', 'string'],
+            'documents.*.issued_at' => ['nullable', 'date_format:Y-m-d'],
         ];
     }
 
     /**
      * Defines validation rules for doctor-related data (now nested under 'doctor').
+     * Updated scienceDegrees and qualifications to be nullable.
      * @return array
      */
     protected function doctorRules(): array
     {
         $doctorTypes = config('ehealth.doctors_type');
         $isDoctor = in_array($this->employeeType, $doctorTypes, true);
-        $doctorArrayBaseRules = ['array'];
-        $doctorRequiredArrayRules = ['required', 'array', 'min:1'];
+
+        $educationRules = ['nullable', 'array'];
+        $specialitiesRules = ['nullable', 'array'];
+
+        if ($isDoctor) {
+            $educationRules[] = 'required';
+            $educationRules[] = 'min:1';
+            $specialitiesRules[] = 'required';
+            $specialitiesRules[] = 'min:1';
+        }
+
+        $scienceDegreesRules = ['nullable', 'array'];
+        $qualificationsRules = ['nullable', 'array'];
 
         return [
             'doctor.divisionUuid' => ['nullable', 'string', 'uuid'],
-
-            'doctor.educations' => $isDoctor ? $doctorRequiredArrayRules : $doctorArrayBaseRules,
+            'doctor.educations' => $educationRules,
             'doctor.educations.*.country' => ['required', 'string', 'max:255'],
             'doctor.educations.*.city' => ['required', 'string', 'max:255'],
-            'doctor.educations.*.institutionName' => ['required', 'string', 'max:255'],
+            'doctor.educations.*.institutionName'=> ['required', 'string', 'max:255'],
             'doctor.educations.*.issuedDate' => ['nullable', 'date'],
             'doctor.educations.*.diplomaNumber' => ['required', 'string', 'max:255'],
             'doctor.educations.*.degree' => ['required', 'string', 'max:255'],
             'doctor.educations.*.speciality' => ['required', 'string', 'max:255'],
 
-            'doctor.specialities' => $isDoctor ? $doctorRequiredArrayRules : $doctorArrayBaseRules,
+            'doctor.specialities' => $specialitiesRules,
             'doctor.specialities.*.speciality' => ['required', 'string', 'max:255'],
             'doctor.specialities.*.specialityOfficio' => ['required', 'boolean'],
             'doctor.specialities.*.level' => ['required', 'string', 'max:255'],
@@ -161,7 +176,7 @@ class EmployeeForm extends Form
             'doctor.specialities.*.validToDate' => ['nullable', 'date'],
             'doctor.specialities.*.certificateNumber' => ['required', 'string', 'max:255'],
 
-            'doctor.scienceDegrees' => $isDoctor ? $doctorRequiredArrayRules : $doctorArrayBaseRules,
+            'doctor.scienceDegrees' => $scienceDegreesRules,
             'doctor.scienceDegrees.*.country' => ['required', 'string', 'max:255'],
             'doctor.scienceDegrees.*.city' => ['required', 'string', 'max:255'],
             'doctor.scienceDegrees.*.degree' => ['required', 'string', 'max:255'],
@@ -170,7 +185,7 @@ class EmployeeForm extends Form
             'doctor.scienceDegrees.*.speciality' => ['required', 'string', 'max:255'],
             'doctor.scienceDegrees.*.issuedDate' => ['nullable', 'date'],
 
-            'doctor.qualifications' => ['nullable', 'array'],
+            'doctor.qualifications' => $qualificationsRules,
             'doctor.qualifications.*.type' => ['required', 'string', 'max:255'],
             'doctor.qualifications.*.institutionName' => ['required', 'string', 'max:255'],
             'doctor.qualifications.*.speciality' => ['required', 'string', 'max:255'],
@@ -183,36 +198,172 @@ class EmployeeForm extends Form
 
     /**
      * Defines validation rules for KEP (Key Electronic Signature) related fields.
-     * These are directly on the form object.
+     * @param bool $required Вказує, чи є поля обов'язковими.
      * @return array
      */
-    protected function kepRules(): array
+    protected function kepRules(bool $required = false): array
     {
+        $rules = $required ? ['required'] : ['nullable'];
+
         return [
-            'knedp' => ['nullable', 'string'],
-            'password' => ['nullable', 'string'],
-            'keyContainerUpload' => ['nullable', 'file', 'mimes:p7s,jks,pfx'],
+            'knedp' => [...$rules, 'string'],
+            'password' => [...$rules, 'string'],
+            'keyContainerUpload' => [...$rules, 'file', 'extensions:dat,pfx,pk8,zs2,jks,p7s'],
         ];
     }
 
     /**
-     * @throws ValidationException
+     * Processes the uploaded KEP file and returns its base64 content.
+     * @return string|null Base64 encoded file content, or null if an error occurred.
+     * @throws Exception If file content cannot be read.
      */
-    public function validated(?array $rules = null, array $messages = [], array $attributes = []): array // <-- ЗМІНЕНО ТУТ
+    public function getBase64KepFileContent(): ?string
     {
-        $rules = $rules ?? $this->rules();
+        if ($this->keyContainerUpload && $this->keyContainerUpload->exists()) {
+            $fileExtension = $this->keyContainerUpload->getClientOriginalExtension();
+            $fileName = 'kep_' . uniqid('', true) . '.' . $fileExtension;
+            $filePath = $this->keyContainerUpload->storeAs('uploads/kep', $fileName, 'public');
 
-        $dataToValidate = Arr::toCamelCase($this->all());
+            if ($filePath) {
+                $fileContents = file_get_contents(Storage::path('public/' . $filePath));
+                Storage::disk('public')->delete($filePath);
 
-        $validator = Validator::make($dataToValidate, $rules, $messages, $attributes);
+                if ($fileContents !== false) {
+                    return base64_encode($fileContents);
+                } else {
+                    throw new \RuntimeException(__('Не вдалося прочитати вміст файлу КЕП.'));
+                }
+            } else {
+                throw new \RuntimeException(__('Не вдалося зберегти завантажений файл КЕП.'));
+            }
+        }
+        throw new \RuntimeException(__('Будь ласка, завантажте файл КЕП.'));
+    }
 
-        try {
-            $validatedData = $validator->validate();
-        } catch (ValidationException $e) {
-            throw $e;
+    /**
+     * Populates the form fields from an existing Employee model.
+     */
+    public function populateFromModel(Employee $employee): void
+    {
+        $employee->load(['party.phones', 'party.documents', 'educations', 'specialities', 'qualifications', 'scienceDegrees']);
+
+        $this->position = $employee->position;
+        $this->employeeType = $employee->employee_type;
+        $this->startDate = $employee->start_date?->format('Y-m-d');
+        $this->endDate = $employee->end_date?->format('Y-m-d');
+        $this->status = $employee->status->value;
+
+        if ($party = $employee->party) {
+            $this->party = [
+                'lastName' => $party->last_name,
+                'firstName' => $party->first_name,
+                'secondName' => $party->second_name,
+                'gender' => $party->gender,
+                'birthDate' => $party->birth_date?->format('Y-m-d'),
+                'taxId' => $party->tax_id,
+                'noTaxId' => (bool)$party->no_tax_id,
+                'email' => $party->email,
+                'workingExperience' => $party->working_experience,
+                'aboutMyself' => $party->about_myself,
+                'phones' => $party->phones->map(fn($phone) => ['type' => $phone->type, 'number' => $phone->number])->toArray(),
+            ];
+            $this->documents = $party->documents->map(fn($doc) => [
+                'type' => $doc->type,
+                'number' => $doc->number,
+                'issued_by' => $doc->issued_by,
+                'issued_at' => $doc->issued_at?->format('Y-m-d'),
+            ])->toArray();
         }
 
-        return $validatedData;
+        $this->doctor['divisionUuid'] = $employee->division_id;
+        $this->doctor['educations'] = $employee->educations->map(fn($edu) => [
+            'country' => $edu->country, 'city' => $edu->city, 'institutionName' => $edu->institution_name,
+            'issuedDate' => $edu->issued_date?->format('Y-m-d'), 'diplomaNumber' => $edu->diploma_number,
+            'degree' => $edu->degree, 'speciality' => $edu->speciality,
+        ])->toArray();
+        $this->doctor['specialities'] = $employee->specialities->map(fn($spec) => [
+            'speciality' => $spec->speciality, 'specialityOfficio' => (bool)$spec->speciality_officio,
+            'level' => $spec->level, 'qualificationType' => $spec->qualification_type,
+            'attestationName' => $spec->attestation_name, 'attestationDate' => $spec->attestation_date?->format('Y-m-d'),
+            'validToDate' => $spec->valid_to_date?->format('Y-m-d'), 'certificateNumber' => $spec->certificate_number,
+        ])->toArray();
+        $this->doctor['qualifications'] = $employee->qualifications->map(fn($qual) => [
+            'type' => $qual->type, 'institutionName' => $qual->institution_name,
+            'speciality' => $qual->speciality, 'issuedDate' => $qual->issued_date?->format('Y-m-d'),
+            'certificateNumber' => $qual->certificate_number, 'additionalInfo' => $qual->additional_info,
+        ])->toArray();
+        $this->doctor['scienceDegrees'] = $employee->scienceDegrees->map(fn($degree) => [
+            'country' => $degree->country, 'city' => $degree->city, 'degree' => $degree->degree,
+            'institutionName' => $degree->institution_name, 'diplomaNumber' => $degree->diploma_number,
+            'speciality' => $degree->speciality, 'issuedDate' => $degree->issued_date?->format('Y-m-d'),
+        ])->toArray();
+    }
+
+    /**
+     * Recursively formats date strings within an array to 'YYYY-MM-DD'.
+     *
+     * @param array $data
+     * @return array
+     */
+    protected function formatDatesInArray(array $data): array
+    {
+        $dateKeys = [
+            'startDate', 'endDate', 'birthDate', 'issuedAt', 'issuedDate',
+            'attestationDate', 'validToDate', 'validTo'
+        ];
+
+        foreach ($data as $key => &$value) {
+            if (is_array($value)) {
+                $value = $this->formatDatesInArray($value);
+            } elseif (is_string($value) && in_array($key, $dateKeys)) {
+                if (!empty($value)) {
+                    try {
+                        $value = Carbon::parse($value)->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        \Log::warning("Failed to parse date for key '$key': " . $value . ' - ' . $e->getMessage());
+                    }
+                } else {
+                    $value = null;
+                }
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * Prepares and returns all form data structured for the repository.
+     * @return array
+     */
+    public function getPreparedData(): array
+    {
+        $formData = $this->all();
+        $formData = $this->formatDatesInArray($formData);
+
+        $preparedData = [
+            'position' => $formData['position'],
+            'employee_type' => $formData['employeeType'],
+            'start_date' => $formData['startDate'],
+            'status' => $formData['status'],
+            'end_date' => $formData['endDate'] ?? null,
+        ];
+
+        $preparedParty = Arr::toSnakeCase($formData['party']);
+        $preparedParty['phones'] = collect($preparedParty['phones'] ?? [])->map(fn($phone) => Arr::toSnakeCase($phone))->toArray();
+        $preparedData['party'] = $preparedParty;
+
+        $preparedDoctor = Arr::toSnakeCase($formData['doctor']);
+        $preparedDoctor['specialities'] = collect($preparedDoctor['specialities'] ?? [])->map(fn($s) => Arr::toSnakeCase($s))->toArray();
+        $preparedDoctor['scienceDegrees'] = collect($preparedDoctor['scienceDegrees'] ?? [])->map(fn($s) => Arr::toSnakeCase($s))->toArray();
+        $preparedDoctor['qualifications'] = collect($preparedDoctor['qualifications'] ?? [])->map(fn($q) => Arr::toSnakeCase($q))->toArray();
+        $preparedDoctor['educations'] = collect($preparedDoctor['educations'] ?? [])->map(fn($e) => Arr::toSnakeCase($e))->toArray();
+        if (isset($formData['doctor']['divisionUuid'])) {
+            $preparedDoctor['division_uuid'] = $formData['doctor']['divisionUuid'];
+        }
+        $preparedData['doctor'] = $preparedDoctor;
+
+        $preparedData['documents'] = collect($formData['documents'] ?? [])->map(fn($doc) => Arr::toSnakeCase($doc))->toArray();
+
+        return $preparedData;
     }
 
     public function reset(...$properties): void
@@ -225,126 +376,17 @@ class EmployeeForm extends Form
         $this->status = 'NEW';
         $this->documents = [];
         $this->party = [
-            'lastName' => '',
-            'firstName' => '',
-            'secondName' => '',
-            'gender' => '',
-            'birthDate' => '',
-            'phones' => [
-                [
-                    'type' => '',
-                    'number' => '',
-                ]
-            ],
-            'taxId' => '',
-            'noTaxId' => false,
-            'email' => '',
-            'workingExperience' => null,
-            'aboutMyself' => null,
+            'lastName' => '', 'firstName' => '', 'secondName' => '', 'gender' => '',
+            'birthDate' => '', 'phones' => [['type' => '', 'number' => '']],
+            'taxId' => '', 'noTaxId' => false, 'email' => '',
+            'workingExperience' => null, 'aboutMyself' => null,
         ];
         $this->doctor = [
-            'divisionUuid' => null,
-            'educations' => [],
-            'specialities' => [],
-            'scienceDegrees' => [],
-            'qualifications' => [],
+            'divisionUuid' => null, 'educations' => [], 'specialities' => [],
+            'scienceDegrees' => [], 'qualifications' => [],
         ];
         $this->knedp = null;
         $this->keyContainerUpload = null;
         $this->password = null;
-    }
-
-    public function validateBeforeSendApi(): array
-    {
-        $doctorTypes = config('ehealth.doctors_type');
-
-        if (empty($this->documents)) {
-            return [
-                'error' => true,
-                'message' => __('validation.custom.documentsEmpty'),
-            ];
-        }
-
-        if (in_array($this->employeeType, $doctorTypes, true)) {
-            if (empty($this->doctor['specialities'])) {
-                return [
-                    'error' => true,
-                    'message' => __('validation.custom.specialityTable'),
-                ];
-            }
-
-            if (empty($this->doctor['educations'])) {
-                return [
-                    'error' => true,
-                    'message' => __('validation.custom.educationTable'),
-                ];
-            }
-
-            if (empty($this->doctor['scienceDegrees'])) {
-                return [
-                    'error' => true,
-                    'message' => __('validation.custom.science_degreesTable'),
-                ];
-            }
-        }
-
-        return [
-            'error' => false,
-            'message' => '',
-        ];
-    }
-
-    /**
-     * Prepares and returns all form data with keys converted to snake_case
-     * and structured for direct use by the repository.
-     *
-     * @return array
-     */
-    public function getPreparedData(): array
-    {
-        $formData = $this->all();
-
-        $preparedData = [
-            'position' => $formData['position'],
-            'employee_type' => $formData['employeeType'],
-            'start_date' => $formData['startDate'],
-            'status' => $formData['status'],
-        ];
-
-        // Додаємо end_date окремо, якщо воно не null
-        if (!empty($formData['endDate'])) {
-            $preparedData['end_date'] = $formData['endDate'];
-        } else {
-            $preparedData['end_date'] = null;
-        }
-
-
-        $preparedParty = Arr::toSnakeCase($formData['party']);
-        $preparedParty['phones'] = collect($preparedParty['phones'] ?? [])
-            ->map(fn($phone) => Arr::toSnakeCase($phone))
-            ->toArray();
-        $preparedData['party'] = $preparedParty;
-
-        $preparedDoctor = Arr::toSnakeCase($formData['doctor']);
-
-        $preparedDoctor['specialities'] = collect($preparedDoctor['specialities'] ?? [])
-            ->map(fn($s) => Arr::toSnakeCase($s))
-            ->toArray();
-        $preparedDoctor['science_degrees'] = collect($preparedDoctor['science_degrees'] ?? [])
-            ->map(fn($s) => Arr::toSnakeCase($s))
-            ->toArray();
-        $preparedDoctor['qualifications'] = collect($preparedDoctor['qualifications'] ?? [])
-            ->map(fn($q) => Arr::toSnakeCase($q))
-            ->toArray();
-        $preparedDoctor['educations'] = collect($preparedDoctor['educations'] ?? [])
-            ->map(fn($e) => Arr::toSnakeCase($e))
-            ->toArray();
-        $preparedData['doctor'] = $preparedDoctor;
-
-        $preparedData['documents'] = collect($formData['documents'] ?? [])
-            ->map(fn($doc) => Arr::toSnakeCase($doc))
-            ->toArray();
-
-        return $preparedData;
     }
 }
