@@ -31,170 +31,155 @@
             <tbody>
             <template x-for="(scienceDegree, index) in scienceDegrees" :key="index">
                 <tr>
-                    <td class="td-input" x-text="degreeDict[scienceDegree.degree] || scienceDegree.degree"></td>
-                    <td class="td-input" x-text="countryDict[scienceDegree.country] || scienceDegree.country"></td>
+                    <td class="td-input" x-text="degreeDict[scienceDegree.degree]"></td>
+                    <td class="td-input" x-text="countryDict[scienceDegree.country]"></td>
                     <td class="td-input" x-text="scienceDegree.city"></td>
                     <td class="td-input" x-text="scienceDegree.issuedDate"></td>
                     <td class="td-input" x-text="scienceDegree.institutionName"></td>
-                    <td class="td-input" x-text="specDict[scienceDegree.speciality] || scienceDegree.speciality"></td>
+                    <td class="td-input" x-text="specDict[scienceDegree.speciality]"></td>
                     <td class="td-input" x-text="scienceDegree.diplomaNumber"></td>
                     <td class="td-input relative">
                         <x-dropdown-button
-                            :editAction="'openModal = true; item = index; modalScienceDegree = new ScienceDegree(scienceDegrees[index]); newScienceDegree = false;'"
-                            :deleteAction="'scienceDegrees.splice(index, 1);'"
-                        />
+                            :editAction="'openModal = true; item = index; modalScienceDegree = new ScienceDegree(scienceDegree); newScienceDegree = false; close($refs.button)'"
+                            :deleteAction="'scienceDegrees.splice(index, 1); close($refs.button)'"                        />
                     </td>
                 </tr>
             </template>
-
             </tbody>
         </table>
 
-        <button @click.prevent="
-            openModal = true;
-            newScienceDegree = true;
-            modalScienceDegree = new ScienceDegree({ country: 'UA' });
-        " class="item-add my-5">
-            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-                 viewBox="0 0 24 24">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M5 12h14m-7 7V5"/>
-            </svg>
-            {{ __('forms.addScienceDegree') }}
-        </button>
-
-        <template x-teleport="body">
-            <div x-show="openModal"
-                 style="display: none"
-                 @keydown.escape.prevent.stop="openModal = false"
-                 role="dialog"
-                 aria-modal="true"
-                 x-id="['modal-title']"
-                 :aria-labelledby="$id('modal-title')"
-                 class="modal"
+        <div>
+            <button @click="
+                        openModal = true;
+                        newScienceDegree = true;
+                        modalScienceDegree = new ScienceDegree({ country: 'UA' });
+                    "
+                    @click.prevent
+                    class="item-add my-5"
             >
-                <div x-show="openModal" x-transition.opacity class="fixed inset-0 bg-black/25"></div>
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                     viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M5 12h14m-7 7V5"/>
+                </svg>
+                {{ __('forms.addScienceDegree') }}
+            </button>
 
+            <template x-teleport="body">
                 <div x-show="openModal"
-                     x-transition
-                     @click="openModal = false"
-                     class="relative flex min-h-screen items-center justify-center p-4"
+                     style="display: none"
+                     @keydown.escape.prevent.stop="openModal = false"
+                     role="dialog"
+                     aria-modal="true"
+                     x-id="['modal-title']"
+                     :aria-labelledby="$id('modal-title')"
+                     class="modal"
                 >
-                    <div @click.stop
-                         x-trap.noscroll.inert="openModal"
-                         class="modal-content h-fit"
+
+                    <div x-show="openModal" x-transition.opacity class="fixed inset-0 bg-black/25"></div>
+
+                    <div x-show="openModal"
+                         x-transition
+                         @click="openModal = false"
+                         class="relative flex min-h-screen items-center justify-center p-4"
                     >
-                        <h3 class="modal-header" :id="$id('modal-title')">
-                            <span
-                                x-text="newScienceDegree ? '{{ __('forms.addScienceDegree') }}' : '{{ __('forms.edit') . ' ' . __('forms.science_degree') }}'"></span>
-                        </h3>
+                        <div @click.stop
+                             x-trap.noscroll.inert="openModal"
+                             class="modal-content h-fit w-full max-w-2xl rounded-2xl shadow-lg bg-white"
+                        >
 
-                        <form>
-                            <div class="form-row-modal grid grid-cols-2 gap-4">
-                                <div>
-                                    <label for="scienceDegree" class="label-modal">{{ __('forms.degree') }}</label>
-                                    <select id="scienceDegree"
-                                            x-model="modalScienceDegree.degree"
-                                            class="input-modal"
-                                            required>
-                                        <template x-for="(description, value) in degreeDict">
-                                            <option :value="value" x-text="description"></option>
-                                        </template>
-                                    </select>
-                                    <p class="text-error text-xs"
-                                       x-show="!modalScienceDegree.degree || !Object.keys(degreeDict).includes(modalScienceDegree.degree)">{{ __('forms.field_empty') }}</p>
-                                </div>
-                                <div>
-                                    <label for="scienceCountry"
-                                           class="label-modal">{{ __('forms.country') }}</label>
-                                    <select x-model="modalScienceDegree.country" id="scienceCountry"
-                                            class="input-modal" required>
-                                        <template x-for="(description, value) in countryDict">
-                                            <option :value="value" x-text="description"></option>
-                                        </template>
-                                    </select>
-                                    <p class="text-error text-xs"
-                                       x-show="!modalScienceDegree.country || !Object.keys(countryDict).includes(modalScienceDegree.country)">{{ __('forms.field_empty') }}</p>
-                                    <p class="text-error text-xs"
-                                       x-show="!modalScienceDegree.country || modalScienceDegree.country.trim().length === 0">{{ __('forms.field_empty') }}</p>
-                                </div>
-                                <div>
-                                    <label for="scienceCity" class="label-modal">{{ __('forms.city') }}</label>
-                                    <input x-model="modalScienceDegree.city" type="text" id="scienceCity"
-                                           class="input-modal" required>
-                                    <p class="text-error text-xs"
-                                       x-show="!modalScienceDegree.city || modalScienceDegree.city.trim().length === 0">{{ __('forms.field_empty') }}</p>
-                                </div>
-                                <div>
-                                    <label for="scienceIssuedDate"
-                                           class="label-modal">{{ __('forms.issuedDate') }}</label>
-                                    <input id="scienceIssuedDate" x-model="modalScienceDegree.issuedDate"
-                                           class="input-modal datepicker-input" autocomplete="off" required>
-                                    <p class="text-error text-xs"
-                                       x-show="!modalScienceDegree.issuedDate || modalScienceDegree.issuedDate.trim().length === 0">{{ __('forms.field_empty') }}</p>
-                                </div>
-                                <div>
-                                    <label for="scienceInstitution"
-                                           class="label-modal">{{ __('forms.institutionName') }}</label>
-                                    <input x-model="modalScienceDegree.institutionName" type="text"
-                                           id="scienceInstitution" class="input-modal" required>
-                                    <p class="text-error text-xs"
-                                       x-show="!modalScienceDegree.institutionName || modalScienceDegree.institutionName.trim().length === 0">{{ __('forms.field_empty') }}</p>
-                                </div>
-                                <div>
-                                    <label for="scienceSpeciality"
-                                           class="label-modal">{{ __('forms.speciality') }}</label>
-                                    <select id="scienceSpeciality"
-                                            x-model="modalScienceDegree.speciality"
-                                            class="input-modal"
-                                            required>
-                                        <template x-for="(description, value) in specDict">
-                                            <option :value="value" x-text="description"></option>
-                                        </template>
-                                    </select>
-                                    <p class="text-error text-xs"
-                                       x-show="!modalScienceDegree.speciality || !Object.keys(specDict).includes(modalScienceDegree.speciality)">{{ __('forms.field_empty') }}</p>
-                                </div>
-                                <div>
-                                    <label for="scienceDiplomaNumber"
-                                           class="label-modal">{{ __('forms.diplomaNumber') }}</label>
-                                    <input x-model="modalScienceDegree.diplomaNumber" type="text"
-                                           id="scienceDiplomaNumber" class="input-modal">
-                                </div>
-                            </div>
+                            <h3 class="modal-header" :id="$id('modal-title')">
+                                <span x-text="newScienceDegree ? '{{ __('forms.addScienceDegree') }}' : '{{ __('forms.edit') . ' ' . __('forms.science_degree') }}'"></span>
+                            </h3>
 
-                            <div class="mt-6 flex justify-between space-x-2">
-                                <button type="button"
-                                        @click="openModal = false"
-                                        class="button-minor"
-                                >
-                                    {{ __('forms.cancel') }}
-                                </button>
-                                <button type="submit"
-                                        @click.prevent="
-                                            if (newScienceDegree) {
-                                                scienceDegrees.push({...modalScienceDegree});
-                                            } else {
-                                                scienceDegrees.splice(item, 1, {...modalScienceDegree});
-                                            }
-                                            openModal = false;
-                                        "
-                                        class="button-primary"
-                                        :disabled="!(modalScienceDegree.degree && modalScienceDegree.degree.trim().length > 0 &&
-                                            modalScienceDegree.institutionName && modalScienceDegree.institutionName.trim().length > 0 &&
-                                            modalScienceDegree.issuedDate && modalScienceDegree.issuedDate.trim().length > 0 &&
-                                            modalScienceDegree.speciality && modalScienceDegree.speciality.trim().length > 0 &&
-                                            modalScienceDegree.country && modalScienceDegree.country.trim().length > 0 &&
-                                            modalScienceDegree.city && modalScienceDegree.city.trim().length > 0)"
-                                >
-                                    {{ __('forms.save') }}
-                                </button>
-                            </div>
-                        </form>
+                            <form>
+                                <div class="form-row-modal">
+                                    <div>
+                                        <label for="scienceDegreeDegree"
+                                               class="label-modal">{{ __('forms.degree') }}</label>
+                                        <select x-model="modalScienceDegree.degree" id="scienceDegreeDegree"
+                                                class="input-modal" required>
+                                            <option value="">{{__('forms.selectLevel')}}</option> {{-- ДОДАНО --}}
+                                            @foreach($this->dictionaries['SCIENCE_DEGREE'] as $degreeValue => $degreeDescription)
+                                                <option value="{{ $degreeValue }}">{{ $degreeDescription }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="scienceDegreeCountry"
+                                               class="label-modal">{{ __('forms.country') }}</label>
+                                        <select x-model="modalScienceDegree.country" id="scienceDegreeCountry"
+                                                class="input-modal" required>
+                                            @foreach($this->dictionaries['COUNTRY'] as $countryValue => $countryDescription)
+                                                <option value="{{ $countryValue }}">{{ $countryDescription }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="scienceCity" class="label-modal">{{ __('forms.city') }}</label>
+                                        <input x-model="modalScienceDegree.city" type="text" id="scienceCity"
+                                               class="input-modal" required>
+                                        <p class="text-error text-xs"
+                                           x-show="!modalScienceDegree.city || modalScienceDegree.city.trim().length === 0">{{ __('forms.field_empty') }}</p>
+                                    </div>
+                                    <div>
+                                        <label for="scienceDegreeIssuedDate"
+                                               class="label-modal">{{ __('forms.issuedDate') }}</label>
+                                        <input x-model="modalScienceDegree.issuedDate" type="date"
+                                               id="scienceDegreeIssuedDate" class="input-modal datepicker-input"
+                                               autocomplete="off" required>
+                                    </div>
+                                    <div>
+                                        <label for="scienceDegreeInstitutionName"
+                                               class="label-modal">{{ __('forms.institutionName') }}</label>
+                                        <input x-model="modalScienceDegree.institutionName" type="text"
+                                               id="scienceDegreeInstitutionName" class="input-modal" required>
+                                    </div>
+                                    <div>
+                                        <label for="scienceDegreeSpeciality"
+                                               class="label-modal">{{ __('forms.speciality') }}</label>
+                                        <select x-model="modalScienceDegree.speciality" id="scienceDegreeSpeciality"
+                                                class="input-modal" required>
+                                            <option value="">{{__('forms.selectSpeciality')}}</option> {{-- ДОДАНО --}}
+                                            @foreach($this->dictionaries['SPECIALITY_TYPE'] as $specValue => $specDescription)
+                                                <option value="{{ $specValue }}">{{ $specDescription }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="scienceDegreeDiplomaNumber"
+                                               class="label-modal">{{ __('forms.diplomaNumber') }}</label>
+                                        <input x-model="modalScienceDegree.diplomaNumber" type="text"
+                                               id="scienceDegreeDiplomaNumber" class="input-modal">
+                                    </div>
+                                </div>
+
+                                <div class="mt-6 flex justify-between space-x-2">
+                                    <button type="button"
+                                            @click="openModal = false"
+                                            class="button-minor"
+                                    >
+                                        {{ __('forms.cancel') }}
+                                    </button>
+
+                                    <button @click.prevent
+                                            @click="newScienceDegree ? scienceDegrees.push(modalScienceDegree) : scienceDegrees[item] = modalScienceDegree; openModal = false"
+                                            class="button-primary"
+                                            :disabled="!(modalScienceDegree.degree && modalScienceDegree.degree.trim().length > 0 &&
+                                                modalScienceDegree.institutionName && modalScienceDegree.institutionName.trim().length > 0 &&
+                                                modalScienceDegree.issuedDate && modalScienceDegree.issuedDate.trim().length > 0 &&
+                                                modalScienceDegree.speciality && modalScienceDegree.speciality.trim().length > 0 &&
+                                                modalScienceDegree.country && modalScienceDegree.country.trim().length > 0 &&
+                                                modalScienceDegree.city && modalScienceDegree.city.trim().length > 0)"
+                                    >
+                                        {{ __('forms.save') }}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </template>
+            </template>
     </fieldset>
 </div>
 

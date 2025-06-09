@@ -168,10 +168,8 @@ class EmployeeRepository
                 $this->specialityRepository->addSpecialities($employee, $doctorData['specialities'] ?? []);
             }
 
-            // Bind employee to Party
             $party->employees()->save($employee);
 
-            // Create record in the revisions table depends on the $employeeModel and its id
             if ($isEmployeRequest) {
                 $responseData = [
                     'response' => $response,
@@ -182,7 +180,7 @@ class EmployeeRepository
                 ];
 
                 $this->revisionRepository->saveRevision($employee, [
-                    'data' => $responseData, // Passed as array, model's casts will handle JSON encoding
+                    'data' => $responseData,
                     'status' => Revision::STATUS_PENDING,
                 ]);
             }
@@ -249,7 +247,7 @@ class EmployeeRepository
             ];
 
             $revision = new Revision();
-            $revision->data = $responseDataForRevision; // No manual json_encode here
+            $revision->data = $responseDataForRevision;
             $revision->status = Revision::STATUS_PENDING;
             $employeeRequest->revision()->save($revision);
 
@@ -596,7 +594,7 @@ class EmployeeRepository
      */
     protected function getRevisionEmployeeData(EmployeeRequest $employeeRequest): array
     {
-        $revisionData = json_decode($employeeRequest->revision->data, true);
+        $revisionData = $employeeRequest->revision()->data;
 
         $employee = $employeeRequest->employee;
 
@@ -679,6 +677,7 @@ class EmployeeRepository
             'id' => 'required|string',
             'legal_entity_id' => 'required|string',
             'inserted_at' => 'required|string',
+            'updated_at' => 'required|string',
             'party' => 'required|array',
             'party.birth_date' => 'nullable|string',
             'party.email' => 'nullable|string',
@@ -694,7 +693,7 @@ class EmployeeRepository
             'party.phones.*.number' => 'required_with:party.phones|string',
             'status' => 'required|string',
             'position' => 'required|string',
-            'start_date' => 'required|string',
+            'start_date' => 'nullable|string',
             'end_date' => 'nullable|string',
         ]);
     }

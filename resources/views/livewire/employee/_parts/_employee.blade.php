@@ -225,7 +225,7 @@
                 {{__('forms.startDateWork')}}
             </label>
 
-            @error('form.startDate') {{-- ЗМІНЕНО: @error --}}
+            @error('form.startDate')
             <p class="text-error">
                 {{$message}}
             </p>
@@ -307,7 +307,9 @@
                     <label for="phoneNumber-@{{ index }}" class="label">
                         {{__('forms.phone')}}
                     </label>
-                    <p class="text-error" x-text="$wire.form.errors.get('form.party.phones.' + index + '.number')" x-show="$wire.form.errors.has('form.party.phones.' + index + '.number')" style="display: none;"></p>
+                    <p class="text-error text-xs" x-show="$wire.form.errors.has('form.party.phones.' + index + '.number')">
+                        <span x-text="$wire.form.errors.get('form.party.phones.' + index + '.number')"></span>
+                    </p>
                 </div>
 
                 <template x-if="index == phones.length - 1 & index != 0">
