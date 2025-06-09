@@ -274,6 +274,7 @@ return [
     'update_successfull' => 'Дані оновлено успішно',
     'backToList' => 'Назад до списку',
     'goToEdit' => 'Перейти до редагування',
+    'requestSignedAndSentToEHealth' => 'Запит іспішно підписано та надіслоно до ЕСОЗ',
     'viewEmployee' => 'Перегляд співробітника',
     'errors' => [
         'update_data' => 'Сталася помилка під час оновлення даних'

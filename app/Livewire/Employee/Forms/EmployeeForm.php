@@ -331,40 +331,16 @@ class EmployeeForm extends Form
     }
 
     /**
-     * Prepares and returns all form data structured for the repository.
-     * @return array
+     * REFACTORED: Prepares and returns all form data.
+     * It now uses a single recursive call to convert keys to snake_case.
      */
     public function getPreparedData(): array
     {
-        $formData = $this->all();
-        $formData = $this->formatDatesInArray($formData);
+        $formData = $this->formatDatesInArray($this->all());
 
-        $preparedData = [
-            'position' => $formData['position'],
-            'employee_type' => $formData['employeeType'],
-            'start_date' => $formData['startDate'],
-            'status' => $formData['status'],
-            'end_date' => $formData['endDate'] ?? null,
-        ];
-
-        $preparedParty = Arr::toSnakeCase($formData['party']);
-        $preparedParty['phones'] = collect($preparedParty['phones'] ?? [])->map(fn($phone) => Arr::toSnakeCase($phone))->toArray();
-        $preparedData['party'] = $preparedParty;
-
-        $preparedDoctor = Arr::toSnakeCase($formData['doctor']);
-        $preparedDoctor['specialities'] = collect($preparedDoctor['specialities'] ?? [])->map(fn($s) => Arr::toSnakeCase($s))->toArray();
-        $preparedDoctor['scienceDegrees'] = collect($preparedDoctor['scienceDegrees'] ?? [])->map(fn($s) => Arr::toSnakeCase($s))->toArray();
-        $preparedDoctor['qualifications'] = collect($preparedDoctor['qualifications'] ?? [])->map(fn($q) => Arr::toSnakeCase($q))->toArray();
-        $preparedDoctor['educations'] = collect($preparedDoctor['educations'] ?? [])->map(fn($e) => Arr::toSnakeCase($e))->toArray();
-        if (isset($formData['doctor']['divisionUuid'])) {
-            $preparedDoctor['division_uuid'] = $formData['doctor']['divisionUuid'];
-        }
-        $preparedData['doctor'] = $preparedDoctor;
-
-        $preparedData['documents'] = collect($formData['documents'] ?? [])->map(fn($doc) => Arr::toSnakeCase($doc))->toArray();
-
-        return $preparedData;
+        return Arr::toSnakeCase($formData);
     }
+
 
     public function reset(...$properties): void
     {

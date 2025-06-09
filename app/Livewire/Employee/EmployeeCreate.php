@@ -23,11 +23,11 @@ class EmployeeCreate extends EmployeeComponent
         $this->getDictionary();
 
         if ($employeeId) {
-            $this->pageTitle = __('forms.edit_employee');
+            $this->pageTitle = __('forms.editEmployee');
             $this->employeeId = $employeeId;
             $this->loadEmployee();
         } else {
-            $this->pageTitle = __('forms.add_employee');
+            $this->pageTitle = __('forms.addEmployee');
         }
     }
 

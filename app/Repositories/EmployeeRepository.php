@@ -290,39 +290,110 @@ class EmployeeRepository
     }
 
     /**
-     * Creates a new "change request" (EmployeeRequest) for an existing Employee.
-     * This is the non-destructive method for the "edit" scenario.
+     * RENAMED: The parameter is now $inputData instead of $preparedData.
      */
     public function createChangeRequestForExistingEmployee(
-        array $preparedData,
+        array $inputData,
         string $employeeUuid,
         LegalEntity $legalEntity
     ): EmployeeRequest {
-        return DB::transaction(function () use ($preparedData, $employeeUuid, $legalEntity) {
-            // 1. Find the existing employee and their party to create associations.
+        return DB::transaction(function () use ($inputData, $employeeUuid, $legalEntity) {
             $existingEmployee = Employee::with('party')->where('uuid', $employeeUuid)->firstOrFail();
-
-            // 2. Create a new EmployeeRequest instance.
             $newRequest = new EmployeeRequest();
-            $requestAttributes = Arr::except($preparedData, ['party', 'doctor', 'documents', 'phones']);
-
+            $requestAttributes = Arr::except($inputData, ['party', 'doctor', 'documents', 'phones']);
             $newRequest->fill($requestAttributes);
-            $newRequest->status = 'NEW'; // Internal DB status for the new request.
-
-            // 3. Associate the new request with the existing employee and party.
+            $newRequest->status = 'NEW';
             $newRequest->legalEntity()->associate($legalEntity);
             $newRequest->employee()->associate($existingEmployee);
             $newRequest->party()->associate($existingEmployee->party);
             $newRequest->save();
 
-            // 4. Save the revision with all proposed changes.
             $this->revisionRepository->saveRevision($newRequest, [
-                'data'   => $preparedData,
+                'data' => $inputData,
                 'status' => Revision::STATUS_PENDING,
             ]);
 
             return $newRequest;
         });
+    }
+
+    /**
+     * Prepares data for signing and sending to the eHealth API.
+     * This method is designed to be moved to a repository or a dedicated service.
+     *
+     * @param array $revisionData The data from the revision record.
+     * @return array The final payload structured for the API.
+     */
+    public function prepareDataForApiSigning(array $revisionData): array
+    {
+        $sourceData = $revisionData['employee_request_data'] ?? $revisionData;
+
+        [
+            'party' => $partyData,
+            'documents' => $documentsData,
+            'doctor' => $doctorData,
+        ] = $sourceData + ['party' => [], 'documents' => [], 'doctor' => []];
+
+        $apiEmployeeRequest = [
+            'position' => $sourceData['position'] ?? null,
+            'status' => 'NEW',
+            'employee_type' => $sourceData['employee_type'] ?? null,
+            'legal_entity_id' => (string)($sourceData['legal_entity_id'] ?? legalEntity()->id),
+            'start_date' => isset($sourceData['start_date']) ? Carbon::parse($sourceData['start_date'])->format('Y-m-d') : null,
+            'party' => [
+                'first_name' => $partyData['first_name'] ?? null,
+                'last_name' => $partyData['last_name'] ?? null,
+                'second_name' => $partyData['second_name'] ?? null,
+                'birth_date' => isset($partyData['birth_date']) ? Carbon::parse($partyData['birth_date'])->format('Y-m-d') : null,
+                'gender' => $partyData['gender'] ?? null,
+                'no_tax_id' => (bool)($partyData['no_tax_id'] ?? false),
+                'tax_id' => $partyData['tax_id'] ?? null,
+                'email' => $partyData['email'] ?? null,
+                'working_experience' => isset($partyData['working_experience']) ? (int)$partyData['working_experience'] : null,
+                'about_myself' => $partyData['about_myself'] ?? null,
+                'phones' => array_map(
+                    fn($phone) => ['type' => $phone['type'], 'number' => $phone['number']],
+                    $partyData['phones'] ?? []
+                ),
+                'documents' => array_map(
+                    fn($doc) => [
+                        'type' => $doc['type'],
+                        'number' => $doc['number'],
+                        'issued_by' => $doc['issued_by'],
+                        'issued_at' => isset($doc['issued_at']) ? Carbon::parse($doc['issued_at'])->format('Y-m-d') : null
+                    ],
+                    $documentsData
+                ),
+            ],
+        ];
+
+        if (!empty($sourceData['end_date'])) {
+            $apiEmployeeRequest['end_date'] = Carbon::parse($sourceData['end_date'])->format('Y-m-d');
+        }
+
+        if (($sourceData['employee_type'] ?? null) === 'DOCTOR') {
+            $doctorPayload = [];
+            if (!empty($doctorData['division_uuid'])) {
+                $doctorPayload['division_id'] = $doctorData['division_uuid'];
+            }
+            if (!empty($doctorData['educations'])) {
+                $doctorPayload['educations'] = $doctorData['educations'];
+            }
+            if (!empty($doctorData['qualifications'])) {
+                $doctorPayload['qualifications'] = $doctorData['qualifications'];
+            }
+            if (!empty($doctorData['specialities'])) {
+                $doctorPayload['specialities'] = $doctorData['specialities'];
+            }
+            if (!empty($doctorData['science_degrees'])) {
+                $doctorPayload['science_degree'] = $doctorData['science_degrees'][0];
+            }
+            if (!empty($doctorPayload)) {
+                $apiEmployeeRequest['doctor'] = $doctorPayload;
+            }
+        }
+
+        return ['employee_request' => $apiEmployeeRequest];
     }
 
     /**
