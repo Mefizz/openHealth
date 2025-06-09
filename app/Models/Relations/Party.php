@@ -31,6 +31,10 @@ class Party extends Model
         'working_experience',
     ];
 
+    protected $casts = [
+        'birth_date' => 'date',
+    ];
+
     public $timestamps = false;
 
     public function employees(): HasMany

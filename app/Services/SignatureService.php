@@ -6,7 +6,6 @@ use App\Classes\Cipher\Api\CipherApi;
 use App\Classes\Cipher\Exceptions\ApiException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class SignatureService
 {
@@ -23,63 +22,47 @@ class SignatureService
      * @param array $dataToSign The data payload to be signed.
      * @param string $password Password for the key container.
      * @param string $knedp KNEPD (Certificate Authority ID).
-     * @param TemporaryUploadedFile $keyContainerFile The uploaded key container file.
-     * @param string $initiatorType Type of signatory (e.g., CipherApi::SIGNATORY_INITIATOR_PERSON).
+     * @param string $base64FileContent The Base64 encoded content of the key container file.
+     * @param string $signatoryInitiator Type of signatory (e.g., CipherApi::SIGNATORY_INITIATOR_PERSON).
      * @param string $taxId Tax ID (ІПН/ЄДРПОУ) for verification.
-     * @param string $verificationType Verification type (e.g., CipherApi::VERIFICATION_TYPE_PERSON).
-     * @return array|string The signed data from Cipher API, or an array of errors.
+     * @return string|array The signed data as a string from Cipher API, or an array of errors.
      */
     public function signData(
         array $dataToSign,
         string $password,
         string $knedp,
-        TemporaryUploadedFile $keyContainerFile,
-        string $initiatorType,
+        string $base64FileContent,
+        string $signatoryInitiator,
         string $taxId,
-        string $verificationType
-    ): array|string {
+    ): string|array {
         try {
-            $base64KeyContainer = $this->convertFileToBase64($keyContainerFile);
-
             return $this->cipherApi->sendSession(
                 json_encode($dataToSign, JSON_THROW_ON_ERROR),
                 $password,
+                $base64FileContent,
                 $knedp,
-                $base64KeyContainer,
-                $initiatorType,
-                $taxId,
-                $verificationType
+                $signatoryInitiator,
+                $taxId
             );
         } catch (ApiException $e) {
-            Log::error("Cipher API signing error: " . $e->getMessage(), ['errors' => $e->getErrors()]);
+            Log::error('Cipher API Exception in SignatureService: ' . $e->getMessage(), ['errors' => $e->getErrors()]);
             return $e->getErrors();
         } catch (\Exception $e) {
-            Log::error("General signing error: " . $e->getMessage(), ['exception' => $e]);
-            return ['errors' => ['general' => $e->getMessage()]];
+            Log::error('Unexpected error in SignatureService: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return [
+                'errors' => [
+                    'general' => __('api.cipher.unexpected_error') . ': ' . $e->getMessage()
+                ],
+                'message' => __('api.cipher.unexpected_error_short'),
+                'status' => 500
+            ];
         }
     }
 
     /**
-     * Converts a Livewire TemporaryUploadedFile to a Base64 string.
+     * Retrieves supported certificate authorities from Cipher API, cached for 7 days.
      *
-     * @param TemporaryUploadedFile $file
-     * @return string|null
-     */
-    protected function convertFileToBase64(TemporaryUploadedFile $file): ?string
-    {
-        if ($file && $file->exists()) {
-            $fileContents = file_get_contents($file->getRealPath());
-            if ($fileContents !== false) {
-                return base64_encode($fileContents);
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Retrieves supported certificate authorities from Cipher API, cached.
-     *
-     * @return array
+     * @return array An array of certificate authorities.
      */
     public function getCertificateAuthorities(): array
     {
