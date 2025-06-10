@@ -247,9 +247,9 @@
                                showResults = true;
                            }
                        "
-                       @focus="if (modalDiagnosticReport.query.length >= ( /^[a-zA-Z]+$/.test(modalDiagnosticReport.query) ? 1 : 3 )) showResults = true"
+                       @focus="if ((modalDiagnosticReport.conclusionCode.coding[0].code?.length ?? 0) >= 1) showResults = true"
                        @click.away="showResults = false"
-                       x-model="modalDiagnosticReport.query"
+                       x-model="modalDiagnosticReport.conclusionCode.coding[0].code"
                        id="conclusionCode"
                        name="conclusionCode"
                        class="input-modal"
@@ -265,9 +265,8 @@
                             <li class="group flex w-full cursor-pointer items-center rounded-md px-2 py-1.5 transition-colors dark:bg-gray-800 dark:text-white"
                                 @click="
                                     selected = result;
-                                    modalDiagnosticReport.query = result.code + ' - ' + result.description;
                                     modalDiagnosticReport.conclusionCode.coding[0].code = result.code;
-                                    showResults = false
+                                    showResults = false;
                                 "
                             >
                                 <span x-text="result.code + ' - ' + result.description"></span>

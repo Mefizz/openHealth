@@ -247,9 +247,7 @@
      * Representation of the user's personal action
      */
     class Action {
-        coding = [
-            { system: 'eHealth/ICPC2/actions', code: '' }
-        ];
+        coding = [{ system: 'eHealth/ICPC2/actions', code: '' }];
         text = '';
 
         constructor(obj = null) {

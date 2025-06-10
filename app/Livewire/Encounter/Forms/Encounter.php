@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Livewire\Encounter\Forms;
 
-use App\Models\Employee\Employee;
 use App\Rules\Cyrillic;
 use App\Rules\InDictionary;
 use App\Rules\OnlyOnePrimaryDiagnosis;
@@ -392,7 +391,7 @@ class Encounter extends Form
             $additionalValues = config($additionalConfigKey);
             $allowedValues = array_intersect(
                 $allowedValues[Auth::user()->legalEntity->type],
-                $additionalValues[Employee::find(1)->employee_type]
+                $additionalValues[Auth::user()?->getEncounterWriterEmployee()->employeeType]
             );
         }
 

@@ -250,7 +250,8 @@
                                             "
                                             class="button-primary"
                                             :disabled="!(
-                                                modalObservation.issuedDate.trim().length > 0 && modalObservation.issuedTime.trim().length > 0 &&
+                                                modalObservation.issuedDate.trim().length > 0 &&
+                                                modalObservation.issuedTime.trim().length > 0 &&
                                                 modalObservation.categories[0].coding[0].code.trim().length > 0 &&
                                                 modalObservation.code.coding[0].code.trim().length > 0
                                             )"
@@ -283,38 +284,34 @@
         performer = {
             identifier: {
                 type: {
-                    coding: [
-                        {system: 'eHealth/resources', code: 'employee'}
-                    ],
+                    coding: [{ system: 'eHealth/resources', code: 'employee' }],
                     text: ''
                 }
             }
         };
         reportOrigin = {
-            coding: [
-                {system: 'eHealth/report_origins', code: ''}
-            ],
+            coding: [{ system: 'eHealth/report_origins', code: '' }],
             text: ''
         };
         categories = [
             {
-                coding: [{system: '', code: ''}],
+                coding: [{ system: '', code: '' }],
                 text: ''
             }
         ];
         code = {
-            coding: [{system: '', code: ''}],
+            coding: [{ system: '', code: '' }],
             text: ''
         };
         components = [
             {
                 valueCodeableConcept: {
-                    coding: [{system: '', code: ''}],
+                    coding: [{ system: '', code: '' }],
                     text: ''
                 },
 
                 interpretation: {
-                    coding: [{system: '', code: ''}],
+                    coding: [{ system: '', code: '' }],
                     text: ''
                 }
             }
@@ -323,15 +320,15 @@
             value: ''
         };
         method = {
-            coding: [{system: 'eHealth/observation_methods', code: ''}],
+            coding: [{ system: 'eHealth/observation_methods', code: '' }],
             text: ''
         };
         interpretation = {
-            coding: [{system: 'eHealth/observation_interpretations', code: ''}],
+            coding: [{ system: 'eHealth/observation_interpretations', code: '' }],
             text: ''
         };
         bodySite = {
-            coding: [{system: 'eHealth/body_sites', code: ''}],
+            coding: [{ system: 'eHealth/body_sites', code: '' }],
             text: ''
         };
         issuedDate = new Date().toISOString().split('T')[0];

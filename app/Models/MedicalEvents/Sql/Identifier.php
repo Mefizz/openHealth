@@ -7,7 +7,6 @@ namespace App\Models\MedicalEvents\Sql;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * @mixin IdeHelperIdentifier
@@ -22,8 +21,6 @@ class Identifier extends Model
         'id',
         'type',
         'value',
-        'identifiable_type',
-        'identifiable_id',
         'created_at',
         'updated_at'
     ];
@@ -33,17 +30,12 @@ class Identifier extends Model
         return Attribute::make(
             get: fn () => [
                 'type' => $this->type->map(fn (CodeableConcept $codeableConcept) => [
-                    'text' => $codeableConcept->text,
-                    'coding' => $codeableConcept->coding->toArray()
+                    'coding' => $codeableConcept->coding->toArray(),
+                    'text' => $codeableConcept->text
                 ])->toArray(),
                 'value' => $this->value
             ]
         );
-    }
-
-    public function identifiable(): MorphTo
-    {
-        return $this->morphTo();
     }
 
     public function type(): MorphMany

@@ -244,17 +244,17 @@
         time = new Date().toLocaleTimeString('uk-UA', {hour: '2-digit', minute: '2-digit', hour12: false});
         notGiven = false;
         vaccineCode = {
-            coding: [{system: 'eHealth/vaccine_codes', code: ''}]
+            coding: [{ system: 'eHealth/vaccine_codes', code: '' }]
         };
         explanation = {
             reasons: [
                 {
-                    coding: [{system: 'eHealth/reason_explanations', code: ''}]
+                    coding: [{ system: 'eHealth/reason_explanations', code: '' }]
                 }
             ],
             reasonsNotGiven: [
                 {
-                    coding: [{system: 'eHealth/reason_not_given_explanations', code: ''}]
+                    coding: [{ system: 'eHealth/reason_not_given_explanations', code: '' }]
                 }
             ]
         };
@@ -262,28 +262,24 @@
         performer = {
             identifier: {
                 type: {
-                    coding: [
-                        {system: 'eHealth/resources', code: 'employee'}
-                    ],
+                    coding: [{ system: 'eHealth/resources', code: 'employee' }],
                     text: ''
                 }
             }
         };
         reportOrigin = {
-            coding: [
-                {system: 'eHealth/immunization_report_origins', code: ''}
-            ],
+            coding: [{ system: 'eHealth/immunization_report_origins', code: '' }],
             text: ''
         };
         manufacturer = null;
         lotNumber = null;
         expirationDate = null;
         site = {
-            coding: [{system: 'eHealth/immunization_body_sites', code: ''}],
+            coding: [{ system: 'eHealth/immunization_body_sites', code: '' }],
             text: ''
         };
         route = {
-            coding: [{system: 'eHealth/vaccination_routes', code: ''}],
+            coding: [{ system: 'eHealth/vaccination_routes', code: '' }],
             text: ''
         };
         doseQuantity = {

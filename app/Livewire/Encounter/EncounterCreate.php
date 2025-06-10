@@ -187,15 +187,21 @@ class EncounterCreate extends EncounterComponent
         DB::transaction(function () use ($formattedData) {
             $createdEncounterId = Repository::encounter()->store($formattedData['encounter'], $this->patientId);
 
-            Repository::episode()->store($formattedData['episode'], $createdEncounterId);
+            if (isset($formattedData['episode'])) {
+                Repository::episode()->store($formattedData['episode'], $createdEncounterId);
+            }
 
             Repository::condition()->store($formattedData['conditions'], $createdEncounterId);
 
-            if (isset($formattedData)) {
+            if (isset($formattedData['immunizations'])) {
                 Repository::immunization()->store($formattedData['immunizations'], $createdEncounterId);
             }
 
-            if (isset($formattedData)) {
+            if (isset($formattedData['diagnosticReports'])) {
+                Repository::diagnosticReport()->store($formattedData['diagnosticReports'], $createdEncounterId);
+            }
+
+            if (isset($formattedData['observations'])) {
                 Repository::observation()->store($formattedData['observations'], $createdEncounterId);
             }
         });

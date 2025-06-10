@@ -21,7 +21,7 @@ final class Repository
         return app(CodeableConceptRepository::class);
     }
 
-    public function encounter(): EncounterRepository
+    public static function encounter(): EncounterRepository
     {
         return app(EncounterRepository::class);
     }
@@ -39,6 +39,11 @@ final class Repository
     public static function immunization(): ImmunizationRepository
     {
         return app(ImmunizationRepository::class);
+    }
+
+    public static function diagnosticReport(): DiagnosticReportRepository
+    {
+        return app(DiagnosticReportRepository::class);
     }
 
     public static function observation(): ObservationRepository
