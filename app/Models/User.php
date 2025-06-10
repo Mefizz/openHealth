@@ -168,6 +168,22 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get employee by priority with encounter:write permission.
+     *
+     * @return Employee|null
+     */
+    public function getEncounterWriterEmployee(): ?Employee
+    {
+        // Ordered role from most valuable to least with permission encounter:write
+        $priorityRoles = ['DOCTOR', 'SPECIALIST', 'ASSISTANT', 'MED_COORDINATOR'];
+
+        // Get first by roles priority
+        return collect($priorityRoles)
+            ->map(fn (string $type) => $this->employees->firstWhere('employee_type', $type))
+            ->first();
+    }
+
+    /**
      * Get email verified at timestamp in camelCase
      *
      * @return mixed

@@ -10,7 +10,9 @@ use App\Classes\Cipher\Traits\Cipher;
 use App\Classes\eHealth\Api\PatientApi;
 use App\Classes\eHealth\Api\ServiceRequestApi;
 use App\Livewire\Encounter\Forms\Api\EncounterRequestApi;
+use App\Models\Employee\Employee;
 use App\Models\Person\Person;
+use App\Models\User;
 use App\Traits\FormTrait;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
@@ -61,6 +63,24 @@ class EncounterComponent extends Component
     public array $divisions;
 
     /**
+     * List of existing patient episodes.
+     * @var array
+     */
+    public array $episodes = [];
+
+    /**
+     * Episode type, new or existing.
+     * @var string
+     */
+    public string $episodeType = 'new';
+
+    /**
+     * Full name of employee.
+     * @var string
+     */
+    public string $employeeFullName;
+
+    /**
      * KEP key.
      * @var object|null
      */
@@ -83,6 +103,12 @@ class EncounterComponent extends Component
      * @var string
      */
     protected string $role;
+
+    /**
+     * Data about auth employee.
+     * @var Employee
+     */
+    protected Employee $authEmployee;
 
     /**
      * Value for finding ICD-10 code in DB.
@@ -250,16 +276,19 @@ class EncounterComponent extends Component
      */
     protected function initializeComponent(int $patientId): void
     {
-        $user = Auth::user();
+        $authUser = Auth::user();
 
-        if (!$user) {
+        if (!$authUser) {
             throw new RuntimeException('Authenticated user not found');
         }
 
         $this->patientId = $patientId;
-        $this->legalEntityType = $user->legalEntity->type;
-        $this->role = $user->roles->first()->name;
-        $this->divisions = $user->legalEntity->division->toArray();
+        $this->legalEntityType = $authUser->legalEntity->type;
+        $this->role = $authUser->roles->first()->name;
+        $this->divisions = $authUser->legalEntity->division->toArray();
+
+        $this->authEmployee = $authUser->getEncounterWriterEmployee();
+        $this->employeeFullName = $this->authEmployee->fullName;
 
         $this->observationCodeMap = config('ehealth.observation_category_codes');
         $this->observationValueMap = config('ehealth.observation_code_values');
@@ -293,6 +322,21 @@ class EncounterComponent extends Component
         try {
             $this->setCertificateAuthority();
         } catch (CipherApiException) {
+            $this->flashGeneralError();
+        }
+    }
+
+    /**
+     * Get all episodes for current patient.
+     *
+     * @return void
+     */
+    public function getEpisodes(): void
+    {
+        try {
+            $params = EncounterRequestApi::buildGetEpisodeBySearchParams(managingOrganizationId: Auth::user()->legalEntity->uuid);
+            $this->episodes = PatientApi::getEpisodeBySearchParams($this->patientUuid, $params);
+        } catch (eHealthApiException) {
             $this->flashGeneralError();
         }
     }
