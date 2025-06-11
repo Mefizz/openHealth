@@ -38,7 +38,7 @@ return new class extends Migration
             $table->foreignId('immunization_id')->constrained('immunizations')->cascadeOnDelete();
             $table->integer('value');
             $table->string('comparator')->nullable();
-            $table->enum('unit', ['мг', 'мкг', 'мл'])->nullable();
+            $table->enum('unit', ['MG', 'MKG', 'ML'])->nullable();
             $table->string('system')->nullable();
             $table->string('code')->nullable();
             $table->timestamps();

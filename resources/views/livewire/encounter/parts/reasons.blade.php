@@ -245,9 +245,7 @@
      * Representation of the user's personal reason
      */
     class Reason {
-        coding = [
-            { system: 'eHealth/ICPC2/reasons', code: '' }
-        ];
+        coding = [{ system: 'eHealth/ICPC2/reasons', code: '' }];
         text = '';
 
         constructor(obj = null) {

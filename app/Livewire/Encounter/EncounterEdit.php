@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Livewire\Encounter;
 
+use App\Classes\eHealth\Api\PatientApi;
+use App\Classes\eHealth\Exceptions\ApiException;
 use App\Repositories\MedicalEvents\Repository;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
@@ -18,7 +20,6 @@ class EncounterEdit extends EncounterComponent
     public function mount(int $patientId, int $encounterId): void
     {
         $this->initializeComponent($patientId);
-
         $this->encounterId = $encounterId;
 
         $encounter = Repository::encounter()->get($this->encounterId);
@@ -29,13 +30,19 @@ class EncounterEdit extends EncounterComponent
 
         $this->form->encounter = $encounter;
 
-        $this->form->episode = Repository::episode()->get($this->encounterId);
+        $this->form->episode = $this->getEpisode();
 
         $this->form->conditions = Repository::condition()->get($this->encounterId);
-        $this->form->conditions = Repository::encounter()->formatConditions($this->form->conditions, $this->form->encounter['diagnoses']);
+        $this->form->conditions = Repository::encounter()->formatConditions(
+            $this->form->conditions,
+            $this->form->encounter['diagnoses']
+        );
 
         $this->form->immunizations = Repository::immunization()->get($this->encounterId);
         $this->form->immunizations = Repository::immunization()->formatForView($this->form->immunizations);
+
+        $this->form->diagnosticReports = Repository::diagnosticReport()->get($this->encounterId);
+        $this->form->diagnosticReports = Repository::diagnosticReport()->formatForView($this->form->diagnosticReports);
 
         $this->form->observations = Repository::observation()->get($this->encounterId);
         $this->form->observations = Repository::observation()->formatForView($this->form->observations);
@@ -73,6 +80,35 @@ class EncounterEdit extends EncounterComponent
             $this->patientId
         );
         Repository::condition()->store($this->form->conditions, $createdEncounterId);
+    }
+
+    /**
+     * Retrieve the episode from the database, if not found, retrieve it from the API, save it to the database, and set it to the form.
+     *
+     * @return array
+     */
+    private function getEpisode(): array
+    {
+        $episode = Repository::episode()->get($this->encounterId);
+
+        if ($episode) {
+            return $episode;
+        }
+
+        try {
+            $episodeData = PatientApi::getEpisodeById(
+                $this->patientUuid,
+                $this->form->encounter['episode']['identifier']['value']
+            );
+
+            Repository::episode()->store($this->convertArrayKeysToCamelCase($episodeData), $this->encounterId);
+
+            return Repository::episode()->get($this->encounterId);
+        } catch (ApiException|Throwable) {
+            $this->flashGeneralError();
+
+            return [];
+        }
     }
 
     /**

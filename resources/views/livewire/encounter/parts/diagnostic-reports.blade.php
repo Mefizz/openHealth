@@ -190,6 +190,10 @@
                                                 openModal = false;
                                             "
                                             class="button-primary"
+                                            :disabled="!(
+                                                modalDiagnosticReport.category[0].coding[0].code.trim().length > 0 &&
+                                                modalDiagnosticReport.code.identifier.value.trim().length > 0
+                                            )"
                                     >
                                         {{ __('forms.save') }}
                                     </button>
@@ -229,9 +233,7 @@
         basedOn = {
             identifier: {
                 type: {
-                    coding: [
-                        { system: 'eHealth/resources', code: 'service_request' }
-                    ],
+                    coding: [{ system: 'eHealth/resources', code: 'service_request' }],
                     text: ''
                 }
             }
@@ -242,33 +244,27 @@
             serviceRequestDate: ''
         };
         conclusionCode = {
-            coding: [
-                { system: 'eHealth/ICD10_AM/condition_codes', code: '' }
-            ]
+            coding: [{ system: 'eHealth/ICD10_AM/condition_codes', code: '' }]
         };
         primarySource = true;
         performer = {
-            identifier: {
-                type: {
-                    coding: [
-                        { system: 'eHealth/resources', code: 'employee' }
-                    ],
-                    text: ''
+            reference: {
+                identifier: {
+                    type: {
+                        coding: [{ system: 'eHealth/resources', code: 'employee' }],
+                        text: ''
+                    }
                 }
             }
         };
         reportOrigin = {
-            coding: [
-                { system: 'eHealth/immunization_report_origins', code: '' }
-            ],
+            coding: [{ system: 'eHealth/immunization_report_origins', code: '' }],
             text: ''
         };
         recordedBy = {
             identifier: {
                 type: {
-                    coding: [
-                        { system: 'eHealth/resources', code: 'employee' }
-                    ],
+                    coding: [{ system: 'eHealth/resources', code: 'employee' }],
                     text: ''
                 }
             }

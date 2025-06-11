@@ -382,6 +382,7 @@ class EncounterRepository extends BaseRepository
             ->setDataSchema(['immunizations' => $immunizationForm], app(PatientApi::class))
             ->requestSchemaNormalize()
             ->camelCaseKeys()
+            ->extractFirst()
             ->getNormalizedData();
     }
 
@@ -477,6 +478,7 @@ class EncounterRepository extends BaseRepository
             ->setDataSchema(['observations' => $observationForm], app(PatientApi::class))
             ->requestSchemaNormalize()
             ->camelCaseKeys()
+            ->extractFirst()
             ->getNormalizedData();
     }
 
@@ -484,11 +486,13 @@ class EncounterRepository extends BaseRepository
      * Format diagnostic reports data before request.
      *
      * @param  array  $diagnosticReports
+     * @param  string  $legalEntityUuid
+     * @param  string  $divisionUuid
      * @return array
      */
-    public function formatDiagnosticReportsRequest(array $diagnosticReports): array
+    public function formatDiagnosticReportsRequest(array $diagnosticReports, string $legalEntityUuid, string $divisionUuid): array
     {
-        $diagnosticReportForm = array_map(function (array $diagnosticReport) {
+        $diagnosticReportForm = array_map(function (array $diagnosticReport) use ($legalEntityUuid, $divisionUuid) {
             // delete frontend properties
             unset($diagnosticReport['isReferralAvailable'], $diagnosticReport['referralType'], $diagnosticReport['query']);
 
@@ -498,7 +502,7 @@ class EncounterRepository extends BaseRepository
             if ($diagnosticReport['primarySource']) {
                 unset($diagnosticReport['reportOrigin']);
 
-                $diagnosticReport['performer']['identifier']['value'] = $this->employeeUuid;
+                $diagnosticReport['performer']['reference']['identifier']['value'] = $this->employeeUuid;
             } else {
                 unset($diagnosticReport['performer']);
             }
@@ -518,6 +522,36 @@ class EncounterRepository extends BaseRepository
             $diagnosticReport['effectivePeriod']['end'] = convertToISO8601($diagnosticReport['effectivePeriodEndDate'] . $diagnosticReport['effectivePeriodEndTime']);
             unset($diagnosticReport['effectivePeriodEndDate'], $diagnosticReport['effectivePeriodEndTime']);
 
+            $diagnosticReport['encounter'] = [
+                'identifier' => [
+                    'type' => [
+                        'coding' => [['system' => 'eHealth/resources', 'code' => 'encounter']],
+                        'text' => ''
+                    ],
+                    'value' => $this->encounterUuid
+                ],
+            ];
+
+            $diagnosticReport['managingOrganization'] = [
+                'identifier' => [
+                    'type' => [
+                        'coding' => [['system' => 'eHealth/resources', 'code' => 'legalEntity']],
+                        'text' => ''
+                    ],
+                    'value' => $legalEntityUuid
+                ],
+            ];
+
+            $diagnosticReport['division'] = [
+                'identifier' => [
+                    'type' => [
+                        'coding' => [['system' => 'eHealth/resources', 'code' => 'division']],
+                        'text' => ''
+                    ],
+                    'value' => $divisionUuid
+                ],
+            ];
+
             if (empty($diagnosticReport['resultsInterpreter']['text'])) {
                 unset($diagnosticReport['resultsInterpreter']);
             }
@@ -529,6 +563,7 @@ class EncounterRepository extends BaseRepository
             ->setDataSchema(['diagnostic_reports' => $diagnosticReportForm], app(PatientApi::class))
             ->requestSchemaNormalize()
             ->camelCaseKeys()
+            ->extractFirst()
             ->getNormalizedData();
     }
 

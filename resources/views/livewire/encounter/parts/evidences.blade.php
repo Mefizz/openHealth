@@ -216,9 +216,7 @@
     class ConditionEvidence {
         codes = [
             {
-                coding: [
-                    { system: 'eHealth/ICPC2/reasons', code: '' }
-                ]
+                coding: [{ system: 'eHealth/ICPC2/reasons', code: '' }]
             }
         ]
 

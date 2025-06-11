@@ -216,9 +216,9 @@
                                                    showResults = true;
                                                }
                                            "
-                                           @focus="if (modalCondition.query.length >= ( /^[a-zA-Z]+$/.test(modalCondition.query) ? 1 : 3 )) showResults = true"
+                                           @focus="if ((modalCondition.conditions.code.coding[1].code?.length ?? 0) >= 1) showResults = true"
                                            @click.away="showResults = false"
-                                           x-model="modalCondition.query"
+                                           x-model="modalCondition.conditions.code.coding[1].code"
                                            id="icd10Code"
                                            class="input-modal"
                                            placeholder="{{ __('forms.select') }}"
@@ -233,7 +233,6 @@
                                                 <li class="group flex w-full cursor-pointer items-center rounded-md px-2 py-1.5 transition-colors dark:bg-gray-800 dark:text-white"
                                                     @click="
                                                         selected = result;
-                                                        modalCondition.query = result.code + ' - ' + result.description;
                                                         modalCondition.conditions.code.coding[1].code = result.code;
                                                         showResults = false;
                                                     "
@@ -629,17 +628,13 @@
             asserter: {
                 identifier: {
                     type: {
-                        coding: [
-                            { system: 'eHealth/resources', code: 'employee' }
-                        ],
+                        coding: [{ system: 'eHealth/resources', code: 'employee' }],
                         text: ''
                     }
                 }
             },
             reportOrigin: {
-                coding: [
-                    { system: 'eHealth/report_origins', code: '' }
-                ]
+                coding: [{ system: 'eHealth/report_origins', code: '' }]
             },
             code: {
                 coding: [
@@ -654,9 +649,7 @@
             assertedDate: new Date().toISOString().split('T')[0],
             assertedTime: new Date().toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit', hour12: false }),
             severity: {
-                coding: [
-                    { system: 'eHealth/condition_severities', code: '' }
-                ]
+                coding: [{ system: 'eHealth/condition_severities', code: '' }]
             },
             diagnoses: {
                 condition: {
