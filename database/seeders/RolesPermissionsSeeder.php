@@ -99,8 +99,7 @@ class RolesPermissionsSeeder extends Seeder
             'equipment:read',
             'party_verification:details',
             'party_verification:write',
-            'person_verification:details',
-            'person_verification:write'
+            'person_verification:details'
         ],
         'DOCTOR' => [
             'declaration:read',
