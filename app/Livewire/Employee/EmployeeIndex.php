@@ -170,6 +170,7 @@ class EmployeeIndex extends Component
             $employeeResponse = schemaService()->setDataSchema($response, app(EmployeeApi::class))
                 ->responseSchemaNormalize()
                 ->replaceIdsKeysToUuid(['id', 'legalEntityId', 'divisionId', 'partyId'])
+                ->snakeCaseKeys(true)
                 ->getNormalizedData();
             app(EmployeeRepository::class)
                 ->saveEmployeeData($employeeResponse,
