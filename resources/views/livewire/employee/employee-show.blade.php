@@ -1,6 +1,6 @@
 <div>
     <x-section-navigation class="breadcrumb-form">
-        <x-slot name="title">{{ $pageTitle }}: {{ $employee->party->fullName }}</x-slot>
+        <x-slot name="title">{{ $pageTitle }}: {{ $employee->fullName }}</x-slot>
     </x-section-navigation>
 
     <div class="p-4">
