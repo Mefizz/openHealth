@@ -2,8 +2,10 @@
 
 namespace App\Models\Relations;
 
-use App\Models\Employee\BaseEmployee;
+use App\Models\Employee\Employee;
+use App\Models\Employee\EmployeeRequest;
 use Eloquence\Behaviours\HasCamelCasing;
+use Illuminate\Database\Eloquent\Casts\Attribute; // <-- Added this line
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -37,9 +39,16 @@ class Party extends Model
 
     public $timestamps = false;
 
+
+
     public function employees(): HasMany
     {
-        return $this->hasMany(BaseEmployee::class);
+        return $this->hasMany(Employee::class, 'party_id');
+    }
+
+    public function employeeRequests(): HasMany
+    {
+        return $this->hasMany(EmployeeRequest::class, 'party_id');
     }
 
     public function documents(): MorphMany

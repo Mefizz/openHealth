@@ -54,9 +54,9 @@
             {{-- Main action buttons --}}
             <div class="form-button-group mt-6 flex justify-between items-center border-t border-gray-200 pt-6">
                 {{-- 1. Cancel button, redirects to the index page --}}
-                <button type="button" wire:click="to_route('employee.index')" class="button-minor">
+                <a href="{{ route('employee.index') }}" class="button-minor">
                     {{__('forms.cancel')}}
-                </button>
+                </a>
 
                 <div class="flex items-center space-x-4">
                     {{-- 2. Save button, always visible --}}
