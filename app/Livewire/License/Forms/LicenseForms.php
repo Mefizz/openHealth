@@ -63,7 +63,7 @@ class LicenseForms extends Component
         }
 
         $this->user_id = auth()->user()->id;
-        $this->legalEntity = auth()->user()->legalEntity;
+        $this->legalEntity = legalEntity();
         // TODO get license types depending on a legal entity type
         $this->dictionaries = dictionary()->getDictionaries(['LICENSE_TYPE']);
 

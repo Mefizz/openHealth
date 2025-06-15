@@ -82,8 +82,8 @@ class TokenStorage
 
         $data = [
             'token' => [
-                'client_id'     => $this->user->legalEntity->client_id ?? '',
-                'client_secret' => $this->user->legalEntity->client_secret ?? '',
+                'client_id'     => legalEntity()->client_id ?? '',
+                'client_secret' => legalEntity()->client_secret ?? '',
                 'grant_type'    => 'refresh_token',
                 'refresh_token' => $this->getRefreshToken(),
             ]

@@ -18,7 +18,7 @@ class LicenseShow extends Component
     public function mount(LegalEntity $legalEntity, $id)
     {
         $cacheKey = "license_{$id}";
-        $legal_entity_id = Auth::user()->legal_entity_id;
+        $legal_entity_id = legalEntity()->id;
 
         // Check if the license is in the cache
         $this->license = Cache::remember($cacheKey, 60*60, function () use ($id, $legal_entity_id) {

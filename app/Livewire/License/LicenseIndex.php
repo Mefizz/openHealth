@@ -70,11 +70,12 @@ class LicenseIndex extends Component
 
     protected function getQuery(): Builder
     {
-        $legal_entity_id = Auth::user()->legal_entity_id;
+        $legal_entity_id = legalEntity()->id;
 
         $query = DB::table('licenses')
-                ->join('users', 'licenses.legal_entity_id', '=', 'users.legal_entity_id')
-                ->where('users.legal_entity_id', $legal_entity_id)
+                // ->join('users', 'licenses.legal_entity_id', '=', 'users.legal_entity_id')
+                // ->where('users.legal_entity_id', $legal_entity_id)
+                ->where('legal_entity_id', $legal_entity_id)
                 ->select(
                     'licenses.id as id',
                     'licenses.type',

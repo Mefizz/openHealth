@@ -2,11 +2,12 @@
 
 namespace App\Auth\EHealth\Guards;
 
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Auth\SessionGuard;
-use App\Auth\EHealth\Services\TokenStorage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Session\Session;
+use App\Auth\EHealth\Services\TokenStorage;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
 
@@ -74,7 +75,7 @@ class EHealthGuard extends SessionGuard
         if (! $this->tokenStorage->hasBearerToken()) {
             Log::error(__('Bearer token missing in session', [], 'en'));
 
-            throw new \Exception('Bearer token missing in session');
+            throw new Exception(__('Bearer token missing in session'));
         }
 
         $this->updateSession($this->getUserUUID($user));

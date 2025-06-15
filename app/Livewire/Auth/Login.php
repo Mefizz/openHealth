@@ -10,6 +10,7 @@ use Livewire\Component;
 use App\Models\LegalEntity;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
+use Illuminate\Validation\Rule;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -26,13 +27,51 @@ use Illuminate\Contracts\Validation\Validator as ResponseValidator;
 #[Layout('layouts.guest')]
 class Login extends Component
 {
+    public string $legalEntityUUID = '';
+
+    protected ?LegalEntity $legalEntity;
+
+    public array $legalEntitesList = [];
+
     public string $email = '';
 
     public string $password = '';
 
     public bool $isLocalAuth = false;
 
-    public bool $remember = false; // TODO: find out need it or not
+    public function mount()
+    {
+        /* List of ALL founded Legal Entites */
+        $this->legalEntitesList = $this->getLegalEntitesList();
+    }
+
+    /**
+     * Get all legal entities founded in the system.
+     * Reformat it data to the array looks like:
+     * [
+     *  ['<uuid-1>', 'Legal Entity 1 Name']
+     *  ['<uuid-2>', 'Legal Entity 2 Name']
+     * ]
+     *
+     * @return array
+     */
+    protected function getLegalEntitesList(): array
+    {
+        $edrList = LegalEntity::select(['id', 'uuid', 'edr'])->get()->toArray();
+
+        return array_map(function($data) {
+            $edr = $data['edr'];
+            $arr['uuid'] = $data['uuid'];
+
+            if (!empty($edr['name'])) {
+                $arr['name'] = $edr['name'];
+            } else if(!empty($arr['public_name'])) {
+                $arr['name'] = $edr['public_name'];
+            }
+
+            return $arr;
+        }, $edrList);
+    }
 
     /**
      * Handle an incoming authentication request.
@@ -42,6 +81,11 @@ class Login extends Component
         $key = $this->throttleKey();
 
         $credentials = $this->validate();
+
+        /* This need to avoid further user authentication for local auth */
+        if (!empty($this->legalEntityUUID)) {
+            unset($credentials['legalEntityUUID']);
+        }
 
         /* Check if user doesn't block by attempts exceeding*/
         if (! $this->ensureIsNotRateLimited($credentials)) {
@@ -72,7 +116,16 @@ class Login extends Component
         }
 
         /* ESOZ Authentication */
-        if ($user && !$this->isLocalAuth && $user->isClientId() ) {
+        if ($user && !$this->isLocalAuth) {
+            if (!empty($this->legalEntityUUID)) {
+                /* Temporary save the UUID of the selected Legal Entity */
+                session()->put('selected_legal_entity_uuid_for_ehealth', $this->legalEntityUUID);
+            } else {
+                Log::error("Legal entity hasn't been choose for email {$user->email}");
+
+                return null;
+            }
+
             $url = $this->loginUrl($user);
 
             return Redirect::to($url);
@@ -90,14 +143,36 @@ class Login extends Component
 
         Session::regenerate();
 
-        return redirect( route('dashboard', [legalEntity()]));
+        /* Get an array of the LegalEntity id's connected to this $user */
+        $accessibleLegalEntities = $user->accessibleLegalEntities()->toArray();
+
+        if (!empty($accessibleLegalEntities)) {
+            session()->flash('user_accessible_legal_entities', $accessibleLegalEntities);
+
+            return redirect( route('legalEntity.select'));
+        } else {
+            return redirect( route('legal-entity.new.create'));
+        }
     }
 
     protected function rules(): array
     {
-        return [
+        $uuids = array_map(fn($arr) => $arr['uuid'], $this->legalEntitesList);
+
+        return array_filter([
             'email' => 'required|email',
             'password' => $this->isLocalAuth ? 'required|string' : 'nullable',
+            'legalEntityUUID' => !$this->isLocalAuth
+                ? ['required', Rule::in($uuids)]
+                : null,
+        ]);
+    }
+
+    public function messages()
+    {
+        return [
+            'legalEntityUUID.required' => __('forms.choose_legal_entity'),
+            'legalEntityUUID.in' => __('forms.del_and_choose_value'),
         ];
     }
 
@@ -179,12 +254,17 @@ class Login extends Component
         }
 
         try {
+            $selectedLegalEntityUuidFromSession = session()->pull('selected_legal_entity_uuid_for_ehealth');
 
             $handleLoginUser = app(EHealthLoginUserHandler::class);
 
             $code = request()->input('code');
 
-            $authResponse = EmployeeApi::authenticate($code);
+            $authResponse = EmployeeApi::authenticate($code, $selectedLegalEntityUuidFromSession);
+
+            if (!$authResponse) {
+                return Redirect::route('login')->with('error', __('auth.login.error.user_identity'));
+            }
 
             $authResponseValidator = $this->validateAuthResponse($authResponse);
 
@@ -201,6 +281,17 @@ class Login extends Component
 
             $authUserUUID = $authResponseData['user_id'];
             $authLegalEntityUUID = $authResponseData['details']['client_id'];
+
+            /* This checks if the user chose one LE, but eHealth returned another */
+            if ($selectedLegalEntityUuidFromSession && $selectedLegalEntityUuidFromSession !== $authLegalEntityUUID) {
+                Log::warning('User selected a different Legal Entity in form than eHealth returned.', [
+                    'Selected in form' => $selectedLegalEntityUuidFromSession,
+                    'Returned by eHealth' => $authLegalEntityUUID,
+                    'User UUID' => $authUserUUID,
+                ]);
+
+                return $handleLoginUser->breakAuth('auth.login.error.legal_entity_identity');
+            }
 
             try {
                 $legalEntity = LegalEntity::byUuid($authLegalEntityUUID)->firstOrFail();
@@ -237,9 +328,16 @@ class Login extends Component
         setPermissionsTeamId($legalEntity->id);
         $user->unsetRelation('roles')->unsetRelation('permissions');
 
-        Log::info(__('auth.login.success.user_auth', [], 'en'), ['User ID' => $user->id]);
+        /* Check if the user has assigned LegalEntity */
+        if ($legalEntity) {
+            Log::info(__('auth.login.success.user_auth', [], 'en'), ['User ID' => $user->id]);
 
-        return Redirect::route('dashboard', [$legalEntity])->with('success', $isFirstLogin ? __('auth.login.success.new_user_auth') : null);
+            return Redirect::route('dashboard', [$legalEntity])->with('success', $isFirstLogin ? __('auth.login.success.new_user_auth') : null);
+        } else {
+            Auth::guard('ehealth')->logout();
+
+            return Redirect::route('login')->with('error', __('auth.login.error.legal_entity.wrong_request'));
+        }
     }
 
     /**
@@ -255,28 +353,45 @@ class Login extends Component
         $baseUrl = config('ehealth.api.auth_host');
         $redirectUri = config('ehealth.api.redirect_uri');
 
+        $selectedLegalEntityClientId = $this->getLegalEntityClientIdFromUuid($this->legalEntityUUID);
+
+        $legalEntityId = LegalEntity::byUuid($this->legalEntityUUID)->first()->id;
+
         /* Base query parameters */
         $queryParams = [
-            'client_id' => $user->legalEntity->client_id ?? '',
+            'client_id' => $selectedLegalEntityClientId ?? '',
             'redirect_uri' => $redirectUri,
             'response_type' => 'code'
         ];
 
         // Set a temporary team/legalEntity ID, this should be overridden once a user actually logs in.
         // Spatie Permissions sets permissions globally, they can't be loaded by querying relations tables
-        setPermissionsTeamId($user->legalEntity->id);
+        setPermissionsTeamId($legalEntityId);
         $user->unsetRelation('roles')->unsetRelation('permissions');
 
         /* Additional query parameters if email is provided */
         if (!empty($user->email)) {
             $queryParams['email'] = $user->email;
-            $queryParams['scope'] = $user->getScopes();
+            $queryParams['scope'] = $user->getScopes($selectedLegalEntityClientId);
         }
 
         session()->put(config('ehealth.api.auth_ehealth'), $user->id);
 
         /* Build the full URL with query parameters */
         return $baseUrl . '?' . http_build_query($queryParams);
+    }
+
+    /**
+     * Helper to get client_id from selected record by legalEntityUUID.
+     * This is crucial if the user desn't have a default LegalEntity assigned yet.
+     *
+     * @param string $uuid
+     *
+     * @return string|null
+     */
+    protected function getLegalEntityClientIdFromUuid(string $uuid): ?string
+    {
+        return LegalEntity::byUuid($uuid)->first()?->clientId;
     }
 
     /**
