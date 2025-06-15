@@ -12,7 +12,6 @@ use Spatie\Permission\Traits\HasRoles;
 use App\Models\Employee\EmployeeRequest;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Builder;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -40,9 +39,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $fillable = [
         'email',
         'password',
-        'legal_entity_id',
-        'secret_key',
-        'tax_id',
+        'secret_key'
     ];
 
     /**
@@ -80,9 +77,9 @@ class User extends Authenticatable implements MustVerifyEmail
      *
      * @var array
      */
-    protected $with = ['legalEntity', 'person'];
+    protected $with = ['person'];
 
-    // This need to override because trait HasProfilePhoto was disabled to remove 'name' attribute calling
+    /* This need to override because trait HasProfilePhoto was disabled to remove 'name' attribute calling */
     public function getProfilePhotoUrlAttribute(): string
     {
         return $this->profile_photo_path
@@ -90,7 +87,7 @@ class User extends Authenticatable implements MustVerifyEmail
             : $this->defaultProfilePhotoUrl();
     }
 
-    // This need to override because trait HasProfilePhoto was disabled to remove 'name' attribute calling
+    /* This need to override because trait HasProfilePhoto was disabled to remove 'name' attribute calling */
     public function defaultProfilePhotoUrl(): string
     {
         return '';
@@ -104,14 +101,24 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo(Person::class);
     }
 
-    public function legalEntity(): BelongsTo
+    /* Check if user has access to the Legal Entity with specified UUID */
+    public function hasAccessToLegalEntityByUuid(string $legalEntityUuid): bool
     {
-        return $this->belongsTo(LegalEntity::class);
+        return $this->employees()
+                    ->whereHas('legalEntity', function($query) use($legalEntityUuid) {
+                        $query->where('uuid', $legalEntityUuid);
+                    })
+                    ->exists();
     }
 
-    public function isClientId(): bool
+    /* Get ALL Legal Entites IDs available for this user */
+    public function accessibleLegalEntities(): Collection
     {
-        return (bool)$this->legalEntity->client_id;
+        return $this->employees()
+                    ->with('legalEntity')
+                    ->get()
+                    ->unique('legal_entity_id')
+                    ->pluck('legal_entity_id');
     }
 
     // TODO: Check why need it for??????
@@ -134,16 +141,15 @@ class User extends Authenticatable implements MustVerifyEmail
      * Overides trait's method to exclude unused scopes
      * @return Collection<Permission> a list of scopes associated with the user and entity type
      */
-    public function getAllPermissions(): Collection
+    public function getAllPermissions(string $legalEntityClientId): Collection
     {
         $scopes = $this->getAllPermissionsTrait();
 
-        $legalEntityType = $this->legalEntity->type;
+        $legalEntity = LegalEntity::where('client_id', $legalEntityClientId)->first();
 
         $exclude = []; // exclude scopes not used by the entity
 
-        switch ($legalEntityType) {
-
+        switch ($legalEntity->type) {
             case LegalEntity::TYPE_PRIMARY_CARE:
                 $exclude = array_merge($exclude, ['contract_request:sign', 'contract_request:terminate', 'contract:write', 'contract_request:approve', 'contract_request:create']);
                 break;
@@ -151,7 +157,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         return $scopes->filter(
             fn (Permission $permission) =>
-            !Str::startsWith($permission->name, $exclude)
+            !collect($exclude)->some(fn($excluded) => Str::startsWith($permission->name, $excluded))
         );
     }
 
@@ -162,9 +168,9 @@ class User extends Authenticatable implements MustVerifyEmail
      *
      * @return string The concatenated string of user's scopes
      */
-    public function getScopes(): string
+    public function getScopes(string $legalEntityClientId): string
     {
-        return $this->getAllPermissions()->unique()->pluck('name')->join(' ');
+        return $this->getAllPermissions($legalEntityClientId)->unique()->pluck('name')->join(' ');
     }
 
     /**
@@ -207,13 +213,5 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getEmailVerifiedAtAttribute()
     {
         return $this->attributes['email_verified_at'];
-    }
-
-    /**
-     * Scope a query to get an user depends on email and LegalEntity ID's
-     */
-    public function scopeByEmailAndLegalEntity(Builder $query, string $email, int $legalEntityID): void
-    {
-        $query->where('email', $email)->where('legal_entity_id', $legalEntityID);
     }
 }

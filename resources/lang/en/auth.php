@@ -38,6 +38,13 @@ return [
                 'credentials' => 'НWrong email or password',
                 'confirm_mismatch' => 'Password mismatch'
             ],
+            'legal_entity' => [
+                'auth_need' => 'Need authorize for access',
+                'invalid_session' => 'Invalid session! Please relogin',
+                'data_problem' => 'Data problem! Please relogin',
+                'wrong_rights' => 'You access rights has changed. Please relogin',
+                'wrong_request' => 'No acceptable Legal Entity found for Your account after login'
+            ],
             'lockout' => 'User locked out [too many login attempts]',
             'exceed_login_attempts' => 'Exceed login attempts',
             'email_verification' => 'Your email has not been verified. Please check your email!',

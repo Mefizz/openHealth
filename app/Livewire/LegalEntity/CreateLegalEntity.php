@@ -39,15 +39,15 @@ class CreateLegalEntity extends LegalEntity
         $this->getCurrentStepFromCache();
     }
 
-    public function mount(?\App\Models\LegalEntity $legalEntity = null): void
+    public function mount(?string $legalEntityId = null): void
     {
         parent::mount();
 
         $this->getOwnerFields();
 
-        $this->legalEntityForm->owner['phones'] = $this->legalEntityForm->owner['phones'] ?? [];
+        $this->legalEntityForm->owner['phones'] ??= [];
 
-        $this->legalEntityForm->owner['noTaxId'] = $this->legalEntityForm->owner['noTaxId'] ?? false;
+        $this->legalEntityForm->owner['noTaxId'] ??= false;
 
         $this->setOwnerFromCache();
     }
@@ -58,7 +58,9 @@ class CreateLegalEntity extends LegalEntity
     private function setOwnerFromCache(): void
     {
         // Check if the owner information is available in the cache and the user is not a legal entity
-        if (Cache::has($this->ownerCacheKey) && !Auth::user()->legalEntity) {
+        // TODO: rework this. Need check additionally if the Auth::user() hasn't connection to the legalEntity() !!!
+        // if (Cache::has($this->ownerCacheKey) && !Auth::user()->legalEntity) { // TODO: 'Auth::user()->legalEntity' is an error. Should be fixed in next PR
+        if (Cache::has($this->ownerCacheKey) && !legalEntity()) { // TODO: 'Auth::user()->legalEntity' is an error. Should be fixed in next PR
             $this->legalEntityForm->owner = Cache::get($this->ownerCacheKey); // Set the owner information from cache
         }
     }
@@ -212,6 +214,7 @@ class CreateLegalEntity extends LegalEntity
 
         // Create the new License model bsed on the form data
         $license = new License();
+
         $license->fill($formData['license']);
 
         // Attach the newly created License model to the current LegalEntity model

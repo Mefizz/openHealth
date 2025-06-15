@@ -233,7 +233,16 @@ if (!function_exists('arrayKeysToSnake')) {
 if (!function_exists('legalEntity')) {
     function legalEntity(): ?LegalEntity
     {
-        return app('legalEntity');
+        // The app('legalEntity') shouldn't be called without condition.
+        // We must check if the LegalEntity already has in container.
+        // It works, if policy access already has been called and binded to 'legalEntity'.
+        if (app()->bound('legalEntity')) {
+            return app('legalEntity');
+        }
+
+        // If LegalEntity hasn't binded to the container (like 'legal_entity.new.create' route),
+        // return null, to avoid an error.
+        return null;
     }
 }
 
