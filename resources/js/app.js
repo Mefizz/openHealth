@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 format: format,
                 language: 'uk',
                 autohide: true,
-                showOnFocus: false
+                showOnFocus: true
             });
 
             datepickerEl.setAttribute('data-initialized', 'true'); // Avoidance of reinitialisation
@@ -47,6 +47,15 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+
+    // Prevent floating label from jumping when clicking inside the datepicker
+    document.addEventListener('mousedown', (event) => {
+        const activeInput = document.activeElement;
+        const isClickInsideDatepicker = event.target.closest('.datepicker');
+        if (activeInput?.classList?.contains('datepicker-input') && isClickInsideDatepicker) {
+            event.preventDefault();
+        }
+    });
 
     // Call when the page loads
     initDatepickers();
@@ -86,7 +95,7 @@ document.addEventListener('livewire:load', () => {
 
     var themeToggleBtn = document.getElementById('theme-toggle');
 
-    themeToggleBtn.addEventListener('click', function() {
+    themeToggleBtn.addEventListener('click', function () {
 
         // toggle icons inside button
         themeToggleDarkIcon.classList.toggle('hidden');
