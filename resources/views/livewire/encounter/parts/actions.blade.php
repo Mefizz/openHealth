@@ -209,14 +209,14 @@
                                                 }
 
                                                 newAction !== false
-                                                ? actions.push(modalAction)
-                                                : actions[item] = modalAction;
+                                                    ? actions.push(modalAction)
+                                                    : actions[item] = modalAction;
 
                                                 showDuplicateCodeWarning = false;
                                                 openModal = false;
                                             "
                                             class="button-primary"
-                                            :disabled="!(modalAction.coding[0].code.trim().length > 0)"
+                                            :disabled="!modalAction.coding[0].code.trim()"
                                     >
                                         {{ __('forms.save') }}
                                     </button>

@@ -78,23 +78,23 @@
             >
                 <div class="mb-6 flex items-center gap-8">
                     <button @click="activeFilter = 'all'"
-                            :class="activeFilter === 'all' ? 'button-primary' : 'light-button'"
+                            :class="activeFilter === 'all' ? 'button-primary' : 'button-minor'"
                     >
                         {{ __('patients.all') }}
                     </button>
                     <button @click="activeFilter = 'eHEALTH'"
-                            :class="activeFilter === 'eHEALTH' ? 'button-primary' : 'light-button'"
+                            :class="activeFilter === 'eHEALTH' ? 'button-primary' : 'button-minor'"
                     >
                         {{ __('patients.patients') }}
                     </button>
                     <button @click="activeFilter = 'APPLICATION'"
-                            :class="activeFilter === 'APPLICATION' ? 'button-primary' : 'light-button'"
+                            :class="activeFilter === 'APPLICATION' ? 'button-primary' : 'button-minor'"
                     >
                         {{ __('patients.applications') }}
                     </button>
                 </div>
                 <div class="table-container">
-                    <div class="overflow-x-auto">
+                    <div class="overflow-visible">
                         <table class="table-base">
                             <thead class="table-header">
                             <tr>
@@ -110,7 +110,8 @@
                                 <tr class="border-b dark:border-gray-700">
                                     <th scope="row" class="table-cell-primary">
                                         <div class="text-base"
-                                             x-text="`${patient.last_name} ${patient.first_name} ${patient.second_name || ''}`"></div>
+                                             x-text="`${ patient.last_name } ${ patient.first_name } ${ patient.second_name || '' }`"
+                                        ></div>
                                         <template x-if="patient.status === 'APPLICATION'">
                                             <div class="flex gap-2 mt-2">
                                                 <a :href="`{{ route('patient.form', ['id' => '']) }}/${patient.id}`"
@@ -122,7 +123,7 @@
                                         </template>
                                         <template x-if="patient.status !== 'APPLICATION'">
                                             <div class="flex gap-2 mt-2">
-                                                <button @click.prevent="$wire.redirectToPatient(patient)"
+                                                <button @click.prevent="$wire.redirectToRecord(patient)"
                                                         type="button"
                                                         class="button-primary"
                                                 >
@@ -136,16 +137,16 @@
                                             </div>
                                         </template>
                                     </th>
-                                    <td class="px-4 py-3" x-text="patient.phones?.[0]?.number || '-'"></td>
-                                    <td class="px-4 py-3" x-text="patient.birth_date"></td>
-                                    <td class="px-4 py-3" x-text="patient.tax_id || '-'"></td>
-                                    <td class="px-4 py-3" x-text="patient.birth_certificate || '-'"></td>
-                                    <td class="px-4 py-3">
+                                    <td class="td-input" x-text="patient.phones?.[0]?.number || '-'"></td>
+                                    <td class="td-input" x-text="patient.birth_date"></td>
+                                    <td class="td-input" x-text="patient.tax_id || '-'"></td>
+                                    <td class="td-input" x-text="patient.birth_certificate || '-'"></td>
+                                    <td class="td-input">
                                         <span x-text="
                                                   patient.status === 'APPLICATION' ? 'ЗАЯВКА' :
                                                   patient.status === 'eHEALTH' ? 'ЕСОЗ' :
                                                   patient.status === 'IN_REVIEW' ? 'ОБРОБЛЯЄТЬСЯ' :
-                                                  '-'
+                                                  patient.status
                                               "
                                               :class="{
                                                   'badge-purple': patient.status === 'APPLICATION',
@@ -154,33 +155,86 @@
                                               }"
                                         ></span>
                                     </td>
-                                    <td class="px-4 py-3">
-                                        <div x-data="{ open: false }">
-                                            <button @click="if (patient.status === 'APPLICATION') open = !open"
-                                                    class="dropdown-button"
+                                    <td class="td-input relative">
+                                        {{-- That all that is needed for the dropdown --}}
+                                        <div x-data="{
+                                                 openDropdown: false,
+                                                 toggle() {
+                                                     if (this.openDropdown) {
+                                                         return this.close()
+                                                     }
+
+                                                     this.$refs.button.focus()
+
+                                                     this.openDropdown = true
+                                                 },
+                                                 close(focusAfter) {
+                                                     if (!this.openDropdown) return
+
+                                                     this.openDropdown = false
+
+                                                     focusAfter && focusAfter.focus()
+                                                 }
+                                             }"
+                                             @keydown.escape.prevent.stop="close($refs.button)"
+                                             @focusin.window="! $refs.panel.contains($event.target) && close()"
+                                             x-id="['dropdown-button']"
+                                             class="relative"
+                                        >
+                                            {{-- Dropdown Button --}}
+                                            <button x-ref="button"
+                                                    @click="toggle()"
+                                                    :aria-expanded="openDropdown"
+                                                    :aria-controls="$id('dropdown-button')"
                                                     type="button"
+                                                    class="cursor-pointer"
                                             >
-                                                <svg width="24" height="25">
-                                                    <use xlink:href="#svg-edit-user-outline"></use>
+                                                <svg class="w-6 h-6 text-gray-800 dark:text-gray-200" aria-hidden="true"
+                                                     xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                     fill="none"
+                                                     viewBox="0 0 24 24">
+                                                    <path stroke="currentColor" stroke-linecap="square"
+                                                          stroke-linejoin="round"
+                                                          stroke-width="2"
+                                                          d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"/>
                                                 </svg>
                                             </button>
-                                            <div x-show="open"
-                                                 @click.away="open = false"
-                                                 class="dropdown-menu absolute right-0 mt-3"
-                                            >
-                                                <ul class="py-1 text-sm text-gray-700 dark:text-gray-200">
-                                                    <li>
-                                                        <a @click.prevent="$wire.removeApplication(patient.id)"
-                                                           href="#"
-                                                           class="dropdown-item-with-icon"
-                                                        >
-                                                            <svg width="18" height="19">
-                                                                <use xlink:href="#svg-edit"></use>
-                                                            </svg>
-                                                            {{ __('forms.delete') }}
-                                                        </a>
-                                                    </li>
-                                                </ul>
+
+                                            {{-- Dropdown Panel --}}
+                                            <div class="absolute right-[148px]">
+                                                <div x-ref="panel"
+                                                     x-show="openDropdown"
+                                                     x-transition.origin.top.left
+                                                     @click.outside="close($refs.button)"
+                                                     :id="$id('dropdown-button')"
+                                                     x-cloak
+                                                     class="dropdown-panel relative w-[170px]"
+                                                >
+                                                    <button x-show="patient.status === 'APPLICATION'"
+                                                            @click.prevent="$wire.removeApplication(patient.id)"
+                                                            class="dropdown-button !flex gap-2"
+                                                    >
+                                                        <svg width="14" height="14">
+                                                            <use xlink:href="#svg-trash"></use>
+                                                        </svg>
+                                                        {{ __('forms.delete') }}
+                                                    </button>
+
+                                                    <button x-show="patient.status !== 'APPLICATION'"
+                                                            @click.prevent="$wire.createDiagnosticReport(patient.id)"
+                                                            class="dropdown-button !flex gap-2"
+                                                    >
+                                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+                                                             xmlns="http://www.w3.org/2000/svg">
+                                                            <path
+                                                                d="M12.8337 7.5H10.5003L8.75033 12.75L5.25033 2.25L3.50033 7.5H1.16699"
+                                                                stroke="currentColor" stroke-linecap="round"
+                                                                stroke-linejoin="round"
+                                                            />
+                                                        </svg>
+                                                        {{ __('patients.create_diagnostic_report') }}
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </td>

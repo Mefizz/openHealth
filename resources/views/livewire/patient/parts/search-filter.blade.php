@@ -33,7 +33,7 @@
                    autocomplete="off"
             />
 
-            <label for="filterFirstName" class="label">
+            <label for="filterLastName" class="label">
                 {{ __('forms.last_name') }}
             </label>
 

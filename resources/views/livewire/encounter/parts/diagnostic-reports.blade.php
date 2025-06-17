@@ -170,11 +170,9 @@
                                         delete modalDiagnosticReport.basedOn;
                                     }
 
-                                    if (newDiagnosticReport) {
-                                        diagnosticReports.push(modalDiagnosticReport);
-                                    } else {
-                                        diagnosticReports[item] = modalDiagnosticReport;
-                                    }
+                                    newDiagnosticReport !== false
+                                        ? diagnosticReports.push(modalDiagnosticReport)
+                                        : diagnosticReports[item] = modalDiagnosticReport;
                                 "
                                 class="button-primary"
                                 data-drawer-hide="diagnostic-report-drawer-right"

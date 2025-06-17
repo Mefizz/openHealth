@@ -64,6 +64,7 @@ return [
     'applications' => 'Заявки',
     'continue_registration' => 'Продовжити реєстрацію',
     'view_record' => 'Переглянути карту',
+    'create_diagnostic_report' => 'Створити діагностичний звіт',
 
     // Create patient
     'patient_information' => 'Інформація про пацієнта',

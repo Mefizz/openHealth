@@ -70,7 +70,7 @@
     @endif
 
     @if($context === 'diagnostic-report')
-        <div class="form-row-3">
+        <div class="form-row-2">
             <div class="form-group group">
                 <select x-model="modalDiagnosticReport.division.identifier.value"
                         x-init="
@@ -94,7 +94,7 @@
         </div>
     @endif
 
-    <div class="form-row-3">
+    <div class="form-row-2">
         <div class="form-group group">
             <input x-model="modalDiagnosticReport.resultsInterpreter.text"
                    type="text"
@@ -111,7 +111,7 @@
     </div>
 
     {{-- Recorded by --}}
-    <div class="form-row-3">
+    <div class="form-row-2">
         <div class="form-group group">
             <input type="text"
                    name="recordedBy"

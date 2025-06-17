@@ -14,13 +14,15 @@ use Illuminate\Contracts\View\View;
 class PatientData extends BasePatientComponent
 {
     public array $phones = [];
+
     public array $confidantPersonRelationships;
+
     public array $authenticationMethods;
 
     protected function initializeComponent(): void
     {
         $patient = Person::with('phones')
-            ->where('id', $this->id)
+            ->where('id', $this->patientId)
             ->first()
             ?->toArray();
 

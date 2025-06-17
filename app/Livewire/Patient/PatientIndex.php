@@ -7,7 +7,7 @@ namespace App\Livewire\Patient;
 use App\Classes\eHealth\Api\PersonApi;
 use App\Classes\eHealth\Exceptions\ApiException;
 use App\Livewire\Patient\Forms\Api\PatientRequestApi;
-use App\Livewire\Patient\Forms\PatientFormRequest;
+use App\Livewire\Patient\Forms\PatientForm as Form;
 use App\Models\Person\Person;
 use App\Models\Person\PersonRequest;
 use Exception;
@@ -31,7 +31,7 @@ class PatientIndex extends Component
      */
     public array $originalPatients = [];
 
-    public PatientFormRequest $form;
+    public Form $form;
 
     /**
      * Check if the search person's request found someone.
@@ -107,7 +107,7 @@ class PatientIndex extends Component
      * @param  array  $patientData  The associative array containing patient details.
      * @return void
      */
-    public function redirectToPatient(array $patientData): void
+    public function redirectToRecord(array $patientData): void
     {
         $this->handleRedirect($patientData, 'patient.patient-data');
     }
@@ -133,6 +133,17 @@ class PatientIndex extends Component
     {
         PersonRequest::destroy($id);
         $this->dispatch('patientRemoved', $id);
+    }
+
+    /**
+     * Redirect to the diagnostic report creation page.
+     *
+     * @param  int  $patientId
+     * @return void
+     */
+    public function createDiagnosticReport(int $patientId): void
+    {
+        $this->redirectRoute('diagnostic-report.create', ['patientId' => $patientId]);
     }
 
     /**
