@@ -9,6 +9,7 @@ use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Patient\PatientComponent;
+use App\Livewire\DiagnosticReport\DiagnosticReportCreate;
 use App\Livewire\License\LicenseShow;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\License\LicenseIndex;
@@ -123,6 +124,8 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
 
             Route::get('/{patientId}/encounter/create', EncounterCreate::class)->name('encounter.create');
             Route::get('/{patientId}/encounter/{encounterId}', EncounterEdit::class)->name('encounter.edit');
+
+            Route::get('/{patientId}/diagnostic-report/create', DiagnosticReportCreate::class)->name('diagnostic-report.create');
         });
     });
 
