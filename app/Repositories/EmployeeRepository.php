@@ -359,7 +359,7 @@ class EmployeeRepository
                     fn($doc) => [
                         'type' => $doc['type'],
                         'number' => $doc['number'],
-                        'issued_by' => $doc['issued_by'],
+                        'issued_by' => $doc['issued_by'] ?? null,
                         'issued_at' => isset($doc['issued_at']) ? Carbon::parse($doc['issued_at'])->format('Y-m-d') : null
                     ],
                     $documentsData

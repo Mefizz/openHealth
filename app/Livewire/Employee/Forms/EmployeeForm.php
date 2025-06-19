@@ -6,6 +6,7 @@ use App\Models\Employee\Employee;
 use App\Rules\BirthDate;
 use App\Rules\Email;
 use App\Rules\Name;
+use App\Rules\UniqueEmailInLegalEntity;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Form;
 use App\Rules\PhoneNumber;
@@ -20,6 +21,7 @@ class EmployeeForm extends Form
     public string $startDate = '';
     public ?string $endDate = null;
     public string $status = 'NEW';
+    public ?int $existingPartyId = null;
 
     public ?string $knedp = null;
     public $keyContainerUpload;
@@ -40,7 +42,7 @@ class EmployeeForm extends Form
         'noTaxId' => false,
         'email' => '',
         'workingExperience' => null,
-        'aboutMyself' => null,
+        'aboutMyself' => '',
     ];
 
     public array $doctor = [
@@ -99,6 +101,8 @@ class EmployeeForm extends Form
      */
     protected function partyRules(): array
     {
+        $partyIdToIgnore = $this->existingPartyId;
+
         return [
             'party.lastName'         => ['required', new Name()],
             'party.firstName'        => ['required', new Name()],
@@ -110,8 +114,12 @@ class EmployeeForm extends Form
             'party.phones.*.type'    => ['required', 'string'],
             'party.taxId'            => ['required', 'string'],
             'party.noTaxId'          => ['boolean'],
-            'party.email'            => ['nullable', 'email', new Email()],
-            'party.workingExperience' => ['nullable', 'numeric'],
+            'party.email' => [
+                'nullable',
+                new Email(),
+                new UniqueEmailInLegalEntity($partyIdToIgnore)
+            ],
+            'party.workingExperience' => ['required', 'numeric', 'min:1'],
             'party.aboutMyself'      => ['nullable', 'string'],
         ];
     }
@@ -127,8 +135,8 @@ class EmployeeForm extends Form
             'documents' => ['required', 'array', 'min:1'],
             'documents.*.type' => ['required', 'string'],
             'documents.*.number' => ['required', 'string'],
-            'documents.*.issued_by' => ['nullable', 'string'],
-            'documents.*.issued_at' => ['nullable', 'date_format:Y-m-d'],
+            'documents.*.issuedBy' => ['required', 'string', 'min:1'],
+            'documents.*.issuedAt' => ['required', 'date_format:Y-m-d'],
         ];
     }
 
@@ -273,6 +281,7 @@ class EmployeeForm extends Form
                 'issued_by' => $doc->issued_by,
                 'issued_at' => $doc->issued_at?->format('Y-m-d'),
             ])->toArray();
+            $this->existingPartyId = $employee->party->id;
         }
 
         $this->doctor['divisionUuid'] = $employee->division_id;
@@ -341,28 +350,28 @@ class EmployeeForm extends Form
         return Arr::toSnakeCase($formData);
     }
 
-
     public function reset(...$properties): void
     {
         parent::reset(...$properties);
         $this->position = '';
         $this->employeeType = '';
         $this->startDate = '';
-        $this->endDate = null;
+        $this->endDate = '';
         $this->status = 'NEW';
         $this->documents = [];
         $this->party = [
             'lastName' => '', 'firstName' => '', 'secondName' => '', 'gender' => '',
             'birthDate' => '', 'phones' => [['type' => '', 'number' => '']],
             'taxId' => '', 'noTaxId' => false, 'email' => '',
-            'workingExperience' => null, 'aboutMyself' => null,
+            'workingExperience' => '', 'aboutMyself' => '',
         ];
         $this->doctor = [
-            'divisionUuid' => null, 'educations' => [], 'specialities' => [],
+            'divisionUuid' => '', 'educations' => [], 'specialities' => [],
             'scienceDegrees' => [], 'qualifications' => [],
         ];
         $this->knedp = null;
         $this->keyContainerUpload = null;
         $this->password = null;
+        $this->existingPartyId = null;
     }
 }

@@ -90,15 +90,12 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
             Route::get('/{division}/healthcare-service', HealthcareServiceForm::class)->name('healthcare_service.index');
         });
 
-        Route::prefix('employee')->group(function () {
-            Route::get('/', EmployeeIndex::class)->name('employee.index');
-            Route::get('/new', EmployeeCreate::class)->name('employee.create');
-            Route::get('/{employeeId}', EmployeeCreate::class)
-                ->name('employee.edit')
-                ->where('employeeId', '[0-9]+');
+        Route::prefix('employees')->name('employee.')->group(function () {
+            Route::get('/', EmployeeIndex::class)->name('index');
+            Route::get('/create', EmployeeCreate::class)->name('create');
+            Route::get('/{employee}', EmployeeShow::class)->name('show');
+            Route::get('/{employeeId}/edit', EmployeeEdit::class)->name('edit');
         });
-
-        Route::get('/employees/{employee}', EmployeeShow::class)->name('employee.show');
 
         Route::prefix('contract')->group(function () {
             Route::get('/', ContractIndex::class)->name('contract.index');

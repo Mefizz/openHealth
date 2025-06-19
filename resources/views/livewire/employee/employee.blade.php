@@ -2,7 +2,7 @@
     <x-section-navigation class="breadcrumb-form">
         <x-slot name="title">
             {{ $pageTitle }}
-            @if($employee)
+            @if(isset($employee))
                 : {{ $employee->fullName }}
             @endif
         </x-slot>
@@ -21,16 +21,16 @@
     >
         <form wire:submit.prevent="save" class="form">
             {{-- Main form includes --}}
-            @include('livewire.employee._parts._employee')
-            @include('livewire.employee._parts._documents')
+            @include('livewire.employee.parts.employee')
+            @include('livewire.employee.parts.documents')
 
             {{-- Doctor-specific fields --}}
             <template x-if="isDoctor()">
                 <div>
-                    @include('livewire.employee._parts._education')
-                    @include('livewire.employee._parts._specialities')
-                    @include('livewire.employee._parts._science_degree')
-                    @include('livewire.employee._parts._qualifications')
+                    @include('livewire.employee.parts.education')
+                    @include('livewire.employee.parts.specialities')
+                    @include('livewire.employee.parts.science_degree')
+                    @include('livewire.employee.parts.qualifications')
                 </div>
             </template>
 
@@ -40,7 +40,7 @@
                 <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">{{ __('forms.sign_with_KEP') }}</h3>
                 <p class="mb-6 text-sm text-gray-600 dark:text-gray-300">{{ __('forms.complete_the_interaction_and_sign') }}</p>
 
-                @include('livewire.employee._parts._signature_block')
+                @include('livewire.employee.parts.signature_block')
             </div>
 
             {{-- Flash messages for success and error --}}

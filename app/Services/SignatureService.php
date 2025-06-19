@@ -6,6 +6,7 @@ use App\Classes\Cipher\Api\CipherApi;
 use App\Classes\Cipher\Exceptions\ApiException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class SignatureService
 {
@@ -18,14 +19,7 @@ class SignatureService
 
     /**
      * Sends data for signing using Cipher API.
-     *
-     * @param array $dataToSign The data payload to be signed.
-     * @param string $password Password for the key container.
-     * @param string $knedp KNEPD (Certificate Authority ID).
-     * @param string $base64FileContent The Base64 encoded content of the key container file.
-     * @param string $signatoryInitiator Type of signatory (e.g., CipherApi::SIGNATORY_INITIATOR_PERSON).
-     * @param string $taxId Tax ID (ІПН/ЄДРПОУ) for verification.
-     * @return string|array The signed data as a string from Cipher API, or an array of errors.
+     * Throws a user-friendly ValidationException on failure.
      */
     public function signData(
         array $dataToSign,
@@ -33,7 +27,7 @@ class SignatureService
         string $knedp,
         string $base64FileContent,
         string $signatoryInitiator,
-        string $taxId,
+        string $taxId
     ): string|array {
         try {
             return $this->cipherApi->sendSession(
@@ -45,17 +39,17 @@ class SignatureService
                 $taxId
             );
         } catch (ApiException $e) {
-            Log::error('Cipher API Exception in SignatureService: ' . $e->getMessage(), ['errors' => $e->getErrors()]);
-            return $e->getErrors();
+            $errors = $e->getErrors();
+            $errorMessage = collect($errors)->flatten()->first() ?? __('forms.invalid_kep_password_or_file');
+
+            throw ValidationException::withMessages([
+                                                        'form.password' => $errorMessage,
+                                                    ]);
         } catch (\Exception $e) {
             Log::error('Unexpected error in SignatureService: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return [
-                'errors' => [
-                    'general' => __('api.cipher.unexpected_error') . ': ' . $e->getMessage()
-                ],
-                'message' => __('api.cipher.unexpected_error_short'),
-                'status' => 500
-            ];
+            throw ValidationException::withMessages([
+                                                        'form.password' => __('api.cipher.unexpected_error_short'),
+                                                    ]);
         }
     }
 

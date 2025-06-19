@@ -80,9 +80,9 @@ trait ManagesEmployeeForm
     }
 
     /**
-     * Handles the signing process.
+     * Handles the signing process and returns a redirect on success.
      */
-    public function sign(): void
+    public function sign()
     {
         try {
             $this->save();
@@ -106,14 +106,19 @@ trait ManagesEmployeeForm
 
             if (is_array($signedContent) && isset($signedContent['errors'])) {
                 $this->dispatchErrorMessage((array)$signedContent['errors'], __('forms.failed_to_sign_data'));
+
+                return null;
             }
 
             if ($this->sendSignedContentToEhealth($signedContent)) {
-                 response()->redirectToRoute('employee.index');
+                return response()->redirectToRoute('employee.index');
             }
+
         } catch (Exception $e) {
             $this->handleException($e);
         }
+
+        return null;
     }
 
     /**
@@ -131,7 +136,6 @@ trait ManagesEmployeeForm
             if (isset($ehealthResponse['id'])) {
                 $this->employeeRequest->uuid = $ehealthResponse['id'];
                 $this->employeeRequest->inserted_at = $ehealthResponse['inserted_at'];
-                $this->employeeRequest->status = Status::SIGNED;
                 $this->employeeRequest->save();
                 session()->flash('success', __('forms.requestSignedAndSentToEHealth'));
                 $this->dispatch('signature-successful');

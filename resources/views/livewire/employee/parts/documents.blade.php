@@ -54,11 +54,6 @@
                     @click.prevent
                     class="item-add my-5"
             >
-                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-                     viewBox="0 0 24 24">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M5 12h14m-7 7V5"/>
-                </svg>
 
                 {{__('forms.add_document')}}
             </button>
@@ -120,15 +115,15 @@
                                         <p class="text-error text-xs"
                                            x-show="!modalDocument.number.trim().length > 0">{{__('forms.field_empty')}}</p>
                                     </div>
+
                                     <div>
-                                        <label for="documentIssuedBy"
-                                               class="label-modal">{{__('forms.document_issued_by')}}</label>
+                                        <label for="documentIssuedBy" class="label-modal">{{__('forms.document_issued_by')}} *</label>
                                         <input x-model="modalDocument.issuedBy" type="text" name="documentIssuedBy"
-                                               id="documentIssuedBy" class="input-modal">
+                                               id="documentIssuedBy" class="input-modal" required>
                                     </div>
+
                                     <div>
-                                        <label for="documentIssuedAt"
-                                               class="label-modal">{{__('forms.document_issued_at')}}</label>
+                                        <label for="documentIssuedAt" class="label-modal">{{__('forms.document_issued_at')}} *</label>
                                         <input x-model="modalDocument.issuedAt" name="documentIssuedAt"
                                                id="documentIssuedAt" class="input-modal datepicker-input"
                                                autocomplete="off" required>
@@ -146,7 +141,7 @@
                                     <button @click.prevent
                                             @click="newDocument !== false ? documents.push(modalDocument) : documents[item] = modalDocument; openModal = false"
                                             class="button-primary"
-                                            :disabled="!(modalDocument.type.trim().length > 0 && modalDocument.number.trim().length > 0 && modalDocument.issuedAt.trim().length > 0)" {{-- Updated disabled condition --}}
+                                            :disabled="!(modalDocument.type && modalDocument.number && modalDocument.issuedBy && modalDocument.issuedAt)"
                                     >
                                         {{__('forms.save')}}
                                     </button>
