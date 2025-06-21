@@ -1,5 +1,4 @@
 {{-- Component to input values to the table through the Modal, built with Alpine --}}
-
 <div class="relative"> {{-- This required for table overflow scrolling --}}
     <fieldset class="fieldset"
               {{-- Binding documents to Alpine, it will be re-used in the modal.
@@ -7,7 +6,7 @@
               x-data="{
                   documents: $wire.entangle('form.documents'),
                   openModal: false,
-                  modalDocument: new Doc(),
+                  modalDocument: new Document(),
                   newDocument: false,
                   item: 0,
                   dictionary: $wire.dictionaries['DOCUMENT_TYPE']
@@ -64,7 +63,7 @@
                         >
                             {{-- Dropdown Button --}}
                             <button x-ref="button"
-                                    x-on:click="toggle()"
+                                    @click="toggle()"
                                     :aria-expanded="openDropdown"
                                     :aria-controls="$id('dropdown-button')"
                                     type="button"
@@ -95,7 +94,7 @@
                                                     openModal = true; {{-- Open the modal --}}
                                                     item = index; {{-- Identify the item we are corrently editing --}}
                                                     {{-- Replace the previous document with the current, don't assign object directly (modalDocument = document) to avoid reactiveness --}}
-                                                    modalDocument = new Doc(document)
+                                                    modalDocument = new Document(document);
                                                     newDocument = false; {{-- This document is already created --}}
                                                 "
                                             class="dropdown-button"
@@ -103,7 +102,7 @@
                                         {{ __('forms.edit') }}
                                     </button>
 
-                                    <button @click.prevent="documents.splice(index, 1); close($refs.button)"
+                                    <button @click.prevent="documents.splice(index, 1); close($refs.button);"
                                             class="dropdown-button dropdown-delete">
                                         {{ __('forms.delete') }}
                                     </button>
@@ -117,12 +116,11 @@
         </table>
 
         <div>
-
             {{-- Button to trigger the modal --}}
             <button @click.prevent="
                         openModal = true; {{-- Open the Modal --}}
                         newDocument = true; {{-- We are adding a new document --}}
-                        modalDocument = new Doc() {{-- Replace the data of the previous document with a new one--}}
+                        modalDocument = new Document() {{-- Replace the data of the previous document with a new one--}}
                     "
                     class="item-add my-5"
             >
@@ -257,8 +255,14 @@
                                     </button>
 
                                     <button class="button-primary"
-                                            @click.prevent="newDocument !== false ? documents.push(modalDocument) : documents[item] = modalDocument; openModal = false"
-                                            :disabled="!(modalDocument.type.trim().length > 0 && modalDocument.number.trim().length > 0)"
+                                            @click.prevent="
+                                                newDocument !== false
+                                                    ? documents.push(modalDocument)
+                                                    : documents[item] = modalDocument;
+
+                                                openModal = false;
+                                            "
+                                            :disabled="!modalDocument.type.trim() || !modalDocument.number.trim()"
                                     >
                                         {{ __('forms.save') }}
                                     </button>
@@ -276,7 +280,7 @@
     /**
      * Representation of the user's personal document
      */
-    class Doc {
+    class Document {
         type = '';
         number = '';
         issuedBy = '';

@@ -12,7 +12,9 @@ use Illuminate\Contracts\View\View;
 class PatientSummary extends BasePatientComponent
 {
     public array $episodes;
+
     public array $diagnoses;
+
     public array $observations;
 
     public function render(): View

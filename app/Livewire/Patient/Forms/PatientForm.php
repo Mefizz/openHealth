@@ -17,7 +17,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
-class PatientFormRequest extends Form
+class PatientForm extends Form
 {
     protected const int NO_SELF_AUTH_AGE = 14;
     protected const int NO_SELF_REGISTRATION_AGE = 14;

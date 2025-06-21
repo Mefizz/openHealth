@@ -9,7 +9,7 @@ use App\Classes\eHealth\Api\PersonApi;
 use App\Classes\eHealth\Api\PersonRequestApi;
 use App\Classes\eHealth\Exceptions\ApiException;
 use App\Livewire\Patient\Forms\Api\PatientRequestApi;
-use App\Livewire\Patient\Forms\PatientFormRequest;
+use App\Livewire\Patient\Forms\PatientForm as Form;
 use App\Models\Person\Person;
 use App\Models\Person\PersonRequest;
 use App\Repositories\PersonRepository;
@@ -24,7 +24,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Throwable;
 
-class PatientForm extends Component
+class PatientComponent extends Component
 {
     use FormTrait;
     use WithFileUploads;
@@ -42,7 +42,7 @@ class PatientForm extends Component
     public int $patientId;
 
     public string $mode = 'create';
-    public PatientFormRequest $form;
+    public Form $form;
 
     /**
      * List of founded confidant person.
@@ -293,7 +293,7 @@ class PatientForm extends Component
         $this->validatePersonRequest(['patient', 'documents', 'documentsRelationship']);
 
         $response = PersonRepository::savePersonResponseData(
-            $this->convertArrayKeysToSnakeCase($this->form->toArray()),
+            removeEmptyKeys($this->convertArrayKeysToSnakeCase($this->form->toArray())),
             PersonRequest::class
         );
 

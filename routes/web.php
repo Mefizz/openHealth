@@ -8,8 +8,8 @@ use App\Livewire\Actions\Logout;
 use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\ForgotPassword;
+use App\Livewire\Patient\PatientComponent;
 use App\Livewire\DiagnosticReport\DiagnosticReportCreate;
-use App\Livewire\Patient\PatientForm;
 use App\Livewire\License\LicenseShow;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\License\LicenseIndex;
@@ -117,10 +117,10 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
     Route::group(['middleware' => ['role:OWNER|ADMIN|DOCTOR']], static function () {
         Route::prefix('patient')->group(static function () {
             Route::get('/', PatientIndex::class)->name('patient.index');
-            Route::get('/create/{id?}', PatientForm::class)->name('patient.form');
-            Route::get('/{id}/patient-data', PatientData::class)->name('patient.patient-data');
-            Route::get('/{id}/summary', PatientSummary::class)->name('patient.summary');
-            Route::get('/{id}/episodes', PatientEpisodes::class)->name('patient.episodes');
+            Route::get('/create/{patientId?}', PatientComponent::class)->name('patient.form');
+            Route::get('/{patientId}/patient-data', PatientData::class)->name('patient.patient-data');
+            Route::get('/{patientId}/summary', PatientSummary::class)->name('patient.summary');
+            Route::get('/{patientId}/episodes', PatientEpisodes::class)->name('patient.episodes');
 
             Route::get('/{patientId}/encounter/create', EncounterCreate::class)->name('encounter.create');
             Route::get('/{patientId}/encounter/{encounterId}', EncounterEdit::class)->name('encounter.edit');

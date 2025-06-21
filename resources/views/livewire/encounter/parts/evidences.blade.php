@@ -183,13 +183,13 @@
 
                                     <button @click.prevent="
                                                 newEvidenceCode !== false
-                                                ? modalCondition.conditions.evidences[0].codes.push(modalEvidenceCode.codes[0])
-                                                : modalCondition.conditions.evidences[item] = modalEvidenceCode;
+                                                    ? modalCondition.conditions.evidences[0].codes.push(modalEvidenceCode.codes[0])
+                                                    : modalCondition.conditions.evidences[item] = modalEvidenceCode;
 
                                                 openModal = false;
                                             "
                                             class="button-primary"
-                                            :disabled="!(modalEvidenceCode.codes[0].coding[0].code.trim().length > 0)"
+                                            :disabled="!modalEvidenceCode.codes[0].coding[0].code.trim()"
                                     >
                                         {{ __('forms.save') }}
                                     </button>

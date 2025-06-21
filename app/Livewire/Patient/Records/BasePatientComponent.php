@@ -11,24 +11,28 @@ use Livewire\Component;
 abstract class BasePatientComponent extends Component
 {
     #[Locked]
-    public string $id;
-    protected string $uuid;
+    public string $patientId;
 
     public string $firstName;
+
     public string $lastName;
+
     public ?string $secondName = null;
+
     public string $verificationStatus;
+
+    protected string $uuid;
 
     public function boot(): void
     {
-        if ($this->id) {
+        if ($this->patientId) {
             $this->loadPatientData();
         }
     }
 
-    public function mount(string $id): void
+    public function mount(string $patientId): void
     {
-        $this->id = $id;
+        $this->patientId = $patientId;
         $this->initializeComponent();
     }
 
@@ -40,7 +44,7 @@ abstract class BasePatientComponent extends Component
     protected function loadPatientData(): void
     {
         $patient = Person::select(['uuid', 'first_name', 'last_name', 'second_name', 'verification_status'])
-            ->where('id', $this->id)
+            ->where('id', $this->patientId)
             ->first()
             ?->toArray();
 

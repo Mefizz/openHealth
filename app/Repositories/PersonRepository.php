@@ -121,14 +121,8 @@ class PersonRepository
             $personData['status'] = $data['status'] ?? 'APPLICATION';
         }
 
-        // Update or create data based on id or uuid
-        return $modelClass::updateOrCreate(
-            [
-                'uuid' => $personData['uuid'] ?? null,
-                'id' => isset($data['dbId']) && !$personData['uuid'] ? $data['dbId'] : null
-            ],
-            $personData
-        );
+        // Update or create data based on uuid
+        return $modelClass::updateOrCreate(['uuid' => $personData['uuid'] ?? null], $personData);
     }
 
     /**

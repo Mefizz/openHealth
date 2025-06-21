@@ -207,14 +207,14 @@
                                                 }
 
                                                 newReason !== false
-                                                ? reasons.push(modalReason)
-                                                : reasons[item] = modalReason;
+                                                    ? reasons.push(modalReason)
+                                                    : reasons[item] = modalReason;
 
                                                 showDuplicateCodeWarning = false;
                                                 openModal = false;
                                             "
                                             class="button-primary"
-                                            :disabled="!(modalReason.coding[0].code.trim().length > 0)"
+                                            :disabled="!modalReason.coding[0].code.trim()"
                                     >
                                         {{ __('forms.save') }}
                                     </button>

@@ -236,8 +236,8 @@
                                                 modalObservation.dictionaryName = $wire.observationValueMap[modalObservation.code.coding[0].code]?.[0];
 
                                                 newObservation !== false
-                                                ? observations.push(modalObservation)
-                                                : observations[item] = modalObservation;
+                                                    ? observations.push(modalObservation)
+                                                    : observations[item] = modalObservation;
 
                                                 showDuplicateCodeWarning = false;
                                                 openModal = false;

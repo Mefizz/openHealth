@@ -5,7 +5,7 @@
 
     <div>
         {{-- Category --}}
-        <div class="form-row-3">
+        <div class="form-row-2">
             <div class="form-group group">
                 <select x-model="modalDiagnosticReport.category[0].coding[0].code"
                         id="diagnosticCategory"
@@ -26,7 +26,7 @@
         </div>
 
         {{-- Services --}}
-        <div class="form-row-3 relative z-1">
+        <div class="form-row-2 relative z-1">
             <div class="form-group group">
                 <x-select2 modelPath="modalDiagnosticReport.code.identifier.value"
                            dictionaryName="custom/services"
@@ -60,7 +60,7 @@
             {{-- When referral available --}}
             <template x-if="modalDiagnosticReport.isReferralAvailable">
                 <div class="form-group group">
-                    <div class="form-row-3" x-cloak>
+                    <div class="form-row-2" x-cloak>
                         <div>
                             <select id="referralType"
                                     class="input-select peer"
@@ -98,7 +98,7 @@
                     {{-- Paper referral --}}
                     <template x-if="modalDiagnosticReport.referralType === 'paper'" x-transition>
                         <div>
-                            <div class="form-row-3">
+                            <div class="form-row-2">
                                 <div class="form-group group">
                                     <input x-model="modalDiagnosticReport.paperReferral.requisition"
                                            type="text"
@@ -128,7 +128,7 @@
                                 </div>
                             </div>
 
-                            <div class="form-row-3">
+                            <div class="form-row-2">
                                 <div class="form-group group">
                                     <input x-model="modalDiagnosticReport.paperReferral.requesterLegalEntityEdrpou"
                                            type="text"
@@ -160,7 +160,7 @@
                                 </div>
                             </div>
 
-                            <div class="form-row-3">
+                            <div class="form-row-2">
                                 <div class="form-group group">
                                     <div class="datepicker-wrapper">
                                         <input x-model="modalDiagnosticReport.paperReferral.serviceRequestDate"
@@ -204,7 +204,7 @@
                  results: $wire.entangle('results'),
                  showResults: false
              }"
-             class="form-row-3 relative"
+             class="form-row-2 relative"
         >
             <div class="form-group group">
                 <input type="text"

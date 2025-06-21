@@ -200,8 +200,8 @@
                                                 }
 
                                                 newImmunization !== false
-                                                ? immunizations.push(modalImmunization)
-                                                : immunizations[item] = modalImmunization;
+                                                    ? immunizations.push(modalImmunization)
+                                                    : immunizations[item] = modalImmunization;
 
                                                 showDuplicateCodeWarning = false;
                                                 openModal = false;
