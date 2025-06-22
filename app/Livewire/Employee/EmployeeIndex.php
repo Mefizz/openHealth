@@ -55,7 +55,7 @@ class EmployeeIndex extends Component
         $this->legalEntity = Auth::user()->legalEntity;
     }
 
-    public function mount()
+    public function mount(LegalEntity $legalEntity)
     {
         $this->tableHeaders();
         $this->getLastStoreId();

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\License;
 
+use App\Models\LegalEntity;
 use App\Traits\FormTrait;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -36,7 +37,7 @@ class LicenseIndex extends Component
         $this->licenseCacheKey = self::CACHE_PREFIX . '-' . $user->id;
     }
 
-    public function mount()
+    public function mount(LegalEntity $legalEntity): void
     {
         $this->tableHeaders();
         $this->getLastStoreId();
@@ -132,7 +133,7 @@ class LicenseIndex extends Component
 
     public function create()
     {
-        return redirect()->route('license.form', ['store_id' => $this->storeId]);
+        return redirect()->route('license.form', [legalEntity(), 'store_id' => $this->storeId]);
     }
 
     public function sortTypeLicenses(): void

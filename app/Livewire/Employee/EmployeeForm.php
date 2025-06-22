@@ -354,7 +354,7 @@ class EmployeeForm extends Component
             'type'    => 'success',
         ]);
 
-        return redirect()->route('employee.index');
+        return redirect()->route('employee.index', [legalEntity()]);
 
     }
 

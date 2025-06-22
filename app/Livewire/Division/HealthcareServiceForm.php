@@ -8,6 +8,7 @@ use App\Livewire\Division\Api\HealthcareServiceRequestApi;
 use App\Livewire\Division\Forms\HealthCareFormRequest;
 use App\Models\Division;
 use App\Models\HealthcareService;
+use App\Models\LegalEntity;
 use App\Traits\FormTrait;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
@@ -63,7 +64,7 @@ class HealthcareServiceForm extends Component
 
     public bool $divisionStatus = false;
 
-    public function mount(Division $division)
+    public function mount(LegalEntity $legalEntity, Division $division)
     {
         $this->dictionaries = [
             'show' => [],

@@ -77,7 +77,7 @@ class DiagnosticReportCreate extends DiagnosticReportComponent
 
         PatientApi::submitDiagnosticReportPackage($this->patientUuid, ['signed_data' => $base64EncryptedData]);
 
-        to_route('patient.index')->with('flashMessage', [
+        to_route('patient.index', [legalEntity()])->with('flashMessage', [
             'message' => 'Діагностичний звіт успішно створений',
             'type' => 'success'
         ]);

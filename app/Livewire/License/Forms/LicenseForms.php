@@ -40,7 +40,7 @@ class LicenseForms extends Component
         'status'  => false,
     ];
 
-    public function mount($id = null)
+    public function mount(LegalEntity $legalEntity, $id = null)
     {
         if (isset($id) && $id !== null) {
             $this->license_id = $id;
@@ -168,7 +168,7 @@ class LicenseForms extends Component
 
     public function back()
     {
-        return redirect()->route('license.index');
+        return redirect()->route('license.index', legalEntity());
     }
 
 

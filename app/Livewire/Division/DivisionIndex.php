@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Division;
 
+use App\Models\LegalEntity;
 use App\Traits\FormTrait;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
@@ -44,7 +45,7 @@ class DivisionIndex extends Component
         $this->addressRepository = $addressRepository;
     }
 
-    public function mount(): void
+    public function mount(LegalEntity $legalEntity): void
     {
         $this->tableHeaders();
         $this->getDictionary();

@@ -8,6 +8,7 @@ use App\Repositories\EmployeeRepository;
 use App\Traits\FormTrait;
 use Livewire\Component;
 use App\Livewire\Employee\Forms\EmployeeForm as Form;
+use App\Models\LegalEntity;
 
 class EmployeeComponent extends Component
 {
@@ -54,7 +55,7 @@ class EmployeeComponent extends Component
         $this->employeeRepository = $employeeRepository;
     }
 
-    public function mount(): void
+    public function mount(LegalEntity $legalEntity): void
     {
         $this->getDictionary();
     }

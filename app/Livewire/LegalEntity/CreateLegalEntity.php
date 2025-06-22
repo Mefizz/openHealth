@@ -39,7 +39,7 @@ class CreateLegalEntity extends LegalEntity
         $this->getCurrentStepFromCache();
     }
 
-    public function mount(): void
+    public function mount(?\App\Models\LegalEntity $legalEntity = null): void
     {
         parent::mount();
 

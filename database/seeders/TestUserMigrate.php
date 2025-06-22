@@ -210,12 +210,15 @@ class TestUserMigrate extends Seeder
 
                 $this->command->info("\tINFO: A new User entry has been successfully inserted into the database");
 
-                $ownerRoleId = DB::table('roles')->where('name', 'OWNER')->value('id');
-                DB::table('model_has_roles')->insert([
-                    'role_id' => $ownerRoleId,
-                    'model_type' => 'App\Models\User',
-                    'model_id' => $ownerUser->id
-                ]);
+                $ownerRoleIds = DB::table('roles')->where('name', 'OWNER')->pluck('id');
+                foreach ($ownerRoleIds as $ownerRoleId) {
+                    DB::table('model_has_roles')->insert([
+                        'role_id' => $ownerRoleId,
+                        'model_type' => 'App\Models\User',
+                        'model_id' => $ownerUser->id,
+                        'legal_entity_id' => $legalEntityId,
+                    ]);
+                }
 
                 $partyId = DB::table('parties')->insertGetId([
                     'uuid' => '8656775d-9258-405c-8841-10769360ee1e',

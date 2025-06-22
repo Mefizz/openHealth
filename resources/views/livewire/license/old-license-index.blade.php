@@ -27,7 +27,7 @@
                         </div>
                     </div>
 
-                    <a href="{{ route('license.create') }}"
+                    <a href="{{ route('license.create', legalEntity()) }}"
                         class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
                         wire:click="create('license.create')"
                         type="button"
@@ -116,13 +116,13 @@
                                                     style="display: none;"
                                                     class="absolute right-0 mt-2 w-60 rounded-md bg-white shadow-md z-50"
                                                 >
-                                                    <a href="{{ route('license.show', $license->id) }}"
+                                                    <a href="{{ route('license.show', [legalEntity(), $license->id]) }}"
                                                         class="flex items-center gap-2 w-full first-of-type:rounded-t-md last-of-type:rounded-b-md px-4 py-2.5 text-left text-sm hover:bg-gray-50 disabled:text-gray-500"
                                                     >
                                                         {{ __('forms.info') }}
                                                     </a>
 
-                                                    <a href="{{ route('license.form', $license->id) }}"
+                                                    <a href="{{ route('license.form', [legalEntity(), $license->id]) }}"
                                                         class="flex items-center gap-2 w-full first-of-type:rounded-t-md last-of-type:rounded-b-md px-4 py-2.5 text-left text-sm hover:bg-gray-50 disabled:text-gray-500"
                                                     >
                                                         {{ __('forms.updateInfo') }}

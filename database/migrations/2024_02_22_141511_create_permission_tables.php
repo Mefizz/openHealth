@@ -38,6 +38,11 @@ return new class extends Migration
             if ($teams || config('permission.testing')) { // permission.testing is a fix for sqlite testing
                 $table->unsignedBigInteger($columnNames['team_foreign_key'])->nullable();
                 $table->index($columnNames['team_foreign_key'], 'roles_team_foreign_key_index');
+
+                $table->foreign($columnNames['team_foreign_key'])
+                    ->references('id')
+                    ->on($columnNames['team_foreign_key_constraint_table'])
+                    ->onDelete('cascade');
             }
             $table->string('name');       // For MySQL 8.0 use string('name', 125);
             $table->string('guard_name'); // For MySQL 8.0 use string('guard_name', 125);
@@ -86,6 +91,12 @@ return new class extends Migration
                 ->onDelete('cascade');
             if ($teams) {
                 $table->unsignedBigInteger($columnNames['team_foreign_key']);
+
+                $table->foreign($columnNames['team_foreign_key'])
+                    ->references('id')
+                    ->on($columnNames['team_foreign_key_constraint_table'])
+                    ->onDelete('cascade');
+
                 $table->index($columnNames['team_foreign_key'], 'model_has_roles_team_foreign_key_index');
 
                 $table->primary([$columnNames['team_foreign_key'], $pivotRole, $columnNames['model_morph_key'], 'model_type'],

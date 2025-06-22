@@ -90,7 +90,7 @@ class Login extends Component
 
         Session::regenerate();
 
-        return redirect( route('dashboard'));
+        return redirect( route('dashboard', [legalEntity()]));
     }
 
     protected function rules(): array
@@ -230,9 +230,16 @@ class Login extends Component
 
         auth('ehealth')->login($user);
 
+        /**
+         * must set actual permissions for the particular legal entity, see:
+         * https://spatie.be/docs/laravel-permission/v6/basic-usage/teams-permissions#content-working-with-teams-permissions
+         */
+        setPermissionsTeamId($legalEntity->id);
+        $user->unsetRelation('roles')->unsetRelation('permissions');
+
         Log::info(__('auth.login.success.user_auth', [], 'en'), ['User ID' => $user->id]);
 
-        return Redirect::route('dashboard')->with('success', $isFirstLogin ? __('auth.login.success.new_user_auth') : null);
+        return Redirect::route('dashboard', [$legalEntity])->with('success', $isFirstLogin ? __('auth.login.success.new_user_auth') : null);
     }
 
     /**
@@ -242,7 +249,7 @@ class Login extends Component
     *
     * @return string
     */
-    protected function loginUrl($user): string
+    protected function loginUrl(User $user): string
     {
         /* Base URL and client ID */
         $baseUrl = config('ehealth.api.auth_host');
@@ -254,6 +261,11 @@ class Login extends Component
             'redirect_uri' => $redirectUri,
             'response_type' => 'code'
         ];
+
+        // Set a temporary team/legalEntity ID, this should be overridden once a user actually logs in.
+        // Spatie Permissions sets permissions globally, they can't be loaded by querying relations tables
+        setPermissionsTeamId($user->legalEntity->id);
+        $user->unsetRelation('roles')->unsetRelation('permissions');
 
         /* Additional query parameters if email is provided */
         if (!empty($user->email)) {

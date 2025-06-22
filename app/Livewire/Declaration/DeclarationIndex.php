@@ -6,6 +6,7 @@ namespace App\Livewire\Declaration;
 
 use App\Models\Declaration;
 use App\Models\Employee;
+use App\Models\LegalEntity;
 use Database\Seeders\DeclarationSeeder;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -61,7 +62,7 @@ class DeclarationIndex extends Component
 
     protected $listeners = ['searchUpdated'];
 
-    public function mount()
+    public function mount(LegalEntity $legalEntity)
     {
         $this->tableHeaders();
     }

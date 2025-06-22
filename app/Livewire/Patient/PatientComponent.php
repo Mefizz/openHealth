@@ -10,6 +10,7 @@ use App\Classes\eHealth\Api\PersonRequestApi;
 use App\Classes\eHealth\Exceptions\ApiException;
 use App\Livewire\Patient\Forms\Api\PatientRequestApi;
 use App\Livewire\Patient\Forms\PatientForm as Form;
+use App\Models\LegalEntity;
 use App\Models\Person\Person;
 use App\Models\Person\PersonRequest;
 use App\Repositories\PersonRepository;
@@ -129,7 +130,7 @@ class PatientComponent extends Component
      * @return void
      * @throws \App\Classes\Cipher\Exceptions\ApiException
      */
-    public function mount(?int $id = null): void
+    public function mount(LegalEntity $legalEntity, ?int $id = null): void
     {
         if ($id !== null) {
             $fromDatabase = PersonRequest::find($id, ['id']);
@@ -306,7 +307,7 @@ class PatientComponent extends Component
             return;
         }
 
-        to_route('patient.index')->with('flashMessage', [
+        to_route('patient.index', [legalEntity()])->with('flashMessage', [
             'message' => 'Пацієнт успішно створений',
             'type' => 'success'
         ]);
@@ -548,7 +549,7 @@ class PatientComponent extends Component
                 return;
             }
 
-            to_route('patient.index')->with('flashMessage', [
+            to_route('patient.index', [legalEntity()])->with('flashMessage', [
                 'message' => 'Пацієнт успішно створений',
                 'type' => 'success'
             ]);

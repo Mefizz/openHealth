@@ -6,6 +6,7 @@ namespace App\Livewire\Encounter;
 
 use App\Classes\eHealth\Api\PatientApi;
 use App\Classes\eHealth\Exceptions\ApiException;
+use App\Models\LegalEntity;
 use App\Repositories\MedicalEvents\Repository;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
@@ -17,7 +18,7 @@ class EncounterEdit extends EncounterComponent
     #[Locked]
     public int $encounterId;
 
-    public function mount(int $patientId, int $encounterId): void
+    public function mount(LegalEntity $legalEntity, int $patientId, int $encounterId): void
     {
         $this->initializeComponent($patientId);
         $this->encounterId = $encounterId;

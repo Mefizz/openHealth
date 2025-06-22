@@ -9,7 +9,6 @@ use App\Livewire\LegalEntity\Forms\LegalEntitiesRequestApi;
 use App\Models\Contract;
 use App\Models\Division;
 use App\Models\LegalEntity;
-use App\Services\LegalEntityService;
 use App\Classes\Cipher\Traits\Cipher;
 use App\Traits\FormTrait;
 use Carbon\Carbon;
@@ -52,7 +51,7 @@ class ContractForm extends Component
         $this->contractCacheKey = self::CACHE_PREFIX . '-' . Auth::user()->legalEntity->uuid;
     }
 
-    public function mount($id = '')
+    public function mount(LegalEntity $legalEntity, $id = '')
     {
         if ($id !== '') {
             $this->contract_request->previous_request_id = $id;
@@ -63,7 +62,7 @@ class ContractForm extends Component
 
     public function getLegalEntity()
     {
-        $this->legalEntity = auth()->user()->legalEntity;
+        $this->legalEntity = legalEntity();
 
         $this->divisions = $this->legalEntity->getActiveDivisions();
     }
@@ -195,7 +194,7 @@ class ContractForm extends Component
         $contract->contractor_owner_id = $contract_response['contractor_owner']['id'];
         $this->legalEntity->contract()->save($contract);
         Cache::forget($this->contractCacheKey);
-        return redirect()->route('contract.index');
+        return redirect()->route('contract.index', [legalEntity()]);
     }
 
 

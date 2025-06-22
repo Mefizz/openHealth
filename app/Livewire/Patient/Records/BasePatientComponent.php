@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Patient\Records;
 
+use App\Models\LegalEntity;
 use App\Models\Person\Person;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -30,7 +31,7 @@ abstract class BasePatientComponent extends Component
         }
     }
 
-    public function mount(string $patientId): void
+    public function mount(LegalEntity $legalEntity, string $patientId): void
     {
         $this->patientId = $patientId;
         $this->initializeComponent();

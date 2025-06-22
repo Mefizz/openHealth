@@ -116,7 +116,7 @@ class LegalEntity extends Component
         $this->stepCacheKey = self::CACHE_PREFIX . '-' . Auth::id() . '-' . 'steps';
     }
 
-    protected function mount(): void
+    protected function mount(?\App\Models\LegalEntity $legalEntity = null): void
     {
         $this->getLegalEntity();
 

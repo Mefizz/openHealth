@@ -93,7 +93,12 @@ return [
          * foreign key is other than `team_id`.
          */
 
-        'team_foreign_key' => 'team_id',
+        'team_foreign_key' => 'legal_entity_id',
+
+        /**
+         * Foreign key constraint for the Laravel Permissions team
+         */
+        'team_foreign_key_constraint_table' => 'legal_entities',
     ],
 
     /*
@@ -120,7 +125,7 @@ return [
      * (view the latest version of this package's migration file)
      */
 
-    'teams' => false,
+    'teams' => true,
 
     /*
      * Passport Client Credentials Grant

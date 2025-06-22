@@ -2,6 +2,7 @@
 
 namespace App\Livewire\License;
 
+use App\Models\LegalEntity;
 use Livewire\Component;
 use App\Models\License;
 use Illuminate\Support\Facades\Auth;
@@ -14,7 +15,7 @@ class LicenseShow extends Component
     public string $license_type = '';
     public string $licenseTypeDescription = '';
 
-    public function mount($id)
+    public function mount(LegalEntity $legalEntity, $id)
     {
         $cacheKey = "license_{$id}";
         $legal_entity_id = Auth::user()->legal_entity_id;
@@ -39,6 +40,6 @@ class LicenseShow extends Component
 
     public function back()
     {
-        return redirect()->route('license.index');
+        return redirect()->route('license.index', [legalEntity()]);
     }
 }

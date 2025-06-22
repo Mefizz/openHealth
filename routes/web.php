@@ -35,6 +35,7 @@ use App\Livewire\Division\HealthcareServiceForm;
 use App\Livewire\License\Forms\CreateNewLicense;
 use App\Livewire\Patient\Records\PatientEpisodes;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Models\LegalEntity;
 
 /*
 |--------------------------------------------------------------------------
@@ -71,47 +72,46 @@ Route::post('logout', Logout::class)->name('logout');
 
 /* Dashboard */
 
-Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
-    Route::get('/dashboard', function () {
+Route::middleware(['auth:web', 'verified'])->group(function () {
+    Route::get('/dashboard/legal-entities/create', CreateLegalEntity::class)->name('legal-entity.create');
+});
+
+Route::middleware(['auth:ehealth', 'can:access,legalEntity'])->prefix('/dashboard/{legalEntity}')->group(function () {
+
+    Route::get('/edit', EditLegalEntity::class)->name('legal-entity.edit');
+
+    Route::get('/', function (LegalEntity $legalEntity) {
         return view('dashboard');
     })->name('dashboard');
 
-    Route::get('/dashboard/legal-entities/create', CreateLegalEntity::class)->name('create.legalEntities');
+    Route::prefix('division')->group(function () {
+        Route::get('/', DivisionIndex::class)->name('division.index');
+        Route::get('/form/{id?}', DivisionForm::class)->name('division.form');
+        Route::get('/{division}/healthcare-service', HealthcareServiceForm::class)->name('healthcare_service.index');
+    });
 
-    Route::group(['middleware' => ['role:OWNER|ADMIN|DOCTOR'], 'prefix' => 'dashboard'], function () {
-        Route::prefix('legal-entities')->group(function () {
-            Route::get('/edit', EditLegalEntity::class)->name('edit.legalEntities');
-        });
+    Route::prefix('employee')->group(function () {
+        Route::get('/', EmployeeIndex::class)->name('employee.index');
+        Route::get('/{id}', EmployeeEdit::class)
+            ->name('employee.edit')
+            ->where('id', '[0-9]+');
+        Route::get('/new', EmployeeCreate::class)->name('employee.create');
+    });
 
-        Route::prefix('division')->group(function () {
-            Route::get('/', DivisionIndex::class)->name('division.index');
-            Route::get('/form/{id?}', DivisionForm::class)->name('division.form');
-            Route::get('/{division}/healthcare-service', HealthcareServiceForm::class)->name('healthcare_service.index');
-        });
+    Route::prefix('contract')->group(function () {
+        Route::get('/', ContractIndex::class)->name('contract.index');
+        Route::get('/form/{id?}', ContractForm::class)->name('contract.form');
+    });
 
-        Route::prefix('employee')->group(function () {
-            Route::get('/', EmployeeIndex::class)->name('employee.index');
-            Route::get('/{id}', EmployeeEdit::class)
-                ->name('employee.edit')
-                ->where('id', '[0-9]+');
-            Route::get('/new', EmployeeCreate::class)->name('employee.create');
-        });
+    Route::prefix('license')->group(function () {
+        Route::get('/', LicenseIndex::class)->name('license.index');
+        Route::get('/update/{id}', LicenseForms::class)->name('license.form');
+        Route::get('/create', CreateNewLicense::class)->name('license.create');
+        Route::get('/show/{id}', LicenseShow::class)->name('license.show');
+    });
 
-        Route::prefix('contract')->group(function () {
-            Route::get('/', ContractIndex::class)->name('contract.index');
-            Route::get('/form/{id?}', ContractForm::class)->name('contract.form');
-        });
-
-        Route::prefix('license')->group(function () {
-            Route::get('/', LicenseIndex::class)->name('license.index');
-            Route::get('/update/{id}', LicenseForms::class)->name('license.form');
-            Route::get('/create', CreateNewLicense::class)->name('license.create');
-            Route::get('/show/{id}', LicenseShow::class)->name('license.show');
-        });
-
-        Route::prefix('declaration')->group(function () {
-            Route::get('/', DeclarationIndex::class)->name('declaration.index');
-        });
+    Route::prefix('declaration')->group(function () {
+        Route::get('/', DeclarationIndex::class)->name('declaration.index');
     });
 
     Route::group(['middleware' => ['role:OWNER|ADMIN|DOCTOR']], static function () {
@@ -128,8 +128,9 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
             Route::get('/{patientId}/diagnostic-report/create', DiagnosticReportCreate::class)->name('diagnostic-report.create');
         });
     });
-
-    Route::get('/{any}', function () {
-        return view('errors.404');
-    })->where('any', '.*');
 });
+
+Route::get('/{any}', function () {
+    return view('errors.404');
+})->where('any', '.*');
+

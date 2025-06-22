@@ -8,6 +8,7 @@ use App\Classes\eHealth\Api\PersonApi;
 use App\Classes\eHealth\Exceptions\ApiException;
 use App\Livewire\Patient\Forms\Api\PatientRequestApi;
 use App\Livewire\Patient\Forms\PatientForm as Form;
+use App\Models\LegalEntity;
 use App\Models\Person\Person;
 use App\Models\Person\PersonRequest;
 use Exception;
@@ -39,6 +40,11 @@ class PatientIndex extends Component
      * @var bool
      */
     public bool $searchPerformed = false;
+
+    public function mount(LegalEntity $legalEntity): void
+    {
+
+    }
 
     public function render(): View
     {
@@ -143,7 +149,7 @@ class PatientIndex extends Component
      */
     public function createDiagnosticReport(int $patientId): void
     {
-        $this->redirectRoute('diagnostic-report.create', ['patientId' => $patientId]);
+        $this->redirectRoute('diagnostic-report.create', [legalEntity(), 'patientId' => $patientId]);
     }
 
     /**
@@ -177,7 +183,7 @@ class PatientIndex extends Component
             $person = $this->storeNewPerson($originalPatientData);
         }
 
-        $this->redirectRoute($routeName, ['patientId' => $person->id] ?? null);
+        $this->redirectRoute($routeName, [legalEntity(), 'patientId' => $person->id]);
     }
 
     /**

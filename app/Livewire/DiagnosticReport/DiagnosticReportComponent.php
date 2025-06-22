@@ -8,6 +8,7 @@ use App\Classes\Cipher\Exceptions\ApiException as CipherApiException;
 use App\Classes\Cipher\Traits\Cipher;
 use App\Classes\eHealth\Exceptions\ApiException as eHealthApiException;
 use App\Livewire\DiagnosticReport\Forms\DiagnosticReportForm as Form;
+use App\Models\LegalEntity;
 use App\Models\Person\Person;
 use App\Traits\FormTrait;
 use Illuminate\Support\Facades\Auth;
@@ -132,7 +133,7 @@ class DiagnosticReportComponent extends Component
         'eHealth/LOINC/LL3250-9'
     ];
 
-    public function mount(int $patientId): void
+    public function mount(LegalEntity $legalEntity, int $patientId): void
     {
         $authUser = Auth::user();
 

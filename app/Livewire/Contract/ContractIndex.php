@@ -47,7 +47,7 @@ class ContractIndex extends Component
     }
 
 
-    public function mount(): void
+    public function mount(LegalEntity $legalEntity): void
     {
         $this->tableHeaders();
         $this->getDictionary();
@@ -80,7 +80,7 @@ class ContractIndex extends Component
     public function createRequest()
     {
         if (Cache::has($this->contractCacheKey)){
-            return redirect()->route('contract.form');
+            return redirect()->route('contract.form', legalEntity());
         }
         $this->validate();
 
@@ -88,7 +88,7 @@ class ContractIndex extends Component
         if (!empty($initContractRequestApi)){
            Cache::put($this->contractCacheKey, $initContractRequestApi);
         }
-        return redirect()->route('contract.form');
+        return redirect()->route('contract.form', legalEntity());
 
     }
 

@@ -7,6 +7,7 @@ namespace App\Livewire\Encounter;
 use App\Classes\eHealth\Api\PatientApi;
 use App\Classes\eHealth\Exceptions\ApiException;
 use App\Livewire\Encounter\Forms\Api\EncounterRequestApi;
+use App\Models\LegalEntity;
 use App\Repositories\MedicalEvents\Repository;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +17,7 @@ use Throwable;
 
 class EncounterCreate extends EncounterComponent
 {
-    public function mount(int $patientId): void
+    public function mount(LegalEntity $legalEntity, int $patientId): void
     {
         $this->initializeComponent($patientId);
         $this->setEmployeePartyData();

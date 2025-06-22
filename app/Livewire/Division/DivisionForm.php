@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Division;
 
+use App\Models\LegalEntity;
 use Livewire\Component;
 use App\Models\Division;
 use App\Traits\AddressSearch;
@@ -25,7 +26,7 @@ class DivisionForm extends Component
     protected array $divisionAllowedPhoneTypeKeys = ['MOBILE','LAND_LINE'];
     protected array $divisionAllowedTypeKeys = ['CLINIC', 'AMBULANT_CLINIC', 'FAP'];
 
-    public function mount($id = '')
+    public function mount(LegalEntity $legalEntity, $id = '')
     {
         if (!empty($id)) {
             $this->getDivision($id);
@@ -98,7 +99,7 @@ class DivisionForm extends Component
         if ($response) {
             $this->formService->saveDivision($division, $response);
 
-            return redirect()->route('division.index');
+            return redirect()->route('division.index', [legalEntity()]);
         }
 
         $this->dispatch('flashMessage', ['message' => __('Інформацію не оновлено'), 'type' => 'error']);
