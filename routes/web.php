@@ -133,4 +133,5 @@ Route::middleware(['auth:ehealth', 'can:access,legalEntity'])->prefix('/dashboar
 Route::get('/{any}', function () {
     return view('errors.404');
 })->where('any', '.*');
+});
 
