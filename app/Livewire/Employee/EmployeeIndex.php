@@ -53,7 +53,7 @@ class EmployeeIndex extends Component
      * The mount method is called only on the initial page load.
      * We use it to set up the initial state.
      */
-    public function mount(): void
+    public function mount(LegalEntity $legalEntity): void
     {
         $this->getDictionary();
         $this->parties = new Collection();

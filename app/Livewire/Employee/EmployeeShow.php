@@ -1,34 +1,35 @@
 <?php
-
 namespace App\Livewire\Employee;
 
 use App\Models\Employee\Employee;
+use App\Models\LegalEntity;
 use Illuminate\View\View;
 
 class EmployeeShow extends EmployeeComponent
 {
     public Employee $employee;
+    public string $pageTitle;
 
-    public function mount(Employee $employee): void
+    public function mount(LegalEntity $legalEntity, Employee $employee): void
     {
-        $this->employee = $employee->load([
-                                              'party.phones',
-                                              'party.documents',
-                                              'educations',
-                                              'specialities',
-                                              'qualifications',
-                                              'scienceDegrees',
-                                              'division'
-                                          ]);
+        $this->employee = $employee->load(
+            [
+                'party.phones', 'party.documents', 'educations',
+                'specialities', 'qualifications', 'scienceDegrees', 'division',
+            ]
+        );
 
         $this->getDictionary();
         $this->form->populateFromModel($this->employee);
+
+        $this->pageTitle = __('forms.view_employee');
     }
 
     public function render(): View
     {
         return view('livewire.employee.employee-show', [
-            'pageTitle' => __('forms.view_employee'),
+            'pageTitle' => $this->pageTitle,
+            'employee' => $this->employee,
         ]);
     }
 }

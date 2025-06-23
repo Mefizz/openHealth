@@ -1,9 +1,9 @@
 <?php
-
 namespace App\Livewire\Employee;
 
 use App\Livewire\Employee\Forms\EmployeeForm;
 use App\Livewire\Employee\Traits\ManagesEmployeeForm;
+use App\Models\LegalEntity;
 use Illuminate\View\View;
 
 class EmployeeEdit extends EmployeeComponent
@@ -13,7 +13,7 @@ class EmployeeEdit extends EmployeeComponent
     public string $pageTitle;
     public string $viewMode = 'full_edit';
 
-    public function mount(int $employeeId, string $viewMode = 'full_edit'): void
+    public function mount(LegalEntity $legalEntity, int $employeeId, string $viewMode = 'full_edit'): void
     {
         $this->getDictionary();
         $this->employeeId = $employeeId;
@@ -21,9 +21,9 @@ class EmployeeEdit extends EmployeeComponent
         $this->viewMode = $viewMode;
 
         if ($this->viewMode === 'party_only') {
-            $this->pageTitle = __('forms.editPersonalData');
+            $this->pageTitle = __('forms.edit_personal_data');
         } else {
-            $this->pageTitle = __('forms.editEmployee');
+            $this->pageTitle = __('forms.edit_employee');
         }
     }
 

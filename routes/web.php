@@ -13,6 +13,7 @@ use App\Livewire\DiagnosticReport\DiagnosticReportCreate;
 use App\Livewire\Employee\EmployeeShow;
 use App\Livewire\Patient\PatientForm;
 use App\Livewire\License\LicenseShow;
+use App\Models\LegalEntity;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\License\LicenseIndex;
 use App\Livewire\Patient\PatientIndex;

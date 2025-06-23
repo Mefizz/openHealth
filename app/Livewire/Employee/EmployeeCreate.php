@@ -1,9 +1,9 @@
 <?php
-
 namespace App\Livewire\Employee;
 
 use App\Livewire\Employee\Forms\EmployeeForm;
 use App\Livewire\Employee\Traits\ManagesEmployeeForm;
+use App\Models\LegalEntity;
 use App\Models\Relations\Party;
 use Illuminate\View\View;
 
@@ -14,18 +14,17 @@ class EmployeeCreate extends EmployeeComponent
     public string $pageTitle;
     public string $viewMode = 'full_create';
 
-    public function mount(?int $partyId = null): void
+    public function mount(LegalEntity $legalEntity, int $partyId = null): void
     {
         $this->getDictionary();
 
         if ($partyId) {
-            $this->pageTitle = __('forms.addPosition');
-            $party           = Party::findOrFail($partyId);
+            $this->pageTitle = __('forms.add_position');
+            $party = Party::findOrFail($partyId);
             $this->form->populateFromParty($party);
-
             $this->lockPartyFields = true;
         } else {
-            $this->pageTitle       = __('forms.addEmployee');
+            $this->pageTitle = __('forms.add_employee');
             $this->lockPartyFields = false;
         }
     }

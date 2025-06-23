@@ -87,11 +87,11 @@ class EmployeeForm extends Form
     protected function rootFieldsRules(): array
     {
         return [
-            'position'      => ['required', 'string'],
-            'employeeType'  => ['required', 'string'],
-            'startDate'     => ['required', 'date'],
-            'endDate'       => ['nullable', 'date'],
-            'status'        => ['required', 'string'],
+            'position' => ['required', 'string'],
+            'employeeType' => ['required', 'string'],
+            'startDate' => ['required', 'date'],
+            'endDate' => ['nullable', 'date'],
+            'status' => ['required', 'string'],
         ];
     }
 
@@ -104,16 +104,16 @@ class EmployeeForm extends Form
         $partyIdToIgnore = $this->existingPartyId;
 
         return [
-            'party.lastName'         => ['required', new Name()],
-            'party.firstName'        => ['required', new Name()],
-            'party.secondName'       => ['nullable', new Name()],
-            'party.gender'           => ['required', 'string'],
-            'party.birthDate'        => ['required', 'date', new BirthDate()],
-            'party.phones'           => ['required', 'array', 'min:1'],
-            'party.phones.*.number'  => ['required', new PhoneNumber()],
-            'party.phones.*.type'    => ['required', 'string'],
-            'party.taxId'            => ['required', 'string'],
-            'party.noTaxId'          => ['boolean'],
+            'party.lastName' => ['required', new Name()],
+            'party.firstName' => ['required', new Name()],
+            'party.secondName' => ['nullable', new Name()],
+            'party.gender' => ['required', 'string'],
+            'party.birthDate' => ['required', 'date', new BirthDate()],
+            'party.phones' => ['required', 'array', 'min:1'],
+            'party.phones.*.number' => ['required', new PhoneNumber()],
+            'party.phones.*.type' => ['required', 'string'],
+            'party.taxId' => ['required', 'string'],
+            'party.noTaxId' => ['boolean'],
             'party.email' => [
                 'nullable',
                 new Email(),
