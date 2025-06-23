@@ -24,7 +24,7 @@ class LegalEntityPolicy
 
        app()->bind(LegalEntity::class, fn () => Auth::user()->legalEntity);
        app()->alias(LegalEntity::class, 'legalEntity');
-       setPermissionsTeamId(1);
+       setPermissionsTeamId($currentEntity->id);
        return Response::allow();
    }
 }
