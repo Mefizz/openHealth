@@ -41,23 +41,23 @@ class EmployeeIndex extends Component
         'division_id' => '',
     ];
 
-    public string $search = '';
+    // --- Component State ---
+    public string      $search          = '';
+    public string|bool $showModal       = false;
+    public bool        $showDeleteModal = false;
 
-    public string $dismiss_text = '';
-    public int $dismissed_id = 0;
+    // --- Properties for Dismissal Modal ---
+    public ?int $dismissed_id = null;
     public ?string $dismissal_employee_name = null;
+    public string $dismiss_text = '';
+
+    // --- Properties for Delete Draft Modal ---
+    public ?int $requestToDeleteId = null;
     public ?string $deleteRequestName = null;
     public string $deleteRequestText = '';
-    public bool $showDeleteModal   = false;
-    public ?int $requestToDeleteId = null;
-    public ?string $employeeCacheKey = null;
 
-
+    // --- Private properties ---
     private LegalEntity $legalEntity;
-
-    public array $dictionaryNames = [
-        'POSITION', 'EMPLOYEE_TYPE', 'GENDER'
-    ];
 
     public function boot(): void
     {
@@ -66,34 +66,24 @@ class EmployeeIndex extends Component
 
     public function mount(LegalEntity $legalEntity): void
     {
-        $this->getDictionary();
 //        $this->divisions = $this->legalEntity->divisions()->get();
         $this->employees = new Collection();
         $this->employeeCacheKey = 'employees_cache_' . $this->legalEntity->id;
+        $this->getDictionary();
     }
 
     #[Computed]
     public function parties(): LengthAwarePaginator
     {
-        $legalEntityId = $this->legalEntity->id;
+        $legalEntityId = legalEntity()->id;
 
         $query = Party::query()
-            ->where(function($q) use ($legalEntityId) {
-                $q->whereHas('employees', fn($subq) => $subq->where('legal_entity_id', $legalEntityId))
-                    ->orWhereHas('employeeRequests', fn($subq) => $subq->where('legal_entity_id', $legalEntityId));
-            })
+            ->whereHas('employees', fn($q) => $q->where('legal_entity_id', $legalEntityId))
             ->with([
                        'phones',
-                       'employees'        => fn($q) => $q->where('legal_entity_id', $legalEntityId)->with('division'),
+                       'employees' => fn($q) => $q->where('legal_entity_id', $legalEntityId)->with('division'),
                        'employeeRequests' => fn($q) => $q->where('legal_entity_id', $legalEntityId)->with('division'),
-                   ])
-
-            ->withMax(
-                ['employeeRequests as latest_draft_updated_at' => fn($query) => $query->whereNull('uuid')],
-                'updated_at'
-            )
-            ->orderByDesc('latest_draft_updated_at');
-
+                   ]);
 
         if (!empty($this->search)) {
             $query->where(function($q) {
@@ -103,38 +93,7 @@ class EmployeeIndex extends Component
             });
         }
 
-        // Advanced filters
-        if (!empty($this->status)) {
-            $query->whereHas('employees', fn($q) => $q->where('status', $this->status));
-        }
-        if (!empty($this->filter['phone'])) {
-            $query->whereHas('phones', fn($q) => $q->where('number', 'like', '%' . $this->filter['phone'] . '%'));
-        }
-        if (!empty($this->filter['email'])) {
-            $query->where('email', 'ilike', '%' . $this->filter['email'] . '%');
-        }
-        if (!empty($this->filter['role'])) {
-            $query->where(function ($q) {
-                $q->whereHas('employees', fn($sub) => $sub->where('employee_type', $this->filter['role']))
-                    ->orWhereHas('employeeRequests', fn($sub) => $sub->where('employee_type', $this->filter['role']));
-            });
-        }
-        if (!empty($this->filter['position'])) {
-            $query->whereHas('employees', fn($q) => $q->where('position', $this->filter['position']));
-        }
-        // if (!empty($this->filter['division_id'])) {
-        //     $query->whereHas('employees', fn($q) => $q->where('division_id', $this->filter['division_id']));
-        // }
-
-        $paginator = $query->paginate(10);
-
-        $paginator->getCollection()->transform(function ($party) {
-            $party->employees->each(fn($p) => $p->type = 'employee');
-            $party->employeeRequests->each(fn($p) => $p->type = 'request');
-            return $party;
-        });
-
-        return $paginator;
+        return $query->paginate(10);
     }
 
     public function updated($property): void
@@ -156,16 +115,21 @@ class EmployeeIndex extends Component
     public function showModalDismissed(int $id): void
     {
         $employee = Employee::find($id);
-        if (!$employee) {
-            return;
-        }
+        if (!$employee) return;
 
-        $this->dismissal_employee_name = $employee->fullName;
-        $this->dismiss_text =  __('employees.dismissalWarning');
-
+        $this->dismissal_employee_name = $employee->party->fullName ?? 'співробітника';
+        $this->dismiss_text = __('employees.dismissalWarning');
         $this->dismissed_id = $employee->id;
+        $this->showModal = true;
+    }
 
-        $this->openModal();
+    /**
+     * Closes the dismissal modal.
+     */
+    public function closeModal(): void
+    {
+        $this->showModal = false;
+        $this->reset(['dismissed_id', 'dismissal_employee_name', 'dismiss_text']);
     }
 
     #[On('refreshPage')]
@@ -195,7 +159,7 @@ class EmployeeIndex extends Component
 
     public function dismissed(int $employeeId): void
     {
-        $employee = Employee::find($employeeId);
+        $employee = Employee::find($this->dismissed_id);
         if (!$employee) {
             $this->closeModal();
             return;
@@ -223,6 +187,7 @@ class EmployeeIndex extends Component
         }
 
         $this->closeModal();
+        $this->dispatch('flashMessage', ['message' => 'Співробітника успішно звільнено', 'type' => 'success']);
     }
 
     //TODO: Створити багато співробітників в статусі не підтверджено, створювати таблицю EmployeeRequest? перевірити Rate Limit
@@ -290,36 +255,29 @@ class EmployeeIndex extends Component
     }
 
     /**
-     * Shows a confirmation modal before deleting an employee request.
+     * Prepares and shows the delete confirmation modal for a draft.
      */
     public function confirmRequestDeletion(int $id): void
     {
         $request = EmployeeRequest::with('party')->find($id);
+        if (!$request || $request->uuid) return;
 
-        if ($request && !$request->uuid) {
-            $this->requestToDeleteId = $id;
-
-            $this->deleteRequestName = $request->party->fullName ?? 'співробітника';
-            $this->deleteRequestText = 'Ви впевнені, що хочете видалити чернетку для цього співробітника? Цю дію неможливо буде скасувати.';
-
-            $this->showDeleteModal = true;
-        } else {
-            $this->dispatchErrorMessage(__('Цей запит не є чернеткою і не може бути видалений.'), 'error');
-        }
+        $this->requestToDeleteId = $id;
+        $this->deleteRequestName = $request->party->fullName ?? 'співробітника';
+        $this->deleteRequestText = 'Ви впевнені, що хочете видалити чернетку для цього співробітника? Цю дію неможливо буде скасувати.';
+        $this->showDeleteModal = true;
     }
 
     /**
-     * Deletes the employee request from the database.
+     * Deletes the employee request draft.
      */
     public function deleteRequest(): void
     {
         $request = EmployeeRequest::find($this->requestToDeleteId);
-
         if ($request && !$request->uuid) {
             $request->delete();
-            $this->dispatchErrorMessage(__('Чернетку успішно видалено.'), 'success');
+            $this->dispatch('flashMessage', ['message' => 'Чернетку успішно видалено.', 'type' => 'success']);
         }
-
         $this->showDeleteModal = false;
         $this->requestToDeleteId = null;
     }
@@ -334,10 +292,14 @@ class EmployeeIndex extends Component
         ]);
     }
 
-    public function render(): object
+    /**
+     * Renders the component.
+     */
+    public function render()
     {
         return view('livewire.employee.employee-index', [
             'parties' => $this->parties,
+            'dictionaries' => $this->dictionaries,
         ]);
     }
 }

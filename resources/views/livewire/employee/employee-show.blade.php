@@ -19,17 +19,18 @@
                 @endif
             </fieldset>
 
-            <div class="mt-6 flex justify-between items-center border-t pt-6">
-                <a href="{{ route('employee.index', ['legalEntity' => legalEntity()->id]) }}" class="button-minor">
-                    &larr; {{ __('forms.backToList') }}
-                </a>
-                <a href="{{ route('employee.edit', [
-                    'legalEntity' => legalEntity()->id,
-                    'id' => $employee->id,
-                    'type' => $employee instanceof \App\Models\Employee\EmployeeRequest ? 'request' : 'employee'
-                ]) }}" class="button-secondary">
-                    {{__('forms.edit')}}
-                </a>
-            </div>
+        <div class="mt-6 flex justify-between items-center border-t border-gray-200 dark:border-gray-700 pt-6">
+            <a href="{{ url()->previous() }}" class="button-minor">
+                &larr; {{ __('forms.backToList') }}
+            </a>
+
+            @can('update', $employee)
+                @if($employee instanceof \App\Models\Employee\EmployeeRequest)
+                    <a href="{{ route('employee-request.edit', $employee) }}" class="button-secondary">
+                        {{__('forms.edit')}}
+                    </a>
+                @endif
+            @endcan
+        </div>
     </div>
 </div>

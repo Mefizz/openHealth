@@ -23,6 +23,7 @@ return [
     'addEmployee' => 'Додати співробітника',
     'editEmployee' => 'Зміна данних співробітника',
     'employees' => 'Співробітники',
+    'employee_requests' => 'Запити співробітників',
     'employeeSearch' => 'Пошук працівника',
     'newEmployee' => 'Новий співробітник',
     'invalid_kep_password_or_file' => 'Не вірний пароль чи файл КЕП',

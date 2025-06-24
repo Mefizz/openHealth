@@ -16,28 +16,30 @@ class EmployeeEdit extends EmployeeComponent
 
     public EmployeeForm $form;
     public string $pageTitle;
-    public ?int $employeeRequestId = null;
 
-    public function mount(LegalEntity $legalEntity, int $id, string $type = 'employee'): void
+    /**
+     * The mount method now contains only the logic specific to the "Edit" action.
+     * It receives the crucial LegalEntity parameter.
+     */
+    public function mount(LegalEntity $legalEntity, int $id): void
     {
-        $this->getDictionary();
+        $this->loadDictionaries();
 
-        $source = match ($type) {
-            'request' => EmployeeRequest::with(['revision', 'party'])->find($id),
-            default => Employee::find($id),
+        $routeName = request()->route()?->getName();
+
+        $source = match (true) {
+            str_starts_with($routeName, 'employee-request.') => EmployeeRequest::findOrFail($id),
+            str_starts_with($routeName, 'employee.') => Employee::findOrFail($id),
+            default => throw new ModelNotFoundException('Unsupported route for editing.'),
         };
-
-        if (!$source) { throw new ModelNotFoundException('Source model not found.'); }
 
         if ($source instanceof Employee) {
             $this->employee = $source;
-            $this->employeeId = $source->id;
         } else {
             $this->employeeRequest = $source;
         }
 
         $this->form->hydrate($source);
-        $this->lockEmailAndTaxId  = true;
         $this->pageTitle = __('forms.editEmployee');
     }
 

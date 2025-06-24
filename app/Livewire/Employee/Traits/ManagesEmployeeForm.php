@@ -23,9 +23,7 @@ trait ManagesEmployeeForm
     protected ?Employee $employee = null;
 
     #[Locked]
-    public ?int $employeeId = null;
     public ?EmployeeRequest $employeeRequest = null;
-    public bool $lockEmailAndTaxId = false;
 
     public function save(): void
     {

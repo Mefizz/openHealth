@@ -2,7 +2,7 @@
     <x-section-navigation x-data="{ showFilter: false }">
 
         <x-slot name="title">
-            {{ __('forms.employees') }}
+            {{ __('forms.employee_requests') }}
         </x-slot>
 
         <x-slot name="navigation">
@@ -133,25 +133,20 @@
         <div class="space-y-6">
             @forelse($parties as $party)
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6" wire:key="party-{{ $party->id }}">
-                    <div class="flex flex-wrap items-start justify-between gap-4 border-b border-gray-200 dark:border-gray-700 pb-4">
-                        {{-- Party Info --}}
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ $party->fullName }}</h3>
-                            <div class="flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 mt-2">
-                                @if ($mobilePhone = $party->phones->firstWhere('type', 'MOBILE'))
-                                    <span class="flex items-center gap-1.5"><svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg><a href="tel:{{ $mobilePhone->number }}" class="hover:underline">{{ $mobilePhone->number }}</a></span>
-                                @endif
-                                @if($party->email)
-                                    <span class="flex items-center gap-1.5"><svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M2.038 5.61A2.01 2.01 0 0 0 2 6v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6c0-.12-.01-.238-.03-.352l-.866.65-7.89 6.032a2 2 0 0 1-2.429 0L2.884 6.288l-.846-.677Z"/><path d="M20.677 4.117A1.996 1.996 0 0 0 20 4H4c-.225 0-.44.037-.642.105l.758.607L12 10.742 19.9 4.7l.777-.583Z"/></svg><a href="mailto:{{$party->email}}" class="hover:underline">{{ $party->email }}</a></span>
-                                @endif
-                            </div>
-                        </div>
-                        {{-- Add Position Button --}}
-                        <div class="flex items-center space-x-3">
-                            @can('create', \App\Models\Employee\EmployeeRequest::class)
-                                <a href="{{ route('employee-request.add-position', ['legalEntity' => legalEntity()->id, 'party' => $party->id]) }}" class="item-add text-blue-600 hover:text-blue-800 flex items-center gap-1"><span class="text-xl leading-none">+</span><span>{{ __('forms.addPosition') }}</span></a>
-                            @endcan
-                        </div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ $party->fullName }}</h3>
+                    <div class="flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 mt-2">
+                        @if ($mobilePhone = $party->phones->firstWhere('type', 'MOBILE'))
+                            <span class="flex items-center gap-1.5">
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>
+                <a href="tel:{{ $mobilePhone->number }}" class="hover:underline">{{ $mobilePhone->number }}</a>
+            </span>
+                        @endif
+                        @if($party->email)
+                            <span class="flex items-center gap-1.5">
+                <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M2.038 5.61A2.01 2.01 0 0 0 2 6v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6c0-.12-.01-.238-.03-.352l-.866.65-7.89 6.032a2 2 0 0 1-2.429 0L2.884 6.288l-.846-.677Z"/><path d="M20.677 4.117A1.996 1.996 0 0 0 20 4H4c-.225 0-.44.037-.642.105l.758.607L12 10.742 19.9 4.7l.777-.583Z"/></svg>
+                <a href="mailto:{{$party->email}}" class="hover:underline">{{ $party->email }}</a>
+            </span>
+                        @endif
                     </div>
 
                     <div class="flow-root mt-4">
@@ -166,46 +161,36 @@
                             </tr>
                             </thead>
                             <tbody>
-                            @php $positions = $party->employees->merge($party->employeeRequests); @endphp
-                            @foreach($party->employees as $position)
+                            @foreach($party->employeeRequests as $position)
                                 <tr class="border-b dark:border-gray-700">
                                     <td class="px-4 py-3 font-medium">{{ $dictionaries['POSITION'][$position->position] ?? $position->position }}</td>
                                     <td class="px-4 py-3">{{ $dictionaries['EMPLOYEE_TYPE'][$position->employee_type] ?? $position->employee_type }}</td>
                                     <td class="px-4 py-3">{{ $position->division->name ?? 'N/A' }}</td>
                                     <td class="px-4 py-3">
-                                        @switch($position->status)
-                                            @case(\App\Enums\Status::APPROVED)
-                                                <span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Активний</span>
-                                                @break
-                                            @case(\App\Enums\Status::DISMISSED)
-                                                <span class="bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">Звільнений</span>
-                                                @break
-                                        @endswitch
+                                        <span class="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">Чернетка</span>
                                     </td>
                                     <td class="px-4 py-3 text-right">
                                         <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                                            <button @click="open = !open" class="inline-flex items-center p-2 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-white" type="button">
-                                                <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4z"/></svg>
-                                            </button>
+                                            <button @click="open = !open" class="inline-flex items-center p-2 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-white" type="button"><svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4z"/></svg></button>
                                             <div x-show="open" x-transition class="absolute right-0 z-10 w-48 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600" style="display: none;">
                                                 <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" @click="open = false">
+                                                    {{-- Actions for Employee Requests --}}
                                                     @can('view', $position)
                                                         <li>
-                                                            <a href="{{ route('employee.show', ['legalEntity' => legalEntity()->id, 'id' => $position->id]) }}" ...>Переглянути</a>
+                                                            <a href="{{ route('employee-request.show', ['legalEntity' => legalEntity()->id, 'id' => $position->id]) }}" ...>Переглянути</a>
                                                         </li>
                                                     @endcan
                                                     @can('update', $position)
                                                         <li>
-                                                            <a href="{{ route('employee.edit', ['legalEntity' => legalEntity()->id, 'id' => $position->id]) }}" ...>Редагувати</a>
+                                                            <a href="{{ route('employee-request.edit', ['legalEntity' => legalEntity()->id, 'id' => $position->id]) }}" ...>Редагувати</a>
                                                         </li>
                                                     @endcan
                                                 </ul>
-                                                @if($position->status?->value === \App\Enums\Status::APPROVED->value)
-                                                    @can('dismiss', $position)
-                                                        <div class="py-1">
-                                                            <button type="button" @click="open = false" wire:click="showModalDismissed({{ $position->id }})" class="block w-full text-right py-2 px-4 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600">
-                                                                {{ __('forms.dismissed') }}
-                                                            </button>
+                                                {{-- "Delete" button for drafts --}}
+                                                @if(!$position->uuid)
+                                                    @can('delete', $position)
+                                                        <div class="py-1" @click="open = false">
+                                                            <button type="button" wire:click="confirmRequestDeletion({{ $position->id }})" class="block w-full text-right py-2 px-4 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600">{{ __('forms.delete') }}</button>
                                                         </div>
                                                     @endcan
                                                 @endif
@@ -228,27 +213,6 @@
             {{ $parties->links() }}
         </div>
     </x-section>
-
-    {{-- MODAL FOR DISMISSAL --}}
-    <div x-data="{ showDismissModal: @entangle('showModal') }">
-        <template x-teleport="body">
-            <div x-show="showDismissModal" style="display: none" @keydown.escape.prevent.stop="showDismissModal = false" role="dialog" aria-modal="true" class="fixed inset-0 z-50 overflow-y-auto">
-                <div x-show="showDismissModal" x-transition.opacity class="fixed inset-0 bg-black/30"></div>
-                <div x-show="showDismissModal" x-transition @click="showDismissModal = false" class="relative flex min-h-screen items-center justify-center p-4">
-                    <div @click.stop x-trap.noscroll.inert="showDismissModal" class="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white p-6 text-center shadow-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
-                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">
-                            <span x-text="$wire.dismissal_employee_name || 'Підтвердження дії'"></span> - звільнення
-                        </h2>
-                        <p class="mt-4 text-sm text-gray-600 whitespace-pre-line dark:text-gray-300" x-text="$wire.dismiss_text"></p>
-                        <div class="mt-6 flex justify-center gap-4">
-                            <button type="button" @click="showDismissModal = false" wire:click="closeModal" class="button-primary">Скасувати</button>
-                            <button type="button" wire:click="dismissed({{ $dismissed_id }})" wire:loading.attr="disabled" class="inline-flex justify-center rounded-lg border border-transparent bg-red-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">Звільнити</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </template>
-    </div>
 
     {{-- MODAL FOR DELETING A DRAFT --}}
     <div x-data="{ show: @entangle('showDeleteModal') }">

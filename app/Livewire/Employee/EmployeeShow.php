@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Livewire\Employee;
 
 use App\Models\Employee\Employee;
@@ -12,32 +11,31 @@ class EmployeeShow extends EmployeeComponent
 {
     public Employee|EmployeeRequest $employee;
     public string $pageTitle;
-    public bool $lockEmailAndTaxId = true;
+    public bool $isReadOnly = true;
 
-    public function mount(LegalEntity $legalEntity, int $id, string $type = 'employee'): void
+    public function mount(LegalEntity $legalEntity, int $id): void
     {
-        $this->getDictionary();
+        $this->loadDictionaries();
 
-        $source = match ($type) {
-            'request' => EmployeeRequest::with(['revision', 'party'])->find($id),
-            default => Employee::find($id),
+        $routeName = request()->route()->getName();
+
+        $source = match (true) {
+            str_starts_with($routeName, 'employee-request.') => EmployeeRequest::findOrFail($id),
+            str_starts_with($routeName, 'employee.') => Employee::findOrFail($id),
+            default => throw new ModelNotFoundException('Unsupported route for showing.'),
         };
-
-        if (!$source) { throw new ModelNotFoundException('Source model not found.'); }
 
         $this->employee = $source;
         $this->form->hydrate($source);
         $this->pageTitle = __('forms.viewEmployee');
     }
 
-    /**
-     * Render the component view.
-     */
     public function render(): View
     {
         return view('livewire.employee.employee-show', [
             'pageTitle' => $this->pageTitle,
             'employee' => $this->employee,
+            'isReadOnly' => $this->isReadOnly,
         ]);
     }
 }

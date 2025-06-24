@@ -24,7 +24,8 @@ class EmployeePositionAdd extends EmployeeComponent
      */
     public function mount(LegalEntity $legalEntity, Party $party): void
     {
-        $this->getDictionary();
+        $this->loadDictionaries();
+        $this->isPersonalDataLocked = true;
         $this->form->populateFromParty($party);
 
         $needsRevisionCheck = empty($this->form->documents) || empty($this->form->party['phones']) || empty($this->form->party['phones'][0]['number']);

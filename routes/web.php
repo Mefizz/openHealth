@@ -10,11 +10,14 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\ForgotPassword;
 use App\Http\Controllers\Auth\EHealthLoginController;
 use App\Livewire\Employee\EmployeePositionAdd;
+use App\Livewire\Employee\EmployeeRequestIndex;
 use App\Livewire\Patient\PatientComponent;
 use App\Livewire\DiagnosticReport\DiagnosticReportCreate;
 use App\Livewire\Employee\EmployeeShow;
 use App\Livewire\Patient\PatientForm;
 use App\Livewire\License\LicenseShow;
+use App\Models\Employee\Employee;
+use App\Models\Employee\EmployeeRequest;
 use App\Models\LegalEntity;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\License\LicenseIndex;
@@ -103,13 +106,21 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
             Route::get('/{division}/healthcare-service', HealthcareServiceForm::class)->name('healthcare_service.index');
         });
 
-
+        // --- Group for existing, approved Employees ---
         Route::prefix('employees')->name('employee.')->group(function () {
-            Route::get('/', EmployeeIndex::class)->name('index');
-            Route::get('/create', EmployeeCreate::class)->name('create');
-            Route::get('/party/{party}/add-position', EmployeePositionAdd::class)->name('add-position');
-            Route::get('/{id}/{type?}', EmployeeShow::class)->name('show');
-            Route::get('/{id}/{type?}/edit', EmployeeEdit::class)->name('edit');
+            Route::get('/', EmployeeIndex::class)->name('index')->middleware('can:viewAny,' . Employee::class);
+            Route::get('/{id}', EmployeeShow::class)->name('show')->middleware('can:view,employee');
+            Route::get('/{id}/edit', EmployeeEdit::class)->name('edit')->middleware('can:update,employee');
+        });
+
+        // --- Group for Employee Requests ---
+        Route::prefix('employee-requests')->name('employee-request.')->group(function () {
+            Route::get('/', EmployeeRequestIndex::class)->name('index')->middleware('can:viewAny,' . EmployeeRequest::class);
+            Route::get('/create', EmployeeCreate::class)->name('create')->middleware('can:create,' . EmployeeRequest::class);
+            Route::get('/{id}', EmployeeShow::class)->name('show')->middleware('can:view,employee_request');
+            Route::get('/{id}/edit', EmployeeEdit::class)->name('edit')->middleware('can:update,employee_request');
+
+            Route::get('/party/{party}/add-position', EmployeePositionAdd::class)->name('add-position')->middleware('can:create,' . EmployeeRequest::class);
         });
 
         Route::prefix('contract')->group(function () {
