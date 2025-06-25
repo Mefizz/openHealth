@@ -12,6 +12,7 @@ class EmployeeCreate extends EmployeeComponent
     use ManagesEmployeeForm;
 
     public string $pageTitle;
+    public ?int $employeeRequestId = null;
 
     public ?EmployeeRequest $employeeRequest = null;
     public ?int $employeeRequestId = null;
