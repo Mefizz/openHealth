@@ -220,12 +220,20 @@ class EmployeeForm extends Form
     }
 
     /**
-     * Prepares and returns all form data, recursively converting keys to snake_case.
+     * Prepares and returns all form data for saving to the database.
+     * It now filters out properties that should not be mass-assigned.
      */
     public function getPreparedData(): array
     {
+
         $formData = $this->all();
-        unset($formData['existingPartyId']);
+
+        unset(
+            $formData['existingPartyId'],
+            $formData['knedp'],
+            $formData['keyContainerUpload'],
+            $formData['password']
+        );
 
         return Arr::toSnakeCase($formData);
     }
