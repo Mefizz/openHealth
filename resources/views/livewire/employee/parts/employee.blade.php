@@ -5,12 +5,12 @@
     <div class="form">
         <div class="form-row-3">
             <div class="form-group">
-                <input wire:model="form.party.lastName" type="text" id="lastName" class="peer input @error('form.party.lastName') input-error @enderror" placeholder=" " required {{ $this->lockPartyFields ? 'disabled' : '' }} />
+                <input wire:model="form.party.lastName" type="text" id="lastName" class="peer input @error('form.party.lastName') input-error @enderror" placeholder=" " required  />
                 <label for="lastName" class="label">{{__('forms.last_name')}}</label>
                 @error('form.party.lastName') <p class="text-error">{{$message}}</p> @enderror
             </div>
             <div class="form-group">
-                <input wire:model="form.party.firstName" type="text" id="firstName" class="peer input @error('form.party.firstName') input-error @enderror" placeholder=" " required {{ $this->lockPartyFields ? 'disabled' : '' }}/>
+                <input wire:model="form.party.firstName" type="text" id="firstName" class="peer input @error('form.party.firstName') input-error @enderror" placeholder=" " required />
                 <label for="firstName" class="label">{{__('forms.first_name')}}</label>
                 @error('form.party.firstName') <p class="text-error">{{$message}}</p> @enderror
             </div>
@@ -18,12 +18,12 @@
 
         <div class="form-row-3">
             <div class="form-group">
-                <input wire:model="form.party.secondName" type="text" id="secondName" class="peer input @error('form.party.secondName') input-error @enderror" placeholder=" " {{ $this->lockPartyFields ? 'disabled' : '' }}/>
+                <input wire:model="form.party.secondName" type="text" id="secondName" class="peer input @error('form.party.secondName') input-error @enderror" placeholder=" " />
                 <label for="secondName" class="label">{{__('forms.second_name')}}</label>
                 @error('form.party.secondName') <p class="text-error">{{$message}}</p> @enderror
             </div>
             <div class="form-group">
-                <select wire:model="form.party.gender" id="employeeGender" class="peer input appearance-none bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400 @error('form.party.gender') input-error @enderror" required {{ $this->lockPartyFields ? 'disabled' : '' }}>
+                <select wire:model="form.party.gender" id="employeeGender" class="peer input appearance-none bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400 @error('form.party.gender') input-error @enderror" required >
                     <option value="" disabled selected hidden></option>
                     @foreach($this->dictionaries['GENDER'] as $k => $gender)
                         <option value="{{ $k }}">{{ $gender }}</option>
@@ -36,12 +36,12 @@
 
         <div class="form-row-3">
             <div class="form-group datepicker-wrapper relative w-full">
-                <input wire:model="form.party.birthDate" type="text" id="birthDate" class="peer input pl-10 appearance-none datepicker-input text-gray-500 dark:text-gray-400 @error('form.party.birthDate') input-error @enderror" placeholder=" " required datepicker-autohide datepicker-format="yyyy-mm-dd" datepicker-button="false" {{ $this->lockPartyFields ? 'disabled' : '' }}/>
+                <input wire:model="form.party.birthDate" type="text" id="birthDate" class="peer input pl-10 appearance-none datepicker-input text-gray-500 dark:text-gray-400 @error('form.party.birthDate') input-error @enderror" placeholder=" " required datepicker-autohide datepicker-format="yyyy-mm-dd" datepicker-button="false" />
                 <label for="birthDate" class="label">{{__('forms.birth_date')}}</label>
                 @error('form.party.birthDate') <p class="text-error">{{$message}}</p> @enderror
             </div>
             <div class="form-group">
-                <input wire:model="form.party.workingExperience" type="number" id="workingExperience" class="peer input @error('form.party.workingExperience') input-error @enderror" placeholder=" " required min="0" {{ $this->lockPartyFields ? 'disabled' : '' }}/>
+                <input wire:model="form.party.workingExperience" type="number" id="workingExperience" class="peer input @error('form.party.workingExperience') input-error @enderror" placeholder=" " required min="0" />
                 <label for="workingExperience" class="label">{{__('forms.workingExperience')}}</label>
                 @error('form.party.workingExperience') <p class="text-error">{{$message}}</p> @enderror
             </div>
@@ -65,11 +65,9 @@
         <div class="space-y-2">
             <div class="flex justify-between items-center">
                 <label class="label-main">{{__('forms.phone_number')}} *</label>
-                @if(!$this->lockPartyFields)
                     <button type="button" wire:click="addPhone" class="item-add">
                         <span>{{__('forms.add_phone')}}</span>
                     </button>
-                @endif
             </div>
             <div class="space-y-4">
                 @foreach($form->party['phones'] as $index => $phone)
@@ -77,7 +75,7 @@
 
                         {{-- Phone Type Select --}}
                         <div class="form-group">
-                            <select wire:model.defer="form.party.phones.{{$index}}.type" class="input-select @error('form.party.phones.'.$index.'.type') input-error @enderror" required {{ $this->lockPartyFields ? 'disabled' : '' }}>
+                            <select wire:model.defer="form.party.phones.{{$index}}.type" class="input-select @error('form.party.phones.'.$index.'.type') input-error @enderror" required >
                                 <option value="">{{__('forms.type_mobile')}} *</option>
                                 @foreach($this->dictionaries['PHONE_TYPE'] as $key => $phoneType)
                                     <option value="{{$key}}">{{$phoneType}}</option>
@@ -95,7 +93,6 @@
                                 class="input peer @error('form.party.phones.'.$index.'.number') input-error @enderror"
                                 placeholder="+38 (0__) ___-__-__"
                                 required
-                                @if($this->lockPartyFields) disabled @endif
                             />
                             @error('form.party.phones.'.$index.'.number') <p class="text-error text-xs">{{ $message }}</p> @enderror
                         </div>
@@ -123,7 +120,7 @@
         <div class="form-row-2">
             <div class="form-group">
                 <label for="about" class="default-label text-gray-500 dark:text-gray-400">{{ __('forms.aboutMyself') }}</label>
-                <textarea wire:model="form.party.aboutMyself" id="about" name="about" class="textarea disabled:bg-gray-200" placeholder="{{ __('forms.comment') }}" {{ $this->lockPartyFields ? 'disabled' : '' }}></textarea>
+                <textarea wire:model="form.party.aboutMyself" id="about" name="about" class="textarea disabled:bg-gray-200" placeholder="{{ __('forms.comment') }}" ></textarea>
                 @error('form.party.about') <p class="text-error">{{ $message }}</p> @enderror
             </div>
         </div>
