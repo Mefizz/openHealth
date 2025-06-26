@@ -8,7 +8,6 @@ use App\Models\Employee\Employee;
 use App\Models\Employee\EmployeeRequest;
 use App\Rules\TwoLettersSixDigits;
 use Exception;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -53,9 +52,11 @@ trait ManagesEmployeeForm
     }
 
     /**
-     * Save or Update the employee data. This method now handles all scenarios correctly.
+     * Save or Update the employee data, handling different modes.
+     *
+     * @throws ValidationException
      */
-    public function save(): void
+    public function save(string $currentMode = 'full_create'): void
     {
         if (isset($this->form->party['phones'])) {
             $cleanedPhones = [];
@@ -71,45 +72,25 @@ trait ManagesEmployeeForm
 
         try {
             $this->form->validate($this->form->rulesForSave());
-            $preparedDataForDb = $this->form->getPreparedData();
-            $preparedDataForDb['legal_entity_uuid'] = legalEntity()->uuid;
-            $preparedDataForDb['legal_entity_id']   = legalEntity()->id;
 
-            if ($this->employeeRequest) {
-                // SCENARIO: Re-saving a PENDING request.
-                DB::transaction(function () use ($preparedDataForDb) {
-                    $requestAttributes = \Illuminate\Support\Arr::except($preparedDataForDb, ['party', 'doctor', 'documents', 'phones']);
-                    $this->employeeRequest->fill($requestAttributes)->save();
+            $preparedData = $this->form->getPreparedData();
+            $preparedData['legal_entity_uuid'] = legalEntity()->uuid;
+            $preparedData['legal_entity_id']   = legalEntity()->id;
 
-                    if ($this->employeeRequest->party) {
-                        $partyDataFromForm = $preparedDataForDb['party'] ?? [];
-                        $fillablePartyFields = [
-                            'last_name', 'first_name', 'second_name', 'birth_date', 'gender',
-                            'no_tax_id', 'about_myself', 'working_experience'
-                        ];
-                        $partyUpdateData = \Illuminate\Support\Arr::only($partyDataFromForm, $fillablePartyFields);
-                        $this->employeeRequest->party->update($partyUpdateData);
-                    }
+            $forceCreate = ($currentMode === 'add_position');
 
-                    if ($this->employeeRequest->revision) {
-                        $this->employeeRequest->revision->update(['data' => $preparedDataForDb]);
-                    }
-                });
+            if ($this->employeeRequest && !$forceCreate) {
+                if ($this->employeeRequest->revision) {
+                    $this->employeeRequest->revision->update(['data' => $preparedData]);
+                }
             } else {
-                // SCENARIO: Creating a NEW request for the first time.
                 if ($this->employee) {
                     $this->employeeRequest = Repository::employee()->createChangeRequestForExistingEmployee(
-                        $preparedDataForDb,
-                        $this->employee->uuid,
-                        legalEntity()
+                        $preparedData, $this->employee->uuid, legalEntity()
                     );
                 } else {
                     $this->employeeRequest = Repository::employee()->store(
-                        $preparedDataForDb,
-                        legalEntity(),
-                        new EmployeeRequest(),
-                        null,
-                        true
+                        $preparedData, legalEntity(), new EmployeeRequest(), null, true
                     );
                 }
             }
