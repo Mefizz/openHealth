@@ -8,6 +8,7 @@ use App\Models\Employee\Employee;
 use App\Models\Employee\EmployeeRequest;
 use App\Rules\TwoLettersSixDigits;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -19,8 +20,6 @@ trait ManagesEmployeeForm
 {
     use WithFileUploads;
 
-    public bool $lockPartyFields = false;
-
     protected ?Employee $employee = null;
 
     #[Locked]
@@ -28,37 +27,76 @@ trait ManagesEmployeeForm
 
     public ?EmployeeRequest $employeeRequest = null;
     public bool $showSignatureBlock = false;
+    public bool $lockPartyFields = false;
 
-    /**
-     * Load the employee model based on the locked employeeId.
-     */
-    public function loadEmployee(): void
+    public function loadEmployee(string $viewMode = 'full_edit'): void
     {
         if ($this->employeeId) {
-            $this->employee = Employee::findOrFail($this->employeeId);
-            $this->form->populateFromModel($this->employee);
+            $employee = Employee::findOrFail($this->employeeId);
+            $this->employee = $employee;
+
+            $this->form->populateFromModel($employee, $viewMode);
+        }
+    }
+
+    public function addPhone(): void
+    {
+        $this->form->party['phones'][] = ['type' => 'MOBILE', 'number' => ''];
+    }
+
+    public function removePhone(int $index): void
+    {
+        if (isset($this->form->party['phones'][$index])) {
+            unset($this->form->party['phones'][$index]);
+            $this->form->party['phones'] = array_values($this->form->party['phones']);
         }
     }
 
     /**
-     * Save or Update the employee data.
+     * Save or Update the employee data. This method now handles all scenarios correctly.
      */
     public function save(): void
     {
+        if (isset($this->form->party['phones'])) {
+            $cleanedPhones = [];
+            foreach ($this->form->party['phones'] as $phone) {
+                if (isset($phone['number']) && is_string($phone['number'])) {
+                    $digits = preg_replace('/[^0-9]/', '', $phone['number']);
+                    $phone['number'] = !empty($digits) ? '+' . $digits : '';
+                }
+                $cleanedPhones[] = $phone;
+            }
+            $this->form->party['phones'] = $cleanedPhones;
+        }
+
         try {
             $this->form->validate($this->form->rulesForSave());
-            $this->runCustomValidation();
             $preparedDataForDb = $this->form->getPreparedData();
             $preparedDataForDb['legal_entity_uuid'] = legalEntity()->uuid;
-            $preparedDataForDb['legal_entity_id'] = legalEntity()->id;
+            $preparedDataForDb['legal_entity_id']   = legalEntity()->id;
 
             if ($this->employeeRequest) {
-                // Re-saving a pending request.
-                if ($this->employeeRequest->revision) {
-                    $this->employeeRequest->revision->update(['data' => $preparedDataForDb]);
-                }
+                // SCENARIO: Re-saving a PENDING request.
+                DB::transaction(function () use ($preparedDataForDb) {
+                    $requestAttributes = \Illuminate\Support\Arr::except($preparedDataForDb, ['party', 'doctor', 'documents', 'phones']);
+                    $this->employeeRequest->fill($requestAttributes)->save();
+
+                    if ($this->employeeRequest->party) {
+                        $partyDataFromForm = $preparedDataForDb['party'] ?? [];
+                        $fillablePartyFields = [
+                            'last_name', 'first_name', 'second_name', 'birth_date', 'gender',
+                            'no_tax_id', 'about_myself', 'working_experience'
+                        ];
+                        $partyUpdateData = \Illuminate\Support\Arr::only($partyDataFromForm, $fillablePartyFields);
+                        $this->employeeRequest->party->update($partyUpdateData);
+                    }
+
+                    if ($this->employeeRequest->revision) {
+                        $this->employeeRequest->revision->update(['data' => $preparedDataForDb]);
+                    }
+                });
             } else {
-                // Creating a new request.
+                // SCENARIO: Creating a NEW request for the first time.
                 if ($this->employee) {
                     $this->employeeRequest = Repository::employee()->createChangeRequestForExistingEmployee(
                         $preparedDataForDb,
@@ -77,14 +115,22 @@ trait ManagesEmployeeForm
             }
             session()->flash('success', __('forms.employee_request_saved_successfully'));
             $this->showSignatureBlock = true;
-        } catch (Exception $e) {
-            $this->handleException($e);
-            if ($e instanceof ValidationException) throw $e;
+
+        } catch (ValidationException $e) {
+            $this->dispatch('employee-form-failed');
+            session()->flash('error', __('forms.validation_failed_check_form'));
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('Failed to save employee: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            $this->dispatch('employee-form-failed');
+            session()->flash('error', __('forms.failed_to_save_employee_unexpected_error'));
+            $this->showSignatureBlock = false;
+            throw $e;
         }
     }
 
     /**
-     * Handles the signing process and returns a redirect on success.
+     * Handles the signing process.
      */
     public function sign()
     {
@@ -93,31 +139,19 @@ trait ManagesEmployeeForm
             $this->employeeRequest->refresh();
             $this->form->validate($this->form->rulesForKepOnly());
 
-            $dataForSigning = Repository::employee()->formatEHealthRequest(
-                $this->employeeRequest->revision->data
-            );
-
-            $base64FileContent = $this->form->getBase64KepFileContent();
-
+            $dataForSigning = Repository::employee()->formatEHealthRequest($this->employeeRequest->revision->data);
             $signedContent = signatureService()->signData(
                 $dataForSigning,
                 $this->form->password,
                 $this->form->knedp,
-                $base64FileContent,
-                CipherApi::SIGNATORY_INITIATOR_PERSON,
+                $this->form->keyContainerUpload,
+                'Person',
                 $this->form->party['taxId']
             );
 
-            if (is_array($signedContent) && isset($signedContent['errors'])) {
-                $this->dispatchErrorMessage((array)$signedContent['errors'], __('forms.failed_to_sign_data'));
-
-                return null;
-            }
-
             if ($this->sendSignedContentToEhealth($signedContent)) {
-                return response()->redirectToRoute('employee.index');
+                return redirect()->route('employee.index', ['legalEntity' => legalEntity()->id]);
             }
-
         } catch (Exception $e) {
             $this->handleException($e);
         }
@@ -141,7 +175,7 @@ trait ManagesEmployeeForm
                 $this->employeeRequest->uuid = $ehealthResponse['id'];
                 $this->employeeRequest->inserted_at = $ehealthResponse['inserted_at'];
                 $this->employeeRequest->legal_entity_uuid = $ehealthResponse['legal_entity_id'];
-                $this->employeeRequest->updated_at        = $ehealthResponse['updated_at'];
+                $this->employeeRequest->updated_at = $ehealthResponse['updated_at'];
                 $this->employeeRequest->save();
                 session()->flash('success', __('forms.requestSignedAndSentToEHealth'));
                 $this->dispatch('signature-successful');
@@ -204,9 +238,6 @@ trait ManagesEmployeeForm
         $this->dispatch('employee-form-failed');
     }
 
-    /**
-     * Dispatches a structured error message to the session.
-     */
     protected function dispatchErrorMessage(array $errors, string $prefix = ''): void
     {
         $errorMessage = collect($errors)->flatten()->implode(', ');
