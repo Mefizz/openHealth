@@ -118,8 +118,8 @@
         <div class="form-row-2">
             <div class="form-group">
                 <label for="about" class="peer appearance-none bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400">{{ __('forms.aboutMyself') }}</label>
-                <textarea id="about" name="about" class="textarea" placeholder="{{ __('forms.comment') }}"></textarea>
-                @error('form.party.about') <p class="text-error">{{ $message }}</p> @enderror
+                <textarea id="about" name="about" class="textarea" placeholder="{{ __('forms.comment') }}" wire:model.defer="form.party.aboutMyself"></textarea>
+                @error('form.party.aboutMyself') <p class="text-error">{{ $message }}</p> @enderror
             </div>
         </div>
     </div>
