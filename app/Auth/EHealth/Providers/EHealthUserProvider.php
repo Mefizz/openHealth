@@ -12,7 +12,8 @@ class EHealthUserProvider extends EloquentUserProvider
      * Retrieve a user by their unique identifier.
      * Here an user's uuid acts as an identifier.
      *
-     * @param  mixed  $identifier
+     * @param string $identifier
+     *
      * @return \Illuminate\Contracts\Auth\Authenticatable|null
      */
     public function retrieveById($identifier):?User
