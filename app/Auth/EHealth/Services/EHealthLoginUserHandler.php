@@ -4,6 +4,7 @@ namespace App\Auth\EHealth\Services;
 
 use App\Models\User;
 use App\Models\LegalEntity;
+use Closure;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\RedirectResponse;
 use App\Repositories\EmployeeRepository;
@@ -11,9 +12,9 @@ use App\Classes\eHealth\Api\EmployeeApi;
 use App\Models\Employee\EmployeeRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
-use App\Auth\EHealth\Services\TokenStorage;
 use App\Classes\eHealth\Request as eHealthRequest;
 use Illuminate\Contracts\Validation\Validator as ResponseValidator;
+use Illuminate\Validation\Rule;
 
 class EHealthLoginUserHandler
 {
@@ -147,23 +148,45 @@ class EHealthLoginUserHandler
     /**
      * Check authentication $response schema for errors
      *
-     * @return array Returned only specified fields
+     * @return ResponseValidator Returned only specified fields
      */
     public function validateAuthResponse(array $data): ResponseValidator
     {
         return Validator::make($data, [
-            'details' => 'required|array',
-            'details.client_id' => 'required|string',
-            'details.scope' => 'required|string',
-            'user_id' => 'required|string',
-            'value' => 'required|string'
+            'details' => ['required', 'array'],
+            'details.client_id' => ['required','uuid', Rule::exists('legal_entities', 'uuid')],
+            'details.scope' => [
+                'required',
+                function (string $attribute, string $value, Closure $fail) {
+                    if ($attribute != 'details.scope') {
+                        return;
+                    }
+
+                    $scopesReceived = explode(' ', $value);
+                    $scopesAvailable = collect(config('ehealth.roles'))
+                        ->flatten()
+                        ->unique()
+                        ->toArray();
+                    $diff = array_diff($scopesReceived, $scopesAvailable);
+
+                    if (empty($diff)) {
+                        return;
+                    }
+
+                    $fail("The following scopes are unsupported: " . implode(', ', $diff) );
+                }
+            ],
+            'details.refresh_token' => ['required','string'],
+            'user_id' => ['required', 'uuid'],
+            'value' => ['required', 'string'],
+            'expires_at' => ['required', 'numeric'],
         ]);
     }
 
     /**
      * Check authentication $response schema for errors
      *
-     *  @return array Returned only specified fields
+     *  @return ResponseValidator Returned only specified fields
      */
     public function validateUserDetailsResponse(array $data): ResponseValidator
     {

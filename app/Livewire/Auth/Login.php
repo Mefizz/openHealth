@@ -266,7 +266,7 @@ class Login extends Component
                 return Redirect::route('login')->with('error', __('auth.login.error.user_identity'));
             }
 
-            $authResponseValidator = $this->validateAuthResponse($authResponse);
+            $authResponseValidator = $handleLoginUser->validateAuthResponse($authResponse);
 
             /** @var \Illuminate\Contracts\Validation\Validator $authResponseValidator */
             if ($authResponseValidator->fails()) {
@@ -392,23 +392,5 @@ class Login extends Component
     protected function getLegalEntityClientIdFromUuid(string $uuid): ?string
     {
         return LegalEntity::byUuid($uuid)->first()?->clientId;
-    }
-
-    /**
-     * Check authentication $response schema for errors
-     *
-     * @return ResponseValidator Returned only specified fields
-     */
-    public function validateAuthResponse(array $data): ResponseValidator
-    {
-        return Validator::make($data, [
-            'details' => 'required|array',
-            'details.client_id' => 'required|string',
-            'details.scope' => 'required|string',
-            'details.refresh_token' => 'required|string',
-            'user_id' => 'required|string',
-            'value' => 'required|string',
-            'expires_at' => 'required|numeric'
-        ]);
     }
 }
