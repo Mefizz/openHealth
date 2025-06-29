@@ -8,11 +8,11 @@ use App\Livewire\Actions\Logout;
 use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\ForgotPassword;
+use App\Http\Controllers\Auth\EHealthLoginController;
 use App\Livewire\Employee\AddPosition;
 use App\Livewire\Patient\PatientComponent;
 use App\Livewire\DiagnosticReport\DiagnosticReportCreate;
 use App\Livewire\Employee\EmployeeShow;
-use App\Livewire\Patient\PatientForm;
 use App\Livewire\License\LicenseShow;
 use App\Models\LegalEntity;
 use Illuminate\Support\Facades\Route;
@@ -58,7 +58,7 @@ Route::post('/send-email', [EmailController::class, 'sendEmail'])->name('send.em
 
 /* Auth */
 
-Route::get('/ehealth/oauth/', [Login::class, 'callback'])->name('ehealth.oauth.callback');
+Route::get('/ehealth/oauth/', EHealthLoginController::class)->name('ehealth.oauth.callback');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', Login::class)->name('login');

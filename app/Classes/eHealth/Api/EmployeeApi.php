@@ -75,7 +75,7 @@ class EmployeeApi
             return false;
         }
 
-        $legalEntity=LegalEntity::byUuid($legalEntityUUID)->first();
+        $legalEntity = LegalEntity::byUuid($legalEntityUUID)->first();
 
         $data = [
             'token' => [
