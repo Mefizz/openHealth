@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Livewire\Auth;
 
-use Exception;
 use App\Models\User;
 use Livewire\Component;
 use App\Models\LegalEntity;
@@ -16,13 +15,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Session;
-use App\Classes\eHealth\Api\EmployeeApi;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Validator;
-use App\Auth\EHealth\Services\TokenStorage;
 use Illuminate\Support\Facades\RateLimiter;
-use App\Auth\EHealth\Services\EHealthLoginUserHandler;
-use Illuminate\Contracts\Validation\Validator as ResponseValidator;
+use Livewire\Features\SupportRedirects\Redirector;
 
 #[Layout('layouts.guest')]
 class Login extends Component
@@ -76,7 +71,7 @@ class Login extends Component
     /**
      * Handle an incoming authentication request.
      */
-    public function login()
+    public function login(): RedirectResponse|Redirector
     {
         $key = $this->throttleKey();
 
@@ -102,45 +97,36 @@ class Login extends Component
 
         if (!$user) {
             $this->addError('email', __('auth.login.error.validation.auths'));
-
             return back();
         }
 
         if (!$user->hasVerifiedEmail()) {
-            /* Save user's id to send a verification link again (if need, course) */
+            /* Save user's id to send a verification link again (if needed) */
             session()->put('unverified_user_id', $user->id);
-
             $this->redirect(route('verification.notice'), navigate: true);
-
-            return;
         }
 
-        /* ESOZ Authentication */
-        if ($user && !$this->isLocalAuth) {
+        if (!$this->isLocalAuth) {
             if (!empty($this->legalEntityUUID)) {
                 /* Temporary save the UUID of the selected Legal Entity */
                 session()->put('selected_legal_entity_uuid_for_ehealth', $this->legalEntityUUID);
             } else {
                 Log::error("Legal entity hasn't been choose for email {$user->email}");
-
-                return null;
+                return back();
             }
 
-            $url = $this->loginUrl($user);
-
-            return Redirect::to($url);
+            return Redirect::to(
+                $this->buildEHealthLoginUrl($user)
+            );
         }
 
         if (!Auth::attempt($credentials)) {
             RateLimiter::hit($key, config('ehealth.auth.decay_seconds'));
-
             $this->addError('email', __('auth.login.error.validation.credentials'));
-
             return back();
         }
 
         $this->clearLoginAttempts();
-
         Session::regenerate();
 
         /* Get an array of the LegalEntity id's connected to this $user */
@@ -225,129 +211,13 @@ class Login extends Component
     }
 
     /**
-     * Get the authentication rate limiting throttle key.
-     *
-     * @return string
-     */
-    protected function throttleKey(): string
-    {
-        return Str::transliterate(Str::lower($this->email).'|'.request()->ip());
-    }
-
-    /**
-     * This method is called when the user is redirected back from eHealth after it's successfull authentication
-     *
-     * @return null|RedirectResponse
-     */
-    public function callback(): ?RedirectResponse
-    {
-        /* exchange code to token */
-        if (config('ehealth.api.callback_prod') === false) {
-            $code = request()->input('code');
-            $url = 'http://localhost/ehealth/oauth?code=' . $code;
-
-            return redirect($url);
-        }
-
-        if (!request()->has('code')) {
-            return Redirect::route('login');
-        }
-
-        try {
-            $selectedLegalEntityUuidFromSession = session()->pull('selected_legal_entity_uuid_for_ehealth');
-
-            $handleLoginUser = app(EHealthLoginUserHandler::class);
-
-            $code = request()->input('code');
-
-            $authResponse = EmployeeApi::authenticate($code, $selectedLegalEntityUuidFromSession);
-
-            if (!$authResponse) {
-                return Redirect::route('login')->with('error', __('auth.login.error.user_identity'));
-            }
-
-            $authResponseValidator = $handleLoginUser->validateAuthResponse($authResponse);
-
-            /** @var \Illuminate\Contracts\Validation\Validator $authResponseValidator */
-            if ($authResponseValidator->fails()) {
-                Log::error(__('auth.login.error.validation.auth', [], 'en'), ['errors' => $authResponseValidator->errors()]);
-
-                return Redirect::route('login')->with('error', __('auth.login.error.validation.auth'));
-            }
-
-            $authResponseData = $authResponseValidator->validated();
-
-            app(TokenStorage::class)->store($authResponseData);
-
-            $authUserUUID = $authResponseData['user_id'];
-            $authLegalEntityUUID = $authResponseData['details']['client_id'];
-
-            /* This checks if the user chose one LE, but eHealth returned another */
-            if ($selectedLegalEntityUuidFromSession && $selectedLegalEntityUuidFromSession !== $authLegalEntityUUID) {
-                Log::warning('User selected a different Legal Entity in form than eHealth returned.', [
-                    'Selected in form' => $selectedLegalEntityUuidFromSession,
-                    'Returned by eHealth' => $authLegalEntityUUID,
-                    'User UUID' => $authUserUUID,
-                ]);
-
-                return $handleLoginUser->breakAuth('auth.login.error.legal_entity_identity');
-            }
-
-            try {
-                $legalEntity = LegalEntity::byUuid($authLegalEntityUUID)->firstOrFail();
-            } catch (Exception $err) {
-                /* Error if legal entity cannot be found */
-                Log::error(__('auth.login.error.unexistent_legal_entity', [], 'en'), ['Error' => $err->getMessage()]);
-
-                return $handleLoginUser->breakAuth('auth.login.error.legal_entity_identity');
-            }
-
-            $isFirstLogin = (bool) ! User::where('uuid', $authUserUUID)->first()?->uuid;
-
-            auth()->shouldUse('ehealth');
-
-            $user = $handleLoginUser->checkLoginedUser($legalEntity, $authUserUUID);
-
-            if (!$user) {
-                Log::error(__('auth.login.error.user_authentication', [], 'en'));
-
-                return $handleLoginUser->breakAuth('auth.login.error.user_authentication');
-            }
-        } catch (Exception $err) {
-            Log::error(__('auth.login.error.unexpected', [], 'en'), ['Error' => $err->getMessage()]);
-
-            return $handleLoginUser->breakAuth();
-        }
-
-        auth('ehealth')->login($user);
-
-        /**
-         * must set actual permissions for the particular legal entity, see:
-         * https://spatie.be/docs/laravel-permission/v6/basic-usage/teams-permissions#content-working-with-teams-permissions
-         */
-        setPermissionsTeamId($legalEntity->id);
-        $user->unsetRelation('roles')->unsetRelation('permissions');
-
-        /* Check if the user has assigned LegalEntity */
-        if ($legalEntity) {
-            Log::info(__('auth.login.success.user_auth', [], 'en'), ['User ID' => $user->id]);
-
-            return Redirect::route('dashboard', [$legalEntity])->with('success', $isFirstLogin ? __('auth.login.success.new_user_auth') : null);
-        } else {
-            Auth::guard('ehealth')->logout();
-
-            return Redirect::route('login')->with('error', __('auth.login.error.legal_entity.wrong_request'));
-        }
-    }
-
-    /**
     * Prepare login URL for eHealth depending on the user credentials and redirect URI
     *
     * @param $user
     *
     * @return string
     */
-    protected function loginUrl(User $user): string
+    protected function buildEHealthLoginUrl(User $user): string
     {
         /* Base URL and client ID */
         $baseUrl = config('ehealth.api.auth_host');
@@ -392,5 +262,15 @@ class Login extends Component
     protected function getLegalEntityClientIdFromUuid(string $uuid): ?string
     {
         return LegalEntity::byUuid($uuid)->first()?->clientId;
+    }
+
+    /**
+     * Get the authentication rate limiting throttle key.
+     *
+     * @return string
+     */
+    protected function throttleKey(): string
+    {
+        return Str::transliterate(Str::lower($this->email).'|'.request()->ip());
     }
 }
