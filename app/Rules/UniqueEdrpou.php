@@ -17,8 +17,9 @@ class UniqueEdrpou implements ValidationRule
         /** @var User|null $user */
         $user = auth()->user();
 
-        $this->legalEntityId = $user && $user->legalEntity
-            ? $user->legalEntity->id
+        // TODO: check this
+        $this->legalEntityId = $user && legalEntity()
+            ? legalEntity()->id
             : null;
 
     }

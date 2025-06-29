@@ -116,7 +116,7 @@ class LegalEntity extends Component
         $this->stepCacheKey = self::CACHE_PREFIX . '-' . Auth::id() . '-' . 'steps';
     }
 
-    protected function mount(?\App\Models\LegalEntity $legalEntity = null): void
+    protected function mount(): void
     {
         $this->getLegalEntity();
 
@@ -194,7 +194,7 @@ class LegalEntity extends Component
      */
     private function getLegalEntityFromAuth(): ?LegalEntityModel
     {
-        return auth()->user()->legalEntity ?? null;
+        return legalEntity() ?? null;
     }
 
     /**
@@ -770,7 +770,8 @@ class LegalEntity extends Component
         }
 
         // Associate the legal entity with the user
-        $user->legalEntity()->associate($this->legalEntity);
+        // TODO: check if this comment doesn't broke something else
+        // $user->legalEntity()->associate($this->legalEntity);
 
         try{
             $user->save();

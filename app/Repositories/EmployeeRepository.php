@@ -415,7 +415,8 @@ class EmployeeRepository
             ->snakeCaseKeys(true)
             ->getNormalizedData();
 
-        $legalEntity = !empty($user) ? $user->legalEntity : LegalEntity::where('uuid', $legalEntityUUID)->first();
+        // $legalEntity = !empty($user) ? $user->legalEntity : LegalEntity::where('uuid', $legalEntityUUID)->first(); // TODO: remove it if code below works
+        $legalEntity = legalEntity() ?? LegalEntity::where('uuid', $legalEntityUUID)->first(); // TODO: check if it will works
 
         $employeeResponse['division_id'] = isset($employeeResponse['division_uuid'])
             ? Division::where('uuid', $employeeResponse['division_uuid'])->first()?->id
@@ -454,7 +455,9 @@ class EmployeeRepository
         try {
             DB::transaction(function() use($employeeRequest, $ownerUser, $authUserUUID) {
 
-                $legalEntityUUID = $ownerUser->legalEntity->uuid;
+                $legalEntity = LegalEntity::find($employeeRequest->legal_entity_id); // TODO: check this and line below
+
+                $legalEntityUUID = $legalEntity->uuid;
 
                 // List of the users (employees) belongs to the same legal entity
                 $employeeList = EmployeeApi::getEmployeesList($legalEntityUUID);
