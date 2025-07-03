@@ -141,6 +141,12 @@ class EncounterComponent extends Component
     public array $procedureReasons = [];
 
     /**
+     * List of founded complication details for current episode.
+     * @var array
+     */
+    public array $complicationDetails;
+
+    /**
      * List of dictionary names.
      * @var array|string[]
      */
@@ -381,6 +387,36 @@ class EncounterComponent extends Component
         } catch (eHealthApiException) {
             Log::channel('e_health_errors')
                 ->error('Error while searching for procedure reasons in Encounter Component');
+
+            $this->flashGeneralError();
+        }
+    }
+
+    /**
+     * Search for complication details in conditions for selected episode.
+     *
+     * @return void
+     */
+    public function searchComplicationDetails(): void
+    {
+        $episodeId = $this->form->encounter['episode']['identifier']['value'] ?? null;
+
+        // If the episode is not selected, don't perform a search.
+        if (!isset($episodeId)) {
+            return;
+        }
+
+        $buildGetConditions = EncounterRequestApi::buildGetConditionsInEpisodeContext($this->patientUuid, $episodeId);
+
+        try {
+            $this->complicationDetails = PatientApi::getConditionsInEpisodeContext(
+                $this->patientUuid,
+                $episodeId,
+                $buildGetConditions
+            );
+        } catch (eHealthApiException) {
+            Log::channel('e_health_errors')
+                ->error('Error while searching for complication details in Encounter Component');
 
             $this->flashGeneralError();
         }

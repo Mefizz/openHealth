@@ -38,20 +38,20 @@
     </div>
 
     {{-- When the performer is chosen --}}
-    <div x-show="modalProcedure.primarySource === true" class="form-row-modal">
+    <div x-show="modalProcedure.primarySource === true" class="form-row-2">
         <div class="form-group group">
-            <label for="procedurePerformer" class="label-modal">
-                {{ __('patients.doctor_who_performed') }}
-            </label>
             <input type="text"
                    name="procedurePerformer"
                    id="procedurePerformer"
-                   class="input-modal"
+                   class="input peer"
                    placeholder=" "
                    autocomplete="off"
                    disabled
                    value="{{ $employeeFullName }}"
             >
+            <label for="procedurePerformer" class="label">
+                {{ __('patients.doctor_who_performed') }}
+            </label>
         </div>
     </div>
 
@@ -59,28 +59,19 @@
     <div x-show="modalProcedure.primarySource === false">
         <div class="form-row-modal">
             <div>
-                <label for="reportOrigin" class="label-modal">
-                    {{ __('patients.source_link') }}
-                </label>
-                <select class="input-modal"
+                <select class="input-select peer"
                         x-model="modalProcedure.reportOrigin.coding[0].code"
                         id="reportOrigin"
                         type="text"
                         required
                 >
-                    <option selected>{{ __('forms.select') }}</option>
+                    <option selected>{{ __('forms.select') }} {{ mb_strtolower(__('patients.source_link')) }} *</option>
                     @foreach($this->dictionaries['eHealth/report_origins'] as $key => $reportOrigin)
                         <option value="{{ $key }}" wire:key="{{ $key }}">
                             {{ $reportOrigin }}
                         </option>
                     @endforeach
                 </select>
-
-                <p class="text-error text-xs"
-                   x-show="!Object.keys($wire.dictionaries['eHealth/report_origins']).includes(modalProcedure.reportOrigin.coding[0].code)"
-                >
-                    {{ __('forms.field_empty') }}
-                </p>
             </div>
         </div>
     </div>
@@ -88,31 +79,24 @@
     {{-- Start effective period datetime --}}
     <div class="form-row-3">
         <div class="form-group group">
-            <label for="performedPeriodStartDate" class="label-modal">
-                {{ __('patients.procedure_start_date_and_time') }}
-            </label>
-            <div class="relative flex items-center">
-                <svg width="20" height="20"
-                     class="svg-input absolute left-2.5 pointer-events-none"
-                >
-                    <use xlink:href="#svg-calendar-week"></use>
-                </svg>
-
+            <div class="datepicker-wrapper">
                 <input x-model="modalProcedure.performedPeriodStartDate"
                        datepicker-max-date="{{ now()->format('Y-m-d') }}"
                        type="text"
                        name="performedPeriodStartDate"
                        id="performedPeriodStartDate"
-                       class="datepicker-input input-modal !pl-10"
+                       class="datepicker-input with-leading-icon input peer"
                        placeholder=" "
                        required
                        autocomplete="off"
                 >
-
+                <label for="performedPeriodStartDate" class="wrapped-label">
+                    {{ __('patients.procedure_start_date_and_time') }}
+                </label>
             </div>
         </div>
 
-        <div class="w-1/2 mt-7" onclick="document.getElementById('performedPeriodStartTime').showPicker()">
+        <div class="form-group group !w-1/2" onclick="document.getElementById('performedPeriodStartTime').showPicker()">
             <div class="relative flex items-center">
                 <svg width="20" height="20" class="svg-input absolute left-2.5 pointer-events-none">
                     <use xlink:href="#svg-clock"></use>
@@ -123,7 +107,7 @@
                        type="time"
                        name="performedPeriodStartTime"
                        id="performedPeriodStartTime"
-                       class="input-modal !pl-10"
+                       class="input peer !pl-10"
                        autocomplete="off"
                        required
                 >
@@ -134,30 +118,24 @@
     {{-- End effective period datetime --}}
     <div class="form-row-3">
         <div class="form-group group">
-            <label for="performedPeriodEndDate" class="label-modal">
-                {{ __('patients.procedure_end_date_and_time') }}
-            </label>
-            <div class="relative flex items-center">
-                <svg width="20" height="20"
-                     class="svg-input absolute left-2.5 pointer-events-none"
-                >
-                    <use xlink:href="#svg-calendar-week"></use>
-                </svg>
-
+            <div class="datepicker-wrapper">
                 <input x-model="modalProcedure.performedPeriodEndDate"
                        datepicker-max-date="{{ now()->format('Y-m-d') }}"
                        type="text"
                        name="performedPeriodEndDate"
                        id="performedPeriodEndDate"
-                       class="datepicker-input input-modal !pl-10"
+                       class="datepicker-input with-leading-icon input peer"
                        placeholder=" "
                        required
                        autocomplete="off"
                 >
+                <label for="performedPeriodEndDate" class="wrapped-label">
+                    {{ __('patients.procedure_end_date_and_time') }}
+                </label>
             </div>
         </div>
 
-        <div class="w-1/2 mt-7" onclick="document.getElementById('performedPeriodEndTime').showPicker()">
+        <div class="form-group group !w-1/2" onclick="document.getElementById('performedPeriodEndTime').showPicker()">
             <div class="relative flex items-center">
                 <svg width="20" height="20" class="svg-input absolute left-2.5 pointer-events-none">
                     <use xlink:href="#svg-clock"></use>
@@ -168,7 +146,7 @@
                        type="time"
                        name="performedPeriodEndTime"
                        id="performedPeriodEndTime"
-                       class="input-modal !pl-10"
+                       class="input peer !pl-10"
                        autocomplete="off"
                        required
                 >

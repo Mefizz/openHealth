@@ -598,7 +598,24 @@ class EncounterRepository extends BaseRepository
                 unset($reasonReference);
             }
 
-            return $procedure;
+            if (!empty($procedure['complicationDetails'])) {
+                foreach ($procedure['complicationDetails'] as &$complicationDetail) {
+                    $identifier = [
+                        'type' => [
+                            'coding' => [['system' => 'eHealth/resources', 'code' => 'condition']],
+                        ],
+                        'value' => $complicationDetail['id']
+                    ];
+
+                    // Keep only the identifier key
+                    $complicationDetail = ['identifier' => $identifier];
+                }
+
+                unset($complicationDetail);
+            }
+
+            // Remove elements where the key is equal empty array
+            return array_filter($procedure);
         }, $procedures);
 
         return schemaService()

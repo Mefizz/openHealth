@@ -5,7 +5,7 @@
 
     {{-- Is referral available --}}
     <div>
-        <div class="form-row-modal">
+        <div class="form-row-2">
             <div class="form-group group">
                 <input x-model="modalProcedure.isReferralAvailable"
                        @click="modalProcedure.isReferralAvailable = !modalProcedure.isReferralAvailable"
@@ -24,18 +24,17 @@
         {{-- When referral available --}}
         <template x-if="modalProcedure.isReferralAvailable">
             <div class="form-group group">
-                <div class="form-row-modal" x-cloak>
+                <div class="form-row-2" x-cloak>
                     <div>
-                        <label for="referralType" class="label-modal">
-                            {{ __('patients.requisition_type') }}
-                        </label>
-                        <select id="referralType"
-                                class="input-modal"
+                        <select x-model="modalProcedure.referralType"
+                                id="referralType"
+                                class="input-select peer"
                                 type="text"
-                                x-model="modalProcedure.referralType"
                                 required
                         >
-                            <option selected value="">{{ __('forms.select') }}</option>
+                            <option selected value="">
+                                {{ __('forms.select') }} {{ mb_strtolower(__('patients.requisition_type')) }} *
+                            </option>
                             <option value="electronic">{{ __('patients.electronic') }}</option>
                             <option value="paper">{{ __('patients.paper') }}</option>
                         </select>
@@ -44,18 +43,18 @@
                     {{-- Electronic referral --}}
                     <template x-if="modalProcedure.referralType === 'electronic'" x-transition>
                         <div class="form-group group">
-                            <label for="eReferralNumber" class="label-modal">
-                                {{ __('forms.number') }}
-                            </label>
                             <input wire:model="form.encounter.episode.identifier.value"
                                    type="text"
                                    name="eReferralNumber"
                                    id="eReferralNumber"
-                                   class="input-modal"
+                                   class="input-select peer"
                                    placeholder=" "
                                    required
                                    autocomplete="off"
                             />
+                            <label for="eReferralNumber" class="label">
+                                {{ __('forms.number') }}
+                            </label>
                         </div>
                     </template>
                 </div>
@@ -63,121 +62,98 @@
                 {{-- Paper referral --}}
                 <template x-if="modalProcedure.referralType === 'paper'" x-transition>
                     <div>
-                        <div class="form-row-modal">
+                        <div class="form-row-2">
                             <div class="form-group group">
-                                <label for="requisition" class="label-modal">
-                                    {{ __('forms.number') }}
-                                </label>
                                 <input x-model="modalProcedure.paperReferral.requisition"
                                        type="text"
                                        name="requisition"
                                        id="requisition"
-                                       class="input-modal"
+                                       class="input peer"
                                        placeholder=" "
                                        autocomplete="off"
                                 >
+                                <label for="requisition" class="label">
+                                    {{ __('forms.number') }}
+                                </label>
                             </div>
 
                             <div class="form-group group">
-                                <label for="requesterEmployeeName" class="label-modal">
-                                    {{ __('patients.author') }}
-                                </label>
                                 <input x-model="modalProcedure.paperReferral.requesterEmployeeName"
                                        type="text"
                                        name="requesterEmployeeName"
                                        id="requesterEmployeeName"
-                                       class="input-modal"
+                                       class="input peer"
                                        placeholder=" "
                                        autocomplete="off"
                                 >
+                                <label for="requesterEmployeeName" class="label">
+                                    {{ __('patients.author') }}
+                                </label>
                             </div>
                         </div>
 
-                        <div class="form-row-modal">
+                        <div class="form-row-2">
                             <div class="form-group group">
-                                <label for="requesterLegalEntityEdrpou" class="label-modal">
-                                    {{ __('patients.edrpou_of_the_issuing_institution') }}
-                                </label>
                                 <input x-model="modalProcedure.paperReferral.requesterLegalEntityEdrpou"
                                        type="text"
                                        name="requesterLegalEntityEdrpou"
                                        id="requesterLegalEntityEdrpou"
-                                       class="input-modal"
+                                       class="input peer"
                                        placeholder=" "
                                        autocomplete="off"
                                        required
                                 >
-
-                                <p class="text-error text-xs"
-                                   x-show="!modalProcedure.paperReferral.requesterLegalEntityEdrpou.trim()"
-                                >
-                                    {{ __('forms.field_empty') }}
-                                </p>
+                                <label for="requesterLegalEntityEdrpou" class="label">
+                                    {{ __('patients.edrpou_of_the_issuing_institution') }}
+                                </label>
                             </div>
 
                             <div class="form-group group">
-                                <label for="requesterLegalEntityName" class="label-modal">
-                                    {{ __('patients.name_of_the_institution_that_issued_it') }}
-                                </label>
                                 <input x-model="modalProcedure.paperReferral.requesterLegalEntityName"
                                        type="text"
                                        name="requesterLegalEntityName"
                                        id="requesterLegalEntityName"
-                                       class="input-modal"
+                                       class="input peer"
                                        placeholder=" "
                                        autocomplete="off"
                                        required
                                 >
-
-                                <p class="text-error text-xs"
-                                   x-show="!modalProcedure.paperReferral.requesterLegalEntityName.trim()"
-                                >
-                                    {{ __('forms.field_empty') }}
-                                </p>
+                                <label for="requesterLegalEntityName" class="label">
+                                    {{ __('patients.name_of_the_institution_that_issued_it') }}
+                                </label>
                             </div>
                         </div>
 
                         <div class="form-row-modal">
                             <div class="form-group group">
-                                <label for="serviceRequestDate" class="label-modal">
-                                    {{ __('patients.date') }}
-                                </label>
-                                <div class="relative flex items-center">
-                                    <svg width="20" height="20"
-                                         class="svg-input absolute left-2.5 pointer-events-none"
-                                    >
-                                        <use xlink:href="#svg-calendar-week"></use>
-                                    </svg>
+                                <div class="datepicker-wrapper">
                                     <input x-model="modalProcedure.paperReferral.serviceRequestDate"
                                            type="text"
                                            name="serviceRequestDate"
                                            id="serviceRequestDate"
-                                           class="datepicker-input input-modal !pl-10"
+                                           class="datepicker-input with-leading-icon input peer"
                                            placeholder=" "
                                            required
                                            autocomplete="off"
                                     >
+                                    <label for="serviceRequestDate" class="wrapped-label">
+                                        {{ __('patients.date') }}
+                                    </label>
                                 </div>
-
-                                <p class="text-error text-xs"
-                                   x-show="modalProcedure.paperReferral.serviceRequestDate.trim() === ''"
-                                >
-                                    {{ __('forms.field_empty') }}
-                                </p>
                             </div>
 
                             <div class="form-group group">
-                                <label for="note" class="label-modal">
-                                    {{ __('patients.notes') }}
-                                </label>
                                 <input x-model="modalProcedure.paperReferral.note"
                                        type="text"
-                                       name="note"
-                                       id="note"
-                                       class="input-modal"
+                                       name="paperNote"
+                                       id="paperNote"
+                                       class="input peer"
                                        placeholder=" "
                                        autocomplete="off"
                                 >
+                                <label for="paperNote" class="label">
+                                    {{ __('patients.notes') }}
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -186,57 +162,41 @@
         </template>
 
         {{-- Category --}}
-        <div class="form-row-modal">
+        <div class="form-row-2">
             <div class="form-group group">
-                <label for="category" class="label-modal">
-                    {{ __('forms.category') }}
-                </label>
                 <select x-model="modalProcedure.category.coding[0].code"
                         id="category"
-                        class="input-modal"
+                        class="input-select peer"
                         type="text"
                         required
                 >
-                    <option selected>{{ __('forms.select') }}</option>
+                    <option selected value="">
+                        {{ __('forms.select') }} {{ mb_strtolower(__('forms.category')) }} *
+                    </option>
                     @foreach($this->dictionaries['eHealth/procedure_categories'] as $key => $category)
                         <option value="{{ $key }}" wire:key="{{ $key }}">{{ $category }}</option>
                     @endforeach
                 </select>
-
-                <p class="text-error text-xs"
-                   x-show="!Object.keys($wire.dictionaries['eHealth/procedure_categories']).includes(modalProcedure.category.coding[0].code)"
-                >
-                    {{ __('forms.field_empty') }}
-                </p>
             </div>
         </div>
 
         {{-- Services --}}
-        <div class="form-row-modal relative z-1">
+        <div class="form-row-2 relative z-1">
             <div class="form-group group">
-                <label for="serviceCode" class="label-modal">
-                    {{ __('forms.services')}}
-                </label>
                 <x-select2 modelPath="modalProcedure.code.identifier.value"
                            dictionaryName="custom/services"
                            id="serviceCode"
-                           class="input-modal"
+                           class="input peer"
                 />
-
-                <p class="text-error text-xs"
-                   x-show="!$wire.dictionaries['custom/services'].some(item => item.id === modalProcedure.code.identifier.value)"
-                >
-                    {{ __('forms.field_empty') }}
-                </p>
+                <label for="serviceCode" class="label">
+                    {{ __('forms.services')}} {{ mb_strtolower(__('forms.services')) }} *
+                </label>
             </div>
         </div>
 
         {{-- Divisions --}}
-        <div class="form-row-modal">
+        <div class="form-row-2">
             <div class="form-group group">
-                <label for="divisionNames" class="label-modal">
-                    {{ __('patients.division_name')}}
-                </label>
                 <select x-model="modalProcedure.division.identifier.value"
                         x-init="
                             {{-- Set division by default if only one exist --}}
@@ -245,9 +205,11 @@
                             }
                         "
                         id="divisionNames"
-                        class="input-modal"
+                        class="input-select peer"
                 >
-                    <option value="">{{ __('forms.select') }}</option>
+                    <option selected value="">
+                        {{ __('forms.select') }} {{ mb_strtolower(__('patients.division_name')) }}
+                    </option>
                     @foreach($divisions as $key => $division)
                         <option value="{{ $division['uuid'] }}">{{ $division['name'] }}</option>
                     @endforeach
@@ -258,16 +220,14 @@
         {{-- Outcome --}}
         <div class="form-row-modal">
             <div class="form-group group">
-                <label for="outcome" class="label-modal">
-                    {{ __('patients.outcome_result') }}
-                </label>
                 <select x-model="modalProcedure.outcome.coding[0].code"
                         id="outcome"
-                        class="input-modal"
+                        class="input-select peer"
                         type="text"
-                        required
                 >
-                    <option selected>{{ __('forms.select') }}</option>
+                    <option selected>
+                        {{ __('forms.select') }} {{ mb_strtolower(__('patients.outcome_result')) }}
+                    </option>
                     @foreach($this->dictionaries['eHealth/procedure_outcomes'] as $key => $outcome)
                         <option value="{{ $key }}" wire:key="{{ $key }}">{{ $outcome }}</option>
                     @endforeach

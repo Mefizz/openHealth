@@ -228,5 +228,6 @@ return [
     'episode' => 'Епізод',
     'active' => 'діючий',
     'added' => 'Додано',
-    'rehabilitation_aids' => 'Допоміжні засоби реабілітації'
+    'rehabilitation_aids' => 'Допоміжні засоби реабілітації',
+    'complications_arising_during_the_procedure' => 'Ускладнення, що виникли під час процедури'
 ];

@@ -139,7 +139,7 @@
         </button>
 
         {{-- Content --}}
-        <template x-teleport="body">
+        <template x-teleport="body"> {{-- This moves the drawer at the end of the body tag --}}
             <div id="diagnostic-report-drawer-right"
                  class="fixed top-0 right-0 z-40 h-screen pt-20 p-4 overflow-y-auto transition-transform translate-x-full bg-white w-4/5 dark:bg-gray-800"
                  tabindex="-1"
@@ -177,8 +177,8 @@
                                 class="button-primary"
                                 data-drawer-hide="diagnostic-report-drawer-right"
                                 :disabled="!(
-                                    modalDiagnosticReport.category[0].coding[0].code.trim().length > 0 &&
-                                    modalDiagnosticReport.code.identifier.value.trim().length > 0
+                                    modalDiagnosticReport.category[0].coding[0].code.trim() &&
+                                    modalDiagnosticReport.code.identifier.value.trim()
                                 )"
                         >
                             {{ __('forms.save') }}
