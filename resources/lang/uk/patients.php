@@ -224,4 +224,10 @@ return [
     'doctor_who_performed' => 'Лікар, що виконав',
     'procedure_start_date_and_time' => 'Дата та час початку процедури',
     'procedure_end_date_and_time' => 'Дата та час завершення процедури',
+    'reason_for_performing' => 'Причина проведення',
+    'episode' => 'Епізод',
+    'active' => 'діючий',
+    'added' => 'Додано',
+    'rehabilitation_aids' => 'Допоміжні засоби реабілітації',
+    'complications_arising_during_the_procedure' => 'Ускладнення, що виникли під час процедури'
 ];

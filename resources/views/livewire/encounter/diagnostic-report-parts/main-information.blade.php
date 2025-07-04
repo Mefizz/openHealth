@@ -32,7 +32,7 @@
                            dictionaryName="custom/services"
                            id="serviceCode"
                            name="serviceCode"
-                           class="input-select peer"
+                           class="input peer"
                 />
                 <label for="serviceCode" class="label">
                     {{ __('forms.select')}} {{ mb_strtolower(__('forms.services')) }} *
@@ -104,7 +104,7 @@
                                            type="text"
                                            name="requisition"
                                            id="requisition"
-                                           class="input-select peer"
+                                           class="input peer"
                                            placeholder=" "
                                            autocomplete="off"
                                     >
@@ -118,7 +118,7 @@
                                            type="text"
                                            name="requesterEmployeeName"
                                            id="requesterEmployeeName"
-                                           class="input-select peer"
+                                           class="input peer"
                                            placeholder=" "
                                            autocomplete="off"
                                     >
@@ -134,7 +134,7 @@
                                            type="text"
                                            name="requesterLegalEntityEdrpou"
                                            id="requesterLegalEntityEdrpou"
-                                           class="input-select peer"
+                                           class="input peer"
                                            placeholder=" "
                                            autocomplete="off"
                                            required
@@ -149,7 +149,7 @@
                                            type="text"
                                            name="requesterLegalEntityName"
                                            id="requesterLegalEntityName"
-                                           class="input-select peer"
+                                           class="input peer"
                                            placeholder=" "
                                            autocomplete="off"
                                            required
@@ -183,7 +183,7 @@
                                            type="text"
                                            name="note"
                                            id="note"
-                                           class="input-select peer"
+                                           class="input peer"
                                            placeholder=" "
                                            autocomplete="off"
                                     >

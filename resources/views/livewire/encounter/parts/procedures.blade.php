@@ -23,8 +23,13 @@
             <tbody>
             <template x-for="(procedure, index) in procedures">
                 <tr>
-                    <td class="td-input"></td>
-                    <td class="td-input"></td>
+                    <td class="td-input"
+                        x-text="(() => {
+                            const service = Object.values($wire.dictionaries['custom/services']).find(s => s.id === procedure.code.identifier.value);
+                            return service ? `${service.code} / ${service.name}` : '';
+                        })()"
+                    ></td>
+                    <td class="td-input" x-text="procedure.performedPeriodStartDate"></td>
                     <td class="td-input">
                         {{-- That all that is needed for the dropdown --}}
                         <div x-data="{
@@ -86,6 +91,12 @@
                                                 {{-- Replace the previous procedure with the current, don't assign object directly (modalProcedure = procedure) to avoid reactiveness --}}
                                                 modalProcedure = JSON.parse(JSON.stringify(procedures[index]));
                                                 newProcedure = false; {{-- This procedure is already created --}}
+
+                                                $nextTick(() => {
+                                                    const drawer = document.getElementById('procedure-drawer-right');
+                                                    drawer.classList.remove('translate-x-full'); {{-- Open manually --}}
+                                                    drawer.scrollTop = 0; {{-- Move scroll to the top --}}
+                                                });
                                             "
                                             class="dropdown-button"
                                     >
@@ -107,73 +118,73 @@
         </table>
 
         <div>
-            {{-- Button to trigger the modal --}}
+            {{-- Button to trigger the drawer --}}
             <button @click.prevent="
-                        openModal = true; {{-- Open the Modal --}}
                         newProcedure = true; {{-- We are adding a new procedure --}}
                         modalProcedure = new Procedure(); {{-- Replace the data of the previous procedure with a new one--}}
+
+                        $nextTick(() => {
+                            const drawer = document.getElementById('procedure-drawer-right');
+                            drawer.scrollTop = 0; {{-- Move scroll to the top --}}
+                        });
                     "
                     class="item-add my-5"
+                    data-drawer-target="procedure-drawer-right"
+                    data-drawer-show="procedure-drawer-right"
+                    data-drawer-placement="right"
+                    data-drawer-body-scrolling="false"
+                    aria-controls="procedure-drawer-right"
             >
                 {{ __('forms.add') }}
             </button>
 
-            {{-- Modal --}}
-            <template x-teleport="body"> {{-- This moves the modal at the end of the body tag --}}
-                <div x-show="openModal"
-                     style="display: none"
-                     @keydown.escape.prevent.stop="openModal = false"
-                     role="dialog"
-                     aria-modal="true"
-                     x-id="['modal-title']"
-                     :aria-labelledby="$id('modal-title')" {{-- This associates the modal with unique ID --}}
-                     class="modal"
+            {{-- Content --}}
+            <template x-teleport="body"> {{-- This moves the drawer at the end of the body tag --}}
+                <div id="procedure-drawer-right"
+                     class="fixed top-0 right-0 z-40 h-screen pt-20 p-4 overflow-y-auto transition-transform translate-x-full bg-white w-4/5 dark:bg-gray-800"
+                     tabindex="-1"
+                     aria-labelledby="drawer-right-label"
+                     wire:ignore {{-- To avoid hiding when searching for reasons or complication details --}}
                 >
 
-                    {{-- Overlay --}}
-                    <div x-show="openModal" x-transition.opacity class="fixed inset-0 bg-black/25"></div>
+                    <h3 class="modal-header" :id="$id('modal-title')">{{ __('patients.procedure') }}</h3>
 
-                    {{-- Panel --}}
-                    <div x-show="openModal"
-                         x-transition
-                         @click="openModal = false"
-                         class="relative flex min-h-screen items-center justify-center p-4"
-                    >
-                        <div @click.stop
-                             x-trap.noscroll.inert="openModal"
-                             class="modal-content h-fit w-full lg:max-w-7xl"
-                        >
-                            {{-- Title --}}
-                            <h3 class="modal-header" :id="$id('modal-title')">{{ __('patients.procedure') }}</h3>
+                    {{-- Content --}}
+                    <form>
+                        @include('livewire.encounter.procedure-parts.main-information')
+                        @include('livewire.encounter.procedure-parts.additional-information')
+                        @include('livewire.encounter.procedure-parts.reason-references')
+                        @include('livewire.encounter.procedure-parts.used-codes')
+                        @include('livewire.encounter.procedure-parts.complication-details')
 
-                            {{-- Content --}}
-                            <form>
-                                @include('livewire.encounter.procedure-parts.main-information')
-                                @include('livewire.encounter.procedure-parts.additional-information')
+                        <div class="mt-6 flex justify-between space-x-2">
+                            <button type="button"
+                                    @click="openModal = false"
+                                    class="button-minor"
+                                    data-drawer-hide="procedure-drawer-right"
+                                    aria-controls="procedure-drawer-right"
+                            >
+                                {{ __('forms.cancel') }}
+                            </button>
 
-                                <div class="mt-6 flex justify-between space-x-2">
-                                    <button type="button"
-                                            @click="openModal = false"
-                                            class="button-minor"
-                                    >
-                                        {{ __('forms.cancel') }}
-                                    </button>
+                            <button @click.prevent="
+                                        newProcedure !== false
+                                            ? procedures.push(modalProcedure)
+                                            : procedures[item] = modalProcedure;
 
-                                    <button @click.prevent="
-                                                newProcedure !== false
-                                                ? procedures.push(modalProcedure)
-                                                : procedures[item] = modalProcedure;
-
-                                                openModal = false;
-                                            "
-                                            class="button-primary"
-                                    >
-                                        {{ __('forms.save') }}
-                                    </button>
-                                </div>
-                            </form>
+                                        openModal = false;
+                                    "
+                                    class="button-primary"
+                                    data-drawer-hide="procedure-drawer-right"
+                                    :disabled="!(
+                                        modalProcedure.category.coding[0].code.trim() &&
+                                        modalProcedure.code.identifier.value.trim()
+                                    )"
+                            >
+                                {{ __('forms.save') }}
+                            </button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </template>
         </div>
@@ -231,6 +242,9 @@
             coding: [{ system: 'eHealth/report_origins', code: '' }],
             text: ''
         };
+        reasonReferences = [];
+        usedCodes = [];
+        complicationDetails = [];
 
         // Create date
         #now = new Date();
