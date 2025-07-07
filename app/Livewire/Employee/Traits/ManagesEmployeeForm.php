@@ -8,8 +8,8 @@ use App\Models\Employee\Employee;
 use App\Models\Employee\EmployeeRequest;
 use App\Models\Revision;
 use App\Rules\TwoLettersSixDigits;
-use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -33,24 +33,34 @@ trait ManagesEmployeeForm
     public bool $showSignatureModal = false;
 
     /**
-     * REFACTORED: Loads form data from a model by calling the central hydrate method.
+     * REFACTORED: Loads form data from a finalized Employee model.
+     * This is used when editing an existing, signed employee.
+     *
+     * @return void
      */
     public function loadEmployeeFromModel(): void
     {
-        if ($this->employeeId && !$this->employee) {
-            $this->employee = Employee::findOrFail($this->employeeId);
+        if ($this->employeeId) {
+            // If the employee object isn't already loaded, find it.
+            if (!$this->employee) {
+                $this->employee = Employee::findOrFail($this->employeeId);
+            }
+            $this->form->populateFromModel($this->employee);
         }
-        $this->form->hydrate($this->employee);
     }
 
     /**
-     * REFACTORED: Loads form data from a request by calling the central hydrate method.
+     * REFACTORED: Loads form data from a pending EmployeeRequest (a draft).
+     * This is used when editing a draft that has not been signed yet.
+     *
+     * @return void
      */
     public function loadEmployeeFromRequest(): void
     {
         if ($this->employeeRequest) {
+            // Set the state anchor so we don't lose the draft ID on re-renders
             $this->employeeRequestId = $this->employeeRequest->id;
-            $this->form->hydrate($this->employeeRequest);
+            $this->form->populateFromRequest($this->employeeRequest);
         }
     }
 
@@ -142,39 +152,45 @@ trait ManagesEmployeeForm
     }
 
     /**
-     * Helper to encapsulate saving the revision.
-     */
-    private function saveRevisionForRequest(array $formData): void
-    {
-        if (!$this->employeeRequest) {
-            return;
-        }
-
-        $nestedData = $this->prepareDataForRevision($formData);
-
-        $this->employeeRequest->revision()->updateOrCreate(
-            ['revisionable_id' => $this->employeeRequest->id],
-            [
-                'data' => $nestedData,
-                'status' => Revision::STATUS_PENDING,
-            ]
-        );
-    }
-
-    /**
      * Helper method to prepare the nested data structure required for a Revision.
+     *
+     * @param array $flatData The flat data array from the form.
+     * @return array The nested data array.
      */
-    protected function prepareDataForRevision(array $flatData): array
+    private function prepareDataForRevision(array $flatData): array
     {
+        $employeeChunk = Arr::only($flatData, ['position', 'employee_type', 'start_date', 'end_date', 'division_id']);
+        $partyChunk = Arr::only($flatData, ['last_name', 'first_name', 'second_name', 'gender', 'birth_date', 'tax_id', 'no_tax_id', 'email', 'working_experience', 'about_myself']);
+        $documentsChunk = $flatData['documents'] ?? [];
+        $phonesChunk = $flatData['phones'] ?? [];
+        $doctorChunk = $flatData['doctor'] ?? [];
+
         return [
-            'employee_request_data' => Arr::only($flatData, ['position', 'employee_type', 'start_date', 'end_date', 'division_id']),
-            'party' => $flatData['party'] ?? [],
-            'documents' => $flatData['documents'] ?? [],
-            'phones' => $flatData['party']['phones'] ?? [],
-            'doctor' => $flatData['doctor'] ?? [],
+            'employee_request_data' => $employeeChunk,
+            'party' => $partyChunk,
+            'documents' => $documentsChunk,
+            'phones' => $phonesChunk,
+            'doctor' => $doctorChunk,
         ];
     }
 
+    /**
+     * Helper to encapsulate saving the revision.
+     */
+    private function saveRevisionForRequest(array $nestedData): void
+    {
+        if ($this->employeeRequest) {
+            $revision = new Revision();
+            $revision->data = $nestedData;
+            $revision->status = Revision::STATUS_PENDING;
+            $this->employeeRequest->revision()->save($revision);
+        }
+    }
+
+    /**
+     * NEW METHOD: This is the single entry point for the final "Sign" button in the modal.
+     * It validates everything, saves, signs, and sends.
+     */
     public function sign()
     {
         try {
@@ -182,12 +198,12 @@ trait ManagesEmployeeForm
                 $this->employeeRequest = EmployeeRequest::find($this->employeeRequestId);
             }
 
-            $this->save(); // Save latest changes before signing
-
             $this->form->validate($this->form->rulesForKepOnly());
 
-            if (!$this->employeeRequest || !$this->employeeRequest->revision) {
-                throw new \RuntimeException('Employee request and its revision must be saved before signing.');
+            $this->save();
+
+            if (!$this->employeeRequest) {
+                throw new \RuntimeException('Employee request could not be saved or found before signing.');
             }
 
             $dataForSigning = $this->formatEHealthRequest($this->employeeRequest->revision->data);
@@ -238,13 +254,14 @@ trait ManagesEmployeeForm
      */
     private function formatEHealthRequest(array $revisionData): array
     {
-        $unpackedData = $this->form->unpackRevisionData($revisionData);
 
-        $employeeData = $unpackedData['employeeData'];
-        $partyData = $unpackedData['partyData'];
-        $documentsData = $unpackedData['documentsData'];
-        $phonesData = $unpackedData['phonesData'];
-        $doctorData = $unpackedData['doctorData'];
+        $revisionData = $this->form->unpackRevisionData($revisionData);
+
+        $employeeData = $revisionData['employee_request_data'];
+        $partyData = $revisionData['party'];
+        $documentsData = $revisionData['documents'];
+        $phonesData = $revisionData['phones'];
+        $doctorData = $revisionData['doctor'];
 
         $apiEmployeeRequest = [
             'position' => $employeeData['position'] ?? null,
