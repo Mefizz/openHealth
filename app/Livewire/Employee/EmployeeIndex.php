@@ -78,69 +78,56 @@ class EmployeeIndex extends Component
         $legalEntityId = $this->legalEntity->id;
 
         $query = Party::query()
-            ->where(function ($q) use ($legalEntityId) {
+            ->where(function($q) use ($legalEntityId) {
                 $q->whereHas('employees', fn($subq) => $subq->where('legal_entity_id', $legalEntityId))
                     ->orWhereHas('employeeRequests', fn($subq) => $subq->where('legal_entity_id', $legalEntityId));
             })
             ->with([
                        'phones',
-                       'employees' => fn($q) => $q->where('legal_entity_id', $legalEntityId)->with('division'),
-                       'employeeRequests' => fn($q) => $q->where('legal_entity_id', $legalEntityId)->with('division')
+                       'employees'        => fn($q) => $q->where('legal_entity_id', $legalEntityId)->with('division'),
+                       'employeeRequests' => fn($q) => $q->where('legal_entity_id', $legalEntityId)->with('division'),
                    ])
-            // Sorting logic to bring fresh drafts to the top
+
             ->withMax(
                 ['employeeRequests as latest_draft_updated_at' => fn($query) => $query->whereNull('uuid')],
                 'updated_at'
             )
             ->orderByDesc('latest_draft_updated_at');
 
-        // Main search by full name
+
         if (!empty($this->search)) {
-            $query->where(function ($q) {
+            $query->where(function($q) {
                 $q->where('last_name', 'ilike', "%{$this->search}%")
                     ->orWhere('first_name', 'ilike', "%{$this->search}%")
                     ->orWhere('second_name', 'ilike', "%{$this->search}%");
             });
         }
 
-        // --- REWORKED: Advanced Filters ---
-
+        // Advanced filters
         if (!empty($this->status)) {
             $query->whereHas('employees', fn($q) => $q->where('status', $this->status));
         }
-
         if (!empty($this->filter['phone'])) {
             $query->whereHas('phones', fn($q) => $q->where('number', 'like', '%' . $this->filter['phone'] . '%'));
         }
-
         if (!empty($this->filter['email'])) {
             $query->where('email', 'ilike', '%' . $this->filter['email'] . '%');
         }
-
         if (!empty($this->filter['role'])) {
             $query->where(function ($q) {
                 $q->whereHas('employees', fn($sub) => $sub->where('employee_type', $this->filter['role']))
                     ->orWhereHas('employeeRequests', fn($sub) => $sub->where('employee_type', $this->filter['role']));
             });
         }
-
         if (!empty($this->filter['position'])) {
-            $query->where(function ($q) {
-                $q->whereHas('employees', fn($sub) => $sub->where('position', $this->filter['position']))
-                    ->orWhereHas('employeeRequests', fn($sub) => $sub->where('position', $this->filter['position']));
-            });
+            $query->whereHas('employees', fn($q) => $q->where('position', $this->filter['position']));
         }
-
-        // The commented-out division filter
-//        if (!empty($this->filter['division_id'])) {
-            //     $query->whereHas('employees', fn($q) => $q->where('division_id', $this->filter['division_id']));
-            // }
-
-        // --- End of reworked filters ---
+        // if (!empty($this->filter['division_id'])) {
+        //     $query->whereHas('employees', fn($q) => $q->where('division_id', $this->filter['division_id']));
+        // }
 
         $paginator = $query->paginate(10);
 
-        // This part remains crucial for the UI to distinguish between models
         $paginator->getCollection()->transform(function ($party) {
             $party->employees->each(fn($p) => $p->type = 'employee');
             $party->employeeRequests->each(fn($p) => $p->type = 'request');

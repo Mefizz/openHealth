@@ -1,14 +1,15 @@
 <?php
+
 namespace App\Livewire\Employee;
 
 use App\Models\Employee\Employee;
 use App\Models\Employee\EmployeeRequest;
 use App\Models\LegalEntity;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\View\View;
 
 class EmployeeShow extends EmployeeComponent
 {
-    public Forms\EmployeeForm       $form;
     public Employee|EmployeeRequest $employee;
     public string $pageTitle;
     public bool $lockPartyFields = true;
@@ -29,7 +30,10 @@ class EmployeeShow extends EmployeeComponent
         $this->pageTitle = __('forms.viewEmployee');
     }
 
-    public function render()
+    /**
+     * Render the component view.
+     */
+    public function render(): View
     {
         return view('livewire.employee.employee-show', [
             'pageTitle' => $this->pageTitle,

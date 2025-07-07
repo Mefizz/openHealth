@@ -13,8 +13,10 @@ use Illuminate\View\View;
 class EmployeeEdit extends EmployeeComponent
 {
     use ManagesEmployeeForm;
+
     public EmployeeForm $form;
     public string $pageTitle;
+    public ?int $employeeRequestId = null;
 
     public function mount(LegalEntity $legalEntity, int $id, string $type = 'employee'): void
     {

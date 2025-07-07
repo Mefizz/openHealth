@@ -13,11 +13,11 @@ class EmployeeCreate extends EmployeeComponent
 
     public EmployeeForm $form;
     public string $pageTitle;
+    public ?int $employeeRequestId = null;
 
     public function mount(LegalEntity $legalEntity): void
     {
         $this->getDictionary();
-        $this->form->hydrate(); // Hydrates a new, empty form
         $this->lockPartyFields = false;
         $this->pageTitle = __('forms.addEmployee');
     }
@@ -26,6 +26,7 @@ class EmployeeCreate extends EmployeeComponent
     {
         return view('livewire.employee.employee', [
             'pageTitle' => $this->pageTitle,
+            'employee' => $this->employee,
         ]);
     }
 }

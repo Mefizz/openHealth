@@ -227,33 +227,25 @@ class EmployeeRepository
         }
     }
 
-    /**
-     * A new private helper to specifically handle the "update existing draft" scenario.
-     */
-    private function handleExistingRequestUpdate(array $formData, EmployeeRequest $request): EmployeeRequest
+    private function findOrCreatePartyForEmployeeRequest(array $partyData): Party
     {
-        return DB::transaction(function () use ($formData, $request) {
-            // 1. Find and Update the Party
-            $partyData = Arr::toSnakeCase($formData['party'] ?? []);
-            $party = $request->party; // We already have the party from the request
-            $party->update(Arr::except($partyData, ['phones', 'documents']));
+        $party = null;
 
-            // 2. Update the EmployeeRequest itself
-            $request->update(Arr::toSnakeCase(Arr::only($formData, ['position', 'start_date', 'end_date', 'employee_type', 'division_id'])));
+        if (!empty($partyData['email'])) {
+            $party = Party::where('email', $partyData['email'])->first();
+        }
 
-            // 3. Sync relations like phones and documents
-            $this->phoneRepository->syncPhones($party, $formData['party']['phones'] ?? []);
-            $this->documentRepository->syncDocuments($party, $formData['documents'] ?? []);
+        if ($party === null && !empty($partyData['tax_id'])) {
+            $party = Party::where('tax_id', $partyData['tax_id'])->first();
+        }
 
-            // 4. Update the revision
-            $revisionData = app(ManagesEmployeeForm::class)->prepareDataForRevision($formData); // Assuming prepareDataForRevision is accessible
-            $request->revision()->updateOrCreate(
-                ['revisionable_id' => $request->id],
-                ['data' => $revisionData, 'status' => Revision::STATUS_PENDING]
-            );
+        if ($party === null) {
+            $party = new Party();
+            $party->fill($partyData);
+            $party->save();
+        }
 
-            return $request;
-        });
+        return $party;
     }
 
     /**
