@@ -22,7 +22,6 @@ class EncounterCreate extends EncounterComponent
         $this->initializeComponent($patientId);
         $this->setEmployeePartyData();
         $this->setDefaultDate();
-        $this->getEpisodes();
     }
 
     /**
@@ -43,7 +42,7 @@ class EncounterCreate extends EncounterComponent
      * Submit encrypted data about person encounter.
      *
      * @return void
-     * @throws ApiException|Throwable
+     * @throws Throwable
      */
     public function signPerson(): void
     {
@@ -217,6 +216,17 @@ class EncounterCreate extends EncounterComponent
 
             if (isset($formattedData['procedures'])) {
                 Repository::procedure()->store($formattedData['procedures'], $createdEncounterId);
+
+                // Save the selected condition and observation locally if they don't exist in our database.
+                foreach ($formattedData['procedures'] as $procedure) {
+                    if (isset($procedure['reasonReferences'])) {
+                        Repository::procedure()->storeReasonReferences($this->patientUuid, $procedure);
+                    }
+
+                    if (isset($procedure['complicationDetails'])) {
+                        Repository::procedure()->storeComplicationDetails($this->patientUuid, $procedure);
+                    }
+                }
             }
         });
     }

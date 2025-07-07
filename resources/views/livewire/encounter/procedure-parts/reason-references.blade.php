@@ -247,6 +247,10 @@
                                     </div>
                                 </template>
 
+                                <template x-if="$wire.procedureReasons.length <= 0">
+                                    <p class="default-p">{{ __('forms.nothing_found') }}</p>
+                                </template>
+
                                 {{-- Action buttons --}}
                                 <div class="mt-6 flex justify-between space-x-2">
                                     <button @click.prevent

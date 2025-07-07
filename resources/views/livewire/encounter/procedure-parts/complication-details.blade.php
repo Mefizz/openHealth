@@ -222,7 +222,7 @@
                                 </template>
 
                                 <template x-if="$wire.complicationDetails.length <= 0">
-                                    <p class="default-p">Нічого не знайдено</p>
+                                    <p class="default-p">{{ __('forms.nothing_found') }}</p>
                                 </template>
 
                                 {{-- Action buttons --}}

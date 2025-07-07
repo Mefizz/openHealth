@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('conditions', static function (Blueprint $table) {
             $table->id();
             $table->uuid()->unique();
-            $table->foreignId('encounter_id')->constrained('encounters');
+            $table->foreignId('encounter_id')->nullable()->constrained('encounters');
             $table->boolean('primary_source');
             $table->foreignId('asserter_id')->nullable()->constrained('identifiers');
             $table->foreignId('report_origin_id')->nullable()->constrained('codeable_concepts');
