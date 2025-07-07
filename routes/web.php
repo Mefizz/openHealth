@@ -98,12 +98,13 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
             Route::get('/{division}/healthcare-service', HealthcareServiceForm::class)->name('healthcare_service.index');
         });
 
+
         Route::prefix('employees')->name('employee.')->group(function () {
             Route::get('/', EmployeeIndex::class)->name('index');
             Route::get('/create', EmployeeCreate::class)->name('create');
+            Route::get('/party/{party}/add-position', AddPosition::class)->name('add-position');
             Route::get('/{id}/{type?}', EmployeeShow::class)->name('show');
             Route::get('/{id}/{type?}/edit', EmployeeEdit::class)->name('edit');
-            Route::get('/{id}/{type?}/add-position', AddPosition::class)->name('add-position');
         });
 
         Route::prefix('contract')->group(function () {

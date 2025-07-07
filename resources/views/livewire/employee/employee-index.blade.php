@@ -1,4 +1,4 @@
-<div xmlns="http://www.w3.org/1999/html">
+<div>
     <x-section-navigation x-data="{ showFilter: false }">
 
         <x-slot name="title">
@@ -154,22 +154,11 @@
 
                         {{-- "Add Position" Button --}}
                         <div class="flex items-center space-x-3">
-                            @php
-                                // Find the first available position record to use as the source.
-                                $sourceForAddPosition = $party->employees->first() ?? $party->employeeRequests->first();
-                            @endphp
-
-                            @if ($sourceForAddPosition)
-                                <a href="{{ route('employee.add-position', [
-                                        'legalEntity' => legalEntity()->id,
-                                        'id' => $sourceForAddPosition->id,
-                                        'type' => $sourceForAddPosition->type
-                                    ]) }}"
+                                <a href="{{ route('employee.add-position', ['legalEntity' => legalEntity()->id, 'party' => $party->id]) }}"
                                    class="item-add text-blue-600 hover:text-blue-800 flex items-center gap-1">
                                     <span class="text-xl leading-none">+</span>
                                     <span>{{ __('forms.addPosition') }}</span>
                                 </a>
-                            @endif
                         </div>
                     </div>
 
@@ -187,8 +176,8 @@
                             <tbody>
                             @php $positions = $party->employees->merge($party->employeeRequests); @endphp
                             @foreach($positions as $position)
-                                <tr class="border-b-4 border-gray-200 dark:border-gray-700">
-                                <td class="px-4 py-3 font-medium">{{ $dictionaries['POSITION'][$position->position] ?? $position->position }}</td>
+                                <tr class="border-b dark:border-gray-700">
+                                    <td class="px-4 py-3 font-medium">{{ $dictionaries['POSITION'][$position->position] ?? $position->position }}</td>
                                     <td class="px-4 py-3">{{ $dictionaries['EMPLOYEE_TYPE'][$position->employee_type] ?? $position->employee_type }}</td>
                                     <td class="px-4 py-3">{{ $position->division->name ?? 'N/A' }}</td>
 
@@ -225,7 +214,6 @@
                                                            class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600">Редагувати</a>
                                                     </li>
                                                 </ul>
-                                                {{-- ПРАВИЛЬНО --}}
                                                 @if($position->type === 'employee' && $position->status === \App\Enums\Status::APPROVED)
                                                     <div class="py-1" @click="open = false">
                                                         <button type="button" wire:click="showModalDismissed({{ $position->id }})" class="block w-full text-right py-2 px-4 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600">
@@ -303,4 +291,3 @@
         </template>
     </div>
 </div>
-
