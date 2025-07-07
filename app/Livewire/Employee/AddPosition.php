@@ -2,11 +2,12 @@
 
 namespace App\Livewire\Employee;
 
-use App\Core\Arr;
 use App\Livewire\Employee\Forms\EmployeeForm;
 use App\Livewire\Employee\Traits\ManagesEmployeeForm;
+use App\Models\Employee\Employee;
+use App\Models\Employee\EmployeeRequest;
 use App\Models\LegalEntity;
-use App\Models\Relations\Party;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\View\View;
 
 class AddPosition extends EmployeeComponent
@@ -15,43 +16,38 @@ class AddPosition extends EmployeeComponent
 
     public EmployeeForm $form;
     public string $pageTitle;
-    public ?int $employeeRequestId = null;
 
     /**
-     * The mount method now uses a hybrid approach to populate form data.
-     * It prioritizes live data from Party relations, but falls back to the
-     * latest EmployeeRequest revision if data (like phones or documents) is missing.
+     * CORRECTED AND FINAL: This logic is based on your suggestion.
+     * It uses the same robust data-loading logic as the Edit component,
+     * then applies the specific action for this page.
      */
-    public function mount(LegalEntity $legalEntity, Party $party): void
+    public function mount(LegalEntity $legalEntity, int $id, string $type = 'employee'): void
     {
         $this->getDictionary();
-        $this->form->populateFromParty($party);
 
-        $needsRevisionCheck = empty($this->form->documents) || empty($this->form->party['phones']) || empty($this->form->party['phones'][0]['number']);
+        // Step 1: Find the source model (Employee or Request) exactly like in EmployeeEdit.
+        $source = match ($type) {
+            'request' => EmployeeRequest::with(['revision', 'party'])->find($id),
+            default => Employee::find($id),
+        };
 
-        if ($needsRevisionCheck) {
-            $latestRequest = $party->employeeRequests()->latest()->first();
-
-            if ($latestRequest && $latestRequest->revision) {
-                $revisionData = $latestRequest->revision->data ?? [];
-
-                if (empty($this->form->party['phones']) || empty($this->form->party['phones'][0]['number'])) {
-                    $phonesData = $revisionData['phones'] ?? [];
-                    if (!empty($phonesData)) {
-                        $this->form->party['phones'] = Arr::toCamelCase($phonesData);
-                    }
-                }
-
-                if (empty($this->form->documents)) {
-                    $documentsData = $revisionData['documents'] ?? [];
-                    if (!empty($documentsData)) {
-                        $this->form->documents = Arr::toCamelCase($documentsData);
-                    }
-                }
-            }
+        if (!$source) {
+            throw new ModelNotFoundException('Source model not found.');
         }
 
-        $this->form->resetPositionFields();
+        // This handles cases where we might have an EmployeeRequest without a direct party link
+        if (!$source->party && $source->employee_id) {
+            $source->load('employee.party');
+            $source->setRelation('party', $source->employee->party);
+        }
+
+        // Step 2: Use the central hydrate() method to populate the form with all data.
+        // This will correctly fill name, email, phones, documents, etc.
+        $this->form->hydrate($source);
+
+        // Step 3: After the form is fully populated, clear only the position-related fields.
+        $this->form->clearPositionFields();
 
         $this->pageTitle = __('forms.addPosition');
     }

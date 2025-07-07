@@ -8,8 +8,8 @@ use App\Models\Employee\Employee;
 use App\Models\Employee\EmployeeRequest;
 use App\Models\Revision;
 use App\Rules\TwoLettersSixDigits;
+use Carbon\Carbon;
 use Exception;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -33,34 +33,24 @@ trait ManagesEmployeeForm
     public bool $showSignatureModal = false;
 
     /**
-     * REFACTORED: Loads form data from a finalized Employee model.
-     * This is used when editing an existing, signed employee.
-     *
-     * @return void
+     * REFACTORED: Loads form data from a model by calling the central hydrate method.
      */
     public function loadEmployeeFromModel(): void
     {
-        if ($this->employeeId) {
-            // If the employee object isn't already loaded, find it.
-            if (!$this->employee) {
-                $this->employee = Employee::findOrFail($this->employeeId);
-            }
-            $this->form->populateFromModel($this->employee);
+        if ($this->employeeId && !$this->employee) {
+            $this->employee = Employee::findOrFail($this->employeeId);
         }
+        $this->form->hydrate($this->employee);
     }
 
     /**
-     * REFACTORED: Loads form data from a pending EmployeeRequest (a draft).
-     * This is used when editing a draft that has not been signed yet.
-     *
-     * @return void
+     * REFACTORED: Loads form data from a request by calling the central hydrate method.
      */
     public function loadEmployeeFromRequest(): void
     {
         if ($this->employeeRequest) {
-            // Set the state anchor so we don't lose the draft ID on re-renders
             $this->employeeRequestId = $this->employeeRequest->id;
-            $this->form->populateFromRequest($this->employeeRequest);
+            $this->form->hydrate($this->employeeRequest);
         }
     }
 
@@ -152,45 +142,39 @@ trait ManagesEmployeeForm
     }
 
     /**
-     * Helper method to prepare the nested data structure required for a Revision.
-     *
-     * @param array $flatData The flat data array from the form.
-     * @return array The nested data array.
+     * Helper to encapsulate saving the revision.
      */
-    private function prepareDataForRevision(array $flatData): array
+    private function saveRevisionForRequest(array $formData): void
     {
-        $employeeChunk = Arr::only($flatData, ['position', 'employee_type', 'start_date', 'end_date', 'division_id']);
-        $partyChunk = Arr::only($flatData, ['last_name', 'first_name', 'second_name', 'gender', 'birth_date', 'tax_id', 'no_tax_id', 'email', 'working_experience', 'about_myself']);
-        $documentsChunk = $flatData['documents'] ?? [];
-        $phonesChunk = $flatData['phones'] ?? [];
-        $doctorChunk = $flatData['doctor'] ?? [];
+        if (!$this->employeeRequest) {
+            return;
+        }
 
+        $nestedData = $this->prepareDataForRevision($formData);
+
+        $this->employeeRequest->revision()->updateOrCreate(
+            ['revisionable_id' => $this->employeeRequest->id],
+            [
+                'data' => $nestedData,
+                'status' => Revision::STATUS_PENDING,
+            ]
+        );
+    }
+
+    /**
+     * Helper method to prepare the nested data structure required for a Revision.
+     */
+    protected function prepareDataForRevision(array $flatData): array
+    {
         return [
-            'employee_request_data' => $employeeChunk,
-            'party' => $partyChunk,
-            'documents' => $documentsChunk,
-            'phones' => $phonesChunk,
-            'doctor' => $doctorChunk,
+            'employee_request_data' => Arr::only($flatData, ['position', 'employee_type', 'start_date', 'end_date', 'division_id']),
+            'party' => $flatData['party'] ?? [],
+            'documents' => $flatData['documents'] ?? [],
+            'phones' => $flatData['party']['phones'] ?? [],
+            'doctor' => $flatData['doctor'] ?? [],
         ];
     }
 
-    /**
-     * Helper to encapsulate saving the revision.
-     */
-    private function saveRevisionForRequest(array $nestedData): void
-    {
-        if ($this->employeeRequest) {
-            $revision = new Revision();
-            $revision->data = $nestedData;
-            $revision->status = Revision::STATUS_PENDING;
-            $this->employeeRequest->revision()->save($revision);
-        }
-    }
-
-    /**
-     * NEW METHOD: This is the single entry point for the final "Sign" button in the modal.
-     * It validates everything, saves, signs, and sends.
-     */
     public function sign()
     {
         try {
@@ -198,17 +182,15 @@ trait ManagesEmployeeForm
                 $this->employeeRequest = EmployeeRequest::find($this->employeeRequestId);
             }
 
+            $this->save(); // Save latest changes before signing
+
             $this->form->validate($this->form->rulesForKepOnly());
 
-            $this->save();
-
-            if (!$this->employeeRequest) {
-                throw new \RuntimeException('Employee request could not be saved or found before signing.');
+            if (!$this->employeeRequest || !$this->employeeRequest->revision) {
+                throw new \RuntimeException('Employee request and its revision must be saved before signing.');
             }
 
-            $this->employeeRequest->refresh();
-
-            $dataForSigning = Repository::employee()->formatEHealthRequest($this->employeeRequest->revision->data);
+            $dataForSigning = $this->formatEHealthRequest($this->employeeRequest->revision->data);
             $signedContent = signatureService()->signData(
                 $dataForSigning,
                 $this->form->password,
@@ -249,6 +231,72 @@ trait ManagesEmployeeForm
             return redirect()->route('employee.edit',
                                      ['employeeId' => $this->employeeRequest->id, 'legalEntity' => legalEntity()->id]);
         }
+    }
+
+    /**
+     * REFACTORED: Now uses the form's unpackRevisionData helper.
+     */
+    private function formatEHealthRequest(array $revisionData): array
+    {
+        $unpackedData = $this->form->unpackRevisionData($revisionData);
+
+        $employeeData = $unpackedData['employeeData'];
+        $partyData = $unpackedData['partyData'];
+        $documentsData = $unpackedData['documentsData'];
+        $phonesData = $unpackedData['phonesData'];
+        $doctorData = $unpackedData['doctorData'];
+
+        $apiEmployeeRequest = [
+            'position' => $employeeData['position'] ?? null,
+            'status' => 'NEW',
+            'employee_type' => $employeeData['employee_type'] ?? null,
+            'legal_entity_id' => (string)($employeeData['legal_entity_id'] ?? legalEntity()->id),
+            'start_date' => isset($employeeData['start_date']) ? Carbon::parse($employeeData['start_date'])->format('Y-m-d') : null,
+        ];
+
+        if (!empty($employeeData['end_date'])) {
+            $apiEmployeeRequest['end_date'] = Carbon::parse($employeeData['end_date'])->format('Y-m-d');
+        }
+
+        $apiEmployeeRequest['party'] = [
+            'first_name' => $partyData['first_name'] ?? null,
+            'last_name' => $partyData['last_name'] ?? null,
+            'second_name' => $partyData['second_name'] ?? null,
+            'birth_date' => isset($partyData['birth_date']) ? Carbon::parse($partyData['birth_date'])->format('Y-m-d') : null,
+            'gender' => $partyData['gender'] ?? null,
+            'no_tax_id' => (bool)($partyData['no_tax_id'] ?? false),
+            'tax_id' => $partyData['tax_id'] ?? null,
+            'email' => $partyData['email'] ?? null,
+            'working_experience' => isset($partyData['working_experience']) ? (int)$partyData['working_experience'] : null,
+            'about_myself' => $partyData['about_myself'] ?? null,
+
+            'phones' => array_map(
+                fn($phone) => ['type' => $phone['type'], 'number' => $phone['number']],
+                $phonesData
+            ),
+
+            'documents' => array_map(
+                fn($doc) => [
+                    'type' => $doc['type'],
+                    'number' => $doc['number'],
+                    'issued_by' => $doc['issued_by'] ?? null,
+                    'issued_at' => isset($doc['issued_at']) && !empty($doc['issued_at']) ? Carbon::parse($doc['issued_at'])->format('Y-m-d') : null
+                ],
+                $documentsData
+            ),
+        ];
+
+        if (($employeeData['employee_type'] ?? null) === 'DOCTOR' && !empty($doctorData)) {
+            $doctorPayload = [];
+            if (!empty($doctorData['educations'])) $doctorPayload['educations'] = $doctorData['educations'];
+            if (!empty($doctorData['qualifications'])) $doctorPayload['qualifications'] = $doctorData['qualifications'];
+            if (!empty($doctorData['specialities'])) $doctorPayload['specialities'] = $doctorData['specialities'];
+            if (!empty($doctorData['science_degrees'])) $doctorPayload['science_degree'] = $doctorData['science_degrees'][0];
+
+            if (!empty($doctorPayload)) $apiEmployeeRequest['doctor'] = $doctorPayload;
+        }
+
+        return ['employee_request' => $apiEmployeeRequest];
     }
 
     /**

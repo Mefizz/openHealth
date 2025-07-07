@@ -1,5 +1,4 @@
-<body class="bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400">
-<div>
+<div xmlns="http://www.w3.org/1999/html">
     <x-section-navigation x-data="{ showFilter: false }">
 
         <x-slot name="title">
@@ -152,10 +151,25 @@
                                 @endif
                             </div>
                         </div>
+
+                        {{-- "Add Position" Button --}}
                         <div class="flex items-center space-x-3">
-                            <button type="button" wire:click="addPhone" class="item-add">
-                                <span>{{__('forms.addPosition')}}</span>
-                            </button>
+                            @php
+                                // Find the first available position record to use as the source.
+                                $sourceForAddPosition = $party->employees->first() ?? $party->employeeRequests->first();
+                            @endphp
+
+                            @if ($sourceForAddPosition)
+                                <a href="{{ route('employee.add-position', [
+                                        'legalEntity' => legalEntity()->id,
+                                        'id' => $sourceForAddPosition->id,
+                                        'type' => $sourceForAddPosition->type
+                                    ]) }}"
+                                   class="item-add text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                                    <span class="text-xl leading-none">+</span>
+                                    <span>{{ __('forms.addPosition') }}</span>
+                                </a>
+                            @endif
                         </div>
                     </div>
 
@@ -180,13 +194,13 @@
 
                                     <td class="px-4 py-3">
                                         @switch($position->status)
-                                            @case(Status::APPROVED)
+                                            @case(\App\Enums\Status::APPROVED)
                                                 <span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Активний</span>
                                                 @break
-                                            @case(Status::DISMISSED)
+                                            @case(\App\Enums\Status::DISMISSED)
                                                 <span class="bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">Звільнений</span>
                                                 @break
-                                            @case(Status::NEW)
+                                            @case(\App\Enums\Status::NEW)
                                                 <span class="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">Чернетка</span>
                                                 @break
                                             @default
@@ -201,9 +215,17 @@
                                             </button>
                                             <div x-show="open" x-transition class="absolute right-0 z-10 w-48 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600" style="display: none;">
                                                 <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" @click="open = false">
-                                                    <li><a href="{{ route('employee.show', ['legalEntity' => legalEntity()->id, 'id' => $position->id]) }}" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600">Переглянути</a></li>
-                                                    <li><a href="{{ route('employee.edit', ['legalEntity' => legalEntity()->id, 'employeeId' => $position->id]) }}" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600">Редагувати</a></li>
+                                                    <li>
+                                                        {{-- The 'type' parameter is still needed here to resolve ambiguity --}}
+                                                        <a href="{{ route('employee.show', ['legalEntity' => legalEntity()->id, 'id' => $position->id, 'type' => $position->type]) }}"
+                                                           class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600">Переглянути</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="{{ route('employee.edit', ['legalEntity' => legalEntity()->id, 'id' => $position->id, 'type' => $position->type]) }}"
+                                                           class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600">Редагувати</a>
+                                                    </li>
                                                 </ul>
+                                                {{-- ПРАВИЛЬНО --}}
                                                 @if($position->type === 'employee' && $position->status === \App\Enums\Status::APPROVED)
                                                     <div class="py-1" @click="open = false">
                                                         <button type="button" wire:click="showModalDismissed({{ $position->id }})" class="block w-full text-right py-2 px-4 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600">
@@ -281,4 +303,4 @@
         </template>
     </div>
 </div>
-</body>
+

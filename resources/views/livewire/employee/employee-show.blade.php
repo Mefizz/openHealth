@@ -23,8 +23,12 @@
                 <a href="{{ route('employee.index', ['legalEntity' => legalEntity()->id]) }}" class="button-minor">
                     &larr; {{ __('forms.backToList') }}
                 </a>
-                <a href="{{ route('employee.edit', ['legalEntity' => legalEntity()->id, 'employeeId' => $employee->id]) }}" class="button-primary">
-                    {{ __('forms.goToEdit') }}
+                <a href="{{ route('employee.edit', [
+                    'legalEntity' => legalEntity()->id,
+                    'id' => $employee->id,
+                    'type' => $employee instanceof \App\Models\Employee\EmployeeRequest ? 'request' : 'employee'
+                ]) }}" class="button-secondary">
+                    {{__('forms.edit')}}
                 </a>
             </div>
     </div>
