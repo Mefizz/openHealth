@@ -1,51 +1,35 @@
 <?php
-
 namespace App\Livewire\Employee;
 
 use App\Models\Employee\Employee;
 use App\Models\Employee\EmployeeRequest;
 use App\Models\LegalEntity;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\View\View;
 
 class EmployeeShow extends EmployeeComponent
 {
+    public Forms\EmployeeForm       $form;
     public Employee|EmployeeRequest $employee;
     public string $pageTitle;
     public bool $lockPartyFields = true;
 
-    /**
-     * FIX: The mount method is now a "smart loader".
-     * It can handle both finalized Employee models and pending EmployeeRequest models.
-     */
-    public function mount(LegalEntity $legalEntity, int $id): void
+    public function mount(LegalEntity $legalEntity, int $id, string $type = 'employee'): void
     {
-        $record = Employee::with('party')->find($id);
-
-        if (!$record) {
-            $record = EmployeeRequest::with(['revision', 'party'])->find($id);
-
-            if (!$record) {
-                throw new ModelNotFoundException('No Employee or EmployeeRequest found for the given ID.');
-            }
-        }
-
-        $this->employee = $record;
         $this->getDictionary();
 
-        if ($this->employee instanceof EmployeeRequest) {
-            $this->form->populateFromRequest($this->employee);
-        } else {
-            $this->form->populateFromModel($this->employee);
-        }
+        $source = match ($type) {
+            'request' => EmployeeRequest::with(['revision', 'party'])->find($id),
+            default => Employee::find($id),
+        };
 
+        if (!$source) { throw new ModelNotFoundException('Source model not found.'); }
+
+        $this->employee = $source;
+        $this->form->hydrate($source);
         $this->pageTitle = __('forms.viewEmployee');
     }
 
-    /**
-     * Render the component view.
-     */
-    public function render(): View
+    public function render()
     {
         return view('livewire.employee.employee-show', [
             'pageTitle' => $this->pageTitle,

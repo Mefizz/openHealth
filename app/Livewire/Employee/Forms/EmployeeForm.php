@@ -10,6 +10,7 @@ use App\Rules\BirthDate;
 use App\Rules\Name;
 use App\Rules\PhoneNumber;
 use App\Rules\UniqueEmailInLegalEntity;
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Form;
 
 class EmployeeForm extends Form
@@ -20,31 +21,19 @@ class EmployeeForm extends Form
     public ?string $endDate = null;
     public ?int $existingPartyId = null;
     public ?string $divisionId = null;
-
+    public array $documents = [];
+    public array $party = [
+        'lastName' => '', 'firstName' => '', 'secondName' => '', 'gender' => '',
+        'birthDate' => '', 'phones' => [['type' => 'MOBILE', 'number' => '']],
+        'taxId' => '', 'noTaxId' => false, 'email' => '',
+        'workingExperience' => null, 'aboutMyself' => '',
+    ];
+    public array $doctor = [
+        'specialities' => [], 'scienceDegrees' => [], 'qualifications' => [], 'educations' => [],
+    ];
     public ?string $knedp = null;
     public $keyContainerUpload;
     public ?string $password = null;
-
-    public array $documents = [];
-    public array $party = [
-        'lastName' => '',
-        'firstName' => '',
-        'secondName' => '',
-        'gender' => '',
-        'birthDate' => '',
-        'phones' => [['type' => '', 'number' => '']],
-        'taxId' => '',
-        'noTaxId' => false,
-        'email' => '',
-        'workingExperience' => null,
-        'aboutMyself' => '',
-    ];
-    public array $doctor = [
-        'specialities' => [],
-        'scienceDegrees' => [],
-        'qualifications' => [],
-        'educations' => [],
-    ];
 
     public function rulesForSave(): array
     {
@@ -171,19 +160,37 @@ class EmployeeForm extends Form
     }
 
     /**
-     * FIX: The method signature is corrected to accept an Employee model,
-     * which resolves the type-hinting error.
+     * The single "smart" method to populate the form from any data source.
      */
-    public function populateFromModel(Employee $employee): void
+    public function hydrate(Model|Party|null $source = null): void
     {
-        $employee->loadMissing(['party.phones', 'party.documents', 'educations', 'specialities', 'qualifications', 'scienceDegrees']);
+        $this->reset();
 
-        if ($employee->party) {
-            // It correctly calls the helper method with the Party relation.
-            $this->populateFromParty($employee->party);
+        if ($source === null) {
+            return;
         }
 
-        // It now also populates the employee-specific fields.
+        match (get_class($source)) {
+            Employee::class => $this->hydrateFromEmployee($source),
+            EmployeeRequest::class => $this->hydrateFromEmployeeRequest($source),
+            Party::class => $this->hydrateFromParty($source),
+        };
+    }
+
+    /**
+     * Resets only the fields related to a specific position/employment.
+     */
+    public function clearPositionFields(): void
+    {
+        $this->reset('position', 'employeeType', 'startDate', 'endDate', 'divisionId');
+    }
+
+    private function hydrateFromEmployee(Employee $employee): void
+    {
+        $employee->loadMissing(['party.phones', 'party.documents', 'educations', 'specialities']);
+        if ($employee->party) {
+            $this->populatePartyData($employee->party);
+        }
         $this->position = $employee->position;
         $this->employeeType = $employee->employee_type;
         $this->startDate = $employee->start_date?->format('Y-m-d');
@@ -192,83 +199,72 @@ class EmployeeForm extends Form
 
         $this->doctor['educations'] = $employee->educations->map(fn($edu) => Arr::toCamelCase($edu->toArray()))->toArray();
         $this->doctor['specialities'] = $employee->specialities->map(fn($spec) => Arr::toCamelCase($spec->toArray()))->toArray();
-        $this->doctor['qualifications'] = $employee->qualifications->map(fn($qual) => Arr::toCamelCase($qual->toArray()))->toArray();
-        $this->doctor['scienceDegrees'] = $employee->scienceDegrees->map(fn($degree) => Arr::toCamelCase($degree->toArray()))->toArray();
     }
 
-    /**
-     * Resets only the fields related to a specific position/employment.
-     * This is called in the 'Add Position' component.
-     */
-    public function resetPositionFields(): void
+    private function hydrateFromEmployeeRequest(EmployeeRequest $request): void
     {
-        $this->position = '';
-        $this->employeeType = '';
-        $this->startDate = '';
-        $this->endDate = null;
-        $this->divisionId = null;
-    }
+        $request->loadMissing(['party', 'revision']);
+        $revisionData = $request->revision->data ?? [];
+        $unpacked = $this->unpackRevisionData($revisionData);
 
-    /**
-     * Populates form fields from an EmployeeRequest's revision data.
-     * This method now robustly handles the consistently nested data structure.
-     */
-    public function populateFromRequest(EmployeeRequest $request): void
-    {
-        $revisionData = $request->revision->data ?? null;
+        // Populate form with revision data as the base
+        $this->position = $unpacked['employeeData']['position'] ?? '';
+        $this->employeeType = $unpacked['employeeData']['employee_type'] ?? '';
+        $this->startDate = $unpacked['employeeData']['start_date'] ?? '';
+        $this->documents = Arr::toCamelCase($unpacked['documentsData']);
+        $this->doctor = Arr::toCamelCase($unpacked['doctorData']);
+        $this->party = array_merge($this->party, Arr::toCamelCase($unpacked['partyData']));
+        $this->party['phones'] = !empty($unpacked['phonesData']) ? Arr::toCamelCase($unpacked['phonesData']) : [['type' => 'MOBILE', 'number' => '']];
 
-        if ($revisionData) {
-            // Data is always expected in a nested structure now.
-            $employeeData = $revisionData['employee_request_data'] ?? [];
-            $partyData = $revisionData['party'] ?? [];
-            $documentsData = $revisionData['documents'] ?? [];
-            $phonesData = $revisionData['phones'] ?? [];
-            $doctorData = $revisionData['doctor'] ?? [];
-
-            // Populate main employee fields
-            $this->position = $employeeData['position'] ?? '';
-            $this->employeeType = $employeeData['employee_type'] ?? '';
-            $this->startDate = $employeeData['start_date'] ?? '';
-            $this->endDate = $employeeData['end_date'] ?? null;
-            $this->divisionId = $employeeData['division_id'] ?? null;
-
-            $this->party['lastName'] = $partyData['last_name'] ?? '';
-            $this->party['firstName'] = $partyData['first_name'] ?? '';
-            $this->party['secondName'] = $partyData['second_name'] ?? '';
-            $this->party['gender'] = $partyData['gender'] ?? '';
-            $this->party['birthDate'] = $partyData['birth_date'] ?? '';
-            $this->party['taxId'] = $partyData['tax_id'] ?? '';
-            $this->party['noTaxId'] = (bool)($partyData['no_tax_id'] ?? false);
-            $this->party['email'] = $partyData['email'] ?? '';
-            $this->party['workingExperience'] = $partyData['working_experience'] ?? null;
-            $this->party['aboutMyself'] = $partyData['about_myself'] ?? '';
-            $this->party['phones'] = Arr::toCamelCase($phonesData);
-
-            $this->documents = Arr::toCamelCase($documentsData);
-            $this->doctor = Arr::toCamelCase($doctorData);
+        // Now, overwrite with live data from Party to ensure it's current
+        if ($request->party) {
+            $this->party['lastName'] = $request->party->last_name;
+            $this->party['firstName'] = $request->party->first_name;
+            $this->party['secondName'] = $request->party->second_name;
+            $this->party['email'] = $request->party->email;
+            $this->existingPartyId = $request->party->id;
         }
+    }
 
-        if (empty($this->party['email'])) {
-            $request->loadMissing('party');
-            if ($request->party) {
-                $this->party['email'] = $request->party->email;
+    /**
+     * Hydrates the form from a Party model.
+     * Use case: "Add Position" for an existing person.
+     * This method now contains the full "smart" logic.
+     */
+    private function hydrateFromParty(Party $party): void
+    {
+        // 1. First, populate with live data from the Party and its direct relations.
+        // This will correctly fill in name, email, and will try to fill phones/documents.
+        $this->populatePartyData($party);
+
+        // 2. Fallback logic: If documents or phones are still empty after the first step,
+        //    it means the Party might only have EmployeeRequests. Let's try to get
+        //    the data from the latest request's revision.
+        $needsRevisionCheck = empty($this->documents) || empty($this->party['phones'][0]['number']);
+
+        if ($needsRevisionCheck) {
+            $latestRequest = $party->employeeRequests()->with('revision')->latest()->first();
+
+            if ($latestRequest && $latestRequest->revision) {
+                $unpacked = $this->unpackRevisionData($latestRequest->revision->data ?? []);
+
+                // If phones are still empty, get them from the revision.
+                if (empty($this->party['phones'][0]['number']) && !empty($unpacked['phonesData'])) {
+                    $this->party['phones'] = Arr::toCamelCase($unpacked['phonesData']);
+                }
+
+                // If documents are still empty, get them from the revision.
+                if (empty($this->documents) && !empty($unpacked['documentsData'])) {
+                    $this->documents = Arr::toCamelCase($unpacked['documentsData']);
+                }
             }
         }
-
-        if ($request->party_id) {
-            $this->existingPartyId = $request->party_id;
-        }
     }
 
-    /**
-     * FIX: Renamed back to `populateFromParty` as requested.
-     * This method is a helper for populating ONLY personal data from a Party model.
-     */
-    public function populateFromParty(Party $party): void
+    private function populatePartyData(Party $party): void
     {
         $party->loadMissing(['phones', 'documents']);
         $this->existingPartyId = $party->id;
-
         $this->party['lastName'] = $party->last_name;
         $this->party['firstName'] = $party->first_name;
         $this->party['secondName'] = $party->second_name;
@@ -281,32 +277,18 @@ class EmployeeForm extends Form
         $this->party['aboutMyself'] = $party->about_myself;
 
         $phones = $party->phones;
-
-        if ($phones->isNotEmpty()) {
-            $this->party['phones'] = $phones->map(function ($phone) {
-                return [
-                    'type' => $phone->type,
-                    'number' => $phone->number,
-                ];
-            })->toArray();
-        } else {
-
-            $this->party['phones'] = [['type' => 'MOBILE', 'number' => '']];
-        }
-
+        $this->party['phones'] = ($phones && $phones->isNotEmpty()) ? $phones->map(fn($p) => ['type' => $p->type, 'number' => $p->number])->toArray() : [['type' => 'MOBILE', 'number' => '']];
         $documents = $party->documents;
-        if ($documents->isNotEmpty()) {
-            $this->documents = $documents->map(function ($doc) {
-                return [
-                    'type' => $doc->type,
-                    'number' => $doc->number,
-                    'issuedBy' => $doc->issued_by,
-                    'issuedAt' => $doc->issued_at,
-                ];
-            })->toArray();
-        } else {
-            $this->documents = [];
-        }
+        $this->documents = ($documents && $documents->isNotEmpty()) ? $documents->map(fn($d) => Arr::toCamelCase($d->only(['type', 'number', 'issued_by', 'issued_at'])))->toArray() : [];
+    }
+
+    protected function unpackRevisionData(array $revisionData): array
+    {
+        return [
+            'employeeData' => $revisionData['employee_request_data'] ?? [], 'partyData' => $revisionData['party'] ?? [],
+            'documentsData' => $revisionData['documents'] ?? [], 'phonesData' => $revisionData['phones'] ?? [],
+            'doctorData' => $revisionData['doctor'] ?? [],
+        ];
     }
 
     /**
