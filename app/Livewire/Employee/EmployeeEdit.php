@@ -13,55 +13,32 @@ use Illuminate\View\View;
 class EmployeeEdit extends EmployeeComponent
 {
     use ManagesEmployeeForm;
-
     public EmployeeForm $form;
     public string $pageTitle;
-    public ?int $employeeRequestId = null;
 
-    /**
-     * The mount method now uses the refactored, more explicit loader methods.
-     */
-    public function mount(LegalEntity $legalEntity, int $employeeId): void
+    public function mount(LegalEntity $legalEntity, int $id, string $type = 'employee'): void
     {
         $this->getDictionary();
 
-        $employee = Employee::find($employeeId);
+        $source = match ($type) {
+            'request' => EmployeeRequest::with(['revision', 'party'])->find($id),
+            default => Employee::find($id),
+        };
 
-        if (!$employee) {
-            $request = EmployeeRequest::with(['revision', 'party'])->find($employeeId);
+        if (!$source) { throw new ModelNotFoundException('Source model not found.'); }
 
-            if (!$request) {
-                throw new ModelNotFoundException('No Employee or EmployeeRequest found for the given ID.');
-            }
-            $this->employeeRequest = $request;
-            $this->loadEmployeeFromRequest();
+        if ($source instanceof Employee) {
+            $this->employee = $source;
+            $this->employeeId = $source->id;
         } else {
-            // We found the signed Employee.
-            $this->employee = $employee;
-            $this->employeeId = $employeeId;
-
-            $pendingRequest = EmployeeRequest::where('employee_id', $employeeId)
-                ->whereNull('applied_at')
-                ->latest()
-                ->with('revision')
-                ->first();
-
-            if ($pendingRequest) {
-                $this->employeeRequest = $pendingRequest;
-                $this->loadEmployeeFromRequest();
-            } else {
-                $this->loadEmployeeFromModel();
-            }
+            $this->employeeRequest = $source;
         }
 
-
+        $this->form->hydrate($source);
         $this->lockPartyFields = true;
         $this->pageTitle = __('forms.editEmployee');
     }
 
-    /**
-     * Renders the component view.
-     */
     public function render(): View
     {
         return view('livewire.employee.employee', [
