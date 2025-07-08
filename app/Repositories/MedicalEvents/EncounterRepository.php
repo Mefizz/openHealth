@@ -632,7 +632,7 @@ class EncounterRepository extends BaseRepository
             }
 
             // Remove elements where the key is equal empty array
-            return array_filter($procedure);
+            return array_filter($procedure, static fn ($value) => !is_array($value) || !empty($value));
         }, $procedures);
 
         return schemaService()

@@ -160,32 +160,31 @@ class ProcedureRepository extends BaseRepository
      * Store reason references.
      *
      * @param  string  $patientUuid
-     * @param  array  $procedure
+     * @param  array  $reasonReference
+     * @param  int  $encounterId
      * @return void
      */
-    public function storeReasonReferences(string $patientUuid, array $procedure): void
+    public function storeReasonReferences(string $patientUuid, array $reasonReference, int $encounterId): void
     {
-        foreach ($procedure['reasonReferences'] as $reasonReference) {
-            if ($reasonReference['identifier']['type']['coding'][0]['code'] === 'condition') {
-                $this->storeCondition($reasonReference['identifier']['value'], $patientUuid);
-            } else {
-                $observation = Observation::whereUuid($reasonReference['identifier']['value'])->first();
+        if ($reasonReference['identifier']['type']['coding'][0]['code'] === 'condition') {
+            $this->storeCondition($reasonReference['identifier']['value'], $patientUuid, $encounterId);
+        } else {
+            $observation = Observation::whereUuid($reasonReference['identifier']['value'])->first();
 
-                // Get from API and save in the DB.
-                if (!$observation) {
-                    try {
-                        $observationData = PatientApi::getObservationById(
-                            $patientUuid,
-                            $reasonReference['identifier']['value']
-                        );
-                        Repository::observation()->store([CoreArr::toCamelCase($observationData)]);
-                    } catch (ApiException|Throwable $e) {
-                        Log::channel('e_health_errors')->error('Failed to fetch or store observation', [
-                            'message' => $e->getMessage(),
-                            'file' => $e->getFile(),
-                            'line' => $e->getLine()
-                        ]);
-                    }
+            // Get from API and save in the DB.
+            if (!$observation) {
+                try {
+                    $observationData = PatientApi::getObservationById(
+                        $patientUuid,
+                        $reasonReference['identifier']['value']
+                    );
+                    Repository::observation()->store([CoreArr::toCamelCase($observationData)], $encounterId);
+                } catch (ApiException|Throwable $e) {
+                    Log::channel('e_health_errors')->error('Failed to fetch or store observation', [
+                        'message' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine()
+                    ]);
                 }
             }
         }
@@ -196,12 +195,13 @@ class ProcedureRepository extends BaseRepository
      *
      * @param  string  $patientUuid
      * @param  array  $procedure
+     * @param  int  $encounterId
      * @return void
      */
-    public function storeComplicationDetails(string $patientUuid, array $procedure): void
+    public function storeComplicationDetails(string $patientUuid, array $procedure, int $encounterId): void
     {
         foreach ($procedure['complicationDetails'] as $complicationDetail) {
-            $this->storeCondition($complicationDetail['identifier']['value'], $patientUuid);
+            $this->storeCondition($complicationDetail['identifier']['value'], $patientUuid, $encounterId);
         }
     }
 
@@ -280,16 +280,17 @@ class ProcedureRepository extends BaseRepository
      *
      * @param  string  $value
      * @param  string  $patientUuid
+     * @param  int  $encounterId
      * @return void
      */
-    protected function storeCondition(string $value, string $patientUuid): void
+    protected function storeCondition(string $value, string $patientUuid, int $encounterId): void
     {
         $condition = Condition::whereUuid($value)->first();
 
         if (!$condition) {
             try {
                 $conditionData = PatientApi::getConditionById($patientUuid, $value);
-                Repository::condition()->store([CoreArr::toCamelCase($conditionData)]);
+                Repository::condition()->store([CoreArr::toCamelCase($conditionData)], $encounterId);
             } catch (ApiException|Throwable $e) {
                 Log::channel('e_health_errors')->error('Failed to fetch or store condition', [
                     'message' => $e->getMessage(),

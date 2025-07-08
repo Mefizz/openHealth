@@ -76,6 +76,21 @@ class PatientApi
     }
 
     /**
+     * @param  string  $patientId
+     * @param  string  $encounterId
+     * @return array
+     * @throws ApiException
+     */
+    public static function getEncounterById(string $patientId, string $encounterId): array
+    {
+        return new Request(
+            HttpRequest::METHOD_GET,
+            self::ENDPOINT_PATIENT . "/$patientId/encounters/$encounterId",
+            []
+        )->sendRequest();
+    }
+
+    /**
      * Get short encounter data by provided parameters.
      *
      * @param  string  $patientId

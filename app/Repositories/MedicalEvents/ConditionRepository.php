@@ -17,11 +17,11 @@ class ConditionRepository extends BaseRepository
      * Store condition in DB.
      *
      * @param  array  $data
-     * @param  int|null  $encounterId
+     * @param  int  $encounterId
      * @return void
      * @throws Throwable
      */
-    public function store(array $data, ?int $encounterId = null): void
+    public function store(array $data, int $encounterId): void
     {
         DB::transaction(function () use ($data, $encounterId) {
             try {
