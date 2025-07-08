@@ -564,8 +564,6 @@ class EncounterRepository extends BaseRepository
                 ],
             ];
 
-            $procedure['recordedBy']['identifier']['value'] = $this->employeeUuid;
-
             if ($procedure['primarySource']) {
                 unset($procedure['reportOrigin']);
 
@@ -580,54 +578,7 @@ class EncounterRepository extends BaseRepository
             $procedure['performedPeriod']['end'] = convertToISO8601($procedure['performedPeriodEndDate'] . $procedure['performedPeriodEndTime']);
             unset($procedure['performedPeriodEndDate'], $procedure['performedPeriodEndTime']);
 
-            $procedure['managingOrganization'] = [
-                'identifier' => [
-                    'type' => [
-                        'coding' => [['system' => 'eHealth/resources', 'code' => 'legal_entity']],
-                        'text' => ''
-                    ],
-                    'value' => legalEntity()->uuid
-                ],
-            ];
-
-            if (!empty($procedure['reasonReferences'])) {
-                foreach ($procedure['reasonReferences'] as &$reasonReference) {
-                    $code = str_contains($reasonReference['code']['coding'][0]['system'], 'condition_codes')
-                        ? 'condition'
-                        : 'observation';
-
-                    $identifier = [
-                        'type' => [
-                            'coding' => [['system' => 'eHealth/resources', 'code' => $code]]
-                        ],
-                        'value' => $reasonReference['id']
-                    ];
-
-                    // Keep only the identifier key
-                    $reasonReference = ['identifier' => $identifier];
-                }
-
-                unset($reasonReference);
-            }
-
-            if (!empty($procedure['complicationDetails'])) {
-                foreach ($procedure['complicationDetails'] as &$complicationDetail) {
-                    $identifier = [
-                        'type' => [
-                            'coding' => [['system' => 'eHealth/resources', 'code' => 'condition']],
-                        ],
-                        'value' => $complicationDetail['id']
-                    ];
-
-                    // Keep only the identifier key
-                    $complicationDetail = ['identifier' => $identifier];
-                }
-
-                unset($complicationDetail);
-            }
-
-            // Remove elements where the key is equal empty array
-            return array_filter($procedure);
+            return $procedure;
         }, $procedures);
 
         return schemaService()

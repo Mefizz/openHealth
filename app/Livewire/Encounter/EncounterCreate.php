@@ -22,7 +22,6 @@ class EncounterCreate extends EncounterComponent
         $this->initializeComponent($patientId);
         $this->setEmployeePartyData();
         $this->setDefaultDate();
-        $this->getEpisodes();
     }
 
     /**
@@ -213,10 +212,6 @@ class EncounterCreate extends EncounterComponent
 
             if (isset($formattedData['observations'])) {
                 Repository::observation()->store($formattedData['observations'], $createdEncounterId);
-            }
-
-            if (isset($formattedData['procedures'])) {
-                Repository::procedure()->store($formattedData['procedures'], $createdEncounterId);
             }
         });
     }
