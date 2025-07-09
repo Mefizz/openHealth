@@ -2,17 +2,16 @@
 
 namespace App\Livewire\Employee\Forms;
 
-use App\Models\Employee\Employee;
-use App\Rules\BirthDate;
-use App\Rules\Email;
-use App\Rules\Name;
-use App\Rules\UniqueEmailInLegalEntity;
-use Illuminate\Support\Facades\Storage;
-use Livewire\Form;
-use App\Rules\PhoneNumber;
 use App\Core\Arr;
-use Exception;
-use Carbon\Carbon;
+use App\Models\Employee\Employee;
+use App\Models\Employee\EmployeeRequest;
+use App\Models\Relations\Party;
+use App\Rules\BirthDate;
+use App\Rules\Name;
+use App\Rules\PhoneNumber;
+use App\Rules\UniqueEmailInLegalEntity;
+use Illuminate\Database\Eloquent\Model;
+use Livewire\Form;
 
 class EmployeeForm extends Form
 {
@@ -20,43 +19,34 @@ class EmployeeForm extends Form
     public string $employeeType = '';
     public string $startDate = '';
     public ?string $endDate = null;
-    public string $status = 'NEW';
     public ?int $existingPartyId = null;
+    public ?string $divisionId = null;
 
     public ?string $knedp = null;
     public $keyContainerUpload;
     public ?string $password = null;
 
     public array $documents = [];
-
     public array $party = [
         'lastName' => '',
         'firstName' => '',
         'secondName' => '',
         'gender' => '',
         'birthDate' => '',
-        'phones' => [
-            ['type' => '', 'number' => ''],
-        ],
+        'phones' => [['type' => '', 'number' => '']],
         'taxId' => '',
         'noTaxId' => false,
         'email' => '',
         'workingExperience' => null,
         'aboutMyself' => '',
     ];
-
     public array $doctor = [
-        'divisionUuid' => null,
         'specialities' => [],
         'scienceDegrees' => [],
         'qualifications' => [],
         'educations' => [],
     ];
 
-    /**
-     * Defines all validation rules for the form.
-     * @return array
-     */
     public function rulesForSave(): array
     {
         return array_merge(
@@ -67,10 +57,6 @@ class EmployeeForm extends Form
         );
     }
 
-    /**
-     * Defines validation rules for the signature block only.
-     * @return array
-     */
     public function rulesForKepOnly(): array
     {
         return [
@@ -80,10 +66,6 @@ class EmployeeForm extends Form
         ];
     }
 
-    /**
-     * Defines validation rules for root-level data.
-     * @return array
-     */
     protected function rootFieldsRules(): array
     {
         return [
@@ -91,18 +73,12 @@ class EmployeeForm extends Form
             'employeeType' => ['required', 'string'],
             'startDate' => ['required', 'date'],
             'endDate' => ['nullable', 'date'],
-            'status' => ['required', 'string'],
+            'divisionId' => ['nullable', 'string'],
         ];
     }
 
-    /**
-     * Defines validation rules for party-related data.
-     * @return array
-     */
     protected function partyRules(): array
     {
-        $partyIdToIgnore = $this->existingPartyId;
-
         return [
             'party.lastName' => ['required', new Name()],
             'party.firstName' => ['required', new Name()],
@@ -112,23 +88,14 @@ class EmployeeForm extends Form
             'party.phones' => ['required', 'array', 'min:1'],
             'party.phones.*.number' => ['required', new PhoneNumber()],
             'party.phones.*.type' => ['required', 'string'],
-            'party.taxId' => ['required', 'string'],
+            'party.taxId' => ['required_if:party.noTaxId,false', 'string'],
             'party.noTaxId' => ['boolean'],
-            'party.email' => [
-                'nullable',
-                new Email(),
-                new UniqueEmailInLegalEntity($partyIdToIgnore)
-            ],
+            'party.email' => ['nullable', 'email', new UniqueEmailInLegalEntity($this->existingPartyId)],
             'party.workingExperience' => ['required', 'numeric', 'min:1'],
-            'party.aboutMyself'      => ['nullable', 'string'],
+            'party.aboutMyself' => ['nullable', 'string'],
         ];
     }
 
-    /**
-     * Defines validation rules for document-related data (now top-level).
-     * Changed to nullable based on API documentation and repository validation.
-     * @return array
-     */
     protected function documentsRules(): array
     {
         return [
@@ -143,6 +110,7 @@ class EmployeeForm extends Form
     /**
      * Defines validation rules for doctor-related data (now nested under 'doctor').
      * Updated scienceDegrees and qualifications to be nullable.
+     *
      * @return array
      */
     protected function doctorRules(): array
@@ -164,11 +132,10 @@ class EmployeeForm extends Form
         $qualificationsRules = ['nullable', 'array'];
 
         return [
-            'doctor.divisionUuid' => ['nullable', 'string', 'uuid'],
             'doctor.educations' => $educationRules,
             'doctor.educations.*.country' => ['required', 'string', 'max:255'],
             'doctor.educations.*.city' => ['required', 'string', 'max:255'],
-            'doctor.educations.*.institutionName'=> ['required', 'string', 'max:255'],
+            'doctor.educations.*.institutionName' => ['required', 'string', 'max:255'],
             'doctor.educations.*.issuedDate' => ['nullable', 'date'],
             'doctor.educations.*.diplomaNumber' => ['required', 'string', 'max:255'],
             'doctor.educations.*.degree' => ['required', 'string', 'max:255'],
@@ -205,195 +172,230 @@ class EmployeeForm extends Form
     }
 
     /**
-     * Defines validation rules for KEP (Key Electronic Signature) related fields.
-     * @param bool $required Вказує, чи є поля обов'язковими.
-     * @return array
+     * The single "smart" method to populate the form from any data source.
      */
-    protected function kepRules(bool $required = false): array
+    public function hydrate(Model|Party|null $source = null): void
     {
-        $rules = $required ? ['required'] : ['nullable'];
+        $this->reset();
 
-        return [
-            'knedp' => [...$rules, 'string'],
-            'password' => [...$rules, 'string'],
-            'keyContainerUpload' => [...$rules, 'file', 'extensions:dat,pfx,pk8,zs2,jks,p7s'],
-        ];
-    }
-
-    /**
-     * Processes the uploaded KEP file and returns its base64 content.
-     * @return string|null Base64 encoded file content, or null if an error occurred.
-     * @throws Exception If file content cannot be read.
-     */
-    //TODO в SignService обробку експепшена
-    public function getBase64KepFileContent(): ?string
-    {
-        if ($this->keyContainerUpload && $this->keyContainerUpload->exists()) {
-            $fileExtension = $this->keyContainerUpload->getClientOriginalExtension();
-            $fileName = 'kep_' . uniqid('', true) . '.' . $fileExtension;
-            $filePath = $this->keyContainerUpload->storeAs('uploads/kep', $fileName, 'public');
-
-            if ($filePath) {
-                $fileContents = file_get_contents(Storage::path('public/' . $filePath));
-                Storage::disk('public')->delete($filePath);
-
-                if ($fileContents !== false) {
-                    return base64_encode($fileContents);
-                } else {
-                    throw new \RuntimeException(__('Не вдалося прочитати вміст файлу КЕП.'));
-                }
-            } else {
-                throw new \RuntimeException(__('Не вдалося зберегти завантажений файл КЕП.'));
-            }
+        if ($source === null) {
+            return;
         }
-        throw new \RuntimeException(__('Будь ласка, завантажте файл КЕП.'));
+
+        match (get_class($source)) {
+            Employee::class => $this->hydrateFromEmployee($source),
+            EmployeeRequest::class => $this->hydrateFromEmployeeRequest($source),
+            Party::class => $this->hydrateFromParty($source),
+        };
+    }
+
+
+    /**
+     * Resets only the fields related to a specific position/employment.
+     * This is called in the 'Add Position' component.
+     */
+    public function resetPositionFields(): void
+    {
+        $this->position = '';
+        $this->employeeType = '';
+        $this->startDate = '';
+        $this->endDate = null;
+        $this->divisionId = null;
     }
 
     /**
-     * Populates the form fields from an existing Employee model.
+     * FIX: Renamed back to `populateFromParty` as requested.
+     * This method is a helper for populating ONLY personal data from a Party model.
      */
-    public function populateFromModel(Employee $employee): void
+    public function populateFromParty(Party $party): void
     {
-        $employee->load(['party.phones', 'party.documents', 'educations', 'specialities', 'qualifications', 'scienceDegrees']);
+        $party->loadMissing(['phones', 'documents']);
+        $this->existingPartyId = $party->id;
 
+        $this->party['lastName'] = $party->last_name;
+        $this->party['firstName'] = $party->first_name;
+        $this->party['secondName'] = $party->second_name;
+        $this->party['gender'] = $party->gender;
+        $this->party['birthDate'] = $party->birth_date?->format('Y-m-d');
+        $this->party['taxId'] = $party->tax_id;
+        $this->party['noTaxId'] = (bool)$party->no_tax_id;
+        $this->party['email'] = $party->email;
+        $this->party['workingExperience'] = $party->working_experience;
+        $this->party['aboutMyself'] = $party->about_myself;
+
+        $phones = $party->phones;
+
+        if ($phones->isNotEmpty()) {
+            $this->party['phones'] = $phones->map(function ($phone) {
+                return [
+                    'type' => $phone->type,
+                    'number' => $phone->number,
+                ];
+            })->toArray();
+        } else {
+
+            $this->party['phones'] = [['type' => 'MOBILE', 'number' => '']];
+        }
+
+        $documents = $party->documents;
+        if ($documents->isNotEmpty()) {
+            $this->documents = $documents->map(function ($doc) {
+                return [
+                    'type' => $doc->type,
+                    'number' => $doc->number,
+                    'issuedBy' => $doc->issued_by,
+                    'issuedAt' => $doc->issued_at,
+                ];
+            })->toArray();
+        } else {
+            $this->documents = [];
+        }
+    }
+
+    private function hydrateFromEmployee(Employee $employee): void
+    {
+        $employee->loadMissing(['party.phones', 'party.documents', 'educations', 'specialities', 'qualifications']);
+        if ($employee->party) {
+            $this->populatePartyData($employee->party);
+        }
         $this->position = $employee->position;
         $this->employeeType = $employee->employee_type;
         $this->startDate = $employee->start_date?->format('Y-m-d');
         $this->endDate = $employee->end_date?->format('Y-m-d');
-        $this->status = $employee->status->value;
+        $this->divisionId = $employee->division_id;
 
-        if ($party = $employee->party) {
-            $this->party = [
-                'lastName' => $party->last_name,
-                'firstName' => $party->first_name,
-                'secondName' => $party->second_name,
-                'gender' => $party->gender,
-                'birthDate' => $party->birth_date?->format('Y-m-d'),
-                'taxId' => $party->tax_id,
-                'noTaxId' => (bool)$party->no_tax_id,
-                'email' => $party->email,
-                'workingExperience' => $party->working_experience,
-                'aboutMyself' => $party->about_myself,
-                'phones' => $party->phones->map(fn($phone) => ['type' => $phone->type, 'number' => $phone->number])->toArray(),
-            ];
-            $this->documents = $party->documents->map(fn($doc) => [
-                'type' => $doc->type,
-                'number' => $doc->number,
-                'issued_by' => $doc->issued_by,
-                'issued_at' => $doc->issued_at?->format('Y-m-d'),
-            ])->toArray();
-            $this->existingPartyId = $employee->party->id;
+        $this->doctor['educations'] = $employee->educations->map(fn($edu) => Arr::toCamelCase($edu->toArray()))->toArray();
+        $this->doctor['specialities'] = $employee->specialities->map(fn($spec) => Arr::toCamelCase($spec->toArray()))->toArray();
+    }
+
+    private function hydrateFromEmployeeRequest(EmployeeRequest $request): void
+    {
+        $request->loadMissing(['party', 'revision']);
+
+        $revisionData = $request->revision->data ?? [];
+
+        // Populate form with revision data as the base
+        $this->position = $revisionData['employee_request_data']['position'] ?? '';
+        $this->employeeType = $revisionData['employee_request_data']['employee_type'] ?? '';
+        $this->startDate = $revisionData['employee_request_data']['start_date'] ?? '';
+        $this->documents = Arr::toCamelCase($revisionData['documents']);
+        $this->doctor = Arr::toCamelCase($revisionData['doctor']);
+        $this->party = array_merge($this->party, Arr::toCamelCase($revisionData['party']));
+        $this->party['phones'] = !empty($revisionData['phones']) ? Arr::toCamelCase($revisionData['phones']) : [['type' => 'MOBILE', 'number' => '']];
+
+
+        // Now, overwrite with live data from Party to ensure it's current
+        if ($request->party) {
+            $this->party['lastName'] = $request->party->last_name;
+            $this->party['firstName'] = $request->party->first_name;
+            $this->party['secondName'] = $request->party->second_name;
+            $this->party['email'] = $request->party->email;
+            $this->existingPartyId = $request->party->id;
         }
-
-        $this->doctor['divisionUuid'] = $employee->division_id;
-        $this->doctor['educations'] = $employee->educations->map(fn($edu) => [
-            'country' => $edu->country, 'city' => $edu->city, 'institutionName' => $edu->institution_name,
-            'issuedDate' => $edu->issued_date?->format('Y-m-d'), 'diplomaNumber' => $edu->diploma_number,
-            'degree' => $edu->degree, 'speciality' => $edu->speciality,
-        ])->toArray();
-        $this->doctor['specialities'] = $employee->specialities->map(fn($spec) => [
-            'speciality' => $spec->speciality, 'specialityOfficio' => (bool)$spec->speciality_officio,
-            'level' => $spec->level, 'qualificationType' => $spec->qualification_type,
-            'attestationName' => $spec->attestation_name, 'attestationDate' => $spec->attestation_date?->format('Y-m-d'),
-            'validToDate' => $spec->valid_to_date?->format('Y-m-d'), 'certificateNumber' => $spec->certificate_number,
-        ])->toArray();
-        $this->doctor['qualifications'] = $employee->qualifications->map(fn($qual) => [
-            'type' => $qual->type, 'institutionName' => $qual->institution_name,
-            'speciality' => $qual->speciality, 'issuedDate' => $qual->issued_date?->format('Y-m-d'),
-            'certificateNumber' => $qual->certificate_number, 'additionalInfo' => $qual->additional_info,
-        ])->toArray();
-        $this->doctor['scienceDegrees'] = $employee->scienceDegrees->map(fn($degree) => [
-            'country' => $degree->country, 'city' => $degree->city, 'degree' => $degree->degree,
-            'institutionName' => $degree->institution_name, 'diplomaNumber' => $degree->diploma_number,
-            'speciality' => $degree->speciality, 'issuedDate' => $degree->issued_date?->format('Y-m-d'),
-        ])->toArray();
     }
 
     /**
-     * Populates the form's party/document fields from an existing Party model.
+     * Hydrates the form from a Party model.
+     * Use case: "Add Position" for an existing person.
+     * This method now contains the full "smart" logic.
      */
-    public function populateFromParty(\App\Models\Party $party): void
+    private function hydrateFromParty(Party $party): void
     {
-        $party->load(['phones', 'documents']);
-        $this->existingPartyId = $party->id;
-        $this->party = [
-            'lastName' => $party->last_name, 'firstName' => $party->first_name,
-            'secondName' => $party->second_name, 'gender' => $party->gender,
-            'birthDate' => $party->birth_date?->format('Y-m-d'), 'taxId' => $party->tax_id,
-            'noTaxId' => (bool)$party->no_tax_id, 'email' => $party->email,
-            'workingExperience' => $party->working_experience, 'aboutMyself' => $party->about_myself,
-            'phones' => $party->phones->map(fn($phone) => ['type' => $phone->type, 'number' => $phone->number])->toArray(),
-        ];
-        $this->documents = $party->documents->map(fn($doc) => [
-            'type' => $doc->type, 'number' => $doc->number, 'issued_by' => $doc->issued_by,
-            'issued_at' => $doc->issued_at?->format('Y-m-d'),
-        ])->toArray();
-    }
+        // 1. First, populate with live data from the Party and its direct relations.
+        // This will correctly fill in name, email, and will try to fill phones/documents.
+        $this->populatePartyData($party);
 
-    /**
-     * Recursively formats date strings within an array to 'YYYY-MM-DD'.
-     *
-     * @param array $data
-     * @return array
-     */
-    protected function formatDatesInArray(array $data): array
-    {
-        $dateKeys = [
-            'startDate', 'endDate', 'birthDate', 'issuedAt', 'issuedDate',
-            'attestationDate', 'validToDate', 'validTo'
-        ];
+        // 2. Fallback logic: If documents or phones are still empty after the first step,
+        //    it means the Party might only have EmployeeRequests. Let's try to get
+        //    the data from the latest request's revision.
+        $needsRevisionCheck = empty($this->documents) || empty($this->party['phones'][0]['number']);
 
-        foreach ($data as $key => &$value) {
-            if (is_array($value)) {
-                $value = $this->formatDatesInArray($value);
-            } elseif (is_string($value) && in_array($key, $dateKeys)) {
-                if (!empty($value)) {
-                    try {
-                        $value = Carbon::parse($value)->format('Y-m-d');
-                    } catch (\Exception $e) {
-                        \Log::warning("Failed to parse date for key '$key': " . $value . ' - ' . $e->getMessage());
-                    }
-                } else {
-                    $value = null;
+        if ($needsRevisionCheck) {
+            $latestRequest = $party->employeeRequests()->with('revision')->latest()->first();
+
+            if ($latestRequest && $latestRequest->revision) {
+
+                // If phones are still empty, get them from the revision.
+                if (empty($this->party['phones'][0]['number']) && !empty($revisionData['phonesData'])) {
+                    $this->party['phones'] = Arr::toCamelCase($revisionData['phonesData']);
+                }
+
+                // If documents are still empty, get them from the revision.
+                if (empty($this->documents) && !empty($revisionData['documentsData'])) {
+                    $this->documents = Arr::toCamelCase($revisionData['documentsData']);
                 }
             }
         }
-        return $data;
+    }
+
+    private function populatePartyData(Party $party): void
+    {
+        $party->loadMissing(['phones', 'documents']);
+        $this->existingPartyId = $party->id;
+        $this->party['lastName'] = $party->last_name;
+        $this->party['firstName'] = $party->first_name;
+        $this->party['secondName'] = $party->second_name;
+        $this->party['gender'] = $party->gender;
+        $this->party['birthDate'] = $party->birth_date?->format('Y-m-d');
+        $this->party['taxId'] = $party->tax_id;
+        $this->party['noTaxId'] = (bool)$party->no_tax_id;
+        $this->party['email'] = $party->email;
+        $this->party['workingExperience'] = $party->working_experience;
+        $this->party['aboutMyself'] = $party->about_myself;
+
+        $phones = $party->phones;
+        $this->party['phones'] = ($phones && $phones->isNotEmpty()) ? $phones->map(fn($p) => ['type' => $p->type, 'number' => $p->number])->toArray() : [['type' => 'MOBILE', 'number' => '']];
+        $documents = $party->documents;
+        $this->documents = ($documents && $documents->isNotEmpty()) ? $documents->map(fn($d) => Arr::toCamelCase($d->only(['type', 'number', 'issued_by', 'issued_at'])))->toArray() : [];
     }
 
     /**
-     * REFACTORED: Prepares and returns all form data.
-     * It now uses a single recursive call to convert keys to snake_case.
+     * Prepares and returns a FLAT array of all form data for the repository.
+     * The logic for creating a nested structure for the revision is moved to the Trait.
      */
     public function getPreparedData(): array
     {
-        $formData = $this->formatDatesInArray($this->all());
+        $formData = $this->all();
+        $partyData = $formData['party'] ?? [];
+        unset($formData['party']);
+        $formData = array_merge($formData, $partyData);
+
+        unset(
+            $formData['existingPartyId'],
+            $formData['knedp'],
+            $formData['keyContainerUpload'],
+            $formData['password']
+        );
 
         return Arr::toSnakeCase($formData);
     }
 
+    /**
+     * Resets the form to its default state.
+     */
     public function reset(...$properties): void
     {
         parent::reset(...$properties);
+
         $this->position = '';
         $this->employeeType = '';
         $this->startDate = '';
-        $this->endDate = '';
-        $this->status = 'NEW';
+        $this->endDate = null;
+        $this->existingPartyId = null;
+
+        $this->knedp = null;
+        $this->keyContainerUpload = null;
+        $this->password = null;
+
         $this->documents = [];
         $this->party = [
             'lastName' => '', 'firstName' => '', 'secondName' => '', 'gender' => '',
             'birthDate' => '', 'phones' => [['type' => '', 'number' => '']],
             'taxId' => '', 'noTaxId' => false, 'email' => '',
-            'workingExperience' => '', 'aboutMyself' => '',
+            'workingExperience' => null, 'aboutMyself' => '',
         ];
-        $this->doctor = [
-            'divisionUuid' => '', 'educations' => [], 'specialities' => [],
+        $this->doctor    = [
             'scienceDegrees' => [], 'qualifications' => [],
         ];
-        $this->knedp = null;
-        $this->keyContainerUpload = null;
-        $this->password = null;
-        $this->existingPartyId = null;
     }
 }

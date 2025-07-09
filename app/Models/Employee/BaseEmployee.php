@@ -48,10 +48,16 @@ class BaseEmployee extends Model
         'inserted_at',
     ];
 
+    /**
+     * The attributes that should be cast to native types.
+     * We are changing the format for start_date and end_date to 'Y-m-d'.
+     *
+     * @var array
+     */
     protected $casts = [
         'status' => Status::class,
-        'start_date' => 'datetime',
-        'end_date' => 'datetime'
+        'start_date' => 'date:Y-m-d',
+        'end_date' => 'date:Y-m-d',
     ];
 
     protected array $prettyAttributes = [
@@ -81,6 +87,20 @@ class BaseEmployee extends Model
                 optional($this->party)->first_name ?? '',
                 optional($this->party)->second_name ?? '',
             ]))
+        );
+    }
+
+    /**
+     * Determine if the employee's associated user is verified.
+     *
+     * @return \Illuminate\Database\Eloquent\Casts\Attribute
+     */
+    protected function isVerified(): Attribute
+    {
+        return Attribute::make(
+        // The logic checks if the user relationship exists AND
+        // if the user's email_verified_at column is not null.
+            get: fn () => $this->user?->email_verified_at !== null
         );
     }
 

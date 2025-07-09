@@ -9,9 +9,11 @@ use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\ForgotPassword;
 use App\Http\Controllers\Auth\EHealthLoginController;
+use App\Livewire\Employee\EmployeePositionAdd;
 use App\Livewire\Patient\PatientComponent;
 use App\Livewire\DiagnosticReport\DiagnosticReportCreate;
 use App\Livewire\Employee\EmployeeShow;
+use App\Livewire\Patient\PatientForm;
 use App\Livewire\License\LicenseShow;
 use App\Models\LegalEntity;
 use Illuminate\Support\Facades\Route;
@@ -101,11 +103,13 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
             Route::get('/{division}/healthcare-service', HealthcareServiceForm::class)->name('healthcare_service.index');
         });
 
+
         Route::prefix('employees')->name('employee.')->group(function () {
             Route::get('/', EmployeeIndex::class)->name('index');
             Route::get('/create', EmployeeCreate::class)->name('create');
-            Route::get('/{employee}', EmployeeShow::class)->name('show');
-            Route::get('/{employeeId}/edit', EmployeeEdit::class)->name('edit');
+            Route::get('/party/{party}/add-position', EmployeePositionAdd::class)->name('add-position');
+            Route::get('/{id}/{type?}', EmployeeShow::class)->name('show');
+            Route::get('/{id}/{type?}/edit', EmployeeEdit::class)->name('edit');
         });
 
         Route::prefix('contract')->group(function () {

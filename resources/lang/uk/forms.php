@@ -42,6 +42,7 @@ return [
     'legalEntityOwner' => 'Представник організації',
     'legalEntityInfo' => 'Інформація про заклад',
     'save' => 'Зберегти',
+    'saving' => 'Збереження...',
     'agree' => 'Я погоджуюсь',
     'accept' => 'Я приймаю',
     'decline' => 'Відхилити',
@@ -131,7 +132,7 @@ return [
     'archive_date' => 'Дата архівації',
     'archive_place' => 'Адреса будівлі, де знаходяться паперові документи',
     'employeeType' => 'Тип працівника',
-    'employee_request_saved_successfully' => 'Успіншно збережено запит на створення співробітника',
+    'employee_request_saved_successfully' => 'Успішно збережено запит на створення співробітника',
     'position' => 'Посада',
     'speciality_level' => 'Рівень спеціалізації',
     'qualificationCategory' => 'Категорія кваліфікації',
@@ -156,6 +157,7 @@ return [
     'startDateWork' => 'Дата початку роботи',
     'division' => 'Підрозділ',
     'selectDivision' => 'Обрати підрозділ',
+    'selectDate' => 'Виберіть дату',
     'additional_info' => 'Додаткова інформація',
     'aboutMyself' => 'Про мене',
     'workingExperience' => 'Досвід роботи',
@@ -204,6 +206,7 @@ return [
     'mfo' => 'МФО',
     'payerAccount' => 'IBAN',
     'statuteMd5' => 'Статут',
+    'additional_search_parameters' => 'Додаткові параметри пошуку',
     'additionalDocumentMd5' => 'Додатковий документ',
     'startDateContract' => 'Дата початку дії договору',
     'endDateContract' => 'Дата закінчення дії договору',
@@ -277,7 +280,7 @@ return [
     'update_successfull' => 'Дані оновлено успішно',
     'backToList' => 'Назад до списку',
     'goToEdit' => 'Перейти до редагування',
-    'requestSignedAndSentToEHealth' => 'Запит іспішно підписано та надіслоно до ЕСОЗ',
+    'requestSignedAndSentToEHealth' => 'Запит успішно підписано та надіслано до ЕСОЗ',
     'viewEmployee' => 'Перегляд співробітника',
     'errors' => [
         'update_data' => 'Сталася помилка під час оновлення даних'
@@ -285,6 +288,5 @@ return [
     'choose_legal_entity' => 'Будь ласка, оберіть медичний заклад зі списку',
     'del_and_choose_value' => 'Видаліть вміст і оберіть значення зі списку',
     'local_login' => 'Увага! Ви намагєтесь увійти в локальну частину МІС',
-    'local_login_warning' => 'Робота з сервером ЕСОЗ буде неможлива!',
-    'name' => 'Назва'
+    'local_login_warning' => 'Робота з сервером ЕСОЗ буде неможлива!'
 ];

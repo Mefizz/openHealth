@@ -157,7 +157,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         return $scopes->filter(
             fn (Permission $permission) =>
-            !collect($exclude)->some(fn ($excluded) => Str::startsWith($permission->name, $excluded))
+            !collect($exclude)->some(fn($excluded) => Str::startsWith($permission->name, $excluded))
         );
     }
 
@@ -170,7 +170,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getScopes(string $legalEntityClientId): string
     {
-        return $this->getAllPermissions($legalEntityClientId)->pluck('name')->unique()->join(' ');
+        return $this->getAllPermissions($legalEntityClientId)->unique()->pluck('name')->join(' ');
     }
 
     /**
