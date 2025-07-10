@@ -170,7 +170,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getScopes(string $legalEntityClientId): string
     {
-        return $this->getAllPermissions($legalEntityClientId)->unique()->pluck('name')->join(' ');
+        return $this->getAllPermissions($legalEntityClientId)->pluck('name')->unique()->join(' ');
     }
 
     /**
