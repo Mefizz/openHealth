@@ -38,10 +38,13 @@
                     <td class="td-input" x-text="scienceDegree.institutionName"></td>
                     <td class="td-input" x-text="specDict[scienceDegree.speciality]"></td>
                     <td class="td-input" x-text="scienceDegree.diplomaNumber"></td>
-                    <td class="td-input relative absolute right-0 top-full mt-2 z-10 w-48 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600">
-                        <x-dropdown-button
-                            :editAction="'openModal = true; item = index; modalScienceDegree = new ScienceDegree(scienceDegree); newScienceDegree = false; close($refs.button)'"
-                            :deleteAction="'scienceDegrees.splice(index, 1); close($refs.button)'"                        />
+                    <td class="td-input">
+                        <div class="[&_[x-show]]:!mt-3 [&_.absolute]:!mt-3 [&_[x-show]]:!left-0 [&_.absolute]:!left-0 [&_[x-show]]:!right-auto [&_.absolute]:!right-auto [&_[x-show]]:!translate-x-5 [&_.absolute]:!translate-x-5">
+                            <x-dropdown-button
+                                :editAction="'openModal = true; item = index; modalDocument = new Doc(document); newDocument = false; close($refs.button)'"
+                                :deleteAction="'documents.splice(index, 1); close($refs.button)'"
+                            />
+                        </div>
                     </td>
                 </tr>
             </template>

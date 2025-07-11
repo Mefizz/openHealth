@@ -26,8 +26,15 @@
                                     </label>
                                 </x-slot>
                                 <x-slot name="input">
-                                    <x-forms.input class="default-input" wire:model.live.debounce.300ms="search"
-                                                   type="text" id="employee_search" placeholder="{{ __('forms.full_name') }}" autocomplete="off" />
+                                    <div class="form-group group w-full relative top-[12px]">
+                                        <input type="text"
+                                               id="employee_search"
+                                               placeholder=" "
+                                               class="input peer"
+                                               wire:model.live.debounce.300ms="search"
+                                               autocomplete="off" />
+                                        <label for="employee_search" class="label">ПІБ</label>
+                                    </div>
                                 </x-slot>
                             </x-forms.form-group>
                         </div>
@@ -53,74 +60,89 @@
                 </div>
 
                 <div x-show="showFilter" x-transition class="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700" style="display: none;">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <x-forms.form-group>
-                            <x-slot name="label"><label for="filter_phone" class="default-label">Телефон</label></x-slot>
-                            <x-slot name="input"><x-forms.input id="filter_phone" class="default-input" type="text" wire:model.live.debounce.300ms="filter.phone" /></x-slot>
-                        </x-forms.form-group>
-                        <x-forms.form-group>
-                            <x-slot name="label"><label for="filter_email" class="default-label">Email</label></x-slot>
-                            <x-slot name="input"><x-forms.input id="filter_email" class="default-input" type="email" wire:model.live.debounce.300ms="filter.email" /></x-slot>
-                        </x-forms.form-group>
-                        <x-forms.form-group>
-                            <x-slot name="label"><label for="filter_role" class="default-label">Роль працівника</label></x-slot>
-                            <x-slot name="input">
-                                <x-forms.select id="filter_role" class="default-input" wire:model.live="filter.role">
-                                    <x-slot name="option">
-                                        <option value="">Всі ролі</option>
-                                        @foreach($dictionaries['EMPLOYEE_TYPE'] ?? [] as $key => $value)
-                                            <option value="{{ $key }}">{{ $value }}</option>
-                                        @endforeach
-                                    </x-slot>
-                                </x-forms.select>
-                            </x-slot>
-                        </x-forms.form-group>
-                        <x-forms.form-group>
-                            <x-slot name="label"><label for="filter_position" class="default-label">Посада</label></x-slot>
-                            <x-slot name="input">
-                                <x-forms.select id="filter_position" class="default-input" wire:model.live="filter.position">
-                                    <x-slot name="option">
-                                        <option value="">Всі посади</option>
-                                        @foreach($dictionaries['POSITION'] ?? [] as $key => $value)
-                                            <option value="{{ $key }}">{{ $value }}</option>
-                                        @endforeach
-                                    </x-slot>
-                                </x-forms.select>
-                            </x-slot>
-                        </x-forms.form-group>
-
-                        {{-- Division Filter - Commented out as requested --}}
-                        {{--
-                        <x-forms.form-group>
-                            <x-slot name="label"><label for="filter_division" class="default-label">Підрозділ</label></x-slot>
-                            <x-slot name="input">
-                                 <x-forms.select id="filter_division" class="default-input" wire:model.live="filter.division_id">
-                                    <x-slot name="option">
-                                        <option value="">Всі підрозділи</option>
-                                        @foreach($divisions ?? [] as $division)
-                                            <option value="{{ $division->id }}">{{ $division->name }}</option>
-                                        @endforeach
-                                    </x-slot>
-                                </x-forms.select>
-                            </x-slot>
-                        </x-forms.form-group>
-                        --}}
-
-                        <x-forms.form-group>
-                            <x-slot name="label"><label for="filter_status" class="default-label">Статус у системі</label></x-slot>
-                            <x-slot name="input">
-                                <x-forms.select id="filter_status" class="default-input" wire:model.live="status">
-                                    <x-slot name="option">
-                                        <option value="">Всі статуси</option>
-                                        <option value="APPROVED">Активний</option>
-                                        <option value="DISMISSED">Звільнений</option>
-                                    </x-slot>
-                                </x-forms.select>
-                            </x-slot>
-                        </x-forms.form-group>
+                    <div class="form-row-4">
+                        <div class="form-group phone-wrapper">
+                            <input wire:model.live.debounce.300ms="filter.phone"
+                                   type="tel"
+                                   placeholder=" "
+                                   class="peer input pl-10 with-leading-icon text-gray-500"
+                                   x-model="phones[index].number"
+                                   x-mask="+380999999999"
+                                   :id="$id('phone', '_number' + index)"
+                                   :class="{ 'input-error border-red-500': errors[legalEntityForm.phones.${index}.number] }"
+                            />
+                            <label for="filter_phone" class="label pl-10">Телефон</label>
+                        </div>
+                        <div class="form-group group">
+                            <input wire:model.live.debounce.300ms="filter.email"
+                                   type="email"
+                                   name="filter_email"
+                                   id="filter_email"
+                                   class="input peer"
+                                   placeholder=" "
+                                   autocomplete="off"
+                            />
+                            <label for="filter_email" class="label">Email</label>
+                        </div>
                     </div>
-                    <div class="flex justify-end mt-4">
-                        <button type="button" wire:click="resetFilters" class="text-sm text-blue-600 hover:underline">Скинути всі фільтри</button>
+                    <div class="form-row-4">
+                        <div class="form-group group">
+                            <select wire:model.live="filter.role"
+                                    name="filter_role"
+                                    id="filter_role"
+                                    class="input peer text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                            >
+                                <option value="">Всі ролі</option>
+                                @foreach($dictionaries['EMPLOYEE_TYPE'] ?? [] as $key => $value)
+                                    <option value="{{ $key }}">{{ $value }}</option>
+                                @endforeach
+                            </select>
+                            <label for="filter_role" class="label">Роль працівника</label>
+                        </div>
+                        <div class="form-group group">
+                            <select wire:model.live="filter.position"
+                                    name="filter_position"
+                                    id="filter_position"
+                                    class="input peer text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                            >
+                                <option value="">Всі посади</option>
+                                @foreach($dictionaries['POSITION'] ?? [] as $key => $value)
+                                    <option value="{{ $key }}">{{ $value }}</option>
+                                @endforeach
+                            </select>
+                            <label for="filter_position" class="label">Посада</label>
+                        </div>
+                    </div>
+                    <div class="form-row-4">
+                        <div class="form-group group">
+                            <select wire:model.live="filter.division_id"
+                                    name="filter_division"
+                                    id="filter_division"
+                                    class="input peer text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                            >
+                                <option value="">Всі підрозділи</option>
+                                @foreach($divisions ?? [] as $division)
+                                    <option value="{{ $division->id }}">{{ $division->name }}</option>
+                                @endforeach
+                            </select>
+                            <label for="filter_division" class="label">Медичний заклад</label>
+                        </div>
+
+                        <div class="form-group group">
+                            <select wire:model.live="status"
+                                    name="filter_status"
+                                    id="filter_status"
+                                    class="input peer text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                            >
+                                <option value="">Всі статуси</option>
+                                <option value="APPROVED">Активний</option>
+                                <option value="DISMISSED">Звільнений</option>
+                            </select>
+                            <label for="filter_status" class="label">Статус у системі</label>
+                        </div>
+                    </div>
+                    <div class="w-full flex justify-start mt-4">
+                        <button type="button" wire:click="resetFilters" class="button-primary">Скинути всі фільтри</button>
                     </div>
                 </div>
             </div>
@@ -137,16 +159,18 @@
                             <div class="flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 mt-2">
                                 @if ($mobilePhone = $party->phones->firstWhere('type', 'MOBILE'))
                                     <span class="flex items-center gap-1.5">
-                                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>
+                                       <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.427 14.768 17.2 13.542a1.733 1.733 0 0 0-2.45 0l-.613.613a1.732 1.732 0 0 1-2.45 0l-1.838-1.84a1.735 1.735 0 0 1 0-2.452l.612-.613a1.735 1.735 0 0 0 0-2.452L9.237 5.572a1.6 1.6 0 0 0-2.45 0c-3.223 3.2-1.702 6.896 1.519 10.117 3.22 3.221 6.914 4.745 10.12 1.535a1.601 1.601 0 0 0 0-2.456Z"/>
+                                         </svg>
                                         <a href="tel:{{ $mobilePhone->number }}" class="hover:underline">{{ $mobilePhone->number }}</a>
                                     </span>
                                 @endif
                                 @if($party->email)
                                     <span class="flex items-center gap-1.5">
-                                        <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M2.038 5.61A2.01 2.01 0 0 0 2 6v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6c0-.12-.01-.238-.03-.352l-.866.65-7.89 6.032a2 2 0 0 1-2.429 0L2.884 6.288l-.846-.677Z"/>
-                <path d="M20.677 4.117A1.996 1.996 0 0 0 20 4H4c-.225 0-.44.037-.642.105l.758.607L12 10.742 19.9 4.7l.777-.583Z"/>
-            </svg><a href="mailto:{{$party->email}}" class="hover:underline">{{ $party->email }}</a>
+                                        <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                           <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m3.5 5.5 7.893 6.036a1 1 0 0 0 1.214 0L20.5 5.5M4 19h16a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Z"/>
+                                        </svg>
+                                        <a href="mailto:{{$party->email}}" class="hover:underline">{{ $party->email }}</a>
                                     </span>
                                 @endif
                             </div>
@@ -176,47 +200,72 @@
                             <tbody>
                             @php $positions = $party->employees->merge($party->employeeRequests); @endphp
                             @foreach($positions as $position)
-                                <tr class="border-b dark:border-gray-700">
-                                    <td class="px-4 py-3 font-medium">{{ $dictionaries['POSITION'][$position->position] ?? $position->position }}</td>
-                                    <td class="px-4 py-3">{{ $dictionaries['EMPLOYEE_TYPE'][$position->employee_type] ?? $position->employee_type }}</td>
-                                    <td class="px-4 py-3">{{ $position->division->name ?? 'N/A' }}</td>
+                                <tr class="border-b-4 border-gray-200 dark:border-gray-700">
+                                    <td class="px-4 py-3  text-gray-500 dark:text-gray-400 font-medium">{{ $dictionaries['POSITION'][$position->position] ?? $position->position }}</td>
+                                    <td class="px-4 py-3  text-gray-500 dark:text-gray-400">{{ $dictionaries['EMPLOYEE_TYPE'][$position->employee_type] ?? $position->employee_type }}</td>
+                                    <td class="px-4 py-3  text-gray-500 dark:text-gray-400">{{ $position->division->name ?? 'N/A' }}</td>
 
                                     <td class="px-4 py-3">
                                         @switch($position->status)
                                             @case(\App\Enums\Status::APPROVED)
-                                                <span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Активний</span>
+                                                <span class="badge-green">Активний</span>
                                                 @break
                                             @case(\App\Enums\Status::DISMISSED)
-                                                <span class="bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">Звільнений</span>
+                                                <span class="badge-red">Звільнений</span>
                                                 @break
                                             @case(\App\Enums\Status::NEW)
-                                                <span class="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">Чернетка</span>
+                                                <span class="badge-red">Чернетка</span>
                                                 @break
                                             @default
-                                                <span class="bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-yellow-900 dark:text-yellow-300">{{ $position->status }}</span>
+                                                <span class="badge-yellow">{{ $position->status }}</span>
                                         @endswitch
                                     </td>
 
                                     <td class="px-4 py-3 text-right">
                                         <div class="relative" x-data="{ open: false }" @click.outside="open = false">
                                             <button @click="open = !open" class="inline-flex items-center p-2 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-white" type="button">
-                                                <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4z"/></svg>
+                                                <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                                    <path stroke="currentColor" stroke-linecap="square" stroke-linejoin="round" stroke-width="2" d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"/>
+                                                </svg>
                                             </button>
                                             <div x-show="open" x-transition class="absolute right-0 z-10 w-48 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600" style="display: none;">
                                                 <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" @click="open = false">
                                                     <li>
                                                         {{-- The 'type' parameter is still needed here to resolve ambiguity --}}
                                                         <a href="{{ route('employee.show', ['legalEntity' => legalEntity()->id, 'id' => $position->id, 'type' => $position->type]) }}"
-                                                           class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600">Переглянути</a>
+                                                           class="flex items-center gap-2 py-2 px-5 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
+                                                            <svg class="w-5 h-5 text-gray-500 dark:text-gray-300" aria-hidden="true"
+                                                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                                <path stroke="currentColor" stroke-width="2"
+                                                                      d="M21 12c0 1.2-4.03 6-9 6s-9-4.8-9-6c0-1.2 4.03-6 9-6s9 4.8 9 6Z"/>
+                                                                <path stroke="currentColor" stroke-width="2"
+                                                                      d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                                                            </svg>
+                                                            Переглянути
+                                                        </a>
                                                     </li>
                                                     <li>
                                                         <a href="{{ route('employee.edit', ['legalEntity' => legalEntity()->id, 'id' => $position->id, 'type' => $position->type]) }}"
-                                                           class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600">Редагувати</a>
+                                                           class="flex items-center gap-2 py-2 px-5 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
+                                                            <svg class="w-5 h-5 text-gray-500 dark:text-gray-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                                 fill="none" viewBox="0 0 24 24">
+                                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                      d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z"/>
+                                                            </svg>
+                                                            Редагувати
+                                                        </a>
                                                     </li>
                                                 </ul>
                                                 @if($position->type === 'employee' && $position->status === \App\Enums\Status::APPROVED)
                                                     <div class="py-1" @click="open = false">
-                                                        <button type="button" wire:click="showModalDismissed({{ $position->id }})" class="block w-full text-right py-2 px-4 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                                        <button type="button"
+                                                                wire:click="showModalDismissed({{ $position->id }})"
+                                                                class="flex items-center gap-2 w-full py-2 px-4 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                                            <svg class="w-5 h-5 text-red-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                                 fill="none" viewBox="0 0 24 24">
+                                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                      d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                                            </svg>
                                                             {{ __('forms.dismissed') }}
                                                         </button>
                                                     </div>
