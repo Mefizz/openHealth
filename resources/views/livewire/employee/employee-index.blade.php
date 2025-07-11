@@ -166,7 +166,6 @@
                             </tr>
                             </thead>
                             <tbody>
-                            @php $positions = $party->employees->merge($party->employeeRequests); @endphp
                             @foreach($party->employees as $position)
                                 <tr class="border-b dark:border-gray-700">
                                     <td class="px-4 py-3 font-medium">{{ $dictionaries['POSITION'][$position->position] ?? $position->position }}</td>
@@ -188,26 +187,30 @@
                                                 <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4z"/></svg>
                                             </button>
                                             <div x-show="open" x-transition class="absolute right-0 z-10 w-48 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600" style="display: none;">
-                                                <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" @click="open = false">
-                                                    @can('view', $position)
-                                                        <li>
-                                                            <a href="{{ route('employee.show', ['legalEntity' => legalEntity()->id, 'id' => $position->id]) }}" ...>Переглянути</a>
-                                                        </li>
-                                                    @endcan
-                                                    @can('update', $position)
-                                                        <li>
-                                                            <a href="{{ route('employee.edit', ['legalEntity' => legalEntity()->id, 'id' => $position->id]) }}" ...>Редагувати</a>
-                                                        </li>
-                                                    @endcan
-                                                </ul>
-                                                @if($position->status?->value === \App\Enums\Status::APPROVED->value)
-                                                    @can('dismiss', $position)
-                                                        <div class="py-1">
-                                                            <button type="button" @click="open = false" wire:click="showModalDismissed({{ $position->id }})" class="block w-full text-right py-2 px-4 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600">
-                                                                {{ __('forms.dismissed') }}
-                                                            </button>
-                                                        </div>
-                                                    @endcan
+                                                @if($position instanceof \App\Models\Employee\Employee)
+                                                    <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" @click="open = false">
+                                                        @can('view', $position)
+                                                            <li>
+                                                                <a href="{{ route('employee.show', ['legalEntity' => legalEntity()->id, 'employee' => $position]) }}" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600">{{ __('forms.view') }}</a>
+                                                            </li>
+                                                        @endcan
+                                                        @can('update', $position)
+                                                            <li>
+                                                                <a href="{{ route('employee.edit', ['legalEntity' => legalEntity()->id, 'employee' => $position]) }}" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600">{{ __('forms.edit') }}</a>
+                                                            </li>
+                                                        @endcan
+                                                    </ul>
+                                                    @if($position->status?->value === \App\Enums\Status::APPROVED->value)
+                                                        @can('dismiss', $position)
+                                                            <div class="py-1">
+                                                                <button type="button" @click="open = false"
+                                                                        wire:click="showModalDismissed({{ $position->id }})"
+                                                                        class="block w-full text-right py-2 px-4 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                                                    {{ __('forms.dismiss') }}
+                                                                </button>
+                                                            </div>
+                                                        @endcan
+                                                    @endif
                                                 @endif
                                             </div>
                                         </div>
@@ -229,45 +232,5 @@
         </div>
     </x-section>
 
-    {{-- MODAL FOR DISMISSAL --}}
-    <div x-data="{ showDismissModal: @entangle('showModal') }">
-        <template x-teleport="body">
-            <div x-show="showDismissModal" style="display: none" @keydown.escape.prevent.stop="showDismissModal = false" role="dialog" aria-modal="true" class="fixed inset-0 z-50 overflow-y-auto">
-                <div x-show="showDismissModal" x-transition.opacity class="fixed inset-0 bg-black/30"></div>
-                <div x-show="showDismissModal" x-transition @click="showDismissModal = false" class="relative flex min-h-screen items-center justify-center p-4">
-                    <div @click.stop x-trap.noscroll.inert="showDismissModal" class="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white p-6 text-center shadow-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
-                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">
-                            <span x-text="$wire.dismissal_employee_name || 'Підтвердження дії'"></span> - звільнення
-                        </h2>
-                        <p class="mt-4 text-sm text-gray-600 whitespace-pre-line dark:text-gray-300" x-text="$wire.dismiss_text"></p>
-                        <div class="mt-6 flex justify-center gap-4">
-                            <button type="button" @click="showDismissModal = false" wire:click="closeModal" class="button-primary">Скасувати</button>
-                            <button type="button" wire:click="dismissed({{ $dismissed_id }})" wire:loading.attr="disabled" class="inline-flex justify-center rounded-lg border border-transparent bg-red-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">Звільнити</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </template>
-    </div>
-
-    {{-- MODAL FOR DELETING A DRAFT --}}
-    <div x-data="{ show: @entangle('showDeleteModal') }">
-        <template x-teleport="body">
-            <div x-show="show" class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" style="display: none;">
-                <div x-show="show" x-transition.opacity class="fixed inset-0 bg-black/30"></div>
-                <div x-show="show" x-transition @click="show = false" class="relative flex min-h-screen items-center justify-center p-4">
-                    <div @click.stop x-trap.noscroll.inert="show" class="relative w-full max-w-md overflow-hidden rounded-lg bg-white p-6 text-center shadow-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-                            Видалення чернетки для <span x-text="$wire.deleteRequestName || 'співробітника'"></span>
-                        </h3>
-                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400" x-text="$wire.deleteRequestText"></p>
-                        <div class="mt-6 flex justify-center gap-4">
-                            <button type="button" @click="show = false" class="button-primary">Скасувати</button>
-                            <button type="button" wire:click="deleteRequest" wire:loading.attr="disabled" class="inline-flex justify-center rounded-lg border border-transparent bg-red-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">Видалити</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </template>
-    </div>
+    @include('livewire.employee.parts.modals.dismissal-modal')
 </div>

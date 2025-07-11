@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Employee;
 
 use App\Traits\FormTrait;
@@ -8,12 +10,12 @@ use App\Livewire\Employee\Forms\EmployeeForm as Form;
 
 abstract class EmployeeComponent extends Component
 {
-    public Form $form;
-    public bool $isPersonalDataLocked = false;
-
     use FormTrait {
         getDictionary as traitGetDictionary;
     }
+    public Form $form;
+    public bool $isPersonalDataLocked = false;
+
 
     public ?array $dictionaryNames = [
         'PHONE_TYPE', 'COUNTRY', 'SETTLEMENT_TYPE', 'SPECIALITY_TYPE', 'DIVISION_TYPE',
@@ -25,8 +27,7 @@ abstract class EmployeeComponent extends Component
     public array $employeeTypePosition = [];
 
     /**
-     * This is the method that child components will call.
-     * It loads all necessary dictionaries for the forms.
+     * This is the single, public method that child components will call.
      */
     public function loadDictionaries(): void
     {
@@ -34,19 +35,21 @@ abstract class EmployeeComponent extends Component
     }
 
     /**
-     * We override the getDictionary method from the trait to add our custom logic.
+     * The protected getDictionary method contains the implementation.
      */
     protected function getDictionary(): void
     {
-        // First, call the original method from the trait
         $this->traitGetDictionary();
 
-        // Then, add your custom filtering logic for roles
         if (legalEntity()) {
             $this->dictionaries['EMPLOYEE_TYPE'] = $this->getDictionariesFields(
                 config('ehealth.legal_entity_type.' . legalEntity()->type . '.roles'),
                 'EMPLOYEE_TYPE'
             );
+            foreach ($this->dictionaries['EMPLOYEE_TYPE'] as $employeeType => $description) {
+                $keys = config("ehealth.employee_type.{$employeeType}.position", []);
+                $this->employeeTypePosition[$employeeType] = $this->getDictionariesFields($keys, 'POSITION');
+            }
         }
     }
 }

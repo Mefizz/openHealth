@@ -5,9 +5,7 @@ namespace App\Livewire\Employee;
 use App\Livewire\Employee\Forms\EmployeeForm;
 use App\Livewire\Employee\Traits\ManagesEmployeeForm;
 use App\Models\Employee\Employee;
-use App\Models\Employee\EmployeeRequest;
 use App\Models\LegalEntity;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\View\View;
 
 class EmployeeEdit extends EmployeeComponent
@@ -16,38 +14,25 @@ class EmployeeEdit extends EmployeeComponent
 
     public EmployeeForm $form;
     public string $pageTitle;
+    public bool $isPersonalDataLocked = true;
 
     /**
-     * The mount method now contains only the logic specific to the "Edit" action.
-     * It receives the crucial LegalEntity parameter.
+     * This mount method is now simple: it only accepts an Employee.
      */
-    public function mount(LegalEntity $legalEntity, int $id): void
+    public function mount(LegalEntity $legalEntity, Employee $employee): void
     {
         $this->loadDictionaries();
 
-        $routeName = request()->route()?->getName();
-
-        $source = match (true) {
-            str_starts_with($routeName, 'employee-request.') => EmployeeRequest::findOrFail($id),
-            str_starts_with($routeName, 'employee.') => Employee::findOrFail($id),
-            default => throw new ModelNotFoundException('Unsupported route for editing.'),
-        };
-
-        if ($source instanceof Employee) {
-            $this->employee = $source;
-        } else {
-            $this->employeeRequest = $source;
-        }
-
-        $this->form->hydrate($source);
+        $this->employee = $employee;
+        $this->form->hydrate($this->employee);
         $this->pageTitle = __('forms.editEmployee');
     }
 
+    /**
+     * This component also uses the shared form template.
+     */
     public function render(): View
     {
-        return view('livewire.employee.employee', [
-            'pageTitle' => $this->pageTitle,
-            'employee' => $this->employee ?? $this->employeeRequest,
-        ]);
+        return view('livewire.employee.employee');
     }
 }

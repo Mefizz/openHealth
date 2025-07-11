@@ -1,22 +1,23 @@
 <?php
 namespace App\Livewire\Employee;
 
-use App\Models\Employee\Employee;
+use App\Models\Employee\EmployeeRequest;
 use App\Models\LegalEntity;
 use Illuminate\View\View;
 
-class EmployeeShow extends EmployeeComponent
+class EmployeeRequestShow extends EmployeeComponent
 {
-    public Employee $position;
+    public EmployeeRequest $position;
     public string $pageTitle;
+    public bool $isReadOnly = true;
 
-    public function mount(LegalEntity $legalEntity, Employee $employee): void
+    public function mount(LegalEntity $legalEntity, EmployeeRequest $employee_request): void
     {
         $this->loadDictionaries();
 
-        $this->position = $employee;
+        $this->position = $employee_request;
         $this->form->hydrate($this->position);
-        $this->pageTitle = __('forms.viewEmployee');
+        $this->pageTitle = __('forms.view_employee_request');
     }
 
     public function render(): View

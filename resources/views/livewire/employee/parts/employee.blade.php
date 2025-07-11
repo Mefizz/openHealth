@@ -62,49 +62,57 @@
         </div>
 
         {{-- Phones Section --}}
-        <div class="space-y-2">
-            <div class="space-y-4">
-                @foreach($form->party['phones'] as $index => $phone)
-                    <div wire:key="phone-{{ $index }}" class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+        <div
+            class="space-y-4"
+            x-data="{ phones: $wire.entangle('form.party.phones') }"
+            x-init="if (!Array.isArray(phones) || phones.length === 0) { phones = [{ type: 'MOBILE', number: '' }] }"
+        >
+            <template x-for="(phone, index) in phones" :key="index">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
 
-                        {{-- Phone Type Select --}}
-                        <div class="form-group">
-                            <select wire:model.defer="form.party.phones.{{$index}}.type" class="input-select @error('form.party.phones.'.$index.'.type') input-error @enderror" required >
-                                <option value="">{{__('forms.type_mobile')}} *</option>
-                                @foreach($this->dictionaries['PHONE_TYPE'] as $key => $phoneType)
-                                    <option value="{{$key}}">{{$phoneType}}</option>
-                                @endforeach
-                            </select>
-                            <label class="label">{{ __('forms.phone_type') }}</label>
-                            @error('form.party.phones.'.$index.'.type') <p class="text-error">{{ $message }}</p> @enderror
-                        </div>
+                    {{-- Phone Type Select --}}
+                    <div class="form-group">
+                        <select x-model="phone.type" class="input-select @error('form.party.phones.*.type') input-error @enderror" required>
+                            <option value="" disabled>{{__('forms.type_mobile')}} *</option>
+                            @foreach($this->dictionaries['PHONE_TYPE'] as $key => $phoneType)
+                                <option value="{{$key}}">{{$phoneType}}</option>
+                            @endforeach
+                        </select>
+                        <label class="label">{{ __('forms.phone_type') }}</label>
+                        @error('form.party.phones.*.type') <p class="text-error">{{ $message }}</p> @enderror
+                    </div>
 
-                        <div class="form-group phone-wrapper">
-                            <input
-                                required
-                                type="tel"
-                                placeholder=" "
-                                class="peer input pl-10 with-leading-icon text-gray-500"
-                                x-model="party.phones[{{$index}}].number"
-                                x-mask="+380999999999"
-                                :id="$id('phone', '_number' + index)"
-                            />
-                            <label for="phoneNumber" class="wrapped-label">{{ __('forms.phone') }}</label>
-                            @error('form.party.phones.'.$index.'.number') <p class="text-error">{{ $message }}</p> @enderror
-                        </div>
+                    {{-- Phone Number Input --}}
+                    <div class="form-group phone-wrapper">
+                        <input
+                            required
+                            type="tel"
+                            placeholder=" "
+                            class="peer input pl-10 with-leading-icon text-gray-500"
+                            x-model="phone.number"
+                            x-mask="+380999999999"
+                        />
+                        <label class="wrapped-label">{{ __('forms.phone') }}</label>
+                        @error('form.party.phones.*.number') <p class="text-error">{{ $message }}</p> @enderror
+                    </div>
 
-                        <button type="button" wire:click="addPhone" class="item-add">
-                            <span>{{__('forms.add_phone')}}</span>
-                        </button>
-
-                        {{-- Remove Button --}}
-                        @if(count($form->party['phones']) > 1 && !$this->lockEmailAndTaxId )
-                            <button type="button" wire:click="removePhone({{ $index }})" class="item-remove text-red-600 hover:text-red-800 justify-self-start">
+                    {{-- Remove Button (only shows if there's more than one phone) --}}
+                    <div class="flex items-center">
+                        <template x-if="phones.length > 1">
+                            <button type="button" @click="phones.splice(index, 1)" class="item-remove text-red-600 hover:text-red-800 justify-self-start">
                                 <span>{{__('forms.remove_phone')}}</span>
                             </button>
-                        @endif
+                        </template>
                     </div>
-                @endforeach
+
+                </div>
+            </template>
+
+            {{-- Add Phone Button --}}
+            <div class="pt-2">
+                <button type="button" @click="phones.push({ type: 'MOBILE', number: '' })" class="item-add">
+                    <span>{{__('forms.add_phone')}}</span>
+                </button>
             </div>
         </div>
 

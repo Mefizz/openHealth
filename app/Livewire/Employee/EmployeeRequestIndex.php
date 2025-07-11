@@ -2,49 +2,41 @@
 
 namespace App\Livewire\Employee;
 
-use AllowDynamicProperties;
 use App\Models\Employee\EmployeeRequest;
 use App\Models\LegalEntity;
 use App\Models\Relations\Party;
-use App\Traits\FormTrait;
-use Illuminate\Support\Collection;
-use Livewire\Component;
-use Livewire\WithPagination;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\Computed;
+use Livewire\WithPagination;
 
-#[AllowDynamicProperties]
-class EmployeeRequestIndex extends Component
+class EmployeeRequestIndex extends EmployeeComponent
 {
-    use FormTrait;
     use WithPagination;
 
-    // --- Component State ---
+    // --- Component State for UI ---
     public string $search = '';
-    public bool $showDeleteModal = false;
+    public string $status = '';
+    public array $filter = [];
 
-    // --- Properties for Delete Draft Modal ---
+    // --- State for Delete Draft Modal ---
+    public bool $showDeleteModal = false;
     public ?int $requestToDeleteId = null;
     public ?string $deleteRequestName = null;
     public string $deleteRequestText = '';
-
-    // --- Properties to prevent Blade errors (from dismissal modal) ---
-    // These are not used here, but the Blade view expects them to exist.
-    public string|bool $showModal    = false;
 
     private LegalEntity $legalEntity;
 
     public function boot(): void
     {
         $this->legalEntity = legalEntity();
+        $this->loadDictionaries();
     }
 
-    public function mount(LegalEntity $legalEntity): void
+    public function updated($property): void
     {
-        //        $this->divisions = $this->legalEntity->divisions()->get();
-        $this->employeeRequest = new Collection();
-        $this->employeeRequestsCacheKey = 'employees_cache_' . $this->legalEntity->id;
-        $this->getDictionary();
+        if (in_array($property, ['search', 'status']) || str_starts_with($property, 'filter.')) {
+            $this->resetPage();
+        }
     }
 
     #[Computed]
@@ -53,10 +45,14 @@ class EmployeeRequestIndex extends Component
         $legalEntityId = $this->legalEntity->id;
 
         $query = Party::query()
-            ->whereHas('employeeRequests', fn($q) => $q->where('legal_entity_id', $legalEntityId))
+            ->whereHas('employeeRequests', function ($q) use ($legalEntityId) {
+                $q->where('legal_entity_id', $legalEntityId);
+            })
             ->with([
                        'phones',
-                       'employeeRequests' => fn($q) => $q->where('legal_entity_id', $legalEntityId)->with('division'),
+                       'employeeRequests' => function ($q) use ($legalEntityId) {
+                           $q->where('legal_entity_id', $legalEntityId)->with('division');
+                       },
                    ]);
 
         if (!empty($this->search)) {
@@ -68,6 +64,12 @@ class EmployeeRequestIndex extends Component
         }
 
         return $query->paginate(10);
+    }
+
+    public function resetFilters(): void
+    {
+        $this->reset(['filter', 'status', 'search']);
+        $this->resetPage();
     }
 
     public function confirmRequestDeletion(int $id): void

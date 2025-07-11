@@ -9,18 +9,18 @@ class EmployeeRequestPolicy
 {
     public function viewAny(User $user): bool
     {
-        // ADMIN and HR have this permission
         return $user->hasPermissionTo('employee_request:read', 'ehealth');
     }
 
     public function view(User $user, EmployeeRequest $employeeRequest): bool
     {
+        // Для запитів використовуємо той самий дозвіл, що і для списку
         return $user->hasPermissionTo('employee_request:read', 'ehealth');
     }
 
     public function create(User $user): bool
     {
-        // ADMIN and HR have this permission
+        // Для створення, редагування та видалення використовуємо один дозвіл
         return $user->hasPermissionTo('employee_request:write', 'ehealth');
     }
 
