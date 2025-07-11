@@ -16,8 +16,8 @@ use App\Livewire\Employee\EmployeeRequestShow;
 use App\Livewire\Patient\PatientComponent;
 use App\Livewire\DiagnosticReport\DiagnosticReportCreate;
 use App\Livewire\Employee\EmployeeShow;
-use App\Livewire\Patient\PatientForm;
 use App\Livewire\License\LicenseShow;
+use App\Livewire\Procedure\ProcedureCreate;
 use App\Models\Employee\Employee;
 use App\Models\Employee\EmployeeRequest;
 use App\Models\LegalEntity;
@@ -157,6 +157,8 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                 Route::get('/{patientId}/encounter/{encounterId}', EncounterEdit::class)->name('encounter.edit');
 
                 Route::get('/{patientId}/diagnostic-report/create', DiagnosticReportCreate::class)->name('diagnostic-report.create');
+
+                Route::get('/{patientId}/procedure/create', ProcedureCreate::class)->name('procedure.create');
             });
         });
     });
