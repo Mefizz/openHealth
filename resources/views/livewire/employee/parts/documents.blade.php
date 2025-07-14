@@ -18,22 +18,22 @@
         <table class="min-w-full table-fixed text-sm text-left text-gray-500">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
             <tr>
-                <th scope="col" class="px-4 py-3 whitespace-nowrap">{{ __('forms.document_type') }}</th>
-                <th scope="col" class="px-4 py-3 whitespace-nowrap">{{ __('forms.number') }} </th>
-                <th scope="col" class="px-4 py-3 whitespace-nowrap">{{ __('forms.issued_by') }}</th>
-                <th scope="col" class="px-4 py-3 whitespace-nowrap">{{ __('forms.issued_at') }}</th>
-                <th scope="col" class="px-4 py-3 whitespace-nowrap">{{ __('forms.actions') }}</th>
+                <th scope="col" class="td-input">{{ __('forms.document_type') }}</th>
+                <th scope="col" class="td-input">{{ __('forms.number') }} </th>
+                <th scope="col" class="td-input">{{ __('forms.issued_by') }}</th>
+                <th scope="col" class="td-input">{{ __('forms.issued_at') }}</th>
+                <th scope="col" class="td-input">{{ __('forms.actions') }}</th>
             </tr>
             </thead>
             <tbody>
             <template x-for="(document, index) in documents" :key="index">
                 <tr>
-                    <td class="px-4 py-3 break-words max-w-[180px]" x-text="dictionary[document.type]"></td>
-                    <td class="px-4 py-3" x-text="document.number"></td>
-                    <td class="px-4 py-3" x-text="document.issuedBy"></td>
-                    <td class="px-4 py-3" x-text="document.issuedAt"></td>
-                    <td class="px-4 py-3">
-                        <div class="[&_[x-show]]:!mt-3 [&_.absolute]:!mt-3 [&_[x-show]]:!left-0 [&_.absolute]:!left-0 [&_[x-show]]:!right-auto [&_.absolute]:!right-auto [&_[x-show]]:!translate-x-7 [&_.absolute]:!translate-x-7">
+                    <td class="td-input="dictionary[document.type]"></td>
+                    <td class="td-input" x-text="document.number"></td>
+                    <td class="td-input" x-text="document.issuedBy"></td>
+                    <td class="td-input" x-text="document.issuedAt"></td>
+                    <td class="td-input">
+                        <div class="[&_[x-show]]:!mt-3 [&_.absolute]:!mt-3 [&_[x-show]]:!left-0 [&_.absolute]:!left-0 [&_[x-show]]:!left-auto [&_.absolute]:!left-auto [&_[x-show]]:!-translate-x-full [&_.absolute]:!-translate-x-full">
                             <x-dropdown-button
                                 :editAction="'openModal = true; item = index; modalDocument = new Doc(document); newDocument = false; close($refs.button)'"
                                 :deleteAction="'documents.splice(index, 1); close($refs.button)'"
