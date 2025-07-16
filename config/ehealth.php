@@ -935,4 +935,9 @@ return [
             'person_verification:write',
         ]
     ],
+
+    'emailers' => [
+        'credentialsQueueTimeout' => 60,
+        'failCredentialsTries' => 3
+    ]
 ];

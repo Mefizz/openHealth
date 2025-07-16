@@ -16,10 +16,9 @@ use Livewire\WithFileUploads;
 use App\Traits\AddressSearch;
 use App\Livewire\Actions\Logout;
 use App\Models\Employee\Employee;
+use App\Events\LegalEntityCreate;
 use Illuminate\Support\Facades\DB;
-use App\Mail\OwnerCredentialsMail;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 use App\Classes\Cipher\Traits\Cipher;
 use App\Classes\Cipher\Api\CipherApi;
@@ -741,32 +740,21 @@ abstract class LegalEntity extends Component
         $authenticatedUser = Auth::user();
 
         // Retrieve the email address of the legal entity owner from the form or set it to null
-        $email = $this->legalEntityForm->owner['email'] ?? null;
+        $ownerEmail = $this->legalEntityForm->owner['email'] ?? null;
 
         // Generate a random password
         $password = Str::random(10);
 
         // Check if a user with the provided email already exists
-        $user = User::where('email', $email)->first();
-
-        // If the authenticated user claim self as the owner of the Legal Entity, use them as the user
-        $isOwner = isset($authenticatedUser->email) && strtolower($authenticatedUser->email) === $email;
-
-        if ($isOwner) {
-            // If the authenticated user is the LegalEntity owner, use them as the user
-            $user = $authenticatedUser;
-        } elseif (!$user) {
-            // If no user exists with that email, create a new user (new owner)
-            $user = User::create([
-                'email'    => $email,
+        $owner = User::where('email', $ownerEmail)->first() ?? User::create([
+                'email'    => $ownerEmail,
                 'password' => Hash::make($password),
-            ]);
-        }
+            ]);;
 
         try{
-            $user->save();
+            $owner->save();
 
-            $user->refresh();
+            $owner->refresh();
         } catch (Exception $e) {
             $this->dispatchErrorMessage(__('Сталася помилка під час обробки запиту'), ['error' => $e->getMessage()]);
 
@@ -776,21 +764,18 @@ abstract class LegalEntity extends Component
         auth()->shouldUse('web');
 
         // Assign the 'OWNER' role to the user authenticated via web guad
-        $user->assignRole('OWNER');
+        $owner->assignRole('OWNER');
 
         auth()->shouldUse('ehealth');
 
         // Assign the 'OWNER' role to the user authenticaed via ehealth guard
-        $user->assignRole('OWNER');
+        $owner->assignRole('OWNER');
 
-        if (!$isOwner) {
-            event(new Registered($user));
+        // Send credentials and email verification link
+        event(new LegalEntityCreate($authenticatedUser, $owner, $password));
 
-            // Send an email with the owner credentials to the user
-            Mail::to($user->email)->send(new OwnerCredentialsMail($user->email, $password));
-            Mail::to($authenticatedUser->email)->send(new OwnerCredentialsMail( '', '', __('Нового користувача зареєстровано в системі. На вказану адресу ' . $user->email . ' надіслано дані для входу в систему')));
-        }
+        Log::info("LegalEntity: New OWNER has been successfully registered! User credentials was sended to the {$owner->email} address");
 
-        return $user;
+        return $owner;
     }
 }
