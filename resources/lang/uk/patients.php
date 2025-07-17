@@ -234,5 +234,6 @@ return [
     // Clinical impressions
     'clinical_impression' => 'Клінічна оцінка',
     'set_of_rule_engines' => 'Набір механізмів правил',
-    'previous_clinical_impression' => 'Попередня клінічна оцінка'
+    'previous_clinical_impression' => 'Попередня клінічна оцінка',
+    'appropriate_patient_assessment' => 'Відповідна оцінка стану пацієнта'
 ];

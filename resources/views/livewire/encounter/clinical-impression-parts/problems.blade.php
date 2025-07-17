@@ -1,18 +1,18 @@
 @use('Carbon\CarbonImmutable')
 
 <div class="relative"> {{-- This required for table overflow scrolling --}}
-    <fieldset class="fieldset !mb-0"
-              {{-- Binding Previous to Alpine, it will be re-used in the modal.
+    <fieldset class="fieldset"
+              {{-- Binding Problem to Alpine, it will be re-used in the modal.
                 Note that it's necessary for modal to work properly --}}
               x-data="{
                   openModal: false,
-                  modalPrevious: new Previous(),
-                  newPrevious: false,
+                  modalProblem: new Problem(),
+                  newProblem: false,
                   item: 0
               }"
     >
         <legend class="legend">
-            <h2>{{ __('patients.previous_clinical_impression') }}</h2>
+            <h2>{{ __('patients.appropriate_patient_assessment') }}</h2>
         </legend>
 
         <table class="table-input w-inherit">
@@ -24,13 +24,13 @@
             </tr>
             </thead>
             <tbody>
-            <template x-for="(previous, index) in modalClinicalImpression.previouses">
+            <template x-for="(problem, index) in modalClinicalImpression.problems">
                 <tr>
                     <td class="td-input"
-                        x-text="new Date(previous.inserted_at).toLocaleDateString('uk-UA')"
+                        x-text="new Date(problem.inserted_at).toLocaleDateString('uk-UA')"
                     ></td>
                     <td class="td-input"
-                        x-text="`${ previous.code.coding[0].code } - ${ dictionary[previous.code.coding[0].code] }`"
+                        x-text="`${ problem.code.coding[0].code } - ${ $wire.dictionaries['eHealth/ICPC2/condition_codes'][problem.code.coding[0].code] }`"
                     ></td>
                     <td class="td-input">
                         {{-- That all that is needed for the dropdown --}}
@@ -89,9 +89,9 @@
                                     <button @click="
                                                 openModal = true; {{-- Open the modal --}}
                                                 item = index; {{-- Identify the item we are corrently editing --}}
-                                                {{-- Replace the previous previous with the current, don't assign object directly (modalPrevious = previous) to avoid reactiveness --}}
-                                                modalPrevious = new Previous(previous);
-                                                newPrevious = false; {{-- This previous is already created --}}
+                                                {{-- Replace the previous problem with the current, don't assign object directly (modalProblem = problem) to avoid reactiveness --}}
+                                                modalProblem = new Problem(problem);
+                                                newProblem = false; {{-- This problem is already created --}}
                                             "
                                             @click.prevent
                                             class="dropdown-button"
@@ -99,7 +99,7 @@
                                         {{ __('forms.edit') }}
                                     </button>
 
-                                    <button @click.prevent="modalClinicalImpression.previouses.splice(index, 1); close($refs.button);"
+                                    <button @click.prevent="modalClinicalImpression.problems.splice(index, 1); close($refs.button);"
                                             class="dropdown-button dropdown-delete"
                                     >
                                         {{ __('forms.delete') }}
@@ -117,8 +117,8 @@
             {{-- Button to trigger the modal --}}
             <button @click.prevent="
                         openModal = true; {{-- Open the Modal --}}
-                        newPrevious = true; {{-- We are adding a new previous --}}
-                        modalPrevious = new Previous(); {{-- Replace the data of the previous previous with a new one--}}
+                        newProblem = true; {{-- We are adding a new problem --}}
+                        modalProblem = new Problem(); {{-- Replace the data of the previous problem with a new one--}}
                     "
                     class="item-add my-5"
             >
@@ -151,10 +151,10 @@
                              class="modal-content h-fit w-full lg:max-w-4xl"
                         >
                             {{-- Title --}}
-                            <h3 class="modal-header" :id="$id('modal-title')">{{ __('patients.clinical_impression') }}</h3>
+                            <h3 class="modal-header" :id="$id('modal-title')">{{ __('forms.add') }}</h3>
 
                             {{-- Content --}}
-                            <form x-data="{ selectedProcedureReasonIds: [] }">
+                            <form x-data="{ selectedProblemIds: [] }">
                                 {{-- Episode info in which the search happens --}}
                                 <div class="form-row-modal" x-data="{ selectedEpisodeId: '' }">
                                     <div class="form-group group">
@@ -173,7 +173,7 @@
 
                                     {{-- Search button --}}
                                     <div>
-                                        <button @click.prevent="$wire.searchClinicalImpressions(selectedEpisodeId)"
+                                        <button @click.prevent="$wire.searchProblems(selectedEpisodeId)"
                                                 class="flex items-center gap-2 button-primary"
                                                 :disabled="!selectedEpisodeId"
                                         >
@@ -188,43 +188,44 @@
                                 </div>
 
                                 {{-- A table that shows the results of the found data --}}
-                                <template x-if="$wire.clinicalImpressions.length > 0">
+                                <template x-if="$wire.problems.length > 0">
                                     <div class="table-container">
                                         <div class="overflow-visible">
                                             <table class="table-base">
                                                 <thead class="table-header">
                                                 <tr>
                                                     <th scope="col" class="th-input">{{ __('patients.date') }}</th>
-                                                    <th scope="col" class="th-input">{{ __('patients.code_and_name') }}</th>
+                                                    <th scope="col"
+                                                        class="th-input">{{ __('patients.code_and_name') }}</th>
                                                     <th scope="col" class="th-input">{{ __('forms.action') }}</th>
                                                 </tr>
                                                 </thead>
                                                 <tbody>
-                                                <template x-for="clinicalImpression in $wire.clinicalImpressions"
-                                                          :key="clinicalImpression.id"
+                                                <template x-for="problem in $wire.problems"
+                                                          :key="problem.id"
                                                 >
                                                     <tr class="border-b dark:border-gray-700">
                                                         <th scope="row" class="table-cell-primary">
                                                             <div class="text-base"
-                                                                 x-text="new Date(clinicalImpression.inserted_at).toLocaleDateString('uk-UA')"
+                                                                 x-text="new Date(problem.inserted_at).toLocaleDateString('uk-UA')"
                                                             ></div>
                                                         </th>
                                                         <td class="td-input"
-                                                            x-text="`${ previous.code.coding[0].code } - ${ dictionary[previous.code.coding[0].code] }`"
+                                                            x-text="`${ problem.code.coding[0].code } - ${ $wire.dictionaries['eHealth/ICPC2/condition_codes'][problem.code.coding[0].code] }`"
                                                         ></td>
                                                         <td class="td-input">
                                                             <button @click.prevent="
-                                                                        const id = clinicalImpression.id;
-                                                                        const index = selectedProcedureReasonIds.indexOf(id);
+                                                                        const id = problem.id;
+                                                                        const index = selectedProblemIds.indexOf(id);
 
                                                                         if (index === -1) {
-                                                                            selectedProcedureReasonIds.push(id);
+                                                                            selectedProblemIds.push(id);
                                                                         } else {
-                                                                            selectedProcedureReasonIds.splice(index, 1); // toggle off
+                                                                            selectedProblemIds.splice(index, 1); // toggle off
                                                                         }
                                                                     "
                                                                     class="button-primary w-28"
-                                                                    x-text="selectedProcedureReasonIds.includes(clinicalImpression.id)
+                                                                    x-text="selectedProblemIds.includes(problem.id)
                                                                         ? '{{ __('patients.added') }}'
                                                                         : '{{ __('forms.add') }}'"
                                                             >
@@ -238,7 +239,7 @@
                                     </div>
                                 </template>
 
-                                <template x-if="$wire.clinicalImpressions.length <= 0">
+                                <template x-if="$wire.problems.length <= 0">
                                     <p class="default-p">{{ __('forms.nothing_found') }}</p>
                                 </template>
 
@@ -255,8 +256,8 @@
                                     <button @click.prevent
                                             @click="
                                                 {{-- Return only the needed data --}}
-                                                modalClinicalImpression.previouses = $wire.clinicalImpressions
-                                                    .filter(reason => selectedProcedureReasonIds.includes(reason.id))
+                                                modalClinicalImpression.problems = $wire.problems
+                                                    .filter(reason => selectedProblemIds.includes(reason.id))
                                                     .map(reason => ({
                                                         id: reason.id,
                                                         inserted_at: reason.inserted_at,
@@ -281,9 +282,9 @@
 
 <script>
     /**
-     * Representation of the user's personal Previous
+     * Representation of the user's personal Problems
      */
-    class Previous {
+    class Problem {
         constructor(obj = null) {
             if (obj) {
                 Object.assign(this, JSON.parse(JSON.stringify(obj)));
