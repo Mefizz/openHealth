@@ -83,7 +83,7 @@
                     >
                         <div @click.stop
                              x-trap.noscroll.inert="openModal"
-                             class="modal-content h-fit w-full max-w-2xl rounded-2xl shadow-lg bg-white"
+                             class="modal-content h-fit w-full max-w-6xl rounded-2xl shadow-lg bg-white"
                         >
 
                             {{-- Title --}}
@@ -95,9 +95,7 @@
                             <form>
                                 <div class="form-row-modal">
                                     <div>
-                                        <label for="documentType"
-                                               class="label-modal">{{__('forms.document_type')}}
-                                        </label>
+                                        <label for="documentType" class="label-modal">{{__('forms.document_type')}} *</label>
                                         <select x-model="modalDocument.type" id="documentType" class="input-modal"
                                                 type="text" required>
                                             <option value="">{{__('forms.selectDocumentType')}}</option>
@@ -105,17 +103,16 @@
                                                 <option value="{{$typeValue}}">{{$typeDescription}}</option>
                                             @endforeach
                                         </select>
-                                        <p class="text-error text-xs"
-                                           x-show="!Object.keys(dictionary).includes(modalDocument.type) || !modalDocument.type.trim().length">{{__('forms.field_empty')}}</p>
+                                        {{--<p class="text-error text-xs"
+                                           x-show="!Object.keys(dictionary).includes(modalDocument.type) || !modalDocument.type.trim().length">{{__('forms.field_empty')}}</p>--}}
                                     </div>
 
                                     <div>
-                                        <label for="documentNumber"
-                                               class="label-modal">{{__('forms.document_number')}}</label>
+                                        <label for="documentNumber" class="label-modal">{{__('forms.document_number')}} *</label>
                                         <input x-model="modalDocument.number" type="text" name="documentNumber"
                                                id="documentNumber" class="input-modal" required>
-                                        <p class="text-error text-xs"
-                                           x-show="!modalDocument.number.trim().length > 0">{{__('forms.field_empty')}}</p>
+                                        {{--<p class="text-error text-xs"
+                                           x-show="!modalDocument.number.trim().length > 0">{{__('forms.field_empty')}}</p>--}}
                                     </div>
 
                                     <div>
@@ -131,7 +128,7 @@
                                                autocomplete="off" required>
                                     </div>
                                 </div>
-
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ __('forms.form_required_note') }}</p>
                                 <div class="mt-6 flex justify-between space-x-2">
                                     <button type="button"
                                             @click="openModal = false"

@@ -185,6 +185,8 @@ return [
     'addScienceDegree' => 'Додати науковий ступінь',
     'add_document' => 'Додати документ',
     'close' => 'Закрити',
+    'workingExperience_hint' => 'Вкажіть досвід у роках',
+    'form_required_note' => '* Поля, позначені зірочкою, є обов’язковими для заповнення.',
     'cancel' => 'Скасувати',
     'nameOfInstitution' => 'Назва закладу',
     'certificate' => 'Сертифікат',

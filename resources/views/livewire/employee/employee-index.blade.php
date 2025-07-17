@@ -59,7 +59,7 @@
                     </div>
                 </div>
 
-                <div x-show="showFilter" x-transition class="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700" style="display: none;">
+                <div x-show="showFilter" x-transition class="pt-4 mt-4">
                     <div class="form-row-4">
                         <div class="form-group phone-wrapper">
                             <input wire:model.live.debounce.300ms="filter.phone"

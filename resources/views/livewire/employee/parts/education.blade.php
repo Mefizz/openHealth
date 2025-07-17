@@ -84,7 +84,7 @@
                     >
                         <div @click.stop
                              x-trap.noscroll.inert="openModal"
-                             class="modal-content h-fit w-full max-w-2xl rounded-2xl shadow-lg bg-white"
+                             class="modal-content h-fit w-full max-w-6xl rounded-2xl shadow-lg bg-white"
                         >
 
                             <h3 class="modal-header" :id="$id('modal-title')">
@@ -94,8 +94,7 @@
                             <form>
                                 <div class="form-row-modal">
                                     <div>
-                                        <label for="educationCountry"
-                                               class="label-modal">{{ __('forms.country') }}</label>
+                                        <label for="educationCountry" class="label-modal">{{ __('forms.country') }} *</label>
                                         <select x-model="modalEducation.country" id="educationCountry"
                                                 class="input-modal" required>
                                             @foreach($this->dictionaries['COUNTRY'] as $countryValue => $countryDescription)
@@ -104,54 +103,48 @@
                                         </select>
                                     </div>
                                     <div>
-                                        <label for="educationCity"
-                                               class="label-modal">{{ __('forms.city') }}</label>
+                                        <label for="educationCity" class="label-modal">{{ __('forms.city') }} *</label>
                                         <input x-model="modalEducation.city" type="text" id="educationCity"
                                                class="input-modal" required>
                                     </div>
                                     <div>
-                                        <label for="educationInstitutionName"
-                                               class="label-modal">{{ __('forms.institutionName') }}</label>
+                                        <label for="educationInstitutionName" class="label-modal">{{ __('forms.institutionName') }} *</label>
                                         <input x-model="modalEducation.institutionName" type="text"
                                                id="educationInstitutionName" class="input-modal" required>
                                     </div>
                                     <div>
-                                        <label for="educationSpeciality"
-                                               class="label-modal">{{ __('forms.speciality') }}</label>
+                                        <label for="educationSpeciality" class="label-modal">{{ __('forms.speciality') }} *</label>
                                         <select x-model="modalEducation.speciality" id="educationSpeciality"
                                                 class="input-modal" required>
-                                            <option value="">{{__('forms.selectSpeciality')}}</option> {{-- ДОДАНО --}}
+                                            <option value="">{{__('forms.selectSpeciality')}}</option>
                                             @foreach($this->dictionaries['SPECIALITY_TYPE'] as $specValue => $specDescription)
                                                 <option value="{{ $specValue }}">{{ $specDescription }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div>
-                                        <label for="educationDegree"
-                                               class="label-modal">{{ __('forms.degree') }}</label>
+                                        <label for="educationDegree" class="label-modal">{{ __('forms.degree') }} *</label>
                                         <select x-model="modalEducation.degree" id="educationDegree"
                                                 class="input-modal" required>
-                                            <option value="">{{__('forms.selectLevel')}}</option> {{-- ДОДАНО --}}
+                                            <option value="">{{__('forms.selectLevel')}}</option>
                                             @foreach($this->dictionaries['EDUCATION_DEGREE'] as $degreeValue => $degreeDescription)
                                                 <option value="{{ $degreeValue }}">{{ $degreeDescription }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div>
-                                        <label for="educationIssuedDate"
-                                               class="label-modal">{{ __('forms.issuedDate') }}</label>
+                                        <label for="educationIssuedDate" class="label-modal">{{ __('forms.issuedDate') }} *</label>
                                         <input x-model="modalEducation.issuedDate" type="date"
                                                id="educationIssuedDate" class="input-modal datepicker-input"
                                                autocomplete="off" required>
                                     </div>
                                     <div>
-                                        <label for="educationDiplomaNumber"
-                                               class="label-modal">{{ __('forms.diplomaNumber') }}</label>
+                                        <label for="educationDiplomaNumber" class="label-modal">{{ __('forms.diplomaNumber') }} *</label>
                                         <input x-model="modalEducation.diplomaNumber" type="text"
                                                id="educationDiplomaNumber" class="input-modal">
                                     </div>
                                 </div>
-
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ __('forms.form_required_note') }}</p>
                                 <div class="mt-6 flex justify-between space-x-2">
                                     <button type="button"
                                             @click="openModal = false"

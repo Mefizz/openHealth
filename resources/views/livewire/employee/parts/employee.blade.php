@@ -34,7 +34,7 @@
                 @enderror
             </div>
         </div>
-        <div class="form-row-3">
+        <div class="form-row-3 items-start">
             <div class="form-group datepicker-wrapper relative w-full">
                 <input wire:model="form.party.birthDate" type="text" name="birthDate" id="birthDate" class="peer input pl-10 appearance-none datepicker-input text-gray-500 dark:text-gray-400" placeholder=" " required datepicker-autohide datepicker-format="yyyy-mm-dd" datepicker-button="false"/>
                 <label for="birthDate" class="wrapped-label">{{__('forms.birth_date')}}</label>
@@ -43,6 +43,7 @@
             <div class="form-group">
                 <input wire:model="form.party.workingExperience" type="number" name="workingExperience" id="workingExperience" class="peer input text-gray-500" placeholder=" " required />
                 <label for="workingExperience" class="label">{{__('forms.workingExperience')}}</label>
+                <p class="text-xs text-blue-500 mt-1">{{ __('forms.workingExperience_hint') }}</p>
                 @error('form.party.workingExperience') <p class="text-error">{{$message}}</p> @enderror
             </div>
         </div>
@@ -122,7 +123,7 @@
                 <textarea
                     id="aboutMyself"
                     wire:model="form.party.aboutMyself"
-                    class="textarea !text-gray-500 dark:!text-gray-400"
+                    class="textarea !text-gray-500 dark:!text-gray-400 mt-1"
                     placeholder="{{ __('forms.comment') }}">
                 </textarea>
                 @error('form.party.aboutMyself') <p class="text-error">{{ $message }}</p> @enderror

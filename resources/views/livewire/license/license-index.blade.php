@@ -3,19 +3,18 @@
         <div class="table-nav">
             <h1 class="text-xl font-bold text-gray-900 dark:text-white mt-6">{{ __('Ліцензії') }}</h1>
             <a href="{{ route('license.create', [legalEntity()]) }}" class="default-button">
-                + Нова ліцензія
+                 Нова ліцензія
             </a>
         </div>
-        <div class="table-container bg-white dark:bg-800 shadow-md border border-gray-200 dark:border-gray-700 rounded-lg">
-            <table class="table-base">
-                <thead class="table-header">
-                <tr class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <th class="th-input text-gray-900 dark:text-gray-100">Тип ліцензії</th>
-                    <th class="th-input text-gray-900 dark:text-gray-100">Дата початку дії</th>
-                    <th class="th-input text-gray-900 dark:text-gray-100">Дата завершення дії</th>
-                    <th class="th-input text-gray-900 dark:text-gray-100">Напрям діяльності</th>
-                    <th class="th-input text-gray-900 dark:text-gray-100">Вид ліцензії</th>
-                    <th class="th-input text-gray-900 dark:text-gray-100">Дія</th>
+            <table class="table-input w-inherit">
+                <thead class="thead-input">
+                <tr>
+                    <th scope="col" class="th-input">Тип ліцензії</th>
+                    <th scope="col" class="th-input">Дата початку дії</th>
+                    <th scope="col" class="th-input">Дата завершення дії</th>
+                    <th scope="col" class="th-input">Напрям діяльності</th>
+                    <th scope="col" class="th-input">Вид ліцензії</th>
+                    <th scope="col" class="th-input">Дія</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -86,4 +85,3 @@
             <x-pagination :pagination="$licensesPagination" />
         </div>
     </div>
-</div>
