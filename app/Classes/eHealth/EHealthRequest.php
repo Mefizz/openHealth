@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace App\Classes\eHealth;
 
+use Closure;
 use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Http\Client\Response;
 use Illuminate\Support\HigherOrderTapProxy;
 
 abstract class EHealthRequest extends PendingRequest
 {
+    protected ?Closure $validator = null;
+
     public function __construct(?Factory $factory = null, $middleware = [])
     {
         parent::__construct($factory, $middleware);
@@ -30,12 +32,14 @@ abstract class EHealthRequest extends PendingRequest
     }
 
     /**
-     * Override this method from the parent class to get validated data from the response.
-     * @return array validated data
+     * Set a Callable validator for the response, which accepts an EHealthResponse instance as an argument.
+     * See EHealthResponse::validate().
+     *
+     * @param Callable $validator
      */
-    public function validate(): array
+    protected function setValidator(Callable $validator): void
     {
-        return [];
+        $this->validator = $validator;
     }
 
     /**
@@ -43,7 +47,8 @@ abstract class EHealthRequest extends PendingRequest
      */
     protected function newResponse($response): HigherOrderTapProxy|EHealthResponse
     {
-        return tap(new EHealthResponse($response), function (EHealthResponse $laravelResponse) {
+        return tap(new EHealthResponse($response, $this->validator), function (EHealthResponse $laravelResponse) {
+
             if ($this->truncateExceptionsAt === null) {
                 return;
             }

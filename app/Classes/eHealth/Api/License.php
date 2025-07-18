@@ -15,8 +15,9 @@ class License extends Request
 {
     public const URL = '/api/licenses';
 
-    public function get(string $url = self::URL, $query = null): PromiseInterface|EHealthResponse
+    public function getMany(string $url = self::URL, $query = null): PromiseInterface|EHealthResponse
     {
+        $this->setValidator($this->validateMany(...));
         return parent::get($url, $query);
     }
 
@@ -46,10 +47,10 @@ class License extends Request
      * validate get licenses input,
      * see: https://esoz.docs.apiary.io/#reference/administration/get-licenses
      */
-    protected static function validateAll(array $result): array
+    protected function validateMany(EHealthResponse $response): array
     {
         $replaced = [];
-        foreach ($result as $data) {
+        foreach ($response->getData() as $data) {
             $replaced[] = self::replaceEHealthPropNames($data);
         }
 

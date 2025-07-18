@@ -170,8 +170,8 @@ class LicenseIndex extends Component
     public function sync()
     {
 
-        $licences = EHealth::license()->get();
-        dd($licences);
+        $licences = EHealth::license()->getMany();
+        dd($licences->validate());
         $this->flashGeneralError();
 
         foreach ($licences as $number => $license) {
