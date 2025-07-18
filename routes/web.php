@@ -16,8 +16,12 @@ use App\Livewire\Patient\PatientComponent;
 use App\Livewire\DiagnosticReport\DiagnosticReportCreate;
 use App\Livewire\Employee\EmployeeShow;
 use App\Livewire\Procedure\ProcedureCreate;
+use App\Models\Employee\Employee;
+use App\Models\Employee\EmployeeRequest;
 use App\Models\LegalEntity;
 use App\Models\License;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Patient\PatientIndex;
 use App\Livewire\Contract\ContractForm;
@@ -104,12 +108,28 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
             Route::get('/{division}/healthcare-service', HealthcareServiceForm::class)->name('healthcare_service.index');
         });
 
-        Route::prefix('employees')->name('employee.')->group(function () {
-            Route::get('/', EmployeeIndex::class)->name('index');
-            Route::get('/create', EmployeeCreate::class)->name('create');
-            Route::get('/party/{party}/add-position', EmployeePositionAdd::class)->name('add-position');
-            Route::get('/{id}/{type?}', EmployeeShow::class)->name('show');
-            Route::get('/{id}/{type?}/edit', EmployeeEdit::class)->name('edit');
+        Route::prefix('employees')->name('employee.')->middleware('auth')->group(function () {
+
+            // The main unified list for both employees and requests
+            Route::get('/', EmployeeIndex::class)
+                ->name('index')
+                ->middleware('can:viewAny,' . Employee::class);
+
+            // Route to create a new EmployeeRequest from scratch
+            Route::get('/create', EmployeeCreate::class)
+                ->name('create')
+                ->middleware('can:create,' . EmployeeRequest::class);
+
+            // Route to add a new position (creates an EmployeeRequest)
+            Route::get('/party/{party}/add-position', EmployeePositionAdd::class)
+                ->name('add-position')
+                ->middleware('can:create,' . EmployeeRequest::class);
+
+            Route::get('/{id}/{type?}', EmployeeShow::class)
+                ->name('show');
+
+            Route::get('/{id}/{type?}/edit', EmployeeEdit::class)
+                ->name('edit');
         });
 
         Route::prefix('contract')->group(function () {
@@ -134,7 +154,6 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                 })->name('license.view');
             });
         });
-
 
         Route::prefix('declaration')->group(function () {
             Route::get('/', DeclarationIndex::class)->name('declaration.index');
