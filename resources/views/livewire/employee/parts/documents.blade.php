@@ -15,8 +15,8 @@
             <h2>{{__('forms.document')}}</h2>
         </legend>
 
-        <table class="min-w-full table-fixed text-sm text-left text-gray-500">
-            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+        <table class="table-input w-inherit">
+            <thead class="thead-input">
             <tr>
                 <th scope="col" class="td-input">{{ __('forms.document_type') }}</th>
                 <th scope="col" class="td-input">{{ __('forms.number') }} </th>
@@ -33,11 +33,52 @@
                     <td class="td-input" x-text="document.issuedBy"></td>
                     <td class="td-input" x-text="document.issuedAt"></td>
                     <td class="td-input">
-                        <div class="[&_[x-show]]:!mt-3 [&_.absolute]:!mt-3 [&_[x-show]]:!left-0 [&_.absolute]:!left-0 [&_[x-show]]:!left-auto [&_.absolute]:!left-auto [&_[x-show]]:!-translate-x-full [&_.absolute]:!-translate-x-full">
-                            <x-dropdown-button
-                                :editAction="'openModal = true; item = index; modalDocument = new Doc(document); newDocument = false; close($refs.button)'"
-                                :deleteAction="'documents.splice(index, 1); close($refs.button)'"
-                            />
+
+                        <div x-data="{
+                                 openDropdown: false,
+                                 toggle() {
+                                     if (this.openDropdown) {
+                                         return this.close()
+                                     }
+
+                                     this.$refs.button.focus()
+
+                                     this.openDropdown = true
+                                 },
+                                 close(focusAfter) {
+                                     if (!this.openDropdown) return
+
+                                     this.openDropdown = false
+
+                                     focusAfter &amp;&amp; focusAfter.focus()
+                                 }
+                             }" @keydown.escape.prevent.stop="close($refs.button)" @focusin.window="! $refs.panel.contains($event.target) &amp;&amp; close()" x-id="['dropdown-button']" class="relative" bis_skin_checked="1">
+
+                            <button x-ref="button" @click="toggle()" :aria-expanded="openDropdown" :aria-controls="$id('dropdown-button')" type="button" class="cursor-pointer" aria-expanded="false" aria-controls="dropdown-button-1">
+                                <svg class="w-6 h-6 text-gray-800 dark:text-gray-200 svg-hover-action" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="square" stroke-linejoin="round" stroke-width="2" d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"></path>
+                                </svg>
+                            </button>
+
+
+                            <div class="absolute" style="left: -120%" bis_skin_checked="1">
+                                <div x-ref="panel" x-show="openDropdown" x-transition.origin.top.left="" @click.outside="close($refs.button)" :id="$id('dropdown-button')" class="dropdown-panel relative" style="left: -50%; display: none;" id="dropdown-button-1" bis_skin_checked="1">
+
+                                    <button @click.prevent="
+                                                    openModal = true;
+                                                    item = index;
+
+                                                    modalDocument = new Document(document);
+                                                    newDocument = false;
+                                                " class="dropdown-button">
+                                        Редагувати
+                                    </button>
+
+                                    <button @click.prevent="documents.splice(index, 1); close($refs.button);" class="dropdown-button dropdown-delete">
+                                        Видалити
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </td>
                 </tr>

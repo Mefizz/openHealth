@@ -187,25 +187,25 @@
                     </div>
 
                     <div class="flow-root mt-4">
-                        <table class="w-full text-sm text-left">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <table class="table-input w-inherit">
+                            <thead class="thead-input">
                             <tr>
-                                <th class="px-4 py-3">{{ __('forms.position') }}</th>
-                                <th class="px-4 py-3">{{ __('forms.role') }}</th>
-                                <th class="px-4 py-3">{{ __('forms.division') }}</th>
-                                <th class="px-4 py-3">{{ __('forms.status') }}</th>
-                                <th class="px-4 py-3 text-right">{{ __('forms.actions') }}</th>
+                                <th scope="col" class="th-input">{{ __('forms.position') }}</th>
+                                <th scope="col" class="th-input">{{ __('forms.role') }}</th>
+                                <th scope="col" class="th-input">{{ __('forms.division') }}</th>
+                                <th scope="col" class="th-input">{{ __('forms.status') }}</th>
+                                <th scope="col" class="th-input">{{ __('forms.actions') }}</th>
                             </tr>
                             </thead>
                             <tbody>
                             @php $positions = $party->employees->merge($party->employeeRequests); @endphp
                             @foreach($positions as $position)
-                                <tr class="border-b-4 border-gray-200 dark:border-gray-700">
-                                    <td class="px-4 py-3  text-gray-500 dark:text-gray-400 font-medium">{{ $dictionaries['POSITION'][$position->position] ?? $position->position }}</td>
-                                    <td class="px-4 py-3  text-gray-500 dark:text-gray-400">{{ $dictionaries['EMPLOYEE_TYPE'][$position->employee_type] ?? $position->employee_type }}</td>
-                                    <td class="px-4 py-3  text-gray-500 dark:text-gray-400">{{ $position->division->name ?? 'N/A' }}</td>
+                                <tr>
+                                    <td class="td-input">{{ $dictionaries['POSITION'][$position->position] ?? $position->position }}</td>
+                                    <td class="td-input">{{ $dictionaries['EMPLOYEE_TYPE'][$position->employee_type] ?? $position->employee_type }}</td>
+                                    <td class="td-input">{{ $position->division->name ?? 'N/A' }}</td>
 
-                                    <td class="px-4 py-3">
+                                    <td class="td-input">
                                         @switch($position->status)
                                             @case(\App\Enums\Status::APPROVED)
                                                 <span class="badge-green">Активний</span>
@@ -221,10 +221,10 @@
                                         @endswitch
                                     </td>
 
-                                    <td class="px-4 py-3 text-right">
+                                    <td class="td-input">
                                         <div class="relative" x-data="{ open: false }" @click.outside="open = false">
                                             <button @click="open = !open" class="inline-flex items-center p-2 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-white" type="button">
-                                                <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                                <svg class="w-6 h-6 text-gray-800 dark:text-white svg-hover-action" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                                     <path stroke="currentColor" stroke-linecap="square" stroke-linejoin="round" stroke-width="2" d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"/>
                                                 </svg>
                                             </button>
