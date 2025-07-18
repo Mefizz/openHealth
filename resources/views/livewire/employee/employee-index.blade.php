@@ -221,7 +221,7 @@
                                                 <span class="badge-red">Звільнений</span>
                                             @endif
                                         @else
-                                            <span class="badge-red">Чернетка</span>
+                                            <span class="badge-blue">Чернетка</span>
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 text-right">
