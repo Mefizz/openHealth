@@ -8,7 +8,7 @@
     </x-section-navigation>
 
     <section class="section-form" x-data="{ isDoctor: @js($this->form->employeeType === 'DOCTOR'), showSignatureBlock: $wire.entangle('showSignatureBlock') }">
-        <form wire:submit.prevent="save" class="form space-y-8">
+            <form wire:submit.prevent="save" class="form space-y-8 max-w-4xl mx-auto w-full">
 
             {{-- 1. Personal data is included but will be disabled by the component's logic --}}
             @include('livewire.employee.parts.employee')

@@ -177,7 +177,7 @@
 
                                     {{-- Search button --}}
                                     <div>
-                                        <button @click.prevent="$wire.searchReasons(selectedEpisodeId)"
+                                        <button @click.prevent="$wire.searchConditionsAndObservations(selectedEpisodeId)"
                                                 class="flex items-center gap-2 button-primary"
                                                 :disabled="!selectedEpisodeId"
                                         >
@@ -192,7 +192,7 @@
                                 </div>
 
                                 {{-- A table that shows the results of the found data --}}
-                                <template x-if="$wire.procedureReasons.length > 0">
+                                <template x-if="$wire.conditionsAndObservations.length > 0">
                                     <div class="table-container">
                                         <div class="overflow-visible">
                                             <table class="table-base">
@@ -205,7 +205,7 @@
                                                 </tr>
                                                 </thead>
                                                 <tbody>
-                                                <template x-for="procedureReason in $wire.procedureReasons"
+                                                <template x-for="procedureReason in $wire.conditionsAndObservations"
                                                           :key="procedureReason.id"
                                                 >
                                                     <tr class="border-b dark:border-gray-700">
@@ -247,7 +247,7 @@
                                     </div>
                                 </template>
 
-                                <template x-if="$wire.procedureReasons.length <= 0">
+                                <template x-if="$wire.conditionsAndObservations.length <= 0">
                                     <p class="default-p">{{ __('forms.nothing_found') }}</p>
                                 </template>
 
@@ -264,7 +264,7 @@
                                     <button @click.prevent
                                             @click="
                                                 {{-- Return only the needed data --}}
-                                                modalProcedure.reasonReferences = $wire.procedureReasons
+                                                modalProcedure.reasonReferences = $wire.conditionsAndObservations
                                                     .filter(reason => selectedProcedureReasonIds.includes(reason.id))
                                                     .map(reason => ({
                                                         id: reason.id,

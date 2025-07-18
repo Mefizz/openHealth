@@ -15,7 +15,7 @@ use App\Rules\PhoneNumber;
 use App\Rules\InDictionary;
 use App\Rules\UniqueEdrpou;
 use App\Rules\DocumentNumber;
-use App\Rules\PhoneDublicates;
+use App\Rules\PhoneDuplicates;
 use App\Exceptions\CustomValidationException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -66,9 +66,9 @@ class LegalEntitiesForms extends Form
             'owner.firstName' => ['required', 'min:3', new Name()],
             'owner.secondName' => ['nullable', new Name()],
             'owner.gender' => 'required|string',
-            'owner.birthDate' => ['required', 'date', new BirthDate(), new AgeCheck()],
+            'owner.birthDate' => ['required', 'date', new BirthDate($this->owner['email'] ?? ''), new AgeCheck()],
             'owner.noTaxId' => 'boolean|nullable',
-            'owner.taxId' => ['required', new TaxId($this->owner['noTaxId'])],
+            'owner.taxId' => ['required_unless:owner.noTaxId,true', 'string', new TaxId($this->owner['email'] ?? '')],
             'owner.documents.type' => ['required','string', new InDictionary('DOCUMENT_TYPE')],
             'owner.documents.number' => ['required', 'string', new DocumentNumber($this->owner['documents']['type'] ?? '')],
             'owner.phones' => 'required|array',
@@ -109,14 +109,11 @@ class LegalEntitiesForms extends Form
             'edrpou.unique_edrpou' => __('Такий номер вже існує'),
             'owner.firstName.required' => __('Iм\'я є обов\'язковим до заповнення'),
             'owner.lastName.required' => __('Прізвище є обов\'язковим до заповнення'),
-            'owner.firstName' => __('Поле має хибний формат. (Дозволено лише кирилічні символи)'),
-            'owner.lastName' => __('Поле має хибний формат. (Дозволено лише кирилічні символи)'),
-            'owner.secondName' => __('Поле має хибний формат. (Дозволено лише кирилічні символи)'),
             'owner.birthDate.required' => __('Дата народження є обов\'язковою до заповнення'),
             'owner.age_check' => 'Вік власника має бути не менше 18 років',
             'owner.gender' => __('Це поле є обов\'язковим до заповнення'),
             'owner.phones' => __('Контактний телефон є обов\'язковим до заповнення'),
-            'owner.taxId.required' => __('Номер ІПН чи РНОКПП є обов\'язковим до заповнення'),
+            'owner.taxId.required_unless' => __('Номер ІПН чи РНОКПП є обов\'язковим до заповнення'),
             'owner.documents.type.required' => __('Тип документа є обов\'язковим до заповнення'),
             'owner.position.required' => __('Посада є обов\'язковою до заповнення'),
             'owner.email.unique' => 'Поле :attribute вже зареєстровано в системі',
@@ -209,7 +206,11 @@ class LegalEntitiesForms extends Form
 
         $userTaxId = $user?->party?->taxId;
 
-        if ($user && !empty($userTaxId) && $userTaxId !== $this->owner['taxId']) {
+        if ($user &&
+            filled($userTaxId) &&
+            isset($this->owner['taxId']) &&
+            $userTaxId !== $this->owner['taxId']
+        ) {
             Log::error("rulesForOwner: user with specified email exists and has different tax ID");
 
             throw ValidationException::withMessages([
@@ -308,11 +309,9 @@ class LegalEntitiesForms extends Form
     protected function customRules(): array
     {
         // Place here the custom validation rules to be checked through creation/updating of the LegalEntity
-        $customValidationRules = [
-            new PhoneDublicates($this->phones),
-            new PhoneDublicates($this->owner['phones'])
+        return [
+            new PhoneDuplicates($this->phones),
+            new PhoneDuplicates($this->owner['phones'])
         ];
-
-        return $customValidationRules;
     }
 }

@@ -9,41 +9,34 @@ use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\ForgotPassword;
 use App\Http\Controllers\Auth\EHealthLoginController;
-use App\Livewire\Employee\EmployeePositionAdd;
-use App\Livewire\Employee\EmployeeRequestEdit;
-use App\Livewire\Employee\EmployeeRequestIndex;
-use App\Livewire\Employee\EmployeeRequestShow;
+use App\Livewire\License\LicenseCreate;
+use App\Livewire\License\LicenseEdit;
+use App\Livewire\License\LicenseView;
 use App\Livewire\Patient\PatientComponent;
 use App\Livewire\DiagnosticReport\DiagnosticReportCreate;
-use App\Livewire\Employee\EmployeeShow;
-use App\Livewire\License\LicenseShow;
 use App\Livewire\Procedure\ProcedureCreate;
-use App\Models\Employee\Employee;
-use App\Models\Employee\EmployeeRequest;
 use App\Models\LegalEntity;
+use App\Models\License;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
-use App\Livewire\License\LicenseIndex;
 use App\Livewire\Patient\PatientIndex;
 use App\Livewire\Contract\ContractForm;
 use App\Livewire\Division\DivisionForm;
-use App\Livewire\Employee\EmployeeEdit;
 use App\Livewire\Auth\SelectLegalEntity;
 use App\Livewire\Contract\ContractIndex;
-use App\Livewire\Employee\EmployeeIndex;
 use App\Http\Controllers\HomeController;
 use App\Livewire\Division\DivisionIndex;
 use App\Http\Controllers\EmailController;
-use App\Livewire\Employee\EmployeeCreate;
 use App\Livewire\Encounter\EncounterEdit;
 use App\Livewire\Encounter\EncounterCreate;
-use App\Livewire\License\Forms\LicenseForms;
 use App\Livewire\LegalEntity\EditLegalEntity;
+use App\Livewire\License\LicenseIndex;
 use App\Livewire\Patient\Records\PatientData;
 use App\Livewire\Declaration\DeclarationIndex;
 use App\Livewire\LegalEntity\CreateLegalEntity;
 use App\Livewire\Patient\Records\PatientSummary;
 use App\Livewire\Division\HealthcareServiceForm;
-use App\Livewire\License\Forms\CreateNewLicense;
 use App\Livewire\Patient\Records\PatientEpisodes;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Livewire\Dashboard;
@@ -97,36 +90,38 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
 
         Route::get('/edit', EditLegalEntity::class)->name('legal-entity.edit');
 
-        // TODO: Should determine if this need to be implemented!
-        Route::get('/create', CreateLegalEntity::class)
-            ->middleware(['can:create,' . LegalEntity::class])
-            ->name('legal-entity.create');
-
         Route::prefix('division')->group(function () {
             Route::get('/', DivisionIndex::class)->name('division.index');
             Route::get('/form/{id?}', DivisionForm::class)->name('division.form');
             Route::get('/{division}/healthcare-service', HealthcareServiceForm::class)->name('healthcare_service.index');
         });
 
-        // --- Group for existing, approved Employees ---
-        Route::prefix('employees')->name('employee.')->group(function () {
-            Route::get('/', EmployeeIndex::class)->name('index')->middleware('can:viewAny,' . Employee::class);
-            Route::get('/{employee}', EmployeeShow::class)->name('show')->middleware('can:view,employee');
-            Route::get('/{employee}/edit', EmployeeEdit::class)
-                ->name('edit')
-                ->middleware('can:update,employee');
-        });
+        Route::prefix('employees')->name('employee.')->middleware('auth')->group(function () {
 
-        // --- Group for Employee Requests ---
-        Route::prefix('employee-requests')->name('employee-request.')->group(function () {
-            Route::get('/', EmployeeRequestIndex::class)->name('index')->middleware('can:viewAny,' . EmployeeRequest::class);
-            Route::get('/create', EmployeeCreate::class)->name('create')->middleware('can:create,' . EmployeeRequest::class);
-            Route::get('/{employee_request}', EmployeeRequestShow::class)->name('show')->middleware('can:view,employee_request');
-            Route::get('/{employee_request}/edit', EmployeeRequestEdit::class)
-                ->name('edit')
-                ->middleware('can:update,employee_request');
+            // The main unified list for both employees and requests
+            Route::get('/', \App\Livewire\Employee\EmployeeIndex::class)
+                ->name('index')
+                ->middleware('can:viewAny,' . \App\Models\Employee\Employee::class);
 
-            Route::get('/party/{party}/add-position', EmployeePositionAdd::class)->name('add-position')->middleware('can:create,' . EmployeeRequest::class);
+            // Route to create a new EmployeeRequest from scratch
+            Route::get('/create', \App\Livewire\Employee\EmployeeCreate::class)
+                ->name('create')
+                ->middleware('can:create,' . \App\Models\Employee\EmployeeRequest::class);
+
+            // Route to add a new position (creates an EmployeeRequest)
+            Route::get('/party/{party}/add-position', \App\Livewire\Employee\EmployeePositionAdd::class)
+                ->name('add-position')
+                ->middleware('can:create,' . \App\Models\Employee\EmployeeRequest::class);
+
+            // Polymorphic route for viewing either an Employee or an EmployeeRequest
+            // Authorization will be handled inside the component's mount method.
+            Route::get('/{id}/{type?}', \App\Livewire\Employee\EmployeeShow::class)
+                ->name('show');
+
+            // Polymorphic route for editing either an Employee or an EmployeeRequest
+            // Authorization will be handled inside the component's mount method.
+            Route::get('/{id}/{type?}/edit', \App\Livewire\Employee\EmployeeEdit::class)
+                ->name('edit');
         });
 
         Route::prefix('contract')->group(function () {
@@ -134,11 +129,21 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
             Route::get('/form/{id?}', ContractForm::class)->name('contract.form');
         });
 
-        Route::prefix('license')->group(function () {
-            Route::get('/', LicenseIndex::class)->name('license.index');
-            Route::get('/update/{id}', LicenseForms::class)->name('license.form');
-            Route::get('/create', CreateNewLicense::class)->name('license.create');
-            Route::get('/show/{id}', LicenseShow::class)->name('license.show');
+        // Routes related to legal entity licenses; primary license can't be edited
+        Route::prefix('license')->middleware(['permission:license:read|license:write'])->group(function () {
+
+            Route::get('/', LicenseIndex::class)->name('license.index')->middleware('permission:license:read');
+            Route::get('/create', LicenseCreate::class)->name('license.create')->middleware('permission:license:write');
+
+            Route::middleware(['can:access,license'])->prefix('{license}')->whereNumber('license')->group(function () {
+                Route::get('/', function (LegalEntity $legalEntity, License $license) {
+                    if (Gate::allows('write', [$license, $legalEntity]) && !$license->isPrimary) {
+                        return App::call(LicenseEdit::class, [$legalEntity, $license]);
+                    } else if (Gate::allows('access', [$license, $legalEntity])) {
+                        return App::call(LicenseView::class, [$legalEntity, $license]);
+                    }
+                })->name('license.view');
+            });
         });
 
         Route::prefix('declaration')->group(function () {

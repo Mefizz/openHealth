@@ -1,36 +1,44 @@
 <?php
-
 namespace App\Livewire\Employee;
 
-use App\Livewire\Employee\Forms\EmployeeForm;
-use App\Livewire\Employee\Traits\ManagesEmployeeForm;
 use App\Models\Employee\Employee;
+use App\Models\Employee\EmployeeRequest;
 use App\Models\LegalEntity;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\View\View;
 
 class EmployeeEdit extends EmployeeComponent
 {
-    use ManagesEmployeeForm;
+    use Traits\ManagesEmployeeForm;
 
-    public EmployeeForm $form;
     public string $pageTitle;
-    public bool $isPersonalDataLocked = true;
+    public ?EmployeeRequest $employeeRequest = null;
+    public ?int $employeeRequestId = null;
 
-    /**
-     * This mount method is now simple: it only accepts an Employee.
-     */
-    public function mount(LegalEntity $legalEntity, Employee $employee): void
+    public function mount(LegalEntity $legalEntity, int $id, string $type = 'employee'): void
     {
         $this->loadDictionaries();
 
-        $this->employee = $employee;
-        $this->form->hydrate($this->employee);
-        $this->pageTitle = __('forms.editEmployee');
+        $source = match ($type) {
+            'request' => EmployeeRequest::findOrFail($id),
+            default => Employee::findOrFail($id),
+        };
+
+        $this->authorize('update', $source);
+
+        $this->isPersonalDataLocked = true;
+
+        if ($source instanceof Employee) {
+            $this->employee = $source;
+        } else {
+            $this->employeeRequest = $source;
+            $this->employeeRequestId = $source->id;
+        }
+
+        $this->form->hydrate($source);
+        $this->pageTitle = __('forms.edit_employee');
     }
 
-    /**
-     * This component also uses the shared form template.
-     */
     public function render(): View
     {
         return view('livewire.employee.employee');
