@@ -3,8 +3,6 @@
 namespace App\Livewire\License\Forms;
 
 use App\Classes\eHealth\Api\License;
-use App\Classes\eHealth\Request;
-use Livewire\Component;
 
 class LicenseRequest extends License
 {

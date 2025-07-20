@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Classes\eHealth\Api;
 
 use App\Classes\eHealth\EHealthRequest as Request;
@@ -18,6 +20,7 @@ class License extends Request
     public function getMany(string $url = self::URL, $query = null): PromiseInterface|EHealthResponse
     {
         $this->setValidator($this->validateMany(...));
+        $this->setDefaultPageSize();
         return parent::get($url, $query);
     }
 

@@ -2,10 +2,8 @@
 
 namespace App\Livewire\License\Forms;
 
-use Livewire\Component;
+use App\Classes\eHealth\EHealth;
 use App\Models\License;
-use App\Livewire\License\Forms\LicenseRequest;
-use App\Livewire\License\Forms\LicenseForms;
 
 class CreateNewLicense extends LicenseForms
 {

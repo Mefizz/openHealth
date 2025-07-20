@@ -11,6 +11,8 @@ use Illuminate\Support\HigherOrderTapProxy;
 
 abstract class EHealthRequest extends PendingRequest
 {
+    public const string QUERY_PARAM_PAGE_SIZE = 'page_size';
+
     protected ?Closure $validator = null;
 
     public function __construct(?Factory $factory = null, $middleware = [])
@@ -22,8 +24,12 @@ abstract class EHealthRequest extends PendingRequest
             'API-key' => config('ehealth.api.api_key'),
         ]);
 
-        if (eHealthToken()->hasBearerToken()) {
-            $this->withToken(eHealthToken()->getBearerToken());
+        $token = session()->get(
+            config('ehealth.api.oauth.bearer_token')
+        );
+
+        if ($token) {
+            $this->withToken($token);
         }
 
         $this->baseUrl(
@@ -40,6 +46,17 @@ abstract class EHealthRequest extends PendingRequest
     protected function setValidator(Callable $validator): void
     {
         $this->validator = $validator;
+    }
+
+    /**
+     * Set the default page size for the request.
+     * It's the maximum number of items that can be returned per page.
+     */
+    protected function setDefaultPageSize(): void
+    {
+        $this->withQueryParameters([
+            self::QUERY_PARAM_PAGE_SIZE => config('ehealth.api.page_size'),
+        ]);
     }
 
     /**

@@ -15,6 +15,14 @@ class EHealthResponse extends Response
      */
     public const string DATA_PATH = 'data';
 
+    /**
+     * The path to the paging information in the response, i.e. page_number, page_size, total_entries, total_pages.
+     */
+    public const string PAGING_PATH = 'paging';
+
+    /**
+     * @var Closure|null The closure that holds the validation rules for the response.
+     */
     protected ?Closure $validator = null;
 
     public function __construct($response, ?Closure $validator = null)
@@ -41,5 +49,28 @@ class EHealthResponse extends Response
     public function getData(): array
     {
         return $this->json(self::DATA_PATH, []);
+    }
+
+    /**
+     * @return array eHealth pagination information
+     */
+    public function getPaging(): array
+    {
+        return $this->json(self::PAGING_PATH, []);
+    }
+
+    /**
+     * Determine if the response contains not all the data, e.g., if it is paginated and returns a subset of results.
+     */
+    public function isNotLast(): bool
+    {
+        $paging = $this->getPaging();
+
+        // Check by page number
+        if (isset($paging['page_number']) && isset($paging['total_pages'])) {
+            return $paging['page_number'] < $paging['total_pages'];
+        }
+
+        return false;
     }
 }
