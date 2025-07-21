@@ -1,12 +1,13 @@
 <div x-data="{ showSignatureModal: $wire.entangle('showSignatureModal') }">
     <x-section-navigation class="breadcrumb-form">
         <x-slot name="title">
-            {{ $pageTitle }}
-            @if(isset($employee))
-                {{ $employee->fullName }}
-            @elseif(isset($this->form->party['lastName']))
-                {{ $this->form->party['lastName'] }} {{ $this->form->party['firstName'] }}
+            @if($isPersonalDataLocked)
+                {{ __('forms.add_position') }}
+            @else
+                {{ __('forms.add_employee') }}
             @endif
+
+            {{ $this->employeeFullName }}
         </x-slot>
     </x-section-navigation>
 

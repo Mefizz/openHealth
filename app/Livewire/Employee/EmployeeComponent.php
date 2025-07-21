@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Livewire\Employee;
 
 use App\Traits\FormTrait;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use App\Livewire\Employee\Forms\EmployeeForm as Form;
 
@@ -16,6 +18,8 @@ abstract class EmployeeComponent extends Component
 
     public Form $form;
     public bool $isPersonalDataLocked = false;
+    #[Locked]
+    public ?int $employeeRequestId = null;
 
 
     public ?array $dictionaryNames = [
@@ -52,5 +56,23 @@ abstract class EmployeeComponent extends Component
                 $this->employeeTypePosition[$employeeType] = $this->getDictionariesFields($keys, 'POSITION');
             }
         }
+    }
+
+    #[Computed]
+    public function employeeFullName(): string
+    {
+        if (isset($this->employee) && $this->employee->party) {
+            return $this->employee->party->fullName;
+        }
+
+        if (isset($this->party)) {
+            return $this->party->fullName;
+        }
+
+        if (!empty($this->form->party['lastName'])) {
+            return trim($this->form->party['lastName'] . ' ' . $this->form->party['firstName']);
+        }
+
+        return '';
     }
 }

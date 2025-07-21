@@ -1,38 +1,38 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Employee;
 
 use App\Models\Employee\Employee;
-use App\Models\Employee\EmployeeRequest;
 use App\Models\LegalEntity;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\View\View;
+use Livewire\Attributes\Locked;
 
 class EmployeeShow extends EmployeeComponent
 {
-    public Employee|EmployeeRequest $employee;
-    public string $pageTitle;
-    public bool $isReadOnly = true;
+    protected Employee $employee;
 
-    public function mount(LegalEntity $legalEntity, int $id, string $type = 'employee'): void
+    #[Locked]
+    public ?int $employeeId = null;
+
+    public function mount(LegalEntity $legalEntity, Employee $employee): void
     {
         $this->loadDictionaries();
+        $this->employee = $employee;
+        $this->employeeId = $employee->id;
+        $this->form->hydrate($this->employee);
+    }
 
-        $source = match ($type) {
-            'request' => EmployeeRequest::findOrFail($id),
-            default => Employee::findOrFail($id),
-        };
-
-        $this->authorize('view', $source);
-
-        $this->employee = $source;
-        $this->form->hydrate($source);
-        $this->pageTitle = __('forms.view_employee');
+    public function boot(): void
+    {
+        if($this->employeeId){
+            $this->employee = Employee::findOrFail($this->employeeId);
+        }
     }
 
     public function render(): View
     {
-
         return view('livewire.employee.employee-show', [
             'employee' => $this->employee
         ]);
