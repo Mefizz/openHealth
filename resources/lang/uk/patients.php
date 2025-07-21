@@ -236,5 +236,10 @@ return [
     'set_of_rule_engines' => 'Набір механізмів правил',
     'previous_clinical_impression' => 'Попередня клінічна оцінка',
     'appropriate_patient_assessment' => 'Відповідна оцінка стану пацієнта',
-    'what_was_identified' => 'Що було ідентифіковано'
+    'what_was_identified' => 'Що було ідентифіковано',
+    'supporting_medical_information' => 'Підтверджуючі медичні дані',
+    'medical_records_type' => 'тип медичних записів',
+    'employee_who_created' => 'Співробітник, який створив',
+    'description' => 'Опис',
+    'medical_record' => 'медичний запис',
 ];
