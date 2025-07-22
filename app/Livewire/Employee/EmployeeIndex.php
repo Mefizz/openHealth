@@ -272,13 +272,6 @@ class EmployeeIndex extends EmployeeComponent
         }
     }
 
-    private function dispatchErrorMessage(string $message, string $type = 'success', array $errors = []): void
-    {
-        $this->dispatch('show-notification', [
-            'message' => $message, 'type' => $type, 'errors' => $errors
-        ]);
-    }
-
     public function confirmRequestDeletion(int $id): void
     {
         $request = EmployeeRequest::with('party')->find($id);
