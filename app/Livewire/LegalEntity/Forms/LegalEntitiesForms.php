@@ -329,7 +329,7 @@ class LegalEntitiesForms extends Form
         // Place here the custom validation rules to be checked through creation/updating of the LegalEntity
         return [
             new PhoneDuplicates($this->phones),
-            new PhoneDuplicates()($this->owner['phones'])
+            new PhoneDuplicates($this->owner['phones'])
         ];
     }
 }

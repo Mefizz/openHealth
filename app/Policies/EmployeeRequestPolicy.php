@@ -14,6 +14,9 @@ class EmployeeRequestPolicy
 
     public function view(User $user, EmployeeRequest $employeeRequest): bool
     {
+        if ((int)$employeeRequest->legal_entity_id !== (int)legalEntity()->id) {
+            return false;
+        }
         return $user->hasPermissionTo('employee_request:read', 'ehealth');
     }
 
@@ -24,13 +27,23 @@ class EmployeeRequestPolicy
 
     public function update(User $user, EmployeeRequest $employeeRequest): bool
     {
-        if (!is_null($employeeRequest->uuid)) return false;
+        if ((int)$employeeRequest->legal_entity_id !== (int)legalEntity()->id) {
+            return false;
+        }
+        if (!is_null($employeeRequest->uuid)) {
+            return false;
+        }
         return $user->hasPermissionTo('employee_request:write', 'ehealth');
     }
 
     public function delete(User $user, EmployeeRequest $employeeRequest): bool
     {
-        if (!is_null($employeeRequest->uuid)) return false;
+        if ((int)$employeeRequest->legal_entity_id !== (int)legalEntity()->id) {
+            return false;
+        }
+        if (!is_null($employeeRequest->uuid)) {
+            return false;
+        }
         return $user->hasPermissionTo('employee_request:write', 'ehealth');
     }
 }

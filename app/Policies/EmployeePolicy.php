@@ -14,16 +14,25 @@ class EmployeePolicy
 
     public function view(User $user, Employee $employee): bool
     {
+        if ((int)$employee->legal_entity_id !== (int)legalEntity()->id) {
+            return false;
+        }
         return $user->hasPermissionTo('employee:details', 'ehealth');
     }
 
     public function update(User $user, Employee $employee): bool
     {
+        if ((int)$employee->legal_entity_id !== (int)legalEntity()->id) {
+            return false;
+        }
         return $user->hasPermissionTo('employee:write', 'ehealth');
     }
 
     public function dismiss(User $user, Employee $employee): bool
     {
+        if ((int)$employee->legal_entity_id !== (int)legalEntity()->id) {
+            return false;
+        }
         return $user->hasPermissionTo('employee:deactivate', 'ehealth');
     }
 }
