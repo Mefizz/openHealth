@@ -21,7 +21,8 @@ return [
         'timeout' => 10,
         'queueTimeout' => 60,
         'cooldown' => 300,
-        'retries' => 10
+        'retries' => 10,
+        'page_size' => 300,
     ],
 
     'auth' => [
