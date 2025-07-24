@@ -138,7 +138,7 @@
                             <form>
                                 <div class="form-row-modal">
                                     <div>
-                                        <label for="qualificationType" class="label-modal">{{ __('forms.qualificationType') }} *<span class="text-red-600"> *</span></label>
+                                        <label for="qualificationType" class="label-modal">{{ __('forms.qualificationType') }} <span class="text-red-600"> *</span></label>
                                         <select x-model="modalQualification.type" id="qualificationType"
                                                 class="input-modal" required>
                                             <option value="">{{__('forms.select_qualification_type')}}</option>
@@ -149,12 +149,12 @@
                                     </div>
 
                                     <div>
-                                        <label for="qualificationInstitutionName" class="label-modal">{{ __('forms.institutionName') }} *<span class="text-red-600"> *</span></label>
+                                        <label for="qualificationInstitutionName" class="label-modal">{{ __('forms.institutionName') }} <span class="text-red-600"> *</span></label>
                                         <input x-model="modalQualification.institutionName" type="text"
                                                id="qualificationInstitutionName" class="input-modal" required>
                                     </div>
                                     <div>
-                                        <label for="qualificationSpeciality" class="label-modal">{{ __('forms.speciality') }} *<span class="text-red-600"> *</span></label>
+                                        <label for="qualificationSpeciality" class="label-modal">{{ __('forms.speciality') }} <span class="text-red-600"> *</span></label>
                                         <select x-model="modalQualification.speciality" id="qualificationSpeciality"
                                                 class="input-modal" required>
                                             <option value="">{{__('forms.select_speciality')}}</option>
@@ -164,12 +164,12 @@
                                         </select>
                                     </div>
                                     <div>
-                                        <label for="qualificationCertificateNumber" class="label-modal">{{ __('forms.certificateNumber') }} *<span class="text-red-600"> *</span></label>
+                                        <label for="qualificationCertificateNumber" class="label-modal">{{ __('forms.certificateNumber') }} <span class="text-red-600"> *</span></label>
                                         <input x-model="modalQualification.certificateNumber" type="text"
                                                id="qualificationCertificateNumber" class="input-modal">
                                     </div>
                                     <div>
-                                        <label for="qualificationIssuedDate" class="label-modal">{{ __('forms.issuedDate') }} *<span class="text-red-600"> *</span></label>
+                                        <label for="qualificationIssuedDate" class="label-modal">{{ __('forms.issuedDate') }} <span class="text-red-600"> *</span></label>
                                         <input x-model="modalQualification.issuedDate" type="date"
                                                id="qualificationIssuedDate" class="input-modal datepicker-input"
                                                autocomplete="off" required>
