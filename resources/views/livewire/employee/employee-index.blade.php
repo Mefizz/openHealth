@@ -42,7 +42,7 @@
                         <button class="flex items-center gap-2 gray-button relative top-[8px]" @click="showFilter = !showFilter">
                             <svg width="16" height="16" id="svg-adjustments" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path
-                                    d="M4.00003 3.1999C4.00003 2.98773 3.91574 2.78425 3.76571 2.63422C3.61568 2.48419 3.4122 2.3999 3.20003 2.3999C2.98785 2.3999 2.78437 2.48419 2.63434 2.63422C2.48431 2.78425 2.40003 2.98773 2.40003 3.1999V9.0143C2.15682 9.15474 1.95485 9.35672 1.81444 9.59994C1.67402 9.84316 1.6001 10.1191 1.6001 10.3999C1.6001 10.6807 1.67402 10.9566 1.81444 11.1999C1.95485 11.4431 2.15682 11.6451 2.40003 11.7855V12.7999C2.40003 13.0121 2.48431 13.2156 2.63434 13.3656C2.78437 13.5156 2.98785 13.5999 3.20003 13.5999C3.4122 13.5999 3.61568 13.5156 3.76571 13.3656C3.91574 13.2156 4.00003 13.0121 4.00003 12.7999V11.7855C4.24324 11.6451 4.4452 11.4431 4.58562 11.1999C4.72603 10.9566 4.79996 10.6807 4.79996 10.3999C4.79996 10.1191 4.72603 9.84316 4.58562 9.59994C4.4452 9.35672 4.24324 9.15474 4.00003 9.0143V3.1999ZM8.80003 3.1999C8.80003 2.98773 8.71574 2.78425 8.56571 2.63422C8.41568 2.48419 8.2122 2.3999 8.00003 2.3999C7.78785 2.3999 7.58437 2.48419 7.43434 2.63422C7.28431 2.78425 7.20003 2.98773 7.20003 3.1999V4.2143C6.95682 4.35474 6.75485 4.55672 6.61444 4.79994C6.47402 5.04316 6.4001 5.31906 6.4001 5.5999C6.4001 5.88075 6.47402 6.15665 6.61444 6.39987C6.75485 6.64309 6.95682 6.84507 7.20003 6.9855V12.7999C7.20003 13.0121 7.28431 13.2156 7.43434 13.3656C7.58437 13.5156 7.78785 13.5999 8.00003 13.5999C8.2122 13.5999 8.41568 13.5156 8.56571 13.3656C8.71574 13.2156 8.80003 13.0121 8.80003 12.7999V6.9855C9.04324 6.84507 9.2452 6.64309 9.38562 6.39987C9.52603 6.15665 9.59996 5.88075 9.59996 5.5999C9.59996 5.31906 9.52603 5.04316 9.38562 4.79994C9.2452 4.55672 9.04324 4.35474 8.80003 4.2143V3.1999ZM12.8 2.3999C13.0122 2.3999 13.2157 2.48419 13.3657 2.63422C13.5157 2.78425 13.6 2.98773 13.6 3.1999V9.0143C13.8432 9.15474 14.0452 9.35672 14.1856 9.59994C14.326 9.84316 14.4 10.1191 14.4 10.3999C14.4 10.6807 14.326 10.9566 14.1856 11.1999C14.0452 11.4431 13.8432 11.6451 13.6 11.7855V12.7999C13.6 13.0121 13.5157 13.2156 13.3657 13.3656C13.2157 13.5156 13.0122 13.5999 12.8 13.5999C12.5879 13.5999 12.3844 13.5156 12.2343 13.3656C12.0843 13.2156 12 13.0121 12 12.7999V11.7855C11.7568 11.6451 11.5549 11.4431 11.4144 11.1999C11.274 10.9566 11.2001 10.6807 11.2001 10.3999C11.2001 10.1191 11.274 9.84316 11.4144 9.59994C11.5549 9.35672 11.7568 9.15474 12 9.0143V3.1999C12 2.98773 12.0843 2.78425 12.2343 2.63422C12.3844 2.48419 12.5879 2.3999 12.8 2.3999V2.3999Z"
+                                    d="M4.00003 3.1999C4.00003 2.98773 3.91574 2.78425 3.76571 2.63422C3.61568 2.48419 3.41220 2.39990 3.20003 2.39990C2.98785 2.39990 2.78437 2.48419 2.63434 2.63422C2.48431 2.78425 2.40003 2.98773 2.40003 3.1999V9.0143C2.15682 9.15474 1.95485 9.35672 1.81444 9.59994C1.67402 9.84316 1.60010 10.11910 1.60010 10.39990C1.60010 10.68070 1.67402 10.95660 1.81444 11.1999C1.95485 11.44310 2.15682 11.64510 2.40003 11.7855V12.7999C2.40003 13.01210 2.48431 13.21560 2.63434 13.3656C2.78437 13.51560 2.98785 13.59990 3.20003 13.5999C3.41220 13.59990 3.61568 13.51560 3.76571 13.3656C3.91574 13.21560 4.00003 13.01210 4.00003 12.7999V11.7855C4.24324 11.64510 4.44520 11.44310 4.58562 11.1999C4.72603 10.95660 4.79996 10.68070 4.79996 10.39990C4.79996 10.11910 4.72603 9.84316 4.58562 9.59994C4.44520 9.35672 4.24324 9.15474 4.00003 9.0143V3.1999ZM8.80003 3.1999C8.80003 2.98773 8.71574 2.78425 8.56571 2.63422C8.41568 2.48419 8.21220 2.39990 8.00003 2.39990C7.78785 2.39990 7.58437 2.48419 7.43434 2.63422C7.28431 2.78425 7.20003 2.98773 7.20003 3.1999V4.2143C6.95682 4.35474 6.75485 4.55672 6.61444 4.79994C6.47402 5.04316 6.40010 5.31906 6.40010 5.59990C6.40010 5.88075 6.47402 6.15665 6.61444 6.39987C6.75485 6.64309 6.95682 6.84507 7.20003 6.9855V12.7999C7.20003 13.01210 7.28431 13.21560 7.43434 13.3656C7.58437 13.51560 7.78785 13.59990 8.00003 13.5999C8.21220 13.59990 8.41568 13.51560 8.56571 13.3656C8.71574 13.21560 8.80003 13.01210 8.80003 12.7999V6.9855C9.04324 6.84507 9.24520 6.64309 9.38562 6.39987C9.52603 6.15665 9.59996 5.88075 9.59996 5.59990C9.59996 5.31906 9.52603 5.04316 9.38562 4.79994C9.24520 4.55672 9.04324 4.35474 8.80003 4.2143V3.1999ZM12.8 2.3999C13.0122 2.3999 13.2157 2.48419 13.3657 2.63422C13.5157 2.78425 13.6 2.98773 13.6 3.1999V9.0143C13.8432 9.15474 14.0452 9.35672 14.1856 9.59994C14.3260 9.84316 14.4 10.11910 14.4 10.39990C14.4 10.68070 14.3260 10.95660 14.1856 11.1999C14.0452 11.44310 13.8432 11.64510 13.6 11.7855V12.7999C13.6 13.01210 13.5157 13.21560 13.3657 13.3656C13.2157 13.51560 13.0122 13.59990 12.8 13.5999C12.5879 13.59990 12.3844 13.51560 12.2343 13.3656C12.0843 13.21560 12 13.01210 12 12.7999V11.7855C11.7568 11.64510 11.5549 11.44310 11.4144 11.1999C11.2740 10.95660 11.2001 10.68070 11.2001 10.39990C11.2001 10.11910 11.2740 9.84316 11.4144 9.59994C11.5549 9.35672 11.7568 9.15474 12 9.0143V3.1999C12 2.98773 12.0843 2.78425 12.2343 2.63422C12.3844 2.48419 12.5879 2.39990 12.8 2.3999V2.3999Z"
                                     fill="currentColor"/>
                             </svg>
                             <span>{{ __('patients.additional_search_parameters') }}</span>
@@ -175,37 +175,35 @@
                                 @endif
                             </div>
                         </div>
-
-                        {{-- "Add Position" Button --}}
                         <div class="flex items-center space-x-3">
-                                <a href="{{ route('employee.add-position', ['legalEntity' => legalEntity()->id, 'party' => $party->id]) }}"
-                                   class="item-add text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                                    <span class="text-xl leading-none">+</span>
-                                    <span>{{ __('forms.addPosition') }}</span>
-                                </a>
+                            <a href="{{ route('employee.add-position', ['legalEntity' => legalEntity()->id, 'party' => $party->id]) }}"
+                               class="item-add text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                                <span class="text-xl leading-none">+</span>
+                                <span>{{ __('forms.addPosition') }}</span>
+                            </a>
                         </div>
                     </div>
-
                     <div class="flow-root mt-4">
-                        <table class="table-input w-inherit">
+                        <div class="max-w-screen-xl">
+                        <table class="table-input w-full table-fixed">
                             <thead class="thead-input">
                             <tr>
-                                <th scope="col" class="th-input">{{ __('forms.position') }}</th>
-                                <th scope="col" class="th-input">{{ __('forms.role') }}</th>
-                                <th scope="col" class="th-input">{{ __('forms.division') }}</th>
-                                <th scope="col" class="th-input">{{ __('forms.status') }}</th>
-                                <th scope="col" class="th-input">{{ __('forms.actions') }}</th>
+                                <th scope="col" class="th-input w-[28%]">Посада</th>
+                                <th scope="col" class="th-input w-[22%]">Роль</th>
+                                <th scope="col" class="th-input w-[20%]">Підрозділ</th>
+                                <th scope="col" class="th-input w-[15%]">Статус</th>
+                                <th scope="col" class="th-input w-[15%] text-center">Дії</th>
                             </tr>
                             </thead>
                             <tbody>
                             @php $positions = $party->employees->merge($party->employeeRequests); @endphp
                             @foreach($positions as $position)
                                 <tr>
-                                    <td class="td-input">{{ $dictionaries['POSITION'][$position->position] ?? $position->position }}</td>
-                                    <td class="td-input">{{ $dictionaries['EMPLOYEE_TYPE'][$position->employee_type] ?? $position->employee_type }}</td>
-                                    <td class="td-input">{{ $position->division->name ?? 'N/A' }}</td>
+                                    <td class="td-input break-words whitespace-normal align-top">{{ $dictionaries['POSITION'][$position->position] ?? $position->position }}</td>
+                                    <td class="td-input break-words whitespace-normal align-top">{{ $dictionaries['EMPLOYEE_TYPE'][$position->employee_type] ?? $position->employee_type }}</td>
+                                    <td class="td-input break-words whitespace-normal align-top">{{ $position->division->name ?? 'N/A' }}</td>
 
-                                    <td class="td-input">
+                                    <td class="td-input break-words whitespace-normal align-top">
                                         @switch($position->status)
                                             @case(\App\Enums\Status::APPROVED)
                                                 <span class="badge-green">Активний</span>
@@ -221,8 +219,8 @@
                                         @endswitch
                                     </td>
 
-                                    <td class="td-input">
-                                        <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                                    <td class="td-input text-center">
+                                        <div class="relative inline-block" x-data="{ open: false }" @click.outside="open = false">
                                             <button @click="open = !open" class="inline-flex items-center p-2 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-white" type="button">
                                                 <svg class="w-6 h-6 text-gray-800 dark:text-white svg-hover-action" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                                     <path stroke="currentColor" stroke-linecap="square" stroke-linejoin="round" stroke-width="2" d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"/>
@@ -231,7 +229,6 @@
                                             <div x-show="open" x-transition class="absolute right-0 z-10 w-48 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600" style="display: none;">
                                                 <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" @click="open = false">
                                                     <li>
-                                                        {{-- The 'type' parameter is still needed here to resolve ambiguity --}}
                                                         <a href="{{ route('employee.show', ['legalEntity' => legalEntity()->id, 'id' => $position->id, 'type' => $position->type]) }}"
                                                            class="flex items-center gap-2 py-2 px-5 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
                                                             <svg class="w-5 h-5 text-gray-500 dark:text-gray-300" aria-hidden="true"
@@ -284,6 +281,7 @@
                             @endforeach
                             </tbody>
                         </table>
+                        </div>
                     </div>
                 </div>
             @empty

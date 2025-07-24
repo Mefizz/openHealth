@@ -169,7 +169,7 @@
                                                autocomplete="off" required>
                                     </div>
                                 </div>
-                                <p class="text-sm text-red-600 mb-2">{{ __('forms.form_required_note') }}</p>
+                                <p class="text-sm text-gray-400 mb-2">{{ __('forms.form_required_note') }}</p>
                                 <div class="mt-6 flex justify-between space-x-2">
                                     <button type="button"
                                             @click="openModal = false"
