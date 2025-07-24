@@ -1,7 +1,5 @@
 <div class="overflow-x-auto relative">
     <fieldset class="fieldset"
-              {{-- Binding documents to Alpine, it will be re-used in the modal.
-                Note that it's necessary for modal to work properly --}}
               x-data="{
                   documents: $wire.entangle('form.documents'),
                   openModal: false,
@@ -28,7 +26,7 @@
             <tbody>
             <template x-for="(document, index) in documents" :key="index">
                 <tr>
-                    <td class="td-input="dictionary[document.type]"></td>
+                    <td class="td-input" x-text="dictionary[document.type]"></td>
                     <td class="td-input" x-text="document.number"></td>
                     <td class="td-input" x-text="document.issuedBy"></td>
                     <td class="td-input" x-text="document.issuedAt"></td>
@@ -64,15 +62,9 @@
                             <div class="absolute" style="left: -120%" bis_skin_checked="1">
                                 <div x-ref="panel" x-show="openDropdown" x-transition.origin.top.left="" @click.outside="close($refs.button)" :id="$id('dropdown-button')" class="dropdown-panel relative" style="left: -50%; display: none;" id="dropdown-button-1" bis_skin_checked="1">
 
-                                    <button @click.prevent="
-                                                    openModal = true;
-                                                    item = index;
-
-                                                    modalDocument = new Document(document);
-                                                    newDocument = false;
-                                                " class="dropdown-button">
-                                        Редагувати
-                                    </button>
+                                <button @click.prevent="openModal = true; item = index; modalDocument = new Doc(document); newDocument = false; openDropdown = false;" class="dropdown-button">
+                                    {{ __('forms.edit') }}
+                                </button>
 
                                     <button @click.prevent="documents.splice(index, 1); close($refs.button);" class="dropdown-button dropdown-delete">
                                         Видалити
@@ -139,31 +131,30 @@
                                         <label for="documentType" class="label-modal">{{__('forms.document_type')}}<span class="text-red-600"> *</span></label>
                                         <select x-model="modalDocument.type" id="documentType" class="input-modal"
                                                 type="text" required>
-                                            <option value="">{{__('forms.selectDocumentType')}}</option>
+                                            <option value="">{{__('forms.select_document_type')}}</option>
                                             @foreach($this->dictionaries['DOCUMENT_TYPE'] as $typeValue => $typeDescription)
                                                 <option value="{{$typeValue}}">{{$typeDescription}}</option>
                                             @endforeach
                                         </select>
-                                        {{--<p class="text-error text-xs"
-                                           x-show="!Object.keys(dictionary).includes(modalDocument.type) || !modalDocument.type.trim().length">{{__('forms.field_empty')}}</p>--}}
+
                                     </div>
 
                                     <div>
-                                        <label for="documentNumber" class="label-modal">{{__('forms.document_number')}}<span class="text-red-600"> *</span></label>
+                                        <label for="documentNumber" class="label-modal">{{__('forms.document_number')}} *<span class="text-red-600"> *</span></label>
                                         <input x-model="modalDocument.number" type="text" name="documentNumber"
                                                id="documentNumber" class="input-modal" required>
-                                        {{--<p class="text-error text-xs"
-                                           x-show="!modalDocument.number.trim().length > 0">{{__('forms.field_empty')}}</p>--}}
+                                        <p class="text-error text-xs"
+                                           x-show="!modalDocument.number.trim().length > 0">{{__('forms.field_empty')}}</p>
                                     </div>
 
                                     <div>
-                                        <label for="documentIssuedBy" class="label-modal">{{__('forms.document_issued_by')}}<span class="text-red-600"> *</span></label>
+                                        <label for="documentIssuedBy" class="label-modal">{{__('forms.issued_by')}}<span class="text-red-600"> *</span></label>
                                         <input x-model="modalDocument.issuedBy" type="text" name="documentIssuedBy"
                                                id="documentIssuedBy" class="input-modal" required>
                                     </div>
 
                                     <div>
-                                        <label for="documentIssuedAt" class="label-modal">{{__('forms.document_issued_at')}}<span class="text-red-600"> *</span></label>
+                                        <label for="documentIssuedAt" class="label-modal">{{__('forms.issued_at')}}<span class="text-red-600"> *</span></label>
                                         <input x-model="modalDocument.issuedAt" name="documentIssuedAt"
                                                id="documentIssuedAt" class="input-modal datepicker-input"
                                                autocomplete="off" required>
