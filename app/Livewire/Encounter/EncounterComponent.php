@@ -77,6 +77,24 @@ class EncounterComponent extends Component
     public array $clinicalImpressions = [];
 
     /**
+     * List of existing patient encounters.
+     * @var array
+     */
+    public array $encounters = [];
+
+    /**
+     * List of existing patient procedures.
+     * @var array
+     */
+    public array $procedures = [];
+
+    /**
+     * List of existing patient diagnostic reports.
+     * @var array
+     */
+    public array $diagnosticReports = [];
+
+    /**
      * Episode type, new or existing.
      * @var string
      */
@@ -456,6 +474,72 @@ class EncounterComponent extends Component
         } catch (eHealthApiException) {
             Log::channel('e_health_errors')
                 ->error('Error while searching for problems in Encounter Component');
+
+            $this->flashGeneralError();
+        }
+    }
+
+    /**
+     * Search for complication details in conditions for selected episode.
+     *
+     * @param  string  $type  Example: encounter, procedure, diagnosticReport.
+     * @param  string  $episodeId
+     * @return void
+     */
+    public function searchSupportingInfo(string $type, string $episodeId): void
+    {
+        // If the episode is not selected, don't perform a search.
+        if (!isset($episodeId)) {
+            return;
+        }
+
+        try {
+            switch ($type) {
+                case 'encounter':
+                    $params = EncounterRequestApi::buildGetEncountersBySearchParams(
+                        episodeUuid: $episodeId,
+                        managingOrganizationUuid: legalEntity()->uuid
+                    );
+
+                    $this->encounters = PatientApi::getEncountersBySearchParams(
+                        $this->patientUuid,
+                        $params
+                    )['data'];
+                    break;
+
+                case 'procedure':
+                    $params = EncounterRequestApi::buildGetProceduresBySearchParams(
+                        $this->patientUuid,
+                        episodeUuid: $episodeId,
+                        managingOrganizationUuid: legalEntity()->uuid
+                    );
+                    $this->procedures = PatientApi::getProceduresBySearchParams(
+                        $this->patientUuid,
+                        $params
+                    )['data'];
+                    break;
+
+                case 'diagnosticReport':
+                    $params = EncounterRequestApi::buildGetDiagnosticReportsBySearchParams(
+                        originEpisodeUuid: $episodeId,
+                        managingOrganizationUuid: legalEntity()->uuid
+                    );
+                    $this->diagnosticReports = PatientApi::getDiagnosticReportsBySearchParams(
+                        $this->patientUuid,
+                        $params
+                    )['data'];
+                    break;
+
+                default:
+                    break;
+            }
+        } catch (eHealthApiException $e) {
+            Log::channel('e_health_errors')
+                ->error("Error while searching for $type in Encounter Component", [
+                    'exception' => $e->getMessage(),
+                    'type' => $type,
+                    'episodeId' => $episodeId
+                ]);
 
             $this->flashGeneralError();
         }
