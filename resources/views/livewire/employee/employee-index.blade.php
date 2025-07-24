@@ -26,10 +26,10 @@
                                     <div class="form-group group w-full relative top-[12px]">
                                         <input type="text"
                                                id="employee_search"
-                                               placeholder="{{ __('forms.full_name') }}"
+                                               placeholder=" "
                                                class="input peer"
                                                wire:model.live.debounce.300ms="search"
-                                               autocomplete="off"/>
+                                               autocomplete="off" />
                                         <label for="employee_search" class="label">ПІБ</label>
                                     </div>
                                 </x-slot>
@@ -124,38 +124,73 @@
                             </select>
                             <label for="filter_division" class="label">Медичний заклад</label>
                         </div>
-
-                        <div class="form-group col-span-full">
-                            <label class="default-label">{{ __('forms.status') }}</label>
-                            <div class="flex flex-col space-y-2 mt-2">
-                                <div>
-                                    <input type="checkbox" wire:model.live="status" value="APPROVED"
-                                           id="status_approved" class="default-checkbox">
-                                    <label for="status_approved"
-                                           class="ml-2 text-sm text-gray-500 dark:text-gray-300">{{ __('forms.active') }}</label>
-                                </div>
-                                <div>
-                                    <input type="checkbox" wire:model.live="status" value="NEW" id="status_new"
-                                           class="default-checkbox">
-                                    <label for="status_new"
-                                           class="ml-2 text-sm text-gray-500 dark:text-gray-300">{{ __('forms.draft') }}</label>
-                                </div>
-                                <div>
-                                    <input type="checkbox" wire:model.live="status" value="DISMISSED"
-                                           id="status_dismissed" class="default-checkbox">
-                                    <label for="status_dismissed"
-                                           class="ml-2 text-sm text-gray-500 dark:text-gray-300">{{ __('forms.dismissed') }}</label>
-                                </div>
-
-                                <div class="opacity-50">
-                                    <input type="checkbox" id="status_verified" class="default-checkbox" disabled>
-                                    <label for="status_verified"
-                                           class="ml-2 text-sm text-gray-400 dark:text-gray-500">{{ __('forms.verified') }}</label>
-                                </div>
-                                <div class="opacity-50">
-                                    <input type="checkbox" id="status_not_verified" class="default-checkbox" disabled>
-                                    <label for="status_not_verified"
-                                           class="ml-2 text-sm text-gray-400 dark:text-gray-500">{{ __('forms.not_verified') }}</label>
+                        <div class="form-group group" x-data="{ open: false, selectedStatuses: @entangle('status').live }">
+                            <label for="statusFilter" class="label">Статус</label>
+                            <div class="relative">
+                                <input type="text"
+                                       id="statusFilter"
+                                       class="input peer w-full cursor-pointer text-gray-500 dark:text-gray-400"
+                                       placeholder="Оберіть статуси"
+                                       x-on:click="open = !open"
+                                       :value="selectedStatuses.length ? selectedStatuses.map(s => {
+                                            if (s === 'APPROVED') return 'Активний';
+                                            if (s === 'NEW') return 'Чернетка';
+                                            if (s === 'DISMISSED') return 'Звільнений';
+                                            if (s === 'VERIFIED') return 'Верифікований';
+                                            if (s === 'NOT_VERIFIED') return 'Не верифікований';
+                                            return s;
+                                        }).join(', ') : ''"
+                                       readonly
+                                />
+                                <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                                <div x-show="open"
+                                     x-on:click.away="open = false"
+                                     x-transition:enter="transition ease-out duration-100"
+                                     x-transition:enter-start="transform opacity-0 scale-95"
+                                     x-transition:enter-end="transform opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-75"
+                                     x-transition:leave-start="transform opacity-100 scale-100"
+                                     x-transition:leave-end="transform opacity-0 scale-95"
+                                     class="absolute z-10 mt-2 w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg">
+                                    <ul class="py-2 px-3 space-y-2 text-sm text-gray-700 dark:text-gray-200">
+                                        <li>
+                                            <label class="flex items-center space-x-2 cursor-pointer">
+                                                <input type="checkbox" value="APPROVED" wire:model.live="status"
+                                                       class="rounded-sm text-blue-600 focus:ring-blue-500 border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:checked:bg-blue-600 dark:checked:border-transparent" />
+                                                <span>{{ __('forms.active') }}</span>
+                                            </label>
+                                        </li>
+                                        <li>
+                                            <label class="flex items-center space-x-2 cursor-pointer">
+                                                <input type="checkbox" value="NEW" wire:model.live="status"
+                                                       class="rounded-sm text-blue-600 focus:ring-blue-500 border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:checked:bg-blue-600 dark:checked:border-transparent" />
+                                                <span>{{ __('forms.draft') }}</span>
+                                            </label>
+                                        </li>
+                                        <li>
+                                            <label class="flex items-center space-x-2 cursor-pointer">
+                                                <input type="checkbox" value="DISMISSED" wire:model.live="status"
+                                                       class="rounded-sm text-blue-600 focus:ring-blue-500 border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:checked:bg-blue-600 dark:checked:border-transparent" />
+                                                <span>{{ __('forms.dismissed') }}</span>
+                                            </label>
+                                        </li>
+                                        <li>
+                                            <label class="flex items-center space-x-2 cursor-pointer">
+                                                <input type="checkbox" value="VERIFIED" wire:model.live="status"
+                                                       class="rounded-sm text-blue-600 focus:ring-blue-500 border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:checked:bg-blue-600 dark:checked:border-transparent">
+                                                <span>{{ __('forms.verified') }}</span>
+                                            </label>
+                                        </li>
+                                        <li>
+                                            <label class="flex items-center space-x-2 cursor-pointer">
+                                                <input type="checkbox" value="NOT_VERIFIED" wire:model.live="status"
+                                                       class="rounded-sm text-blue-600 focus:ring-blue-500 border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:checked:bg-blue-600 dark:checked:border-transparent">
+                                                <span>{{ __('forms.not_verified') }}</span>
+                                            </label>
+                                        </li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
@@ -174,7 +209,6 @@
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6" wire:key="party-{{ $party->id }}">
                     <div
                         class="flex flex-wrap items-start justify-between gap-4 border-b border-gray-200 dark:border-gray-700 pb-4">
-                        {{-- Party Info Header (Name, Phone, Email) --}}
                         <div>
                             <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ $party->fullName }}</h3>
                             <div class="flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 mt-2">
@@ -191,14 +225,14 @@
                                            class="hover:underline">{{ $mobilePhone->number }}</a>
                                     </span>
                                 @endif
-                                @if($party->email)
-                                    <span class="flex items-center gap-1.5">
-                                        <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M2.038 5.61A2.01 2.01 0 0 0 2 6v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6c0-.12-.01-.238-.03-.352l-.866.65-7.89 6.032a2 2 0 0 1-2.429 0L2.884 6.288l-.846-.677Z"/>
-                <path d="M20.677 4.117A1.996 1.996 0 0 0 20 4H4c-.225 0-.44.037-.642.105l.758.607L12 10.742 19.9 4.7l.777-.583Z"/>
-            </svg><a href="mailto:{{$party->email}}" class="hover:underline">{{ $party->email }}</a>
+                                    @if($party->email)
+                                        <span class="flex items-center gap-1.5">
+                                        <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                           <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m3.5 5.5 7.893 6.036a1 1 0 0 0 1.214 0L20.5 5.5M4 19h16a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Z"/>
+                                        </svg>
+                                        <a href="mailto:{{$party->email}}" class="hover:underline">{{ $party->email }}</a>
                                     </span>
-                                @endif
+                                    @endif
                             </div>
                         </div>
                         <div class="flex items-center space-x-3">
@@ -211,57 +245,57 @@
                     </div>
                     <div class="flow-root mt-4">
                         <div class="max-w-screen-xl">
-                        <table class="table-input w-full table-fixed">
-                            <thead class="thead-input">
-                            <tr>
-                                <th scope="col" class="th-input w-[28%]">Посада</th>
-                                <th scope="col" class="th-input w-[22%]">Роль</th>
-                                <th scope="col" class="th-input w-[20%]">Підрозділ</th>
-                                <th scope="col" class="th-input w-[15%]">Статус</th>
-                                <th scope="col" class="th-input w-[15%] text-center">Дії</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            @php
-                                $positions = $party->employees->merge($party->employeeRequests);
-                                $groupedPositions = $positions->groupBy('position');
-                            @endphp
-                            @foreach($groupedPositions as $positionCode => $items)
-                                @php
-                                    $positionToShow = $items->firstWhere(fn($item) => $item instanceof \App\Models\Employee\Employee) ?? $items->first();
-                                @endphp
+                            <table class="table-input w-full table-fixed">
+                                <thead class="thead-input">
                                 <tr>
-                                    <td class="td-input break-words whitespace-normal align-top">{{ $dictionaries['POSITION'][$positionToShow->position] ?? $positionToShow->position }}</td>
-                                    <td class="td-input break-words whitespace-normal align-top">{{ $dictionaries['EMPLOYEE_TYPE'][$positionToShow->employee_type] ?? $positionToShow->employee_type }}</td>
-                                    <td class="td-input break-words whitespace-normal align-top">{{ $positionToShow->division->name ?? 'N/A' }}</td>
-
-                                    <td class="td-input break-words whitespace-normal align-top">
-                                        @if($positionToShow instanceof \App\Models\Employee\Employee)
-                                            @if($positionToShow->status?->value === 'APPROVED')
-                                                <span class="badge-green">Активний</span>
-                                            @else
-                                                <span class="badge-red">Звільнений</span>
-                                            @endif
-                                        @else
-                                            <span class="badge-blue">Чернетка</span>
-                                        @endif
-                                    </td>
-
-                                    <td class="td-input text-center">
-                                        @include('livewire.employee.parts.actions-dropdown', [
-                                            'position' => $positionToShow,
-                                            'canViewEmployeeDetails' => $canViewEmployeeDetails,
-                                            'canUpdateEmployee' => $canUpdateEmployee,
-                                            'canDismissEmployee' => $canDismissEmployee,
-                                            'canViewEmployeeRequest' => $canViewEmployeeRequest,
-                                            'canUpdateEmployeeRequest' => $canUpdateEmployeeRequest,
-                                            'canDeleteEmployeeRequest' => $canDeleteEmployeeRequest,
-                                        ])
-                                    </td>
+                                    <th scope="col" class="th-input w-[28%]">Посада</th>
+                                    <th scope="col" class="th-input w-[22%]">Роль</th>
+                                    <th scope="col" class="th-input w-[20%]">Підрозділ</th>
+                                    <th scope="col" class="th-input w-[15%]">Статус</th>
+                                    <th scope="col" class="th-input w-[15%] text-center"></th>
                                 </tr>
-                            @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                @php
+                                    $positions = $party->employees->merge($party->employeeRequests);
+                                    $groupedPositions = $positions->groupBy('position');
+                                @endphp
+                                @foreach($groupedPositions as $positionCode => $items)
+                                    @php
+                                        $positionToShow = $items->firstWhere(fn($item) => $item instanceof \App\Models\Employee\Employee) ?? $items->first();
+                                    @endphp
+                                    <tr>
+                                        <td class="td-input break-words whitespace-normal align-top">{{ $dictionaries['POSITION'][$positionToShow->position] ?? $positionToShow->position }}</td>
+                                        <td class="td-input break-words whitespace-normal align-top">{{ $dictionaries['EMPLOYEE_TYPE'][$positionToShow->employee_type] ?? $positionToShow->employee_type }}</td>
+                                        <td class="td-input break-words whitespace-normal align-top">{{ $positionToShow->division->name ?? 'N/A' }}</td>
+
+                                        <td class="td-input break-words whitespace-normal align-top">
+                                            @if($positionToShow instanceof \App\Models\Employee\Employee)
+                                                @if($positionToShow->status?->value === 'APPROVED')
+                                                    <span class="badge-green">Активний</span>
+                                                @else
+                                                    <span class="badge-red">Звільнений</span>
+                                                @endif
+                                            @else
+                                                <span class="badge-red">Чернетка</span>
+                                            @endif
+                                        </td>
+
+                                        <td class="td-input text-center">
+                                            @include('livewire.employee.parts.actions-dropdown', [
+                                                'position' => $positionToShow,
+                                                'canViewEmployeeDetails' => $canViewEmployeeDetails,
+                                                'canUpdateEmployee' => $canUpdateEmployee,
+                                                'canDismissEmployee' => $canDismissEmployee,
+                                                'canViewEmployeeRequest' => $canViewEmployeeRequest,
+                                                'canUpdateEmployeeRequest' => $canUpdateEmployeeRequest,
+                                                'canDeleteEmployeeRequest' => $canDeleteEmployeeRequest,
+                                            ])
+                                        </td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
