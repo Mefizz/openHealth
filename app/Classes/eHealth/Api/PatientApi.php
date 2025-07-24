@@ -76,6 +76,23 @@ class PatientApi
     }
 
     /**
+     * Get diagnostic reports data for patient by provided params.
+     *
+     * @param  string  $patientId
+     * @param  array  $params
+     * @return array
+     * @throws ApiException
+     */
+    public static function getDiagnosticReportsBySearchParams(string $patientId, array $params): array
+    {
+        return new Request(
+            HttpRequest::METHOD_GET,
+            self::ENDPOINT_PATIENT . "/$patientId/diagnostic_reports",
+            $params
+        )->sendRequest();
+    }
+
+    /**
      * Submit procedure data package.
      *
      * @param  string  $patientId
@@ -93,6 +110,25 @@ class PatientApi
     }
 
     /**
+     * Get procedures data for patient by provided params.
+     *
+     * @param  string  $patientId
+     * @param  array  $params
+     * @return array
+     * @throws ApiException
+     */
+    public static function getProceduresBySearchParams(string $patientId, array $params): array
+    {
+        return new Request(
+            HttpRequest::METHOD_GET,
+            self::ENDPOINT_PATIENT . "/$patientId/procedures",
+            $params
+        )->sendRequest();
+    }
+
+    /**
+     * Get encounter data by provided ID.
+     *
      * @param  string  $patientId
      * @param  string  $encounterId
      * @return array
@@ -104,6 +140,23 @@ class PatientApi
             HttpRequest::METHOD_GET,
             self::ENDPOINT_PATIENT . "/$patientId/encounters/$encounterId",
             []
+        )->sendRequest();
+    }
+
+    /**
+     * Get encounter data for patient by provided params.
+     *
+     * @param  string  $patientId
+     * @param  array  $params
+     * @return array
+     * @throws ApiException
+     */
+    public static function getEncountersBySearchParams(string $patientId, array $params): array
+    {
+        return new Request(
+            HttpRequest::METHOD_GET,
+            self::ENDPOINT_PATIENT . "/$patientId/encounters",
+            $params
         )->sendRequest();
     }
 
