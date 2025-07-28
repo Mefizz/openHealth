@@ -94,7 +94,7 @@ return [
     'new_employee' => 'Новий співробітник',
     'add_employee' => 'Додати співробітника',
     'edit_employee' => 'Зміна даних співробітника',
-    'view_employee' => 'Перегляд співробітника',
+    'view_employee' => 'Перегляд данних співробітника',
     'employee_requests' => 'Запити співробітників',
     'edit_employee_request' => 'Редагування запиту співробітника',
     'view_employee_request' => 'Перегляд запиту співробітника',

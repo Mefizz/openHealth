@@ -35,7 +35,18 @@
                     <td class="td-input" x-text="specDict[speciality.speciality]"></td>
                     <td class="td-input" x-text="speciality.attestationName"></td>
                     <td class="td-input" x-text="levelDict[speciality.level]"></td>
-                    <td class="td-input" x-text="speciality.specialityOfficio"></td>
+                    <td class="td-input text-center">
+                        <template x-if="speciality.specialityOfficio">
+                            <svg class="w-6 h-6 text-green-500 mx-auto" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 11.917 9.724 16.5 19 7.5"/>
+                            </svg>
+                        </template>
+                        <template x-if="!speciality.specialityOfficio">
+                            <svg class="w-6 h-6 text-red-500 mx-auto" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/>
+                            </svg>
+                        </template>
+                    </td>
                     <td class="td-input" x-text="speciality.certificateNumber"></td>
                     <td class="td-input" x-text="speciality.attestationDate"></td>
                     <td class="td-input">
@@ -126,7 +137,7 @@
                     <div x-show="openModal"
                          x-transition
                          @click="openModal = false"
-                         class="relative flex min-h-screen items-center justify-center p-4"
+                         class="relative flex min-h-screen items-center justify-start pl-72 p-4"
                     >
                         <div @click.stop
                              x-trap.noscroll.inert="openModal"
@@ -140,7 +151,7 @@
                             <form>
                                 <div class="form-row-modal">
                                     <div>
-                                        <label for="specialitySpeciality" class="label-modal">{{ __('forms.speciality') }} *</label>
+                                        <label for="specialitySpeciality" class="label-modal">{{ __('forms.speciality') }} <span class="text-red-600"> *</span></label>
                                         <select x-model="modalSpeciality.speciality" id="specialitySpeciality"
                                                 class="input-modal" required>
                                             <option value="">{{__('forms.select_speciality')}}</option>
@@ -163,13 +174,13 @@
                                     </div>
 
                                     <div>
-                                        <label for="specialityAttestationName" class="label-modal">{{ __('forms.issued_by') }} *</label>
+                                        <label for="specialityAttestationName" class="label-modal">{{ __('forms.issued_by') }} <span class="text-red-600"> *</span></label>
                                         <input x-model="modalSpeciality.attestationName" type="text"
                                                id="specialityAttestationName" class="input-modal" required>
                                     </div>
 
                                     <div>
-                                        <label for="specialityLevel" class="label-modal">{{ __('forms.speciality_level') }} *</label>
+                                        <label for="specialityLevel" class="label-modal">{{ __('forms.speciality_level') }} <span class="text-red-600"> *</span></label>
                                         <select x-model="modalSpeciality.level" id="specialityLevel"
                                                 class="input-modal" required>
                                             <option value="">{{__('forms.select_level')}}</option>
@@ -180,7 +191,7 @@
                                     </div>
 
                                     <div>
-                                        <label for="specialityQualificationType" class="label-modal">{{ __('forms.qualificationType') }} *</label>
+                                        <label for="specialityQualificationType" class="label-modal">{{ __('forms.qualificationType') }} <span class="text-red-600"> *</span></label>
                                         <select x-model="modalSpeciality.qualificationType" id="specialityQualificationType"
                                                 class="input-modal" required>
                                             <option value="">{{__('forms.select_qualification_type')}}</option>
@@ -191,18 +202,18 @@
                                     </div>
 
                                     <div>
-                                        <label for="specialityCertificateNumber" class="label-modal">{{ __('forms.certificateNumber') }} *</label>
+                                        <label for="specialityCertificateNumber" class="label-modal">{{ __('forms.certificateNumber') }} <span class="text-red-600"> *</span></label>
                                         <input x-model="modalSpeciality.certificateNumber" type="text"
                                                id="specialityCertificateNumber" class="input-modal">
                                     </div>
                                     <div>
-                                        <label for="specialityAttestationDate" class="label-modal">{{ __('forms.attestationDate') }} *</label>
+                                        <label for="specialityAttestationDate" class="label-modal">{{ __('forms.attestationDate') }} <span class="text-red-600"> *</span></label>
                                         <input x-model="modalSpeciality.attestationDate" type="date"
                                                id="specialityAttestationDate" class="input-modal datepicker-input"
                                                autocomplete="off" required>
                                     </div>
                                 </div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ __('forms.form_required_note') }}</p>
+                                <p class="text-sm text-gray-400 mb-2">{{ __('forms.form_required_note') }}</p>
                                 <div class="mt-6 flex justify-between space-x-2">
                                     <button type="button"
                                             @click="openModal = false"

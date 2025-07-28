@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Employee;
 
 use AllowDynamicProperties;
@@ -203,7 +205,7 @@ class EmployeeIndex extends EmployeeComponent
     /**
      * Performs the dismissal action.
      */
-    public function dismissed(): void
+    public function deactivate(): void
     {
         $employee = Employee::find($this->employeeToDismissId);
         if (!$employee) {
@@ -232,51 +234,109 @@ class EmployeeIndex extends EmployeeComponent
         $this->closeModal();
     }
 
-    public function syncEmployees(): void
+    public function sync(): void
     {
         try {
-            $apiResponse = EmployeeRequestApi::getEmployees($this->legalEntity->uuid);
-
-            if (!isset($apiResponse['data']) || !is_array($apiResponse['data'])) {
-                $this->dispatch('flashMessage', ['message' => 'Не вдалося отримати список співробітників з E-Health.', 'type' => 'error']);
+            // 1. Get all employee IDs from the remote E-Health API.
+            $eHealthEmployees = $this->getRemoteEmployees();
+            if (empty($eHealthEmployees)) {
+                $this->dispatch('flashMessage', ['message' => 'Не знайдено співробітників в E-Health або сталася помилка API.', 'type' => 'info']);
                 return;
             }
 
-            $requests = $apiResponse['data'];
+            // 2. Get all existing employee UUIDs from our local database in a SINGLE query.
+            $localEmployeeUuids = $this->getLocalEmployeeUuids();
 
-            foreach ($requests as $request) {
-                if (!isset($request['id'])) {
+            // 3. Determine which employees are new by comparing the two lists.
+            $newEmployeeIds = array_diff(array_column($eHealthEmployees, 'id'), $localEmployeeUuids);
+
+            if (empty($newEmployeeIds)) {
+                $this->dispatch('flashMessage', ['message' => 'Синхронізацію завершено. Нових співробітників не знайдено.', 'type' => 'success']);
+                return;
+            }
+
+            // 4. Create the new employees.
+            $newEmployeesAdded = $this->createNewEmployees($newEmployeeIds);
+
+            // 5. Dispatch the final success message.
+            $message = "Синхронізацію завершено. Додано {$newEmployeesAdded} нових співробітників.";
+            $this->dispatch('flashMessage', ['message' => $message, 'type' => 'success']);
+
+        } catch (\Exception $e) {
+            Log::error('Employee sync failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            $this->dispatch('flashMessage', ['message' => __('employees.requestError', ['error' => 'Помилка синхронізації']), 'type' => 'error']);
+        }
+    }
+
+    /**
+     * Fetches the list of employees from the E-Health API.
+     *
+     * @return array
+     */
+    private function getRemoteEmployees(): array
+    {
+        $apiResponse = EmployeeRequestApi::getEmployees($this->legalEntity->uuid);
+
+        return isset($apiResponse['data']) && is_array($apiResponse['data'])
+            ? $apiResponse['data']
+            : [];
+    }
+
+    /**
+     * Gets all existing employee UUIDs from the local database for the current legal entity.
+     *
+     * @return array
+     */
+    private function getLocalEmployeeUuids(): array
+    {
+        return Employee::where('legal_entity_id', $this->legalEntity->id)
+            ->pluck('uuid') // Select only the 'uuid' column
+            ->all();      // Convert the collection to a simple array
+    }
+
+    /**
+     * Iterates over new employee IDs, fetches their full data, and stores them locally.
+     *
+     * @param array $newEmployeeIds
+     * @return int The number of successfully added employees.
+     */
+    private function createNewEmployees(array $newEmployeeIds): int
+    {
+        $successfullyAddedCount = 0;
+        $employeeRepository = app(EmployeeRepository::class);
+        $employeeApi = app(EmployeeApi::class);
+
+        foreach ($newEmployeeIds as $employeeId) {
+            try {
+                // This is the unavoidable N+1 API call for details.
+                $fullEmployeeData = EmployeeRequestApi::getEmployeeById($employeeId);
+                if (empty($fullEmployeeData)) {
+                    Log::warning("Could not fetch details for employee ID: {$employeeId}");
                     continue;
                 }
 
-                $response = EmployeeRequestApi::getEmployeeById($request['id']);
-
-                $employeeResponse = schemaService()->setDataSchema($response, app(EmployeeApi::class))
+                // Normalize and prepare data for storing.
+                $employeeResponse = schemaService()->setDataSchema($fullEmployeeData, $employeeApi)
                     ->responseSchemaNormalize()
                     ->replaceIdsKeysToUuid(['id', 'legalEntityId', 'divisionId', 'partyId'])
                     ->snakeCaseKeys(true)
                     ->getNormalizedData();
 
-                app(EmployeeRepository::class)
-                    ->store($employeeResponse,
-                            legalEntity(),
-                            new Employee());
+                // Store the new employee.
+                $employeeRepository->store($employeeResponse, legalEntity(), new Employee());
+
+                $successfullyAddedCount++;
+            } catch (\Exception $e) {
+                // Log the specific error and continue with the next employee.
+                // This makes the sync process more resilient.
+                Log::error("Failed to create employee with UUID {$employeeId}", [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
-
-            $this->dispatch('flashMessage', ['message' => __('employees.sync_success'), 'type' => 'success']);
-
-        } catch (\Exception $e) {
-
-            Log::error('Employee sync failed: ' . $e->getMessage());
-            $this->dispatch('flashMessage', ['message' => __('employees.requestError', ['error' => 'Помилка синхронізації']), 'type' => 'error']);
         }
-    }
 
-    private function dispatchErrorMessage(string $message, string $type = 'success', array $errors = []): void
-    {
-        $this->dispatch('show-notification', [
-            'message' => $message, 'type' => $type, 'errors' => $errors
-        ]);
+        return $successfullyAddedCount;
     }
 
     public function confirmRequestDeletion(int $id): void

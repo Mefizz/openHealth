@@ -13,14 +13,22 @@ class FlashMessage extends Component
     public string $message = '';
     public string $type = 'success';
     public array $errors = [];
+    public bool $visible = false;
 
-    protected $listeners = ['flashMessage'];
-
-    public function flashMessage($flash): void
+    #[On('flashMessage')]
+    public function showFlashMessage($data): void
     {
-        $this->message = $flash['message'] ?? '';
-        $this->type = $flash['type'];
-        $this->errors = $flash['errors'] ?? [];
+        $this->message = $data['message'] ?? '';
+        $this->type = $data['type'] ?? 'success';
+        $this->errors = $data['errors'] ?? [];
+        $this->visible = true;
+
+        $this->dispatch('start-flash-timer');
+    }
+
+    public function hideFlashMessage(): void
+    {
+        $this->visible = false;
     }
 
     #[On('show-notification')]

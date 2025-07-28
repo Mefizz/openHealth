@@ -327,8 +327,9 @@ class LegalEntitiesForms extends Form
     protected function customRules(): array
     {
         // Place here the custom validation rules to be checked through creation/updating of the LegalEntity
-        $customValidationRules = [];
-
-        return $customValidationRules;
+        return [
+            new PhoneDuplicates($this->phones),
+            new PhoneDuplicates($this->owner['phones'])
+        ];
     }
 }

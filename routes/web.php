@@ -9,13 +9,13 @@ use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\ForgotPassword;
 use App\Http\Controllers\Auth\EHealthLoginController;
-use App\Models\Employee\Employee;
 use App\Livewire\Employee\EmployeeEdit;
 use App\Livewire\Employee\EmployeeShow;
 use App\Livewire\Employee\EmployeeIndex;
-use App\Models\Employee\EmployeeRequest;
 use App\Livewire\Employee\EmployeeCreate;
 use App\Livewire\Employee\EmployeePositionAdd;
+use App\Livewire\Employee\EmployeeRequestEdit;
+use App\Livewire\Employee\EmployeeRequestShow;
 use App\Models\License;
 use App\Livewire\License\LicenseEdit;
 use App\Livewire\License\LicenseView;
@@ -108,33 +108,26 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
             Route::get('/{division}/healthcare-service', HealthcareServiceForm::class)->name('healthcare_service.index');
         });
 
+        Route::prefix('employee')->name('employee.')->middleware('auth')->group(function () {
+            Route::get('/', EmployeeIndex::class)->name('index');
 
-        Route::prefix('employees')->name('employee.')->middleware('auth')->group(function () {
+            Route::get('/{employee}',EmployeeShow::class)
+                ->name('show')->middleware('can:view,employee');
 
-            // The main unified list for both employees and requests
-            Route::get('/', EmployeeIndex::class)
-                ->name('index')
-                ->middleware('can:viewAny,' . Employee::class);
+            Route::get('/{employee}/edit', EmployeeEdit::class)
+                ->name('edit')->middleware('can:update,employee');
+        });
 
-            // Route to create a new EmployeeRequest from scratch
-            Route::get('/create', EmployeeCreate::class)
-                ->name('create')
-                ->middleware('can:create,' . EmployeeRequest::class);
+        // --- Group for Employee Requests ---
+        Route::prefix('employee-request')->name('employee-request.')->middleware('auth')->group(function () {
+            Route::get('/create', EmployeeCreate::class)->name('create');
+            Route::get('/party/{party}/position-add', EmployeePositionAdd::class)->name('position-add');
 
-            // Route to add a new position (creates an EmployeeRequest)
-            Route::get('/party/{party}/add-position', EmployeePositionAdd::class)
-                ->name('add-position')
-                ->middleware('can:create,' . EmployeeRequest::class);
+            Route::get('/{employee_request}', EmployeeRequestShow::class)
+                ->name('show')->middleware('can:view,employee_request');
 
-            // Polymorphic route for viewing either an Employee or an EmployeeRequest
-            // Authorization will be handled inside the component's mount method.
-            Route::get('/{id}/{type?}', EmployeeShow::class)
-                ->name('show');
-
-            // Polymorphic route for editing either an Employee or an EmployeeRequest
-            // Authorization will be handled inside the component's mount method.
-            Route::get('/{id}/{type?}/edit', EmployeeEdit::class)
-                ->name('edit');
+            Route::get('/{employee_request}/edit',EmployeeRequestEdit::class)
+                ->name('edit')->middleware('can:update,employee_request');
         });
 
         Route::prefix('contract')->group(function () {
