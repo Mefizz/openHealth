@@ -13,9 +13,6 @@ class EmployeeCreate extends EmployeeComponent
 {
     use ManagesEmployeeForm;
 
-    public ?EmployeeRequest $employeeRequest = null;
-    public ?int $employeeRequestId = null;
-
     public function mount(LegalEntity $legalEntity): void
     {
         $this->loadDictionaries();

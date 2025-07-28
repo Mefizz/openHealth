@@ -88,6 +88,7 @@
                 <label for="taxId" class="label z-10"
                        x-text="noTaxId ? '{{ __('forms.document_no_tax_id') }}' : '{{ __('forms.tax_id') }}'"></label>
                 @error('form.party.taxId') <p id="partyTaxIdErrorHelp" class="text-error">{{ $message }}</p> @enderror
+                <label for="taxId" class="label z-10" x-text="noTaxId ? '{{ __('forms.document_no_tax_id') }}' : '{{ __('forms.tax_id') }}'"></label>
             </div>
             <div class="form-group group">
                 <div class="mt-3">
@@ -106,7 +107,7 @@
 
         {{-- Phones Section --}}
         <div
-            class="space-y-4"
+            class="space-y-2"
             x-data="{ phones: $wire.entangle('form.party.phones') }"
             x-init="if (!Array.isArray(phones) || phones.length === 0) { phones = [{ type: 'MOBILE', number: '' }] }"
         >
@@ -141,7 +142,7 @@
 
                     <div class="flex items-center space-x-4 justify-start">
                         <template x-if="phones.length > 1">
-                            <button type="button" @click="phones.splice(index, 1)" class="item-remove text-red-600 hover:text-red-800">
+                            <button type="button" @click="phones.splice(index, 1)" class="item-remove text-red-600 hover:text-red-800 justify-self-start">
                                 <span>{{__('forms.remove_phone')}}</span>
                             </button>
                         </template>

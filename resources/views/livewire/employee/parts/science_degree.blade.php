@@ -140,7 +140,7 @@
                             <form>
                                 <div class="form-row-modal">
                                     <div>
-                                        <label for="scienceDegreeDegree" class="label-modal">{{ __('forms.degree') }}<span class="text-red-600"> *</span></label>
+                                        <label for="scienceDegreeDegree" class="label-modal">{{ __('forms.degree') }} <span class="text-red-600"> *</span></label>
                                         <select x-model="modalScienceDegree.degree" id="scienceDegreeDegree"
                                                 class="input-modal" required>
                                             <option value="">{{__('forms.select_level')}}</option>
@@ -150,7 +150,7 @@
                                         </select>
                                     </div>
                                     <div>
-                                        <label for="scienceDegreeCountry" class="label-modal">{{ __('forms.country') }}<span class="text-red-600"> *</span></label>
+                                        <label for="scienceDegreeCountry" class="label-modal">{{ __('forms.country') }} <span class="text-red-600"> *</span></label>
                                         <select x-model="modalScienceDegree.country" id="scienceDegreeCountry"
                                                 class="input-modal" required>
                                             @foreach($this->dictionaries['COUNTRY'] as $countryValue => $countryDescription)
@@ -159,23 +159,23 @@
                                         </select>
                                     </div>
                                     <div>
-                                        <label for="scienceCity" class="label-modal">{{ __('forms.city') }}<span class="text-red-600"> *</span></label>
+                                        <label for="scienceCity" class="label-modal">{{ __('forms.city') }} <span class="text-red-600"> *</span></label>
                                         <input x-model="modalScienceDegree.city" type="text" id="scienceCity"
                                                class="input-modal" required>
                                     </div>
                                     <div>
-                                        <label for="scienceDegreeIssuedDate" class="label-modal">{{ __('forms.issuedDate') }}<span class="text-red-600"> *</span></label>
+                                        <label for="scienceDegreeIssuedDate" class="label-modal">{{ __('forms.issuedDate') }} <span class="text-red-600"> *</span></label>
                                         <input x-model="modalScienceDegree.issuedDate" type="date"
                                                id="scienceDegreeIssuedDate" class="input-modal datepicker-input"
                                                autocomplete="off" required>
                                     </div>
                                     <div>
-                                        <label for="scienceDegreeInstitutionName" class="label-modal">{{ __('forms.institutionName') }}<span class="text-red-600"> *</span></label>
+                                        <label for="scienceDegreeInstitutionName" class="label-modal">{{ __('forms.institutionName') }} <span class="text-red-600"> *</span></label>
                                         <input x-model="modalScienceDegree.institutionName" type="text"
                                                id="scienceDegreeInstitutionName" class="input-modal" required>
                                     </div>
                                     <div>
-                                        <label for="scienceDegreeSpeciality" class="label-modal">{{ __('forms.speciality') }}<span class="text-red-600"> *</span></label>
+                                        <label for="scienceDegreeSpeciality" class="label-modal">{{ __('forms.speciality') }} <span class="text-red-600"> *</span></label>
                                         <select x-model="modalScienceDegree.speciality" id="scienceDegreeSpeciality"
                                                 class="input-modal" required>
                                             <option value="">{{__('forms.select_speciality')}}</option>
@@ -185,7 +185,7 @@
                                         </select>
                                     </div>
                                     <div>
-                                        <label for="scienceDegreeDiplomaNumber" class="label-modal">{{ __('forms.diplomaNumber') }}<span class="text-red-600"> *</span></label>
+                                        <label for="scienceDegreeDiplomaNumber" class="label-modal">{{ __('forms.diplomaNumber') }} <span class="text-red-600"> *</span></label>
                                         <input x-model="modalScienceDegree.diplomaNumber" type="text"
                                                id="scienceDegreeDiplomaNumber" class="input-modal">
                                     </div>
