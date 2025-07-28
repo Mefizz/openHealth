@@ -5,7 +5,6 @@ namespace App\Livewire\Auth;
 
 use Exception;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Log;
