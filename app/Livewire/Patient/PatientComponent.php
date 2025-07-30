@@ -314,7 +314,7 @@ class PatientComponent extends Component
      */
     public function createApplication(): void
     {
-        if (!Auth::user()?->can('createApplication', PersonRequest::class)) {
+        if (!Auth::user()?->can('create', PersonRequest::class)) {
             $this->dispatch('flashMessage', [
                 'message' => 'У вас немає дозволу на створення пацієнта.',
                 'type' => 'error'
@@ -456,6 +456,15 @@ class PatientComponent extends Component
      */
     public function resendSms(): void
     {
+        if (!Auth::user()?->can('create', PersonRequest::class)) {
+            $this->dispatch('flashMessage', [
+                'message' => 'У вас немає дозволу на повторну відправку СМС.',
+                'type' => 'error'
+            ]);
+
+            return;
+        }
+
         if ($this->resendCooldown > 0) {
             return;
         }
@@ -526,6 +535,15 @@ class PatientComponent extends Component
      */
     public function sign(): void
     {
+        if (!Auth::user()?->can('create', PersonRequest::class)) {
+            $this->dispatch('flashMessage', [
+                'message' => 'У вас немає дозволу на створення підписаного пацієнта.',
+                'type' => 'error'
+            ]);
+
+            return;
+        }
+
         try {
             $approvedPersonRequest = EHealth::personRequest()->getById($this->form->patient['id']);
             $personRequestData = $approvedPersonRequest->getData();
@@ -727,6 +745,15 @@ class PatientComponent extends Component
      */
     private function approvePersonRequest(array $requestData = []): void
     {
+        if (!Auth::user()?->can('create', PersonRequest::class)) {
+            $this->dispatch('flashMessage', [
+                'message' => 'У вас немає дозволу на підтвердження пацієнта.',
+                'type' => 'error'
+            ]);
+
+            return;
+        }
+
         try {
             $response = EHealth::personRequest()->approve($this->form->patient['id'], $requestData);
             $responseData = $response->getData();
