@@ -6,7 +6,6 @@ namespace App\Classes\eHealth\Api;
 
 use App\Classes\eHealth\EHealthRequest;
 use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -15,34 +14,30 @@ use RuntimeException;
 class EmployeeRequest extends EHealthRequest
 {
     /**
-     * The API endpoint for creating employee requests.
+     * The API endpoint for employee requests.
      */
     public const string ENDPOINT = '/api/v2/employee_requests';
 
     /**
-     * Creates a request in eHealth, encapsulating the logic of sending and handling the response.
-     * Returns an array with data on success or throws an exception on failure.
+     * Creates a new Employee Request in eHealth using a signed data payload.
+     * This is the primary action method for this class.
      *
-     * @param  string  $signedContent The signed data payload.
-     * @return array The response data from eHealth.
-     * @throws RuntimeException If the response from eHealth contains an error.
-     * @throws ConnectionException
+     * @param string $signedContent The base64 encoded signed string.
+     * @return array The response data from eHealth on success.
+     * @throws RuntimeException|ConnectionException
      */
-    public static function createFromSignedContent(string $signedContent): array
+    public function create(string $signedContent): array
     {
-        // Prepare the request body as per the eHealth specification.
         $requestBody = [
             'signed_content' => $signedContent,
             'signed_content_encoding' => 'base64',
         ];
 
-        // 1. Instantiate the class and send the request.
-        $response = (new static())->post(self::ENDPOINT, $requestBody);
+        $response = $this->post(self::ENDPOINT, $requestBody);
 
-        // 2. Check the response. If it's not successful, throw an exception with the error body.
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             $errorBody = $response->json();
-            $errorMessage = 'eHealth API Error (422): ' . ($errorBody['error']['message'] ?? $response->reason());
+            $errorMessage = 'eHealth API Error (422): '.($errorBody['error']['message'] ?? $response->reason());
 
             Log::channel('e_health_errors')->error('EHealth Create EmployeeRequest Error', [
                 'status' => $response->status(),
@@ -52,16 +47,14 @@ class EmployeeRequest extends EHealthRequest
             throw new RuntimeException($errorMessage);
         }
 
-        // 3. On success, return the data from the response.
-        // eHealth usually returns the main payload within the 'data' key.
         return $response->json('data', []);
     }
 
     /**
      * Validates the data array received from a successful eHealth response.
      *
-     * @param  array  $responseData
-     * @return array The validated data.
+     * @param array $responseData The data array from the eHealth response.
+     * @return array The validated data, ready for local assignment.
      * @throws ValidationException
      */
     public function validateCreateResponseFromArray(array $responseData): array
@@ -77,75 +70,6 @@ class EmployeeRequest extends EHealthRequest
         }
 
         return $validator->validated();
-    }
-
-    /**
-     * Formats data from a revision into the structure required by the eHealth API.
-     */
-    public static function formatEHealthPayload(array $revisionData): array
-    {
-        $employeeData = $revisionData['employee_request_data'];
-        $partyData = $revisionData['party'];
-        $documentsData = $revisionData['documents'];
-        $phonesData = $revisionData['phones'];
-        $doctorData = $revisionData['doctor'] ?? [];
-
-        $apiEmployeeRequest = [
-            'position' => $employeeData['position'] ?? null,
-            'status' => 'NEW',
-            'employee_type' => $employeeData['employee_type'] ?? null,
-            'legal_entity_id' => (string) legalEntity()->id,
-            'start_date' => isset($employeeData['start_date']) ? Carbon::parse($employeeData['start_date'])->format('Y-m-d') : null,
-        ];
-
-        if (! empty($employeeData['division_id'])) {
-            $apiEmployeeRequest['division_id'] = (string) $employeeData['division_id'];
-        }
-
-        if (! empty($employeeData['end_date'])) {
-            $apiEmployeeRequest['end_date'] = Carbon::parse($employeeData['end_date'])->format('Y-m-d');
-        }
-
-        $apiEmployeeRequest['party'] = [
-            'first_name' => $partyData['first_name'] ?? null,
-            'last_name' => $partyData['last_name'] ?? null,
-            'second_name' => $partyData['second_name'] ?? null,
-            'birth_date' => isset($partyData['birth_date']) ? Carbon::parse($partyData['birth_date'])->format('Y-m-d') : null,
-            'gender' => $partyData['gender'] ?? null,
-            'no_tax_id' => (bool) ($partyData['no_tax_id'] ?? false),
-            'tax_id' => $partyData['tax_id'] ?? null,
-            'email' => $partyData['email'] ?? null,
-            'working_experience' => isset($partyData['working_experience']) ? (int) $partyData['working_experience'] : null,
-            'about_myself' => $partyData['about_myself'] ?? null,
-            'phones' => array_map(fn ($phone) => ['type' => $phone['type'], 'number' => $phone['number']], $phonesData),
-            'documents' => array_map(fn ($doc) => [
-                'type' => $doc['type'],
-                'number' => $doc['number'],
-                'issued_by' => $doc['issued_by'] ?? null,
-                'issued_at' => isset($doc['issued_at']) && ! empty($doc['issued_at']) ? Carbon::parse($doc['issued_at'])->format('Y-m-d') : null,
-            ], $documentsData),
-        ];
-
-        if (($employeeData['employee_type'] ?? null) === 'DOCTOR' && ! empty($doctorData)) {
-            $doctorPayload = [];
-            if (! empty($doctorData['educations'])) {
-                $doctorPayload['educations'] = $doctorData['educations'];
-            }
-            if (! empty($doctorData['qualifications'])) {
-                $doctorPayload['qualifications'] = $doctorData['qualifications'];
-            }
-            if (! empty($doctorData['specialities'])) {
-                $doctorPayload['specialities'] = $doctorData['specialities'];
-            }
-            if (! empty($doctorData['science_degrees'])) {
-                $doctorPayload['science_degree'] = $doctorData['science_degrees'][0];
-            }
-            if (! empty($doctorPayload)) {
-                $apiEmployeeRequest['doctor'] = $doctorPayload;
-            }
-        }
-
-        return ['employee_request' => $apiEmployeeRequest];
     }
 
     /**

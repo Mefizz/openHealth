@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Livewire\Employee\Traits;
 
+use App\Classes\eHealth\Payloads\EHealthEmployeePayload;
 use App\Core\Arr;
 use App\Enums\Employee\RequestStatus;
 use App\Enums\Employee\RevisionStatus;
 use App\Models\Employee\BaseEmployee;
-use App\Models\Employee\Employee;
 use App\Models\Employee\EmployeeRequest;
 use App\Classes\eHealth\Api\EmployeeRequest as EHealthEmployeeRequest;
 use App\Models\Revision;
@@ -57,77 +57,87 @@ trait ManagesEmployeeForm
     }
 
     /**
-     * Handles the entire process of signing and sending the employee request to the eHealth API.
-     * This method is self-contained and does not use the generic save() method to avoid logical conflicts.
-     * It updates the draft with form data, signs it, sends it, and processes the response within a database
-     * transaction.
+     * A self-contained SIGN method. It controls the entire process of updating,
+     * signing, and finalizing a draft within a single database transaction.
+     * It does NOT call the generic save() method to avoid logical conflicts.
      *
      * @throws Exception
      */
     public function sign()
     {
-        // Note: The original 'sign' method logic provided by the user is preserved here.
-        // For a more robust implementation, consider the self-contained refactored version
-        // from the previous conversation to avoid calling the dual-purpose save() method.
-        $this->save();
+        // Start a database transaction to ensure atomicity.
+        DB::beginTransaction();
 
         try {
-            if (!$this->employeeRequest) {
-                $this->employeeRequest = \App\Models\Employee\EmployeeRequest::find($this->employeeRequestId);
-                if (!$this->employeeRequest) {
-                    throw new \RuntimeException('Employee request not found before signing.');
-                }
+            // Step 1: Validate the form data first.
+            $this->form->validate($this->form->rulesForSave());
+            $preparedDataForDb = $this->form->getPreparedData();
+
+            // Step 2: Forcefully load the draft we are working on.
+            $requestToSign = EmployeeRequest::with('revision')->find($this->employeeRequestId);
+            if (!$requestToSign) {
+                throw new \RuntimeException('Employee Request draft not found for signing.');
+            }
+            if ($requestToSign->uuid) {
+                throw new \RuntimeException('This request has already been signed and sent to eHealth.');
             }
 
-            // --- STAGE 1: DATA PREPARATION & NORMALIZATION ---
-            $formattedPayload = EHealthEmployeeRequest::formatEHealthPayload($this->employeeRequest->revision->data);
-            $normalizedPayload = schemaService()
-                ->setDataSchema($formattedPayload, app(EHealthEmployeeRequest::class))
-                ->requestSchemaNormalize()
-                ->getNormalizedData();
+            // Step 3: Update the draft and its revision with the latest data from the form.
+            $requestAttributes = Arr::only($preparedDataForDb, ['position', 'employee_type', 'start_date', 'end_date', 'division_id']);
+            $requestToSign->fill($requestAttributes)->save();
 
-            // --- STAGE 2: SIGNING ---
+            $nestedDataForRevision = $this->prepareDataForRevision($preparedDataForDb);
+            if ($requestToSign->revision) {
+                $requestToSign->revision->update(['data' => $nestedDataForRevision]);
+            } else {
+                $this->saveRevisionForRequest($requestToSign, $nestedDataForRevision);
+            }
+
+            // Step 4: Prepare the data payload for eHealth using the updated revision data.
+            // We call the dedicated Payload class for this.
+            $payloadToSign = EHealthEmployeePayload::prepare($nestedDataForRevision);
+
+            // Step 5: Sign the prepared payload.
             $signedContent = signatureService()->signData(
-                $normalizedPayload,
+                $payloadToSign,
                 $this->form->password,
                 $this->form->knedp,
                 $this->form->keyContainerUpload,
                 'Person',
-                $this->employeeRequest->revision->data['party']['tax_id']
+                $nestedDataForRevision['party']['tax_id']
             );
 
-            // --- STAGE 3: SENDING TO E-HEALTH ---
-            // Call the static method that encapsulates sending and response handling.
-            // It will return an array on success or throw an exception on failure.
-            $ehealthData = EHealthEmployeeRequest::createFromSignedContent($signedContent);
+            // Step 6: Send the signed request to eHealth via our API class.
+            $ehealthData = new EHealthEmployeeRequest()->create($signedContent);
 
-            // --- STAGE 4: UPDATING LOCAL MODELS ---
-            $validatedData = (new EHealthEmployeeRequest)->validateCreateResponseFromArray($ehealthData);
+            // Step 7: Finalize local records with data from the eHealth response.
+            $validatedData = new EHealthEmployeeRequest()->validateCreateResponseFromArray($ehealthData);
 
-            // 4.1. Update the main EmployeeRequest model
-            $this->employeeRequest->update(
+            $requestToSign->update(
                 [
                     'uuid'   => $validatedData['uuid'],
                     'status' => RequestStatus::SIGNED,
                 ]
             );
 
-            // 4.2. Update the revision with the full eHealth response and final status
-            $this->employeeRequest->revision->update(
+            $requestToSign->revision->update(
                 [
                     'ehealth_response' => $ehealthData,
                     'status'           => RevisionStatus::SENT,
                 ]
             );
 
-            // --- STAGE 5: FINALIZE ---
+            // If everything is successful, commit the transaction.
+            DB::commit();
+
+            // Step 8: Provide feedback to the user and redirect.
             session()?->flash('success', 'Request has been successfully signed and sent to eHealth.');
             $this->resetSignatureFields();
             return redirect()->route('employee.index', ['legalEntity' => legalEntity()->id]);
 
-        } catch (\Exception $e) {
-            // A single catch block for all exceptions, including from eHealth.
-            session()?->flash('error-modal', $e->getMessage());
+        } catch (Exception $e) {
+            // If anything fails, roll back the entire transaction.
+            DB::rollBack();
             $this->handleException($e);
             return null;
         }
