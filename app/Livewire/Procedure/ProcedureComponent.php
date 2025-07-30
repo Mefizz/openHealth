@@ -205,7 +205,7 @@ class ProcedureComponent extends Component
     {
         try {
             $params = EncounterRequestApi::buildGetEpisodeBySearchParams(managingOrganizationId: legalEntity()->uuid);
-            $this->episodes = PatientApi::getEpisodeBySearchParams($this->patientUuid, $params);
+            $this->episodes = PatientApi::getEpisodeBySearchParams($this->patientUuid, $params)['data'];
         } catch (eHealthApiException) {
             $this->flashGeneralError();
         }

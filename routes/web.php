@@ -18,6 +18,9 @@ use App\Livewire\Employee\EmployeeShow;
 use App\Livewire\Procedure\ProcedureCreate;
 use App\Models\LegalEntity;
 use App\Models\License;
+use App\Models\MedicalEvents\Sql\DiagnosticReport;
+use App\Models\MedicalEvents\Sql\Encounter;
+use App\Models\MedicalEvents\Sql\Procedure;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Patient\PatientIndex;
 use App\Livewire\Contract\ContractForm;
@@ -117,7 +120,6 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
             Route::get('/form/{id?}', ContractForm::class)->name('contract.form');
         });
 
-
         // Routes related to legal entity licenses; primary license can't be edited
         Route::prefix('license')->middleware(['permission:license:read|license:write'])->group(function () {
 
@@ -128,13 +130,12 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                 Route::get('/', function (LegalEntity $legalEntity, License $license) {
                     if (Gate::allows('write', [$license, $legalEntity]) && !$license->isPrimary) {
                         return App::call(LicenseEdit::class, [$legalEntity, $license]);
-                    } else if (Gate::allows('access', [$license, $legalEntity])) {
+                    } elseif (Gate::allows('access', [$license, $legalEntity])) {
                         return App::call(LicenseView::class, [$legalEntity, $license]);
                     }
                 })->name('license.view');
             });
         });
-
 
         Route::prefix('declaration')->group(function () {
             Route::get('/', DeclarationIndex::class)->name('declaration.index');
@@ -148,12 +149,20 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                 Route::get('/{patientId}/summary', PatientSummary::class)->name('patient.summary');
                 Route::get('/{patientId}/episodes', PatientEpisodes::class)->name('patient.episodes');
 
-                Route::get('/{patientId}/encounter/create', EncounterCreate::class)->name('encounter.create');
-                Route::get('/{patientId}/encounter/{encounterId}', EncounterEdit::class)->name('encounter.edit');
+                Route::middleware('can:create,' . Encounter::class)->group(static function () {
+                    Route::get('/{patientId}/encounter/create', EncounterCreate::class)->name('encounter.create');
+                    Route::get('/{patientId}/encounter/{encounterId}', EncounterEdit::class)->name('encounter.edit');
+                });
 
-                Route::get('/{patientId}/diagnostic-report/create', DiagnosticReportCreate::class)->name('diagnostic-report.create');
+                Route::whereNumber('patientId')->group(static function () {
+                    Route::middleware('can:create,' . DiagnosticReport::class)
+                        ->get('{patientId}/diagnostic-report/create', DiagnosticReportCreate::class)
+                        ->name('diagnostic-report.create');
 
-                Route::get('/{patientId}/procedure/create', ProcedureCreate::class)->name('procedure.create');
+                    Route::middleware('can:create,' . Procedure::class)
+                        ->get('{patientId}/procedure/create', ProcedureCreate::class)
+                        ->name('procedure.create');
+                });
             });
         });
     });

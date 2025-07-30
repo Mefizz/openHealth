@@ -6,6 +6,7 @@ namespace App\Livewire\Procedure;
 
 use App\Classes\eHealth\Api\PatientApi;
 use App\Core\Arr as CoreArr;
+use App\Models\MedicalEvents\Sql\Procedure;
 use App\Repositories\MedicalEvents\Repository;
 use App\Traits\HandlesReasonReferences;
 use Illuminate\Support\Facades\Auth;
@@ -26,6 +27,15 @@ class ProcedureCreate extends ProcedureComponent
      */
     public function save(array $data): void
     {
+        if (!Auth::user()?->can('create', Procedure::class)) {
+            $this->dispatch('flashMessage', [
+                'message' => 'У вас немає дозволу на створення процедури.',
+                'type' => 'error'
+            ]);
+
+            return;
+        }
+
         $formattedData = Repository::procedure()->formatEHealthRequest($data);
 
         if (!$this->validateFormatted($formattedData)) {
@@ -55,6 +65,15 @@ class ProcedureCreate extends ProcedureComponent
      */
     public function sign(array $data): void
     {
+        if (!Auth::user()?->can('create', Procedure::class)) {
+            $this->dispatch('flashMessage', [
+                'message' => 'У вас немає дозволу на створення процедури.',
+                'type' => 'error'
+            ]);
+
+            return;
+        }
+
         $formattedData = Repository::procedure()->formatEHealthRequest($data);
 
         if (!$this->validateFormatted($formattedData)) {
