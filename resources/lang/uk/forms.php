@@ -286,6 +286,7 @@ return [
     'del_and_choose_value' => 'Видаліть вміст і оберіть значення зі списку',
     'local_login' => 'Увага! Ви намагєтесь увійти в локальну частину МІС',
     'local_login_warning' => 'Робота з сервером ЕСОЗ буде неможлива!',
+    'legal_entity_registered' => 'Новий заклад успішно зареєстровано',
 
     // License-related Forms
     'license' => [
