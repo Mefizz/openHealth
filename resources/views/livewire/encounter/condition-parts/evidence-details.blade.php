@@ -2,19 +2,19 @@
 
 <div class="relative"> {{-- This required for table overflow scrolling --}}
     <fieldset class="fieldset"
-              {{-- Binding Finding to Alpine, it will be re-used in the modal.
+              {{-- Binding evidence detail to Alpine, it will be re-used in the modal.
                 Note that it's necessary for modal to work properly --}}
               x-data="{
                   openModal: false,
-                  modalFinding: new Finding(),
-                  newFinding: false,
+                  modalEvidenceDetail: new EvidenceDetail(),
+                  newEvidenceDetail: false,
                   item: 0,
                   searchResults: [],
-                  selectedFindingIds: []
+                  selectedEvidenceDetailIds: []
               }"
     >
         <legend class="legend">
-            <h2>{{ __('patients.what_was_identified') }}</h2>
+            <h2>{{ __('patients.evidence_observations') }}</h2>
         </legend>
 
         <table class="table-input w-inherit">
@@ -26,16 +26,16 @@
             </tr>
             </thead>
             <tbody>
-            <template x-for="(finding, index) in modalClinicalImpression.findings">
+            <template x-for="(detail, index) in modalCondition.conditions.evidences[0].details">
                 <tr>
                     <td class="td-input"
-                        x-text="new Date(finding.inserted_at).toLocaleDateString('uk-UA')"
+                        x-text="new Date(detail.inserted_at).toLocaleDateString('uk-UA')"
                     ></td>
                     <td class="td-input"
-                        x-text="`${ finding.code.coding[0].code } - ${
-                            $wire.dictionaries['eHealth/LOINC/observation_codes'][finding.code.coding[0].code] ||
-                            $wire.dictionaries['eHealth/ICF/classifiers'][finding.code.coding[0].code] ||
-                            $wire.dictionaries['eHealth/ICPC2/condition_codes'][finding.code.coding[0].code]
+                        x-text="`${ detail.code.coding[0].code } - ${
+                            $wire.dictionaries['eHealth/LOINC/observation_codes'][detail.code.coding[0].code] ||
+                            $wire.dictionaries['eHealth/ICF/classifiers'][detail.code.coding[0].code] ||
+                            $wire.dictionaries['eHealth/ICPC2/condition_codes'][detail.code.coding[0].code]
                         }`"
                     ></td>
                     <td class="td-input">
@@ -95,10 +95,10 @@
                                     <button @click="
                                                 openModal = true; {{-- Open the modal --}}
                                                 item = index; {{-- Identify the item we are corrently editing --}}
-                                                {{-- Replace the previous finding with the current, don't assign object directly (modalFinding = finding) to avoid reactiveness --}}
-                                                modalFinding = new Finding(finding);
-                                                newFinding = false; {{-- This finding is already created --}}
-                                                searchResults = modalClinicalImpression.findings;
+                                                {{-- Replace the previous detail with the current, don't assign object directly (modalEvidenceDetail = detail) to avoid reactiveness --}}
+                                                modalEvidenceDetail = new EvidenceDetail(detail);
+                                                newEvidenceDetail = false; {{-- This detail is already created --}}
+                                                searchResults = modalCondition.conditions.evidences[0].details;
                                             "
                                             @click.prevent
                                             class="dropdown-button"
@@ -106,7 +106,7 @@
                                         {{ __('forms.edit') }}
                                     </button>
 
-                                    <button @click.prevent="modalClinicalImpression.findings.splice(index, 1); close($refs.button);"
+                                    <button @click.prevent="modalCondition.conditions.evidences[0].details.splice(index, 1); close($refs.button);"
                                             class="dropdown-button dropdown-delete"
                                     >
                                         {{ __('forms.delete') }}
@@ -124,10 +124,10 @@
             {{-- Button to trigger the modal --}}
             <button @click.prevent="
                         openModal = true; {{-- Open the Modal --}}
-                        newFinding = true; {{-- We are adding a new finding --}}
-                        modalFinding = new Finding(); {{-- Replace the data of the previous finding with a new one--}}
+                        newEvidenceDetail = true; {{-- We are adding a new evidence detail --}}
+                        modalEvidenceDetail = new EvidenceDetail(); {{-- Replace the data of the previous evidence detail with a new one--}}
                         searchResults = [];  {{-- Clear the search results --}}
-                        selectedFindingIds = []; {{-- Clear the selected finding IDs --}}
+                        selectedEvidenceDetailIds = []; {{-- Clear the selected evidence detail IDs --}}
                     "
                     class="item-add my-5"
             >
@@ -167,7 +167,7 @@
                                 {{-- Episode info in which the search happens --}}
                                 <div class="form-row-modal">
                                     <div class="form-group group">
-                                        <select id="episodeId" class="input-modal peer" x-model="modalFinding.selectedEpisodeId">
+                                        <select id="episodeId" class="input-modal peer" x-model="modalEvidenceDetail.selectedEpisodeId">
                                             <option value="" selected>
                                                 {{ __('forms.select') }} {{ mb_strtolower(__('patients.episode')) }}
                                             </option>
@@ -183,12 +183,12 @@
                                     {{-- Search button --}}
                                     <div>
                                         <button @click.prevent="
-                                                 $wire.searchConditionsAndObservations(modalFinding.selectedEpisodeId).then(() => {
-                                                     searchResults = JSON.parse(JSON.stringify($wire.conditionsAndObservations));
-                                                     selectedFindingIds = [];
+                                                $wire.searchEvidenceDetails(modalEvidenceDetail.selectedEpisodeId).then(() => {
+                                                    searchResults = JSON.parse(JSON.stringify($wire.evidenceDetails));
+                                                    selectedEvidenceDetailIds = [];
                                                 })"
                                                 class="flex items-center gap-2 button-primary"
-                                                :disabled="!modalFinding.selectedEpisodeId"
+                                                :disabled="!modalEvidenceDetail.selectedEpisodeId"
                                         >
                                             <svg width="16" height="16">
                                                 <use xlink:href="#svg-search"></use>
@@ -208,41 +208,40 @@
                                                 <thead class="table-header">
                                                 <tr>
                                                     <th scope="col" class="th-input">{{ __('patients.date') }}</th>
-                                                    <th scope="col"
-                                                        class="th-input">{{ __('patients.code_and_name') }}</th>
+                                                    <th scope="col" class="th-input">
+                                                        {{ __('patients.code_and_name') }}
+                                                    </th>
                                                     <th scope="col" class="th-input">{{ __('forms.action') }}</th>
                                                 </tr>
                                                 </thead>
                                                 <tbody>
-                                                <template x-for="finding in searchResults"
-                                                          :key="finding.id"
-                                                >
+                                                <template x-for="condition in searchResults" :key="condition.id">
                                                     <tr class="border-b dark:border-gray-700">
                                                         <th scope="row" class="table-cell-primary">
                                                             <div class="text-base"
-                                                                 x-text="new Date(finding.inserted_at).toLocaleDateString('uk-UA')"
+                                                                 x-text="new Date(condition.inserted_at).toLocaleDateString('uk-UA')"
                                                             ></div>
                                                         </th>
                                                         <td class="td-input"
-                                                            x-text="`${ finding.code.coding[0].code } - ${
-                                                                $wire.dictionaries['eHealth/LOINC/observation_codes'][finding.code.coding[0].code] ||
-                                                                $wire.dictionaries['eHealth/ICF/classifiers'][finding.code.coding[0].code] ||
-                                                                $wire.dictionaries['eHealth/ICPC2/condition_codes'][finding.code.coding[0].code]
+                                                            x-text="`${ condition.code.coding[0].code } - ${
+                                                                $wire.dictionaries['eHealth/LOINC/observation_codes'][condition.code.coding[0].code] ||
+                                                                $wire.dictionaries['eHealth/ICF/classifiers'][condition.code.coding[0].code] ||
+                                                                $wire.dictionaries['eHealth/ICPC2/condition_codes'][condition.code.coding[0].code]
                                                             }`"
                                                         ></td>
                                                         <td class="td-input">
                                                             <button @click.prevent="
-                                                                        const id = finding.id;
-                                                                        const index = selectedFindingIds.indexOf(id);
+                                                                        const id = condition.id;
+                                                                        const index = selectedEvidenceDetailIds.indexOf(id);
 
                                                                         if (index === -1) {
-                                                                            selectedFindingIds.push(id);
+                                                                            selectedEvidenceDetailIds.push(id);
                                                                         } else {
-                                                                            selectedFindingIds.splice(index, 1); // toggle off
+                                                                            selectedEvidenceDetailIds.splice(index, 1); // toggle off
                                                                         }
                                                                     "
                                                                     class="button-primary w-28"
-                                                                    x-text="selectedFindingIds.includes(finding.id)
+                                                                    x-text="selectedEvidenceDetailIds.includes(condition.id)
                                                                         ? '{{ __('patients.added') }}'
                                                                         : '{{ __('forms.add') }}'"
                                                             >
@@ -272,21 +271,21 @@
 
                                     <button @click.prevent
                                             @click="
-                                                const existingIds = modalClinicalImpression.findings.map(finding => finding.id);
+                                                const existingIds = modalCondition.conditions.evidences[0].details.map(detail => detail.id);
 
                                                 {{-- Get only the new fidnings that are not already in the array --}}
-                                                const newFindings = searchResults
-                                                    .filter(finding => selectedFindingIds.includes(finding.id) && !existingIds.includes(finding.id))
-                                                    .map(finding => ({
-                                                        id: finding.id,
-                                                        inserted_at: finding.inserted_at,
-                                                        code: finding.code,
-                                                        type: finding.type,
-                                                        selectedEpisodeId: modalFinding.selectedEpisodeId
+                                                const newEvidenceDetails = searchResults
+                                                    .filter(detail => selectedEvidenceDetailIds.includes(detail.id) && !existingIds.includes(detail.id))
+                                                    .map(detail => ({
+                                                        id: detail.id,
+                                                        inserted_at: detail.inserted_at,
+                                                        code: detail.code,
+                                                        type: detail.type,
+                                                        selectedEpisodeId: modalEvidenceDetail.selectedEpisodeId
                                                     }));
 
                                                 {{-- Add them to the array --}}
-                                                modalClinicalImpression.findings = modalClinicalImpression.findings.concat(newFindings);
+                                                modalCondition.conditions.evidences[0].details = modalCondition.conditions.evidences[0].details.concat(newEvidenceDetails);
 
                                                 openModal = false;
                                                 searchResults = [];
@@ -307,9 +306,9 @@
 
 <script>
     /**
-     * Representation of the user's personal Finding
+     * Representation of the user's personal EvidenceDetail
      */
-    class Finding {
+    class EvidenceDetail {
         selectedEpisodeId = '';
 
         constructor(obj = null) {

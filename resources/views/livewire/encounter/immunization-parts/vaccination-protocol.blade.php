@@ -41,23 +41,23 @@
                                  openDropdown: false,
                                  toggle() {
                                      if (this.openDropdown) {
-                                         return this.close()
+                                         return this.close();
                                      }
 
                                      this.$refs.button.focus()
 
-                                     this.openDropdown = true
+                                     this.openDropdown = true;
                                  },
                                  close(focusAfter) {
-                                     if (!this.openDropdown) return
+                                     if (!this.openDropdown) return;
 
-                                     this.openDropdown = false
+                                     this.openDropdown = false;
 
                                      focusAfter && focusAfter.focus()
                                  }
                              }"
                              @keydown.escape.prevent.stop="close($refs.button)"
-                             @focusin.window="! $refs.panel.contains($event.target) && close()"
+                             @focusin.window="!$refs.panel.contains($event.target) && close()"
                              x-id="['dropdown-button']"
                              class="relative"
                         >
@@ -93,7 +93,7 @@
                                                 openModal = true; {{-- Open the modal --}}
                                                 item = index; {{-- Identify the item we are corrently editing --}}
                                                 {{-- Replace the previous vaccinationProtocol with the current, don't assign object directly (modalVaccinationProtocol = vaccinationProtocol) to avoid reactiveness --}}
-                                                modalVaccinationProtocol = new VaccinationProtocol(vaccinationProtocol)
+                                                modalVaccinationProtocol = new VaccinationProtocol(vaccinationProtocol);
                                                 newVaccinationProtocol = false; {{-- This vaccinationProtocol is already created --}}
                                             "
                                             @click.prevent
@@ -102,8 +102,8 @@
                                         {{ __('forms.edit') }}
                                     </button>
 
-                                    <button @click.prevent="modalImmunization.vaccinationProtocols.splice(index, 1); close($refs.button)"
-                                            class="dropdown-button dropdown-delete"
+                                    <button class="dropdown-button dropdown-delete"
+                                            @click.prevent="modalImmunization.vaccinationProtocols.splice(index, 1); close($refs.button)"
                                     >
                                         {{ __('forms.delete') }}
                                     </button>
@@ -251,6 +251,12 @@
                                                autocomplete="off"
                                                required
                                         >
+
+                                        <p class="text-error text-xs"
+                                           x-show="modalVaccinationProtocol.authority.coding[0].code === 'MoH' && !modalVaccinationProtocol.doseSequence"
+                                        >
+                                            {{ __('forms.field_empty') }}
+                                        </p>
                                     </div>
                                 </div>
 
@@ -267,6 +273,12 @@
                                                autocomplete="off"
                                                required
                                         >
+
+                                        <p class="text-error text-xs"
+                                           x-show="modalVaccinationProtocol.authority.coding[0].code === 'MoH' && !modalVaccinationProtocol.series"
+                                        >
+                                            {{ __('forms.field_empty') }}
+                                        </p>
                                     </div>
                                 </div>
 
@@ -283,6 +295,12 @@
                                                autocomplete="off"
                                                required
                                         >
+
+                                        <p class="text-error text-xs"
+                                           x-show="modalVaccinationProtocol.authority.coding[0].code === 'MoH' && !modalVaccinationProtocol.seriesDoses"
+                                        >
+                                            {{ __('forms.field_empty') }}
+                                        </p>
                                     </div>
                                 </div>
 
@@ -319,7 +337,7 @@
                                                 openModal = false;
                                             "
                                             class="button-primary"
-                                            :disabled="!(modalVaccinationProtocol.authority.coding[0].code.trim().length > 0)"
+                                            :disabled="!modalVaccinationProtocol.authority.coding[0].code.trim()"
                                     >
                                         {{ __('forms.save') }}
                                     </button>

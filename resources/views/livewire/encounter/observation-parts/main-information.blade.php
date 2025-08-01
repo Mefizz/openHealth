@@ -140,21 +140,14 @@
                             type="text"
                             required
                     >
-                        <option selected>{{ __('forms.select') }}</option>
-
-                        <template x-if="modalObservation.codingSystem === 'loinc'">
-                            <div>
-                                @foreach($this->dictionaries['eHealth/LOINC/observation_codes'] as $key => $code)
-                                    <template x-if="
-                                                  !modalObservation.categories[0].coding[0].code ||
-                                                  (codeMap[modalObservation.categories[0].coding[0].code]?.includes('{{ $key }}'))
-                                              "
-                                    >
-                                        <option value="{{ $key }}">{{ $code }}</option>
-                                    </template>
-                                @endforeach
-                            </div>
-                        </template>
+                        <option selected value="">{{ __('forms.select') }}</option>
+                        <div x-show="modalObservation.codingSystem === 'loinc'">
+                            @foreach($this->dictionaries['eHealth/LOINC/observation_codes'] as $key => $code)
+                                <template x-if="codeMap[modalObservation.categories[0].coding[0].code]?.includes('{{ $key }}')">
+                                    <option value="{{ $key }}">{{ $code }}</option>
+                                </template>
+                            @endforeach
+                        </div>
                     </select>
                 </template>
 

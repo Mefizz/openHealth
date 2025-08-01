@@ -531,7 +531,8 @@
                                         </div>
                                     </div>
 
-                                    @include('livewire.encounter.parts.evidences')
+                                    @include('livewire.encounter.condition-parts.evidence-codes')
+                                    @include('livewire.encounter.condition-parts.evidence-details')
                                 </div>
                             </div>
 
@@ -585,9 +586,9 @@
                                         "
                                         class="button-primary justify-end"
                                         :disabled="!(
-                                            modalCondition.conditions.clinicalStatus.trim().length > 0 &&
-                                            modalCondition.conditions.verificationStatus.trim().length > 0 &&
-                                            modalCondition.conditions.code.coding[0].code.trim().length > 0 &&
+                                            modalCondition.conditions.clinicalStatus.trim() &&
+                                            modalCondition.conditions.verificationStatus.trim() &&
+                                            modalCondition.conditions.code.coding[0].code.trim() &&
                                             modalCondition.conditions.diagnoses.role.coding[0].code
                                         )"
                                 >
@@ -660,7 +661,8 @@
             },
             evidences: [
                 {
-                    codes: []
+                    codes: [],
+                    details: []
                 }
             ]
         };

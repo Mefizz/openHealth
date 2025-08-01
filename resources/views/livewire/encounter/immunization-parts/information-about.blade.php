@@ -145,7 +145,7 @@
                         autocomplete="off"
                         required
                 >
-                    <option selected>{{ __('forms.select') }}</option>
+                    <option selected value="">{{ __('forms.select') }}</option>
                     @foreach($this->dictionaries['eHealth/immunization_dosage_units'] as $key => $immunizationDosageUnit)
                         <option value="{{ $key }}" wire:key="{{ $key }}">
                             {{ $immunizationDosageUnit }}
@@ -154,7 +154,11 @@
                 </select>
 
                 <p class="text-error text-xs"
-                   x-show="(modalImmunization.doseQuantity?.unit?.trim().length < 1 && modalImmunization.notGiven === false)"
+                   x-show="
+                       modalImmunization.notGiven === false &&
+                       (modalImmunization.primarySource === true || modalImmunization.primarySource === false) &&
+                       (!modalImmunization.doseQuantity?.unit || modalImmunization.doseQuantity.unit.trim() === '')
+                   "
                 >
                     {{ __('forms.field_empty') }}
                 </p>

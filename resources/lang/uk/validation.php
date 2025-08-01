@@ -516,7 +516,7 @@ return [
                 'code' => 'тип епізоду'
             ]
         ],
-        'immunizations.*' => [
+        'immunizations' => [
             'primarySource' => 'джерело інформації',
             'performer' => 'виконавець',
             'reportOrigin' => 'пацієнт',
@@ -534,11 +534,11 @@ return [
             'site.coding.*.code' => 'частина тіла',
             'route' => 'шлях введення',
             'route.coding.*.code' => 'шлях введення',
-            'vaccinationProtocols.doseSequence' => 'порядковий номер дози',
-            'vaccinationProtocols.authority' => 'автор протоколу',
-            'vaccinationProtocols.series' => 'етап імунізації',
-            'vaccinationProtocols.seriesDoses' => 'кількість доз по протоколу',
-            'vaccinationProtocols.targetDiseases' => 'протидія загрозам',
+            'vaccinationProtocols.*.doseSequence' => 'порядковий номер дози',
+            'vaccinationProtocols.*.authority' => 'автор протоколу',
+            'vaccinationProtocols.*.series' => 'етап імунізації',
+            'vaccinationProtocols.*.seriesDoses' => 'кількість доз по протоколу',
+            'vaccinationProtocols.*.targetDiseases' => 'протидія загрозам',
             'explanation.reasonsNotGiven' => 'причини не проведення',
             'date' => 'дата вакцинації',
             'time' => 'час вакцинації',
