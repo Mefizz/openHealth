@@ -135,7 +135,6 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
             Route::get('/form/{id?}', ContractForm::class)->name('contract.form');
         });
 
-
         // Routes related to legal entity licenses; primary license can't be edited
         Route::prefix('license')->middleware(['permission:license:read|license:write'])->group(function () {
 
@@ -146,7 +145,7 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                 Route::get('/', function (LegalEntity $legalEntity, License $license) {
                     if (Gate::allows('write', [$license, $legalEntity]) && !$license->isPrimary) {
                         return App::call(LicenseEdit::class, [$legalEntity, $license]);
-                    } else if (Gate::allows('access', [$license, $legalEntity])) {
+                    } elseif (Gate::allows('access', [$license, $legalEntity])) {
                         return App::call(LicenseView::class, [$legalEntity, $license]);
                     }
                 })->name('license.view');
@@ -160,7 +159,7 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
         Route::group(['middleware' => ['role:OWNER|ADMIN|DOCTOR']], static function () {
             Route::prefix('patient')->group(static function () {
                 Route::get('/', PatientIndex::class)->name('patient.index');
-                Route::get('/create/{patientId?}', PatientComponent::class)->name('patient.form');
+                Route::get('/create/{id?}', PatientComponent::class)->name('patient.form');
                 Route::get('/{patientId}/patient-data', PatientData::class)->name('patient.patient-data');
                 Route::get('/{patientId}/summary', PatientSummary::class)->name('patient.summary');
                 Route::get('/{patientId}/episodes', PatientEpisodes::class)->name('patient.episodes');
