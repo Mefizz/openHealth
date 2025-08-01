@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use JsonException;
 
 /**
  * @mixin IdeHelperContract
@@ -59,6 +61,7 @@ class Contract extends Model
     protected $casts = [
         'contractor_payment_details' => 'array',
         'external_contractors' => 'array',
+        // 'contractor_divisions' => 'array',
     ];
 
     protected $date = [
@@ -67,8 +70,25 @@ class Contract extends Model
         'inserted_at',
     ];
 
-    public function legalEntity(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function legalEntity(): BelongsTo
     {
         return $this->belongsTo(LegalEntity::class, 'legal_entity_id', 'id');
+    }
+
+    /**
+     * Custom accessor for the contractor_divisions attribute.
+     * This manually handles JSON decoding, bypassing potential issues
+     * with the built-in 'array' cast in this specific environment.
+     *
+     * @param string|null $value The raw value from the database.
+     *
+     * @return array
+     * @throws JsonException
+     */
+    public function getContractorDivisionsAttribute(?string $value): array
+    {
+        // If the value is a string, decode it. Otherwise, return an empty array.
+        // This prevents errors if the value is NULL or invalid.
+        return is_string($value) ? json_decode($value, true, 512, JSON_THROW_ON_ERROR) : [];
     }
 }

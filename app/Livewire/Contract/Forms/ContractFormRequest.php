@@ -7,6 +7,7 @@ use App\Rules\ContractRules\ValidStartDate;
 use App\Rules\ValidIBAN;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Validate;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\Form;
 
 class ContractFormRequest extends Form
@@ -32,6 +33,8 @@ class ContractFormRequest extends Form
     public ?array $contractor_divisions = [];
     #[Validate('required')]
     public ?string $contractor_base = '';
+    #[Validate('required|integer|min:0')]
+    public ?int $number_of_people = 0;
 
     public ?string $start_date = '';
 
@@ -52,6 +55,10 @@ class ContractFormRequest extends Form
 
     public string $id_form = 'PMD_1';
     public string $previous_request_id = '';
+
+    public ?string $knedp = null;
+    public ?TemporaryUploadedFile $keyContainerUpload = null;
+    public ?string $password = null;
 
     /**
      * @throws ValidationException

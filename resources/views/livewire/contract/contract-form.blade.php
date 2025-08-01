@@ -1,11 +1,8 @@
 <div>
     <x-section-navigation x-data="{ showFilter: false }" class=''>
         <x-slot name='title'>
-            {{ $contract_request->previous_request_id === '' ? __('forms.contract.new_contract') :  __('forms.contract.editContract', ['contract' => $contract_request->previous_request_id]) }}
+            {{ $form->previous_request_id === '' ? __('forms.contract.new_contract') :  __('forms.contract.editContract', ['contract' => $form->previous_request_id]) }}
         </x-slot>
-        {{-- <x-slot name='description'>
-            {{ $contract_request->previous_request_id === '' ? __('forms.addContract') :  __('forms.editContract', ['contract' => $contract_request->previous_request_id]) }}
-        </x-slot> --}}
     </x-section-navigation>
 
     <div class='flex bg-white pb-10 p-6 flex-col'>
@@ -29,14 +26,14 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <input value="{{ $legalEntity['edr']['name'] ?? '' }}"  type="text" name="contractor_base" id="contractor_base" class="peer input text-gray-500" placeholder=" " required />
+                            <input value="{{ $legalEntity['edr']['name'] ?? '' }}" wire:model="form.contractor_base"  type="text" name="contractor_base" id="contractor_base" class="peer input text-gray-500" placeholder=" " required />
                             <label for="contractor_base" class="label">{{ __('forms.contract.contractorBase') }}</label>
                             @error('form.party.contractor_base') <p class="text-error">{{$message}}</p> @enderror
                         </div>
                     </div>
                     <div class="form-row-3">
                         <div class="form-group">
-                            <input {{--value="{{ $legalEntity['edr']['name'] ?? '' }}"--}}  type="number" name="numberOfPeople" id="numberOfPeople" class="peer input text-gray-500" placeholder=" " required />
+                            <input {{--value="{{ $legalEntity['edr']['name'] ?? '' }}"--}} wire:model="form.number_of_people" type="number" name="numberOfPeople" id="numberOfPeople" class="peer input text-gray-500" placeholder=" " required />
                             <label for="numberOfPeople" class="label">{{ __('forms.contract.numberOfPeople') }}</label>
                             @error('form.party.numberOfPeople') <p class="text-error">{{$message}}</p> @enderror
                         </div>
@@ -62,9 +59,9 @@
                                 By passing ':file="null"', we explicitly initialize the $file variable
                                 within the component's scope, preventing the error without modifying the component file itself.
                             --}}
-                            <x-forms.file :file="null" wire:model='contract_request.statute_md5' type='file' id='statute_md5' />
+                            <x-forms.file :file="null" wire:model='form.statute_md5' type='file' id='statute_md5' />
                         </x-slot>
-                        @error('contract_request.statute_md5')
+                        @error('form.statute_md5')
                         <x-forms.error>{{ $message }}</x-forms.error>
                         @enderror
                     </x-forms.form-group>
@@ -76,9 +73,9 @@
                         </x-slot>
                         <x-slot name='input'>
                             {{-- The same fix is applied here for the second file input. --}}
-                            <x-forms.file :file="null" wire:model='contract_request.additional_document_md5' type='file' id='additional_document_md5' />
+                            <x-forms.file :file="null" wire:model='form.additional_document_md5' type='file' id='additional_document_md5' />
                         </x-slot>
-                        @error('contract_request.additional_document_md5')
+                        @error('form.additional_document_md5')
                         <x-forms.error>{{ $message }}</x-forms.error>
                         @enderror
                     </x-forms.form-group>
@@ -93,26 +90,26 @@
             </legend>
             <div class="form-row">
             <div class="form-group">
-                <select wire:model="contract_request.id_form" name="id_form" id="id_form" class="peer input appearance-none bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400" required>
+                <select wire:model="form.id_form" name="id_form" id="id_form" class="peer input appearance-none bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400" required>
                     <option value="" disabled selected hidden>{{ __('forms.select') }} {{ __('forms.contract.contractType') }}</option>
                     @foreach($this->dictionaries['CONTRACT_TYPE'] as $key => $contract_type)
                         <option value="{{ $key }}">{{ $contract_type }}</option>
                     @endforeach
                 </select>
                 <label for="id_form" class="label">{{ __('forms.contract.contractType') }}</label>
-                @error('contract_request.id_form')
+                @error('form.id_form')
                 <p class="text-error">{{ $message }}</p>
                 @enderror
             </div>
             </div>
                         <div class="form-row-2 items-start">
                         <div class="form-group datepicker-wrapper relative w-full">
-                            <input wire:model='contract_request.start_date' type="text" name="start_date" id="start_date" class="peer input pl-10 appearance-none datepicker-input text-gray-500 dark:text-gray-400" placeholder=" " required datepicker-autohide datepicker-format="yyyy-mm-dd" datepicker-button="false"/>
+                            <input wire:model="form.start_date" type="text" name="start_date" id="start_date" class="peer input pl-10 appearance-none datepicker-input text-gray-500 dark:text-gray-400" placeholder=" " required datepicker-autohide datepicker-format="yyyy-mm-dd" datepicker-button="false"/>
                             <label for="start_date" class="wrapped-label">{{ __('forms.contract.startDateContract') }}</label>
                             @error('form.party.start_date') <p class="text-error">{{$message}}</p> @enderror
                         </div>
                         <div class="form-group datepicker-wrapper relative w-full">
-                            <input wire:model='contract_request.end_date' type="text" name="end_date" id="end_date" class="peer input pl-10 appearance-none datepicker-input text-gray-500 dark:text-gray-400" placeholder=" " required datepicker-autohide datepicker-format="yyyy-mm-dd" datepicker-button="false"/>
+                            <input wire:model="form.end_date" type="text" name="end_date" id="end_date" class="peer input pl-10 appearance-none datepicker-input text-gray-500 dark:text-gray-400" placeholder=" " required datepicker-autohide datepicker-format="yyyy-mm-dd" datepicker-button="false"/>
                             <label for="end_date" class="wrapped-label">{{ __('forms.contract.endDateContract') }}</label>
                             @error('form.party.end_date') <p class="text-error">{{$message}}</p> @enderror
                         </div>
@@ -126,12 +123,12 @@
             </legend>
             <div class="form-row-3">
                 <div class="form-group">
-                    <input wire:model='contract_request.contractor_payment_details.bank_name'  type="text" name="bank_name" id="bank_name" class="peer input text-gray-500" placeholder=" " required />
+                    <input wire:model="form.contractor_payment_details.bank_name"  type="text" name="bank_name" id="bank_name" class="peer input text-gray-500" placeholder=" " required />
                     <label for="bank_name" class="label">{{ __('forms.bankName') }}</label>
                     @error('form.party.bank_name') <p class="text-error">{{$message}}</p> @enderror
                 </div>
                 <div class="form-group">
-                    <input wire:model='contract_request.contractor_payment_details.bank_name'  type="text" name="MFO" id="MFO" class="peer input text-gray-500" placeholder=" " required />
+                    <input wire:model="form.contractor_payment_details.bank_name"  type="text" name="MFO" id="MFO" class="peer input text-gray-500" placeholder=" " required />
                     <label for="MFO" class="label">{{ __('forms.mfo') }}</label>
                     @error('form.party.MFO') <p class="text-error">{{$message}}</p> @enderror
                 </div>
@@ -143,12 +140,12 @@
                         type="text"
                         placeholder=" "
                         class="peer input"
-                        wire:model="contract_request.contractor_payment_details.payer_account"
+                        wire:model="form.contractor_payment_details.payer_account"
                         x-data
                         x-mask="UA99 9999999 999999999999999999"
                     />
                     <label class="label">{{ __('forms.payerAccount') }}</label>
-                    @error('contract_request.contractor_payment_details.payer_account')
+                    @error('form.contractor_payment_details.payer_account')
                     <p class="text-error">{{ $message }}</p>
                     @enderror
                 </div>
@@ -164,8 +161,8 @@
                 <div class="form-group">
                     <label class="label" for="contractor_divisions">{{ __('forms.contract.chooseLocation') }}</label>
                     <select id="contractor_divisions"
-                            class="input-select @error('contract_request.contractor_divisions') input-error @enderror"
-                            wire:model="contract_request.contractor_divisions"
+                            class="input-select @error('form.contractor_divisions') input-error @enderror"
+                            wire:model="form.contractor_divisions"
                             multiple
                             size="5"
                     >
@@ -175,7 +172,7 @@
                             @endforeach
                         @endif
                     </select>
-                    @error('contract_request.contractor_divisions')
+                    @error('form.contractor_divisions')
                     <p class="text-error">{{ $message }}</p>
                     @enderror
                 </div>
@@ -297,7 +294,7 @@
                         <x-forms.form-group class='mt-4 pl-2'>
                             <x-slot name='input'>
                                 <x-forms.checkbox
-                                    wire:model='contract_request.consent_text'
+                                    wire:model='form.consent_text'
                                     id='consent_text'
                                     type='checkbox'
                                 />
@@ -305,7 +302,7 @@
                                     {{ __('forms.agree') }}
                                 </label>
                             </x-slot>
-                            @error('contract_request.consent_text')
+                            @error('form.consent_text')
                             <x-slot name='error'>
                                 <x-forms.error>
                                     {{ $message }}

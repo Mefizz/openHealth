@@ -9,6 +9,9 @@ use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\ForgotPassword;
 use App\Http\Controllers\Auth\EHealthLoginController;
+use App\Livewire\Contract\ContractCreate;
+use App\Livewire\Contract\ContractEdit;
+use App\Livewire\Contract\ContractShow;
 use App\Livewire\Employee\EmployeeEdit;
 use App\Livewire\Employee\EmployeeShow;
 use App\Livewire\Employee\EmployeeIndex;
@@ -130,12 +133,11 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                 ->name('edit')->middleware('can:update,employee_request');
         });
 
-        // routes/web.php
-
         Route::prefix('contract')->group(function () {
             Route::get('/', ContractIndex::class)->name('contract.index');
-            Route::get('/create', ContractForm::class)->name('contract.create'); // Route for showing the creation form
-            Route::get('/{contract:uuid}/edit', ContractForm::class)->name('contract.edit'); // Route for showing the edit form
+            Route::get('/create', ContractCreate::class)->name('contract.create');
+            Route::get('/{contract:uuid}', ContractShow::class)->name('contract.show');
+            Route::get('/{contract:uuid}/edit', ContractEdit::class)->name('contract.edit');
         });
 
 

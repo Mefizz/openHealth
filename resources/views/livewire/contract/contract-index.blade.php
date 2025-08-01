@@ -19,11 +19,7 @@
                                class="input peer w-full cursor-pointer text-gray-500 dark:text-gray-400"
                                placeholder="Оберіть тип"
                                x-on:click="open = !open"
-                               :value="selectedTypes.length ? selectedTypes.map(type => {
-                            if (type === 'APPLICATIONS') return 'Заявки на договір';
-                            if (type === 'CONTRACTS') return 'Договори';
-                            return type;
-                        }).join(', ') : ''"
+                               :value="selectedTypes.map(type => type === 'CONTRACTS' ? 'Договори' : 'Заявки на договір').join(', ')"
                                readonly
                                autocomplete="off"
                         />
@@ -43,15 +39,13 @@
                             <ul class="py-2 px-3 space-y-2 text-sm text-gray-700 dark:text-gray-200">
                                 <li>
                                     <label class="flex items-center space-x-2 cursor-pointer">
-                                        <input type="checkbox" value="APPLICATIONS" {{--wire:model.live="contractType"--}}
-                                        class="rounded-sm text-blue-600 focus:ring-blue-500 border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:checked:bg-blue-600 dark:checked:border-transparent" />
+                                        <input type="checkbox" value="APPLICATIONS" wire:model.live="contractType" class="..." />
                                         <span>Заявки на договір</span>
                                     </label>
                                 </li>
                                 <li>
                                     <label class="flex items-center space-x-2 cursor-pointer">
-                                        <input type="checkbox" value="CONTRACTS" {{--wire:model.live="contractType"--}}
-                                        class="rounded-sm text-blue-600 focus:ring-blue-500 border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:checked:bg-blue-600 dark:checked:border-transparent" />
+                                        <input type="checkbox" value="CONTRACTS" wire:model.live="contractType" class="..." />
                                         <span>Договори</span>
                                     </label>
                                 </li>
@@ -84,6 +78,39 @@
                 <th scope="col" class="th-input w-[15%] text-center"></th>
             </tr>
             </thead>
+            <tbody>
+            @forelse ($contracts as $contract)
+                <tr class="tr-input">
+                    <td class="td-input">
+                        <p class='text-black dark:text-white'>{{ $contract->contract_number ?? '' }}</p>
+                    </td>
+                    <td class="td-input">
+                        <p class='text-black dark:text-white'>{{ $contract->start_date ?? '' }}</p>
+                    </td>
+                    <td class="td-input">
+                        <p class='text-black dark:text-white'>{{ $contract->end_date ?? '' }}</p>
+                    </td>
+                    <td class="td-input">
+                        <p class='text-black dark:text-white'>{{ $contract->status ?? '' }}</p>
+                    </td>
+                    <td class="td-input flex justify-center items-center">
+                        @include('livewire.contract.actions', ['contract' => $contract])
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td class="text-center p-4" colspan="5">
+                        {{ __('Нічого не знайдено') }}
+                    </td>
+                </tr>
+            @endforelse
+            </tbody>
         </table>
+        {{-- Pagination --}}
+        @if ($contracts->hasPages())
+            <div class="mt-4">
+                {{ $contracts->links() }}
+            </div>
+        @endif
     </div>
 </div>

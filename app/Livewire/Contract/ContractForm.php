@@ -82,15 +82,37 @@ class ContractForm extends Component
 
     }
 
-
     public function addExternalContractors(): void
     {
+        // 1. Manually validate the EDRPOU first
+        $this->validate([
+                            'contract_request.external_contractors.edrpou' => 'required|string|digits:8'
+                        ]);
+
+        // 2. Find the legal entity by EDRPOU
+        $edrpou = $this->contract_request->external_contractors['edrpou'];
+        $foundEntity = LegalEntitiesRequestApi::getLegalEntities($edrpou);
+
+        // 3. CORRECTED CHECK: Check if the 'data' array inside the response is empty
+        if (empty($foundEntity['data'])) {
+            $this->addError('contract_request.external_contractors.edrpou', 'Організацію з таким ЄДРПОУ не знайдено.');
+            return;
+        }
+
+        // 4. CORRECTED ACCESS: Get the ID from the first element of the 'data' array
+        $this->contract_request->external_contractors['legal_entity_id'] = $foundEntity['data'][0]['id'];
+
+        // 5. Now, validate the rest of the fields
         $this->validateExternalContractors();
+
+        // 6. The rest of the original method logic
         if ($this->external_contractor_key !== '') {
             $this->external_contractors[$this->external_contractor_key] = $this->contract_request->external_contractors;
         } else {
             $this->external_contractors[] = $this->contract_request->external_contractors;
         }
+
+        // Clear the form for the next entry
         $this->contract_request->external_contractors = [];
         $this->closeModal();
     }
@@ -192,7 +214,7 @@ class ContractForm extends Component
         $contract->uuid = $contract_response['id'];
         $contract->contractor_legal_entity_id = $contract_response['contractor_legal_entity']['id'];
         $contract->contractor_owner_id = $contract_response['contractor_owner']['id'];
-        $this->legalEntity->contract()->save($contract);
+        $this->legalEntity->contracts()->save($contract);
         Cache::forget($this->contractCacheKey);
         return redirect()->route('contract.index', [legalEntity()]);
     }

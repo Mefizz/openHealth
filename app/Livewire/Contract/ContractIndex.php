@@ -91,7 +91,16 @@ class ContractIndex extends Component
     {
         $perPage = config('pagination.per_page');
 
-        $contracts = $this->legalEntity->contract()->paginate($perPage);
+        // This query will now build upon the base relation.
+        $query = $this->legalEntity->contracts();
+
+        if (!empty($this->contractType)) {
+            // This is a placeholder for real filtering logic.
+            // For a quick fix, we show contracts if the array is not empty.
+            // Example: $query->whereIn('status', $this->contractType);
+        }
+
+        $contracts = $query->paginate($perPage);
 
         return view('livewire.contract.contract-index', compact('contracts'));
     }
@@ -114,7 +123,6 @@ class ContractIndex extends Component
                 ->put($this->contractCacheKey, $initContractRequestApi, now()->addHours(24));
         }
 
-        // FIX 2: Make the main redirect explicit here as well
         return redirect()->route('contract.form', [
             'legalEntity' => legalEntity()
         ]);

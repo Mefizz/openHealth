@@ -1,218 +1,113 @@
-<x-dialog-modal maxWidth='3xl' class='w-1 h-full' wire:model.live='showModal'>
-    <x-slot name='title'>
-        {{ __('forms.externalContractors') }}
-    </x-slot>
+<div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+    x-data @keydown.escape.window="$wire.closeModal()"
+>
+    <div class="relative bg-white rounded-lg shadow-xl w-full max-w-2xl dark:bg-gray-800" @click.away="$wire.closeModal()">
+        {{-- Modal Header --}}
+        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                Нова залучена особа (підрядник)
+            </h3>
+            <button type="button" @click="$wire.closeModal()" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/></svg>
+                <span class="sr-only">Close modal</span>
+            </button>
+        </div>
 
-    <x-slot name='content'>
-        <x-forms.forms-section-modal submit="addExternalContractors({{ $external_contractor_key }})">
-            <x-slot name='form'>
-                <div class='mb-4.5 flex flex-col gap-6'>
-                    <div class='grid grid-cols-1 gap-9 sm:grid-cols-2'>
-                        <x-forms.form-group class='relative' x-data="{ open: false }">
-                            <x-slot name='label'>
-                                <x-forms.label for='documents_issued_by' class='default-label'>
-                                    {{ __('forms.edrpou') }} *
-                                </x-forms.label>
-                            </x-slot>
-                            <x-slot name='input'>
-                                <div>
-                                    <x-forms.input
-                                        class='default-input'
-                                        x-mask='9999999999'
-                                        wire:model='contract_request.external_contractors.name'
-                                        wire:keyup.debounce.500ms="getLegalEntityApi; open = true"
-                                        id=''
-                                    />
+        {{-- Modal Body --}}
+        <div class="p-4 md:p-5 space-y-6">
+            {{-- EDRPOU --}}
+            <div class="form-group">
+                <input type="text"
+                       name="edrpou"
+                       id="edrpou"
+                       class="input peer"
+                       placeholder=" "
+                       wire:model.defer="form.external_contractors.edrpou"
+                />
+                <label for="edrpou" class="label">{{ __('ЄДРПОУ') }} *</label>
+                @error('form.external_contractors.edrpou') <p class="text-error">{{ $message }}</p> @enderror
+                @error('form.external_contractors.legal_entity_id') <p class="text-error">{{ $message }}</p> @enderror
+            </div>
 
-                                    <div x-show='open' x-ref='dropdown' wire:target='getLegalEntityApi'>
-                                        @if($legalEntityApi)
-                                            <div class='z-10 max-h-96 overflow-auto w-fullabsolute bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700'>
-                                                <ul
-                                                    class='py-2 text-sm text-gray-700 dark:text-gray-200'
-                                                    aria-labelledby='dropdownHoverButton'
-                                                >
-                                                    @foreach($legalEntityApi as $legalEntity)
-                                                        <li>
-                                                            <a
-                                                                x-on:click.prevent="
-                                                                    $wire.set('contract_request.external_contractors.name', '{{ $legalEntity['edrpou'] }}');
-                                                                    $wire.set('contract_request.external_contractors.legal_entity_id', '{{ $legalEntity['id'] }}');
-                                                                    open = false;
-                                                                "
-                                                                href='#'
-                                                                class='pointer block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white'
-                                                            >
-                                                                {{ $legalEntity['edrpou'] ?? '' }}
-                                                            </a>
-                                                        </li>
-                                                    @endforeach
-                                                </ul>
+            {{-- Contract Number --}}
+            <div class="form-group">
+                <input type="text"
+                       name="ext_contract_number"
+                       id="ext_contract_number"
+                       class="input peer"
+                       placeholder=" "
+                       wire:model.defer="form.external_contractors.contract.number"
+                />
+                <label for="ext_contract_number" class="label">{{ __('forms.contract.external_contractors_number') }} *</label>
+                @error('form.external_contractors.contract.number') <p class="text-error">{{ $message }}</p> @enderror
+            </div>
 
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-                            </x-slot>
-                            @error('contract_request.external_contractors.legal_entity.name')
-                            <x-slot name='error'>
-                                <x-forms.error>
-                                    {{ $message }}
-                                </x-forms.error>
-                            </x-slot>
-                            @enderror
-                        </x-forms.form-group>
-                    </div>
-
-                    <div class='grid grid-cols-2 mb-4.5 gap-9 sm:grid-cols-2'>
-                        <x-forms.form-group>
-                            <x-slot name='label'>
-                                <x-forms.label for='contract_number' class='default-label'>
-                                    {{ __('forms.externalContractorsNumber') }} *
-                                </x-forms.label>
-                            </x-slot>
-                            <x-slot name='input'>
-                                <x-forms.input
-                                    class='default-input'
-                                    wire:model='contract_request.external_contractors.contract.number'
-                                    type='text'
-                                    id='contract_number'
-                                />
-                            </x-slot>
-                            @error('contract_request.external_contractors.contract.number')
-                            <x-slot name='error'>
-                                <x-forms.error>
-                                    {{ $message }}
-                                </x-forms.error>
-                            </x-slot>
-                            @enderror
-                        </x-forms.form-group>
-                    </div>
-
-                    <div class='grid grid-cols-2 mb-4.5	gap-9 sm:grid-cols-2'>
-                        <x-forms.form-group>
-                            <x-slot name='label'>
-                                <x-forms.label for='contract_issued_at' class='default-label'>
-                                    {{ __('forms.externalContractorsIssuedAt') }} *
-                                </x-forms.label>
-                            </x-slot>
-                            <x-slot name='input'>
-                                <x-forms.input-date
-                                    id='contract_issued_at'
-                                    wire:model='contract_request.external_contractors.contract.issued_at'
-                                    type='date'
-                                />
-                            </x-slot>
-                            @error('contract_request.external_contractors.contract.issued_at')
-                            <x-slot name='error'>
-                                <x-forms.error>
-                                    {{ $message }}
-                                </x-forms.error>
-                            </x-slot>
-                            @enderror
-                        </x-forms.form-group>
-
-                        <x-forms.form-group>
-                            <x-slot name='label'>
-                                <x-forms.label for='contract_expires_at' class='default-label'>
-                                    {{ __('forms.externalContractorsExpiresAt') }} *
-                                </x-forms.label>
-                            </x-slot>
-                            <x-slot name='input'>
-                                <x-forms.input-date
-                                    id='contract_expires_at'
-                                    wire:model='contract_request.external_contractors.contract.expires_at'
-                                    type='date'
-                                />
-                            </x-slot>
-                            @error('contract_request.external_contractors.contract.expires_at')
-                            <x-slot name='error'>
-                                <x-forms.error>
-                                    {{ $message }}
-                                </x-forms.error>
-                            </x-slot>
-                            @enderror
-                        </x-forms.form-group>
-                    </div>
-
-                    <div class='grid grid-cols-2 mb-4.5	gap-9 sm:grid-cols-2'>
-                        <x-forms.form-group class=''>
-                            <x-slot name='label'>
-                                <x-forms.label for='division' class='default-label'>
-                                    {{ __('forms.division') }} *
-                                </x-forms.label>
-                            </x-slot>
-                            <x-slot name='input'>
-                                <x-forms.select
-                                    class='default-input'
-                                    type='text'
-                                    id='division'
-                                    wire:model='contract_request.external_contractors.divisions.id'
-                                    wire:change="getHealthcareServices($event.target.value,)"
-                                >
-                                    <x-slot name='option'>
-                                        <option value=''>{{ __('forms.select') }}</option>
-                                        @foreach($divisions as $k=>$division )
-                                            <option value="{{ $division->uuid }}">
-                                                {{ $division->name }}
-                                            </option>
-                                        @endforeach
-                                    </x-slot>
-                                </x-forms.select>
-                            </x-slot>
-                            @error('contract_request.external_contractors.divisions.name')
-                            <x-slot name='error'>
-                                <x-forms.error>
-                                    {{ $message }}
-                                </x-forms.error>
-                            </x-slot>
-                            @enderror
-                        </x-forms.form-group>
-
-                        <x-forms.form-group class=''>
-                            <x-slot name='label'>
-                                <x-forms.label for='division_external_contractors_medical_service" class="default-label'>
-                                    {{ __('forms.medicalService') }} *
-                                </x-forms.label>
-                            </x-slot>
-                            <x-slot name='input'>
-                                <x-forms.select
-                                    class='default-input'
-                                    wire:model='contract_request.external_contractors.divisions.medical_service'
-                                    type='text'
-                                    id='division_external_contractors_medical_service'
-                                >
-                                    <x-slot name='option'>
-                                        <option  value=''>{{ __('forms.select') }}</option>
-                                        <option  value="PMD_1">{{ __('Послуга ПМД') }}</option>
-                                    </x-slot>
-                                </x-forms.select>
-
-                            </x-slot>
-                            @error('contract_request.external_contractors.divisions.medical_service')
-                            <x-slot name='error'>
-                                <x-forms.error>
-                                    {{ $message }}
-                                </x-forms.error>
-                            </x-slot>
-                            @enderror
-                        </x-forms.form-group>
-
-                    </div>
+            {{-- Dates (in 2 columns) --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="form-group datepicker-wrapper relative">
+                    <input wire:model.defer="form.external_contractors.contract.issued_at"
+                           type="text"
+                           name="ext_issued_at"
+                           id="ext_issued_at"
+                           class="peer input pl-10 appearance-none datepicker-input"
+                           placeholder=" "
+                           datepicker-autohide
+                           datepicker-format="yyyy-mm-dd"
+                           datepicker-button="false"
+                    />
+                    <label for="ext_issued_at" class="wrapped-label">{{__('forms.contract.external_contractors_issued_at')}}</label>
+                    @error('form.external_contractors.contract.issued_at') <p class="text-error">{{$message}}</p> @enderror
                 </div>
-
-                <div class='mt-6 flex flex-col gap-6 xl:flex-row justify-between items-center'>
-                    <div class='xl:w-1/4 text-left'>
-                        <x-secondary-button wire:click='closeModal()'>
-                            {{ __('forms.close') }}
-                        </x-secondary-button>
-                    </div>
-                    <div class='xl:w-1/4 text-right'>
-                        <x-button type='submit' class='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'>
-                            {{ __('forms.add') }}
-                        </x-button>
-                    </div>
+                <div class="form-group datepicker-wrapper relative">
+                    <input wire:model.defer="form.external_contractors.contract.expires_at"
+                           type="text"
+                           name="ext_expires_at"
+                           id="ext_expires_at"
+                           class="peer input pl-10 appearance-none datepicker-input"
+                           placeholder=" "
+                           datepicker-autohide
+                           datepicker-format="yyyy-mm-dd"
+                           datepicker-button="false"
+                    />
+                    <label for="ext_expires_at" class="wrapped-label">{{__('forms.contract.external_contractors_expires_at')}}</label>
+                    @error('form.external_contractors.contract.expires_at') <p class="text-error">{{$message}}</p> @enderror
                 </div>
-            </x-slot>
-        </x-forms.forms-section-modal>
-    </x-slot>
-</x-dialog-modal>
+            </div>
+
+            {{-- Divisions and Services (in 2 columns) --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="form-group">
+                    <select id="ext_division_id"
+                            class="input-select"
+                            wire:model="form.external_contractors.divisions.id">
+                        <option value="" disabled>{{__('Підрозділ')}} *</option>
+                        {{-- Assuming $divisions is available from the parent component --}}
+                        @foreach($divisions as $division)
+                            <option value="{{$division->uuid}}">{{$division->name}}</option>
+                        @endforeach
+                    </select>
+                    <label for="ext_division_id" class="label">{{__('Підрозділ')}} *</label>
+                    @error('form.external_contractors.divisions.id') <p class="text-error">{{ $message }}</p> @enderror
+                </div>
+                <div class="form-group">
+                    <select id="ext_medical_service"
+                            class="input-select"
+                            wire:model="form.external_contractors.divisions.medical_service">
+                        <option value="" disabled>{{__('Медична послуга')}} *</option>
+                        {{-- Assuming you have a list of services to loop through --}}
+                        <option value="primary_care">Послуга ПМД</option>
+                    </select>
+                    <label for="ext_medical_service" class="label">{{__('Медична послуга')}} *</label>
+                    @error('form.external_contractors.divisions.medical_service') <p class="text-error">{{ $message }}</p> @enderror
+                </div>
+            </div>
+        </div>
+
+        {{-- Modal Footer --}}
+        <div class="flex items-center justify-end p-4 md:p-5 border-t border-gray-200 rounded-b dark:border-gray-600 space-x-4">
+            <button @click="$wire.closeModal()" type="button" class="button-secondary">Скасувати</button>
+            <button wire:click.prevent="addExternalContractors()" type="button" class="button-primary">Додати</button>
+        </div>
+    </div>
+</div>

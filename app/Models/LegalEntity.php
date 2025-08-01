@@ -102,7 +102,7 @@ class LegalEntity extends Model
         return $this->hasMany(Division::class);
     }
 
-    public function contract(): HasMany
+    public function contracts(): HasMany
     {
         return $this->hasMany(Contract::class, 'legal_entity_id', 'id');
     }

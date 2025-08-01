@@ -17,24 +17,16 @@ trait WorkTimeUtilities
     /**
      * Replace colon ':' to dot '.' symbol
      *
-     * @param string $str
+     * @param string|null $str
      *
-     * @return string
+     * @return string|null
      */
-    protected function changeColonToDot(string $str): string
+    protected function changeDotToColon(?string $str): ?string
     {
-        return str_replace(':', '.', $str);
-    }
+        if ($str === null) {
+            return null;
+        }
 
-    /**
-     * Replace dot '.' to colon ':' symbol
-     *
-     * @param string $str
-     *
-     * @return string
-     */
-    protected function changeDotToColon(string $str): string
-    {
         return str_replace('.', ':', $str);
     }
 
