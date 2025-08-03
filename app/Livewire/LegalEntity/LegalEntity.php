@@ -380,7 +380,7 @@ abstract class LegalEntity extends Component
             'data.license.active_from_date' => 'required|string',
             'data.license.what_licensed' => 'required|string',
             'data.license.order_no' => 'required|string',
-            'data.archive' => 'sometimes|array',
+            'data.archive' => 'nullable|array',
             'data.archive.*.date' => 'required_with:data.archive|string',
             'data.archive.*.place' => 'required_with:data.archive|string',
             'data.inserted_by' => 'nullable|string',
