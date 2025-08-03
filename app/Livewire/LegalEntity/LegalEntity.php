@@ -14,22 +14,17 @@ use App\Traits\FormTrait;
 use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
 use App\Traits\AddressSearch;
-use App\Livewire\Actions\Logout;
 use App\Models\Employee\Employee;
 use App\Events\LegalEntityCreate;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Classes\Cipher\Traits\Cipher;
-use App\Classes\Cipher\Api\CipherApi;
 use Illuminate\Support\Facades\Cache;
 use App\Repositories\PhoneRepository;
-use Illuminate\Auth\Events\Registered;
 use App\Repositories\AddressRepository;
 use App\Classes\eHealth\Api\EmployeeApi;
 use App\Models\Employee\EmployeeRequest;
 use App\Repositories\EmployeeRepository;
-use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\ValidationException;
 use App\Models\LegalEntity as LegalEntityModel;
 use App\Livewire\LegalEntity\Forms\LegalEntitiesForms;
@@ -262,7 +257,7 @@ abstract class LegalEntity extends Component
         $taxId = $this->legalEntityForm->owner['taxId'];
 
         // Sending encrypted data
-        $base64Data = $this->sendEncryptedData($data, $taxId, CipherApi::SIGNATORY_INITIATOR_BUSINESS);
+        $base64Data = $this->sendEncryptedData($data, $taxId, $data['edrpou']);
 
         // Handle errors from encrypted data
         if (isset($base64Data['errors'])) {
