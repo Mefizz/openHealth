@@ -7,6 +7,7 @@ namespace App\Classes\eHealth;
 use App\Classes\eHealth\Api\License;
 use App\Classes\eHealth\Api\Job;
 use App\Classes\eHealth\Api\PersonRequest;
+use App\Classes\eHealth\Api\RuleEngineRules;
 
 final class EHealth
 {
@@ -23,5 +24,10 @@ final class EHealth
     public static function personRequest(): PersonRequest
     {
         return app(PersonRequest::class);
+    }
+
+    public static function ruleEngineRules(): RuleEngineRules
+    {
+        return app(RuleEngineRules::class);
     }
 }

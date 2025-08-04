@@ -170,6 +170,7 @@ return [
 
     // Evidences
     'evidence_conditions' => 'Докази - стани',
+    'evidence_observations' => 'Докази - медичні стани',
     'condition' => 'Стан',
 
     // Additional data
