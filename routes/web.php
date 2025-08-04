@@ -47,10 +47,11 @@ use App\Livewire\Patient\Records\PatientData;
 use App\Livewire\Declaration\DeclarationIndex;
 use App\Livewire\LegalEntity\CreateLegalEntity;
 use App\Livewire\Patient\Records\PatientSummary;
-use App\Livewire\Division\HealthcareServiceForm;
+use App\Livewire\Division\HealthcareService;
 use App\Livewire\Patient\Records\PatientEpisodes;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Livewire\Dashboard;
+use App\Models\Division;
 
 /*
 |--------------------------------------------------------------------------
@@ -110,10 +111,14 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
             ->can('create',  LegalEntity::class)
             ->name('legal-entity.create');
 
-        Route::prefix('division')->group(function () {
-            Route::get('/', DivisionIndex::class)->name('division.index');
-            Route::get('/form/{id?}', DivisionForm::class)->name('division.form');
-            Route::get('/{division}/healthcare-service', HealthcareServiceForm::class)->name('healthcare_service.index');
+        Route::prefix('division')->middleware(['permission:division:read'])->group(function () {
+            Route::get('/', DivisionIndex::class)->name('division.index')->can('viewAny', Division::class);
+
+            Route::get('/create', DivisionForm::class)->name('division.create')->can('create', Division::class);
+            Route::get('/{id}/edit', DivisionForm::class)->name('division.edit')->whereNumber('division');
+
+
+            Route::get('/{division}/healthcare-service', HealthcareService::class)->name('healthcare_service.index');
         });
 
         Route::prefix('employee')->name('employee.')->middleware('auth')->group(function () {

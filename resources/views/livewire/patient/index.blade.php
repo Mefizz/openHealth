@@ -6,7 +6,7 @@
         __('Д.Н.'),
         __('forms.rnokpp') . '(' . __('forms.ipn') . ')',
         __('forms.birth_certificate'),
-        __('forms.status'),
+        __('forms.status.label'),
         __('forms.action')
     ];
 @endphp

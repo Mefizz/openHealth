@@ -48,9 +48,9 @@ abstract class EHealthRequest extends PendingRequest
      * Set a Callable validator for the response, which accepts an EHealthResponse instance as an argument.
      * See EHealthResponse::validate().
      *
-     * @param Callable $validator
+     * @param callable $validator
      */
-    protected function setValidator(Callable $validator): void
+    protected function setValidator(callable $validator): void
     {
         $this->validator = $validator;
     }

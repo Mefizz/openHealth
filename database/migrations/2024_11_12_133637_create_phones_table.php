@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('type');
             $table->string('number');
-            $table->string(column: 'note')->nullable();
             $table->morphs('phoneable');
             $table->timestamps();
         });

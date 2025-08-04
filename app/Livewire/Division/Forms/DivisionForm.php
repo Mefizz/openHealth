@@ -4,25 +4,25 @@ declare(strict_types=1);
 
 namespace App\Livewire\Division\Forms;
 
+use Log;
+use App\Rules\Email;
+use App\Traits\FormTrait;
+use App\Repositories\Repository;
+use App\Classes\eHealth\EHealth;
+use Livewire\Attributes\Validate;
+use App\Rules\DivisionRules\TypeRule;
+use App\Rules\DivisionRules\PhoneRule;
+use App\Repositories\AddressRepository;
 use App\Rules\DivisionRules\AddressRule;
-use App\Rules\DivisionRules\LegalEntityStatusRule;
-use Livewire\Features\SupportFormObjects\Form;
+use App\Rules\DivisionRules\LocationRule;
 use App\Rules\DivisionRules\WorkingHoursRule;
 use App\Exceptions\CustomValidationException;
-use App\Rules\DivisionRules\LocationRule;
-use App\Rules\Email;
-use App\Rules\DivisionRules\PhoneRule;
-use App\Rules\DivisionRules\TypeRule;
-use Livewire\Attributes\Validate;
+use Livewire\Features\SupportFormObjects\Form;
 use Illuminate\Validation\ValidationException;
-use App\Repositories\AddressRepository;
-use App\Livewire\Division\Api\DivisionRequestApi;
-use Illuminate\Support\Facades\DB;
-use App\Models\Division;
-use App\Traits\FormTrait;
+use App\Rules\DivisionRules\LegalEntityStatusRule;
 
 // TODO: (after divide DivisionForm onto three classes) rename this one to the DivisionForm
-class DivisionFormRequest extends Form
+class DivisionForm extends Form
 {
     use FormTrait;
 
@@ -88,7 +88,7 @@ class DivisionFormRequest extends Form
             // Check that phone type exists in dictionaries and valid accordingly to international rules
             new PhoneRule($this->division),
             // Check that Division type exists in dictionaries
-            new TypeRule($this->division)
+            new TypeRule($this->division),
         ];
     }
 
@@ -155,13 +155,13 @@ class DivisionFormRequest extends Form
     public function messages(): array
     {
         return [
-            'division.location.longitude.required_with' => __('Якщо введено широту, довгота також обов’язкова'),
-            'division.location.latitude.required_with' => __('Якщо введено довготу, широта також обов’язкова'),
-            'division.external_id.integer' => __("Поле 'Зовнішній ідeнтифікатор' має містити ціле число"),
-            'division.email.required' => __('Поле E-mail є обов’язковим'),
-            'division.email.email' => __('Введіть дійсну адресу електронної пошти'),
-            'division.phones.type' => __("Поле 'Тип номера' є обов’язковим"),
-            'division.phones.number' => __("Поле 'Номер телефону' є обов’язковим")
+            'division.location.longitude.required_with' => __('validation.attributes.healthcareService.error.division.location.longitude_required'),
+            'division.location.latitude.required_with' => __('validation.attributes.healthcareService.error.division.location.latitude_required'),
+            'division.external_id.integer' => __('validation.attributes.healthcareService.error.division.external_id'),
+            'division.email.required' => __('validation.attributes.healthcareService.error.division.email.required'),
+            'division.email.email' => __('validation.attributes.healthcareService.error.division.email.wrong'),
+            'division.phones.type' => __('validation.attributes.healthcareService.error.division.phone.type_required'),
+            'division.phones.number' => __('validation.attributes.healthcareService.error.division.phone.number_required')
         ];
     }
 
@@ -184,43 +184,46 @@ class DivisionFormRequest extends Form
         $this->division['working_hours'] = $arr;
     }
 
-    public function updateDivision(): array
+    /**
+     * Modify the data of existent Division
+     * Note: all the data should be present into $this->division property up to now
+     *
+     * @return array
+     */
+    public function updateDivision(): array|null
     {
         $uuid = $this->division['uuid'];
         $division = removeEmptyKeys($this->division);
+
         $division['addresses'] = $this->convertArrayKeysToSnakeCase($division['addresses']);
 
-        return DivisionRequestApi::updateDivisionRequest($uuid, $division);
+        try {
+            return EHealth::division()->update(uuid: $uuid, data: $division)->validate();
+        } catch (\Exception $err) {
+            Log::error(self::class . ':updateDivision', ['error' => $err->getMessage()]);
+        }
+
+        return null;
     }
 
-    public function createDivision(): array
+    /**
+     * Create the new Division
+     * Note: all the data should be present into $this->division property up to now
+     *
+     * @return array
+     */
+    public function createDivision(): array|null
     {
         $division = removeEmptyKeys($this->division);
         $division['addresses'] = $this->convertArrayKeysToSnakeCase($division['addresses']);
 
-        return DivisionRequestApi::createDivisionRequest($division);
-    }
+        try {
+            return EHealth::division()->create(data: $division)->validate();
+        } catch (\Exception $err) {
+            Log::error(self::class . ':updateDivision', ['error' => $err->getMessage()]);
+        }
 
-    public function saveDivision(Division $division, array $response): void
-    {
-        $addressData = $response['addresses'];
-        unset($response['addresses']);
-
-        $response['phones'] = $response['phones'][0];
-
-        $legalEntity = legalEntity();
-
-        $division->fill($response);
-        $division->setAttribute('uuid', $response['id']);
-        $division->setAttribute('legal_entity_uuid', $response['legal_entity_id']);
-        $division->setAttribute('external_id', $response['external_id']);
-        $division->setAttribute('status', $response['status']);
-
-        DB::transaction(function () use ($division, $addressData, $legalEntity) {
-            $savedDivision = $legalEntity->division()->save($division);
-
-            $this->addressRepository->addAddresses($savedDivision, $addressData);
-        });
+        return null;
     }
 
     /**

@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\Division;
+use App\Policies\DivisionPolicy;
+use Illuminate\Support\Facades\Auth;
 use App\Auth\EHealth\Guards\EHealthGuard;
-use App\Auth\EHealth\Providers\EHealthUserProvider;
 use App\Auth\EHealth\Services\TokenStorage;
 use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Contracts\Cookie\QueueingFactory;
+use App\Auth\EHealth\Providers\EHealthUserProvider;
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
 {

@@ -4,19 +4,25 @@ declare(strict_types=1);
 
 namespace App\Livewire\Division;
 
-use App\Livewire\Division\Api\HealthcareServiceRequestApi;
-use App\Livewire\Division\Forms\HealthCareFormRequest;
+use Log;
+use Exception;
+use App\Enums\Status;
+use Livewire\Component;
 use App\Models\Division;
-use App\Models\HealthcareService;
-use App\Models\LegalEntity;
 use App\Traits\FormTrait;
 use Illuminate\View\View;
-use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
-use Livewire\Component;
+use App\Models\LegalEntity;
 use Livewire\WithPagination;
+use App\Classes\eHealth\EHealth;
+use App\Repositories\Repository;
+use App\Models\HealthcareService as HealthcareServiceModel;
+use Livewire\Attributes\Computed;
+use Livewire\Features\SupportRedirects\Redirector;
+use App\Livewire\Division\Forms\HealthcareServiceForm as HealthCareFormRequest;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
-class HealthcareServiceForm extends Component
+class HealthcareService extends Component
 {
     use WithPagination;
     use FormTrait;
@@ -73,7 +79,7 @@ class HealthcareServiceForm extends Component
 
         $this->division = $division;
 
-        $this->divisionStatus = $this->division->status === 'ACTIVE';
+        $this->divisionStatus = $this->division->status === Status::ACTIVE;
 
         $this->category = $this->healthcareCategoriesKeys[0];
 
@@ -154,106 +160,161 @@ class HealthcareServiceForm extends Component
         if ($error) {
             $this->dispatch('flashMessage', ['message' => $error, 'type' => 'error']);
         } else {
-            $this->updateOrCreate(new HealthcareService());
+            if (! $this->updateOrCreate()) {
+                return;
+            }
         }
 
         $this->closeModal();
     }
 
-    public function edit(HealthcareService $healthcareServiceApi): void
+    public function edit(HealthcareServiceModel $healthcareService): void
     {
         $this->mode = 'edit';
 
-        $this->formService->setHelathcareService($healthcareServiceApi->toArray());
+        $this->formService->setHelathcareService($healthcareService->toArray());
 
         $this->openModal();
     }
 
-    public function update(HealthcareService $healthcareService): void
+    public function update(): void
     {
-        $id = $this->formService->getHealthcareServiceParam('id');
         $error = $this->formService->doValidation($this->mode);
 
         if ($error) {
             $this->dispatch('flashMessage', ['message' => $error, 'type' => 'error']);
         } else {
-            $this->updateOrCreate($healthcareService::find($id));
+            if (! $this->updateOrCreate()) {
+                return;
+            }
         }
 
         $this->closeModal();
     }
 
-    public function updateOrCreate(HealthcareService $healthcareService): void
+    /**
+     * Combined method used both creation and modification Division's data
+     *
+     * @return Redirector|RedirectResponse|null
+     */
+    public function updateOrCreate(): Redirector|RedirectResponse|null
     {
         $response = $this->mode === 'edit'
             ? $this->updateHealthcareService()
             : $this->createHealthcareService();
 
         if ($response) {
-            $this->saveHealthcareService($healthcareService, $response);
+            Repository::healthcareService()
+                ->setDivision($this->division)
+                ->saveHealthcareServiceResponseData($response);
+
+            return redirect()->route('healthcare_service.index', [legalEntity(), $this->division])->with('success', __('Запит виконано успішно'));
         }
+
+        session()->flash('error', __('Помилка в процесі обробки запиту'));
+
+        return null;
     }
 
-    private function updateHealthcareService(): array
+    private function updateHealthcareService(): array|null
     {
         $uuid = $this->formService->getHealthcareServiceParam('uuid');
 
-        return HealthcareServiceRequestApi::updateHealthcareServiceRequest($uuid, $this->formService->getHealthcareService());
-    }
+        $healthcareServiceRawData = $this->formService->getHealthcareService();
 
-    private function createHealthcareService(): array
-    {
-        return HealthcareServiceRequestApi::createHealthcareServiceRequest($this->division->uuid, $this->formService->getHealthcareService());
-    }
+        $requestParams = Repository::healthcareService()->prepareRequestUpdateData( $healthcareServiceRawData);
 
-    private function saveHealthcareService(HealthcareService $healthcareService, array $response): void
-    {
-        $healthcareService->setAttribute('uuid', $response['id']);
-
-        $healthcareService->fill($response);
-
-        $this->division->healthcareService()->save($healthcareService);
-    }
-
-    public function activate(HealthcareService $healthcareService): void
-    {
-        HealthcareServiceRequestApi::activateHealthcareServiceRequest($healthcareService['uuid']);
-
-        $healthcareService->setAttribute('status', 'ACTIVE');
-        $healthcareService->save();
-
-        $this->dispatch('refreshPage');
-    }
-
-    public function deactivate(HealthcareService $healthcareService): void
-    {
-        HealthcareServiceRequestApi::deactivateHealthcareServiceRequest($healthcareService['uuid']);
-
-        $healthcareService->setAttribute('status', 'DEACTIVATED');
-        $healthcareService->save();
-
-        $this->dispatch('refreshPage');
-    }
-
-    public function syncHealthcareServices(): void
-    {
-        $syncHealthcareServices = HealthcareServiceRequestApi::syncHealthcareServiceRequest($this->division->uuid);
-
-        $this->dispatch('flashMessage', ['message' => __('Інформацію успішно оновлено'), 'type' => 'success']);
-
-        $this->syncHealthcareServicesSave($syncHealthcareServices);
-
-        $this->dispatch('refreshPage');
-    }
-
-    public function syncHealthcareServicesSave($responses): void
-    {
-        foreach ($responses as $response) {
-            $healthcareService = HealthcareService::firstOrNew(['uuid' => $response['id']]);
-            $healthcareService->setAttribute('uuid', $response['id']);
-            $healthcareService->fill($response);
-            $this->division->healthcareService()->save($healthcareService);
+        try {
+            return EHealth::healthcareService()->update(uuid: $uuid, data: $requestParams)->validate();
+        } catch (Exception $err) {
+            Log::error(self::class . ':updateHealthcareService', ['error' => $err->getMessage()]);
         }
+
+        return null;
+    }
+
+    private function createHealthcareService(): array|null
+    {
+        $healthcareServiceRawData = $this->formService->getHealthcareService();
+
+        $requestParams = Repository::healthcareService()
+            ->setDivision($this->division)
+            ->prepareRequestCreateData($healthcareServiceRawData);
+
+        try {
+            return EHealth::healthcareService()->create(data: $requestParams)->validate();
+        } catch (Exception $err) {
+            Log::error(self::class . ':createHealthcareService', ['error' => $err->getMessage()]);
+        }
+
+        return null;
+    }
+
+    public function activate(HealthcareServiceModel $healthcareService): void
+    {
+        try {
+            $response = EHealth::healthcareService()->activate($healthcareService->uuid);
+
+            if (! $response->successful()) {
+                throw new Exception('response_error ' . $response->body());
+            }
+
+            $responseData = $response->getData();
+
+            Repository::healthcareService()->setAction($healthcareService, $responseData['status']);
+        } catch (Exception $err) {
+            Log::error(self::class . ':activate:', ['message' => $err->getMessage()]);
+
+            session()->flash('error', _('Цю послугу не вдалось активувати'));
+        }
+    }
+
+    public function deactivate(HealthcareServiceModel $healthcareService): void
+    {
+        try {
+            $response = EHealth::healthcareService()->deactivate($healthcareService->uuid);
+
+            if (! $response->successful()) {
+                throw new Exception('response_error ' . $response->body());
+            }
+
+            $responseData = $response->getData();
+
+            Repository::healthcareService()->setAction($healthcareService, $responseData['status']);
+        } catch (Exception $err) {
+            Log::error(self::class . ':deactivate:', ['message' => $err->getMessage()]);
+
+            session()->flash('error', _('Цю послугу не вдалось деактивувати'));
+        }
+    }
+
+    public function sync(): void
+    {
+        $response = null;
+
+        try {
+            $response = EHealth::healthcareService()->getMany(divisionUuid: $this->division->uuid);
+
+            $healthcareServices = $response->validate();
+
+            Repository::healthcareService()
+                ->setDivision($this->division)
+                ->saveHealthcareServiceList($healthcareServices);
+        } catch (Exception $err) {
+            Log::error('HealthscareService repository [syncHealthcareServiceList]: ', ['error' => $err->getMessage()]);
+
+            session()->flash('error', __('Помилка синхронізації. Зверніться до адміністратора.'));
+
+            return;
+        }
+
+        if ($response?->isNotLast()) {
+            // TODO run
+            dd('HCS Multi-Paging detected', $response->getPaging());
+            // SyncHealthsCareListJob::dispatch(legalEntity(), 2); // page starts from number 2
+        }
+
+        session()->flash('success',  __('Інформацію успішно оновлено'));
     }
 
     public function tableHeadersHealthcare(): void

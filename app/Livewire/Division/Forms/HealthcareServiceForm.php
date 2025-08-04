@@ -15,9 +15,8 @@ use App\Rules\DivisionRules\HealthcareRules\CategoryInDictionaryRule;
 use App\Rules\DivisionRules\HealthcareRules\ProvidingConditionRule;
 use App\Rules\DivisionRules\HealthcareRules\SpecialityTypeInDictionaryRule;
 use App\Rules\DivisionRules\LegalEntityStatusRule;
-use Exception;
 
-class HealthCareFormRequest extends Form
+class HealthcareServiceForm extends Form
 {
     const HEALTHCARE_SERVICE_LEGAL_ENTITIES_ALLOWED_TYPE = 'MSP';
     const LEGAL_ENTITY_PRIMARY_CARE_PROVIDING_CONDITIONS = 'OUTPATIENT';
