@@ -3,6 +3,8 @@
         <x-slot name="title">{{ __('Редагувати заклад ') }}</x-slot>
     </x-section-navigation>
 
+    @include('livewire.partials.form-alert')
+
     <section class="section-form"
         x-data="{
             activeStep: 0,

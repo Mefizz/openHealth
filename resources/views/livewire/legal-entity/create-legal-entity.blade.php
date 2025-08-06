@@ -3,6 +3,8 @@
         <x-slot name="title">{{ __('Зарееструвати заклад ') }}</x-slot>
     </x-section-navigation>
 
+    @include('livewire.partials.form-alert')
+
     <section class="section-form">
         <div
             x-data="{

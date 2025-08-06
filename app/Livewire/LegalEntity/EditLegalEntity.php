@@ -2,13 +2,14 @@
 
 namespace App\Livewire\LegalEntity;
 
-use Log;
 use Exception;
 use Illuminate\Support\Arr;
 use App\Models\Employee\Employee;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 use App\Models\LegalEntity as LegalEntityModel;
 
 class EditLegalEntity extends LegalEntity
@@ -135,55 +136,55 @@ class EditLegalEntity extends LegalEntity
         return $this->convertArrayKeysToCamelCase($documents[0]);
     }
 
-    public function updateLegalEntity()
+    /**
+     * The main action method for updating a legal entity.
+     */
+    public function updateLegalEntity(): ?RedirectResponse
     {
-        $this->legalEntityForm->onEditValidate();
+        // Clear any previous alerts before a new attempt.
+        $this->dismissAlert();
 
+        // Run the form-specific validation for editing.
+        $this->legalEntityForm->onEditValidate();
         if ($this->getErrorBag()->isNotEmpty()) {
             $this->dispatchBrowserEvent('scroll-to-error');
+            return null;
         }
 
-        // TODO: until refactoring
-        if (! $result = $this->signLegalEntity()) {
-            return;
+        // The trait's signAndSubmit() method handles all the complex logic.
+        $result = $this->signAndSubmit();
+
+        if (is_null($result)) {
+            // An error occurred and the alert is already displayed. NO REDIRECT.
+            return null;
         }
 
-
-        $data = $result['request'];
-        $response = $this->filterUnprovidedFields($result['response'], $data);
-
+        // If the submission was successful, process the result.
         try {
-            /**
-             * The code below is need to save new client_secret if ESOZ returns successfull response
-             * Without it next login may be impossible!
-             */
-            $legalEntity = LegalEntityModel::where(['uuid' => $response['data']['id'] ])->first();
+            $data = $result['request'];
+            $response = $this->filterUnprovidedFields($result['response'], $data);
 
-            $legalEntity->clientSecret = $response['urgent']['security']['client_secret'] ?? $response['urgent']['security']['secret_key'] ?? null;
-
+            $legalEntity = LegalEntity::where(['uuid' => $response['data']['id'] ])->firstOrFail();
+            $legalEntity->client_secret = $response['urgent']['security']['client_secret'] ?? $response['urgent']['security']['secret_key'] ?? null;
             $legalEntity->save();
             $legalEntity->refresh();
 
             DB::transaction(function() use($response, $data) {
                 $this->modifyLegalEntity($response);
-
                 $user = Auth::user();
-
-                try {
-                    $this->createEmployeeRequest($this->legalEntity, $data, $response['urgent']['employee_request_id'], $user?->id ?? null);
-                } catch (Exception $err) {
-                    throw new Exception('Error: createEmployeeRequest: ' . $err->getMessage(), $err->getCode());
-                }
+                $this->createEmployeeRequest($this->legalEntity, $data, $response['urgent']['employee_request_id'], $user?->id ?? null);
             });
+
         } catch (Exception $err) {
+            // Catch any errors during the final DB operations.
             Log::error(__('forms.errors.update_data', [], 'en'), ['error' => $err->getMessage()]);
-
-            $this->dispatchErrorMessage(__('forms.errors.update_data'));
-
+            $this->showAlert(__('forms.errors.update_data'), 'error');
             return null;
         }
 
-        return Redirect::route('legal-entity.edit', [legalEntity()])->with('success', __('forms.update_successfull')) ?? null;
+        // On full success, redirect with a success message (this uses the session-based alert).
+        return Redirect::route('legal-entity.edit', [legalEntity()])
+            ->with('success', __('forms.update_successfull'));
     }
 
     public function render()

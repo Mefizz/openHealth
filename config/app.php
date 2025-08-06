@@ -178,6 +178,7 @@ return [
         App\Providers\DictionaryServiceProvider::class,
         App\Providers\BladeServiceProvider::class,
         App\Classes\eHealth\Providers\SchemaServiceProvider::class,
+        App\Providers\CipherServiceProvider::class,
         App\Providers\MedicalEventsDBServiceProvider::class
     ])->toArray(),
 

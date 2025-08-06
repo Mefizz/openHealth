@@ -2,12 +2,14 @@
 
 namespace App\Livewire\LegalEntity;
 
-use Log;
-use Arr;
+use App\Livewire\LegalEntity\Traits\ManagesLegalEntitySubmission;
+use App\Services\SignatureService;
+use App\Traits\WithComponentAlerts;
 use Exception;
-use Validator;
+use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use App\Models\User;
+use App\Core\Arr;
 use App\Models\License;
 use Livewire\Component;
 use App\Traits\FormTrait;
@@ -25,17 +27,42 @@ use App\Repositories\AddressRepository;
 use App\Classes\eHealth\Api\EmployeeApi;
 use App\Models\Employee\EmployeeRequest;
 use App\Repositories\EmployeeRepository;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 use App\Models\LegalEntity as LegalEntityModel;
 use App\Livewire\LegalEntity\Forms\LegalEntitiesForms;
-use App\Livewire\LegalEntity\Forms\LegalEntitiesRequestApi;
 
 abstract class LegalEntity extends Component
 {
     use FormTrait,
         Cipher,
         WithFileUploads,
-        AddressSearch;
+        AddressSearch,
+        WithComponentAlerts,
+        ManagesLegalEntitySubmission;
+
+    /**
+     * @var LegalEntitiesForms The Form
+     */
+    public LegalEntitiesForms $legalEntityForm;
+
+    /**
+     * @var object|null
+     */
+    public ?object $file = null;
+
+    /**
+     * @var array|string[] Get dictionaries keys
+     */
+    public array $dictionaryNames = [
+        'PHONE_TYPE',
+        'LICENSE_TYPE',
+        'SETTLEMENT_TYPE',
+        'GENDER',
+        'SPECIALITY_LEVEL',
+        'ACCREDITATION_CATEGORY',
+        'POSITION',
+        'DOCUMENT_TYPE'
+    ];
 
     protected const STEP_PATH='views/livewire/legal-entity/step';
 
@@ -60,11 +87,6 @@ abstract class LegalEntity extends Component
     protected string $stepCacheKey;
 
     /**
-     * @var LegalEntitiesForms The Form
-     */
-    public LegalEntitiesForms $legalEntityForm;
-
-    /**
      * @var LegalEntityModel|null The Legal Entity being filled
      */
     protected ?LegalEntityModel $legalEntity;
@@ -77,25 +99,6 @@ abstract class LegalEntity extends Component
     protected EmployeeRepository $employeeRepository;
 
     protected PhoneRepository $phoneRepository;
-
-    /**
-     * @var object|null
-     */
-    public ?object $file = null;
-
-    /**
-     * @var array|string[] Get dictionaries keys
-     */
-    public array $dictionaryNames = [
-        'PHONE_TYPE',
-        'LICENSE_TYPE',
-        'SETTLEMENT_TYPE',
-        'GENDER',
-        'SPECIALITY_LEVEL',
-        'ACCREDITATION_CATEGORY',
-        'POSITION',
-        'DOCUMENT_TYPE'
-    ];
 
     /**
      * @return void set cache keys
@@ -115,11 +118,9 @@ abstract class LegalEntity extends Component
     protected function mount(): void
     {
         $this->mergeAddress($this->convertArrayKeysToCamelCase($this->legalEntity->toArray())['address'] ?? []);
-
         $this->getDictionary();
-
+        $this->getCertificateAuthorityList();
         $this->setCertificateAuthority();
-
         $this->getOwnerFields();
     }
 
@@ -781,5 +782,13 @@ abstract class LegalEntity extends Component
         Log::info("LegalEntity: New OWNER has been successfully registered! User credentials was sended to the {$owner->email} address");
 
         return $owner;
+    }
+
+    /**
+     * Fetches the list of Certificate Authorities using the dedicated SignatureService.
+     */
+    private function getCertificateAuthorityList(): void
+    {
+        $this->getCertificateAuthority = app(SignatureService::class)->getCertificateAuthorities();
     }
 }

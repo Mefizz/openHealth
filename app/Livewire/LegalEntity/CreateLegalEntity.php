@@ -4,6 +4,7 @@ namespace App\Livewire\LegalEntity;
 
 use Exception;
 use App\Models\License;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Arr;
 use App\Models\Relations\Phone;
 use App\Livewire\Actions\Logout;
@@ -525,28 +526,38 @@ class CreateLegalEntity extends LegalEntity
         }
     }
 
-    public function createLegalEntity()
+    /**
+     * The main action method for creating a new legal entity.
+     */
+    public function createLegalEntity(): ?RedirectResponse
     {
-        $this->stepSignificancy();
+        // Clear any previous alerts before a new attempt.
+        $this->dismissAlert();
 
-        // Validate All the data from the form
-        if ($this->validationRequest()) {
-            // TODO: until refactoring
-            if (! $result = $this->signLegalEntity()) {
-                return;
-            }
+        // Run the component's own validation rules for the form data.
+        if (!$this->validationRequest()) {
+            return null;
+        }
 
-            $requestData = $result['request'];
+        // The trait's signAndSubmit() method handles all complex logic.
+        $result = $this->signAndSubmit();
 
-            $response = $this->filterUnprovidedFields($result['response'], $requestData);
+        if (is_null($result)) {
+            // An error occurred and the alert is already displayed by the component update.
+            // We simply stop the execution. NO REDIRECT.
+            return null;
+        }
 
-            try {
-                // Handle successful API response
-                $this->handleSuccessResponse($response, $requestData);
-            } catch(Exception $err) {
-                // Dispatch error message for possible errors
-                $this->dispatchErrorMessage($err->getMessage());
-            }
+        // If the submission was successful, process the result.
+        try {
+            // CORRECTED: Return the result of handleSuccessResponse, which should be a RedirectResponse.
+            return $this->handleSuccessResponse($result['response'], $result['request']);
+        } catch (Exception $err) {
+            // Catch any errors that might occur during the final DB operations.
+            Log::error('Create Legal Entity - handleSuccessResponse failed.', ['error' => $err->getMessage()]);
+            // Use the new alert system.
+            $this->showAlert('An error occurred during the final data saving process.', 'error');
+            return null;
         }
     }
 
