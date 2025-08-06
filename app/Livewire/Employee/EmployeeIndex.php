@@ -362,12 +362,6 @@ class EmployeeIndex extends EmployeeComponent
         $this->requestToDeleteId = null;
     }
 
-    public function notifyNoAccess()
-    {
-        session()->flash('error', 'Відказано у доступі');
-        $this->skipRender();
-    }
-
     /**
      * Renders the component view.
      */
