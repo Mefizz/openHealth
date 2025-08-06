@@ -35,7 +35,7 @@ return [
     'withTerms' => 'з умовами використання',
     'accreditationShow' => 'Наявна акредитація',
 
-    
+
     'selectLevel' => 'Оберіть ступінь',
     'selectDocumentType' => 'Оберіть тип документа',
     'selectQualificationType' => 'Оберіть тип кваліфікіції',
@@ -161,6 +161,7 @@ return [
     'add_employee' => 'Додати співробітника',
     'edit_employee' => 'Зміна даних співробітника',
     'view_employee' => 'Перегляд данних співробітника',
+    'view' => 'Переглянyти',
     'employee_requests' => 'Запити співробітників',
     'edit_employee_request' => 'Редагування запиту співробітника',
     'view_employee_request' => 'Перегляд запиту співробітника',

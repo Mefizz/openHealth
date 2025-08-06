@@ -6,55 +6,33 @@
         if (
             $user->can('view', $position) ||
             $user->can('update', $position) ||
-            ($user->can('deactivate', $position) && $position->status?->value === \App\Enums\Status::APPROVED->value)
+            $user->can('dismiss', $position)
         ) {
             $hasActions = true;
         }
     } elseif ($position instanceof \App\Models\Employee\EmployeeRequest) {
         if (
             $user->can('view', $position) ||
-            $user->can('update', $position) ||
-            ($user->can('delete', $position) && !$position->uuid)
+            $user->can('update', 'update', $position) ||
+            $user->can('delete', $position)
         ) {
             $hasActions = true;
         }
     }
 @endphp
 
-<div class="relative" x-data="{ open: false }" @click.outside="open = false">
-    <div
-        id="notification-container-{{ $position->id }}"
-        style="display: none;"
-        class="fixed top-[1.5rem] w-auto z-[100000] right-2"
-        role="alert"
-    >
-        <div class="p-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400">
-            <span class="font-medium">Відказано у доступі</span>
-        </div>
-    </div>
+@if ($hasActions)
+    <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+        {{-- Клік по кнопці тепер просто відкриває/закриває меню --}}
+        <button
+            @click="open = !open"
+            class="inline-flex items-center p-2 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-white" type="button">
+            <svg class="w-6 h-6 text-gray-800 dark:text-white svg-hover-action" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="square" stroke-linejoin="round" stroke-width="2" d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"/>
+            </svg>
+        </button>
 
-    <button
-        @click="
-            @if($hasActions)
-                open = !open
-            @else
-                $wire.notifyNoAccess().then(() => {
-
-                    let notification = document.getElementById('notification-container-{{ $position->id }}');
-                    notification.style.display = 'block';
-                    setTimeout(() => {
-                        notification.style.display = 'none';
-                    }, 5000);
-                })
-            @endif
-        "
-        class="inline-flex items-center p-2 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-white" type="button">
-        <svg class="w-6 h-6 text-gray-800 dark:text-white svg-hover-action" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-            <path stroke="currentColor" stroke-linecap="square" stroke-linejoin="round" stroke-width="2" d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"/>
-        </svg>
-    </button>
-
-    @if($hasActions)
+        {{-- Меню показується/ховається за допомогою Alpine.js --}}
         <div x-show="open" x-transition class="absolute right-0 z-10 w-48 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600" style="display: none;">
 
             @if($position instanceof \App\Models\Employee\Employee)
@@ -76,7 +54,7 @@
                         </li>
                     @endcan
                 </ul>
-                @can('deactivate', $position)
+                @can('dismiss', $position)
                     @if($position->status?->value === 'APPROVED')
                         <div class="py-1" @click="open = false">
                             <button type="button" wire:click="showModalDeactivate({{ $position->id }})" class="flex items-center gap-2 w-full py-2 px-4 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600">
@@ -118,5 +96,5 @@
                 @endcan
             @endif
         </div>
-    @endif
-</div>
+    </div>
+@endif
