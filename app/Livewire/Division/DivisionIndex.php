@@ -126,7 +126,7 @@ class DivisionIndex extends Component
     public function render(): View
     {
         $perPage = config('pagination.per_page');
-        $divisions = legalEntity()?->division()->orderBy('uuid')->paginate($perPage);
+        $divisions = legalEntity()?->divisions()->orderBy('uuid')->paginate($perPage);
 
         return view('livewire.division.division-form', compact('divisions'));
     }
