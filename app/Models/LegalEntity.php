@@ -97,7 +97,7 @@ class LegalEntity extends Model
         $this->attributes['kveds'] = json_encode($value);
     }
 
-    public function division(): HasMany
+    public function divisions(): HasMany
     {
         return $this->hasMany(Division::class);
     }
@@ -136,7 +136,7 @@ class LegalEntity extends Model
 
     public function getActiveDivisions(): Collection
     {
-        return $this->division()->has('healthcareService')->where('status', 'ACTIVE')->get();
+        return $this->divisions()->has('healthcareService')->where('status', 'ACTIVE')->get();
     }
 
     public function getEdr(): array

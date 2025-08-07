@@ -99,7 +99,7 @@ class ProcedureComponent extends Component
         $this->employeeFullName = $authUser->getEncounterWriterEmployee()->fullName;
 
         $this->setPatientData();
-        $this->divisions = legalEntity()->division->toArray();
+        $this->divisions = legalEntity()->divisions->toArray();
         $this->getDictionary();
         $this->getEpisodes();
 

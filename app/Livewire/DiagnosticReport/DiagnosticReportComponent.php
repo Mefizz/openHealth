@@ -152,7 +152,7 @@ class DiagnosticReportComponent extends Component
         })->toArray();
 
         $this->setPatientData();
-        $this->divisions = legalEntity()->division->toArray();
+        $this->divisions = legalEntity()->divisions->toArray();
 
         $this->getDictionary();
 
