@@ -86,6 +86,7 @@ return [
     'ipn' => 'ІПН',
     'choose_legal_entity' => 'Будь ласка, оберіть медичний заклад зі списку',
     'synchronise_with_eHealth' => 'Синхронізувати з ЕСОЗ',
+    'website_hint' => 'Сайт має бути вказаний у форматі "google.com"',
 
     // Employee & Party
     'employees' => 'Співробітники',
@@ -312,7 +313,7 @@ return [
     'signature_validation_error' => 'Помилка під час підписання',
     'validation_failed_check_form' => 'Помилка при заповнені форми',
     'errors' => [
-        'update_data' => 'Сталася помилка під час оновлення даних'
+        'update_data' => 'Сталася помилка під час оновлення даних',
     ],
     'del_and_choose_value' => 'Видаліть вміст і оберіть значення зі списку',
     'local_login' => 'Увага! Ви намагєтесь увійти в локальну частину МІС',
