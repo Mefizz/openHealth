@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Classes\eHealth;
 
+use App\Classes\eHealth\Api\DeclarationRequest;
 use App\Classes\eHealth\Api\License;
 use App\Classes\eHealth\Api\Job;
+use App\Classes\eHealth\Api\Person;
 use App\Classes\eHealth\Api\PersonRequest;
 
 final class EHealth
@@ -23,5 +25,15 @@ final class EHealth
     public static function personRequest(): PersonRequest
     {
         return app(PersonRequest::class);
+    }
+
+    public static function person(): Person
+    {
+        return app(Person::class);
+    }
+
+    public static function declarationRequest(): DeclarationRequest
+    {
+        return app(DeclarationRequest::class);
     }
 }

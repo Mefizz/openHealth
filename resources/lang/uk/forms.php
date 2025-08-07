@@ -55,6 +55,9 @@ return [
     'update_info' => 'Оновити інформацію',
     'update_successful' => 'Дані оновлено успішно',
     'with_terms' => 'з умовами використання',
+    'main_information' => 'Основні дані',
+    'authentication' => 'Автентифікація',
+    'auth_method' => 'Метод автентифікації',
 
     // Legal Entity
     'legal_entity_name' => 'Медична організація',
