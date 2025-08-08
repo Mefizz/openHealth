@@ -55,7 +55,7 @@
                     </div>
                 </div>
 
-                <div class="modal-footer">
+                <div class="form-button-group pt-4">
                     <button type="button" @click="showSignatureModal = false" class="button-minor">{{__('forms.cancel')}}</button>
                     <button wire:click="sign" type="button" class="button-primary" wire:loading.attr="disabled" wire:target="sign">
                         <span wire:loading.remove wire:target="sign">{{ __('forms.sign') }}</span>
