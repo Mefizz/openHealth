@@ -168,7 +168,7 @@
         <div class="form-row-2">
             <div class="form-group">
                 <label for="aboutMyself"
-                       class="peer appearance-none bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400">{{ __('forms.about_myself') }}</label>
+                       class="peer appearance-none bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400">{{ __('forms.about_myself') }} *</label>
                 <textarea
                     id="aboutMyself"
                     wire:model="form.party.aboutMyself"
