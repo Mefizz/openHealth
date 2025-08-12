@@ -20,11 +20,8 @@ class SignatureService
     }
 
     /**
-     * Sends data for signing.
-     * On success, returns the signed content string.
-     * On failure, returns the error message string.
-     *
-     * @return string The signed content or an error message.
+     * Sends data for signing using Cipher API.
+     * The file processing logic is now handled inside this service.
      */
     public function signData(
         array $dataToSign,
@@ -32,7 +29,7 @@ class SignatureService
         string $knedp,
         ?UploadedFile $keyFile,
         string $taxId
-    ): string {
+    ): string|array {
         try {
             $base64FileContent = $this->getBase64KepFileContent($keyFile);
 
@@ -53,12 +50,10 @@ class SignatureService
         } catch (ApiException $e) {
 
             $errors = $e->getErrors();
-
             return collect($errors)->flatten()->first() ?? __('forms.invalid_kep_password_or_file');
 
         } catch (\Exception $e) {
             Log::error('Unexpected error in SignatureService: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-
             return __('api.cipher.unexpected_error_short');
         }
     }
