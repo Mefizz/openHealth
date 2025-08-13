@@ -98,6 +98,7 @@ class Login extends Component
 
         if (!$user) {
             $this->addError('email', __('auth.login.error.validation.auths'));
+
             return back();
         }
 
@@ -119,6 +120,7 @@ class Login extends Component
                 session()->put('selected_legal_entity_uuid_for_ehealth', $this->legalEntityUUID);
             } else {
                 Log::error("Legal entity hasn't been choose for email {$user->email}");
+
                 return back();
             }
 

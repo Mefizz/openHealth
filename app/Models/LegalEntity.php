@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\Status;
 use App\Models\Relations\Phone;
 use App\Models\Relations\Address;
 use App\Models\Employee\Employee;
@@ -136,7 +137,7 @@ class LegalEntity extends Model
 
     public function getActiveDivisions(): Collection
     {
-        return $this->divisions()->has('healthcareService')->where('status', 'ACTIVE')->get();
+        return $this->division()->has('healthcareService')->where('status', Status::ACTIVE)->get();
     }
 
     public function getEdr(): array

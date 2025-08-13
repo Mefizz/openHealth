@@ -22,7 +22,7 @@ return [
         'queueTimeout' => 60,
         'cooldown' => 300,
         'retries' => 10,
-        'page_size' => 300,
+        'page_size' => env('EHEALTH_PAGE_SIZE', 300),
     ],
 
     'auth' => [
