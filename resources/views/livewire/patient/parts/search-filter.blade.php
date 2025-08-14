@@ -124,6 +124,7 @@
             <div class="form-row-3">
                 <div class="form-group group">
                     <input wire:model="form.patientsFilter.phoneNumber"
+                           x-mask="+380999999999"
                            name="filterPhoneNumber"
                            id="filterPhoneNumber"
                            type="text"

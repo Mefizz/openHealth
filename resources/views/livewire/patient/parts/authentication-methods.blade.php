@@ -10,18 +10,18 @@
                       return [
                           {
                               value: '{{ AuthenticationMethod::THIRD_PERSON->value }}',
-                              label: '{{ __('patients.authentication') }} {{ AuthenticationMethod::THIRD_PERSON->label() }}'
+                              label: '{{ __('forms.authentication') }} {{ AuthenticationMethod::THIRD_PERSON->label() }}'
                           }
                       ];
                   } else {
                       return [
                           {
                               value: '{{ AuthenticationMethod::OTP->value }}',
-                              label: '{{ __('patients.authentication') }} {{ AuthenticationMethod::OTP->label() }}'
+                              label: '{{ __('forms.authentication') }} {{ AuthenticationMethod::OTP->label() }}'
                           },
                           {
                               value: '{{ AuthenticationMethod::OFFLINE->value }}',
-                              label: '{{ __('patients.authentication') }} {{ AuthenticationMethod::OFFLINE->label() }}'
+                              label: '{{ __('forms.authentication') }} {{ AuthenticationMethod::OFFLINE->label() }}'
                           }
                       ];
                   }
@@ -29,13 +29,13 @@
           }"
 >
     <legend class="legend">
-        {{ __('patients.authentication') }}
+        {{ __('forms.authentication') }}
     </legend>
 
     <div class="form-row-3">
         <div class="form-group group">
             <label for="relationType" class="sr-only">
-                {{ __('patients.authentication') }}
+                {{ __('forms.authentication') }}
             </label>
             <select x-model="authenticationMethods[0].type"
                     id="relationType"
@@ -43,7 +43,7 @@
                     required
             >
                 <option selected value="">
-                    {{ __('forms.select') }} {{ __('patients.authentication') }} *
+                    {{ __('forms.select') }} {{ mb_strtolower(__('forms.authentication')) }} *
                 </option>
                 <template x-for="method in availableAuthMethods" :key="method.value">
                     <option :value="method.value" x-text="method.label"></option>
@@ -63,6 +63,7 @@
             <div class="form-group group">
                 <input x-model="authenticationMethods[0].phoneNumber"
                        type="text"
+                       x-mask="+380999999999"
                        name="phoneNumber"
                        id="phoneNumber"
                        class="input peer @error('form.patient.authenticationMethods.*.phoneNumber') input-error @enderror"

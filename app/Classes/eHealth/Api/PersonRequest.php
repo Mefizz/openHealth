@@ -8,7 +8,6 @@ use App\Classes\eHealth\EHealthRequest as Request;
 use App\Classes\eHealth\EHealthResponse;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\ConnectionException;
-use stdClass;
 
 class PersonRequest extends Request
 {
@@ -38,7 +37,7 @@ class PersonRequest extends Request
      */
     public function approve(string $id, array $data = []): PromiseInterface|EHealthResponse
     {
-        return $this->patch(self::URL_V2 . "/$id/actions/approve", $data ?: new stdClass());
+        return $this->patch(self::URL_V2 . "/$id/actions/approve", $data ?: (object)$data);
     }
 
     /**
