@@ -72,13 +72,6 @@ class LegalEntity extends Model
         'updated_by' => 'string',
     ];
 
-    protected $with = [
-        'licenses',
-        'address',
-        'phones',
-        'revisions'
-    ];
-
     protected $attributes = [
         'is_active' => false,
     ];

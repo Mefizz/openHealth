@@ -29,7 +29,7 @@ class EditLegalEntity extends LegalEntity
      */
     protected function getLegalEntity(): ?LegalEntityModel
     {
-        return $this->getLegalEntityFromAuth();
+        return legalEntity()->loadMissing(['licenses', 'address', 'phones', 'revisions']) ?? null;
     }
 
     protected function setLegalEntity(): bool
