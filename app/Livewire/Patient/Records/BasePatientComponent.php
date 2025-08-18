@@ -22,6 +22,10 @@ abstract class BasePatientComponent extends Component
 
     public string $verificationStatus;
 
+    /**
+     * Patient UUID.
+     * @var string
+     */
     protected string $uuid;
 
     public function boot(): void

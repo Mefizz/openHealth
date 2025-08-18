@@ -54,22 +54,6 @@ class PersonApi
     }
 
     /**
-     * Get the active person's authentication methods.
-     *
-     * @param  string  $personId
-     * @return array
-     * @throws ApiException
-     */
-    public static function getAuthenticationMethods(string $personId): array
-    {
-        return new Request(
-            HttpRequest::METHOD_GET,
-            self::ENDPOINT_PERSON . "/$personId/authentication_methods",
-            []
-        )->sendRequest();
-    }
-
-    /**
      * Create new Confidant Person relationship request.
      *
      * @param  string  $personId

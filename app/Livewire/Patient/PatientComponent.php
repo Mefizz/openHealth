@@ -258,6 +258,14 @@ class PatientComponent extends Component
 
         try {
             $response = EHealth::personRequest()->create(data: $formatted);
+
+            if (!$response->successful()) {
+                $this->logEHealthError($response, 'Error while creating person request');
+                $this->flashGeneralError();
+
+                return;
+            }
+
             $responseData = $response->getData();
             $responseStatusCode = $response->getStatusCode();
         } catch (ConnectionException $e) {
