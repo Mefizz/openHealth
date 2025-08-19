@@ -222,7 +222,7 @@ trait FormTrait
      *
      * @return void
      */
-    public function flashGeneralError(): void
+    protected function flashGeneralError(): void
     {
         $this->dispatch('flashMessage', [
             'message' => __('Виникла помилка. Зверніться до адміністратора.'),
@@ -237,7 +237,7 @@ trait FormTrait
      * @param  string  $message
      * @return void
      */
-    public function logEHealthError(EHealthResponse $response, string $message): void
+    protected function logEHealthError(EHealthResponse $response, string $message): void
     {
         $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
         $caller = collect($trace)
@@ -259,7 +259,7 @@ trait FormTrait
      * @param  string  $message
      * @return void
      */
-    public function logConnectionError(ConnectionException $exception, string $message): void
+    protected function logConnectionError(ConnectionException $exception, string $message): void
     {
         Log::channel('e_health_errors')->error($message, [
             'message' => $exception->getMessage(),

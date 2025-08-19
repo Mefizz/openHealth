@@ -14,6 +14,7 @@ use App\Models\Person\Person;
 use App\Models\Person\PersonRequest;
 use Exception;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -60,16 +61,21 @@ class PatientIndex extends Component
 
     /**
      * Reset pagination when filters are updated.
+     *
+     * @param  string  $property
+     * @return void
      */
-    public function updated($property): void
+    public function updated(string $property): void
     {
-        if (in_array($property, ['activeFilter'])) {
+        if ($property === 'activeFilter') {
             $this->resetPage();
         }
     }
 
     /**
      * Reset all filters to default values.
+     *
+     * @return void
      */
     public function resetFilters(): void
     {
@@ -79,6 +85,8 @@ class PatientIndex extends Component
 
     /**
      * Get paginated patients with filtering.
+     *
+     * @return LengthAwarePaginator
      */
     #[Computed]
     public function paginatedPatients(): LengthAwarePaginator
@@ -87,7 +95,7 @@ class PatientIndex extends Component
 
         // Filter by active filter
         if ($this->activeFilter !== 'all') {
-            $collection = $collection->filter(function ($patient) {
+            $collection = $collection->filter(function (array $patient) {
                 return $patient['status'] === $this->activeFilter;
             });
         }
@@ -100,14 +108,6 @@ class PatientIndex extends Component
         );
     }
 
-    public function render(): View
-    {
-        return view('livewire.patient.index', [
-            'paginatedPatients' => $this->paginatedPatients,
-            'activeFilter' => $this->activeFilter
-        ]);
-    }
-
     /**
      * Search for person with provided filters.
      *
@@ -118,22 +118,35 @@ class PatientIndex extends Component
     {
         $this->form->rulesForModelValidate('patientsFilter');
 
+        // Prepare filters for local DB search
+        $filtersSnake = Arr::toSnakeCase($this->form->patientsFilter);
+        $phoneNumber = $filtersSnake['phoneNumber'] ?? null;
+        unset($filtersSnake['phone_number']);
+
         // Search in our DB
-        $this->originalPatients = Person::where(Arr::toSnakeCase($this->form->patientsFilter))
-            ->with('phones')
+        $this->originalPatients = Person::with('phones')
             ->select([
                 'id', 'uuid', 'first_name', 'last_name', 'second_name', 'birth_date', 'tax_id', 'verification_status'
             ])
+            ->where($filtersSnake)
+            ->when($phoneNumber, static function ($query) use ($phoneNumber) {
+                $query->whereHas('phones', static function (Builder $query) use ($phoneNumber) {
+                    $query->where('number', $phoneNumber);
+                });
+            })
             ->get()
             ->toArray();
 
-        // Don't use phone when searching locally.
-        unset($this->form->patientsFilter['phoneNumber']);
-        // Search for application
-        $personRequests = PersonRequest::where(Arr::toSnakeCase($this->form->patientsFilter))
-            ->where('status', 'APPLICATION')
-            ->with('phones')
+        // Search for applications (person_requests)
+        $personRequests = PersonRequest::with('phones')
             ->select(['id', 'status', 'first_name', 'last_name', 'second_name', 'birth_date', 'tax_id'])
+            ->where($filtersSnake)
+            ->where('status', 'APPLICATION')
+            ->when($phoneNumber, static function ($query) use ($phoneNumber) {
+                $query->whereHas('phones', static function (Builder $query) use ($phoneNumber) {
+                    $query->where('number', $phoneNumber);
+                });
+            })
             ->get()
             ->toArray();
 
@@ -163,7 +176,7 @@ class PatientIndex extends Component
     /**
      * Redirect to patient data route.
      *
-     * @param  array  $patientData  The associative array containing patient details.
+     * @param  int  $patientId
      * @return void
      */
     public function redirectToRecord(int $patientId): void
@@ -300,5 +313,13 @@ class PatientIndex extends Component
 
             return $patient;
         }, $persons);
+    }
+
+    public function render(): View
+    {
+        return view('livewire.patient.index', [
+            'paginatedPatients' => $this->paginatedPatients,
+            'activeFilter' => $this->activeFilter
+        ]);
     }
 }
