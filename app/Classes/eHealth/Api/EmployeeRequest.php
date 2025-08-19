@@ -5,11 +5,8 @@ declare(strict_types=1);
 namespace App\Classes\eHealth\Api;
 
 use App\Classes\eHealth\EHealthRequest;
-use App\Exceptions\EHealth\EHealthResponseException;
-use App\Exceptions\EHealth\EHealthValidationException;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Client\ConnectionException;
+use RuntimeException;
 
 class EmployeeRequest extends EHealthRequest
 {
@@ -20,63 +17,23 @@ class EmployeeRequest extends EHealthRequest
 
     /**
      * Creates a new Employee Request in eHealth using a signed data payload.
+     * This is the primary action method for this class.
      *
      * @param string $signedContent The base64 encoded signed string.
      *
      * @return array The response data from eHealth on success.
-     * @throws EHealthResponseException|EHealthValidationException
+     * @throws RuntimeException|ConnectionException
      */
     public function create(string $signedContent): array
     {
-        $requestBody = [
-            'signed_content' => $signedContent,
-            'signed_content_encoding' => 'base64'
+        $requestBody = [ 'signed_content' => $signedContent, 'signed_content_encoding' => 'base64' ];
+
+        $response = $this->post(self::ENDPOINT, $requestBody);
+
+        return [
+            'id' => $response->json('data.id'),
+            'ehealth_response' => $response->json(),
         ];
-
-        return $this->request('post', self::ENDPOINT, $requestBody)->json('data', []);
-    }
-
-    /**
-     * Validates the data array received from a successful eHealth response.
-     *
-     * @throws ValidationException
-     */
-    public function validateCreateResponseFromArray(array $responseData): array
-    {
-        $mappedData = self::replaceEHealthPropNames($responseData);
-        $validator = Validator::make($mappedData, [
-            'uuid' => 'required|uuid',
-        ]);
-
-        if ($validator->fails()) {
-
-            Log::channel('e_health_errors')->error(
-                'eHealth EmployeeRequest Response Validation failed.',
-                ['errors' => $validator->errors()->all(), 'response_data' => $responseData]
-            );
-
-            throw new ValidationException($validator);
-        }
-
-        return $validator->validated();
-    }
-
-    /**
-     * Replaces property names from the eHealth response (e.g., id -> uuid)
-     * to match the local database schema.
-     */
-    public static function replaceEHealthPropNames(array $properties): array
-    {
-        $replaced = [];
-        foreach ($properties as $name => $value) {
-            $replaced[match ($name) {
-                'id' => 'uuid',
-                'legal_entity_id' => 'legal_entity_uuid',
-                default => $name,
-            }] = $value;
-        }
-
-        return $replaced;
     }
 
     public function schemaRequest(): array
@@ -132,7 +89,7 @@ class EmployeeRequest extends EHealthRequest
                 'institution_name' => ['type' => 'string'],
                 'speciality' => ['type' => 'string'],
                 'issued_date' => ['type' => 'string', 'format' => 'date'],
-                'certificate_number' => ['type' => 'string', 'format' => 'date'],
+                'certificate_number' => ['type' => 'string'],
             ],
             'required' => ['type', 'institution_name', 'speciality'],
             'additionalProperties' => false,
@@ -205,7 +162,7 @@ class EmployeeRequest extends EHealthRequest
                 'speciality' => $specialityDefinition,
                 'science_degree' => $scienceDegreeDefinition,
                 'party' => $partyDefinition,
-                ],
+            ],
             'type' => 'object',
             'properties' => [
                 'employee_request' => [

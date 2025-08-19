@@ -385,6 +385,7 @@ return [
     'get_link' => 'Отримати посилання',
     'return_to_login' => 'Повернутись на сторінку входу',
     'secure_page_description' => 'Здійснюється вхід на захищену сторінку. Будь ласка, підтвердіть пароль',
+    'key_file_description' => 'КЕП',
     'send_for_approval' => 'Відправити на затвердження',
 
     // Notifications & Errors

@@ -8,14 +8,11 @@ use Illuminate\Support\Carbon;
 class EHealthEmployeePayload
 {
     /**
-     * Карта відповідності локальних ключів (camelCase) до ключів API (snake_case).
-     * Це "словник", який ми будемо використовувати для розумного перекладу помилок від EHealth.
      * @return array
      */
     public static function getKeyMap(): array
     {
         return [
-            // З employee_request_data
             'position' => 'position',
             'employeeType' => 'employee_type',
             'legalEntityId' => 'legal_entity_id',
@@ -23,7 +20,6 @@ class EHealthEmployeePayload
             'divisionId' => 'division_id',
             'endDate' => 'end_date',
 
-            // З party
             'firstName' => 'first_name',
             'lastName' => 'last_name',
             'secondName' => 'second_name',
@@ -37,7 +33,6 @@ class EHealthEmployeePayload
             'phones' => 'phones',
             'documents' => 'documents',
 
-            // З doctor
             'educations' => 'educations',
             'qualifications' => 'qualifications',
             'specialities' => 'specialities',
@@ -46,7 +41,6 @@ class EHealthEmployeePayload
     }
 
     /**
-     * Повертає перевернуту карту для перекладу помилок (API key => local key).
      * @return array
      */
     public static function getReverseKeyMap(): array
@@ -54,10 +48,8 @@ class EHealthEmployeePayload
         return array_flip(self::getKeyMap());
     }
 
-
     /**
      * Prepares, formats, and normalizes data for the eHealth employee request.
-     * THIS METHOD REMAINS UNCHANGED.
      */
     public static function prepare(array $revisionData): array
     {
@@ -71,7 +63,6 @@ class EHealthEmployeePayload
 
     /**
      * Formats data from a revision into the structure required by the eHealth API.
-     * THIS METHOD REMAINS UNCHANGED.
      */
     public static function format(array $revisionData): array
     {

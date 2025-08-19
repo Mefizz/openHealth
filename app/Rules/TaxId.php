@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Translation\PotentiallyTranslatedString;
-use Illuminate\Support\Arr;
+use App\Core\Arr;
 
 class TaxId implements ValidationRule, DataAwareRule
 {
@@ -43,16 +43,11 @@ class TaxId implements ValidationRule, DataAwareRule
     {
         $this->data = $data;
 
-        // Determine the context data from either 'party' or 'owner' key.
-        // We use the null coalescing operator to find the first non-null value.
-        // The old code had a bug, where it tried to access `$this->data` instead of `$data`.
         $contextData = Arr::get($data, 'party') ?? Arr::get($data, 'owner');
 
-        // We proceed only if context data is a valid array.
         if (is_array($contextData)) {
-            // Check if it's a passport/national ID instead of a tax ID.
+
             $this->noTaxId = (bool)($contextData['noTaxId'] ?? false);
-            // Get the email for subsequent database lookups.
             $this->email = $contextData['email'] ?? null;
         }
 
