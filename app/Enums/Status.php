@@ -39,8 +39,8 @@ enum Status: string
     public static function only(array $names): array
     {
         return collect(self::cases())
-            ->filter(fn($case) => in_array($case->name, $names))
-            ->map(fn($case) => $case->value)
+            ->filter(fn ($case) => in_array($case->name, $names))
+            ->map(fn ($case) => $case->value)
             ->values()
             ->all();
     }

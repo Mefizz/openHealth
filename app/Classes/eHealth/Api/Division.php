@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Classes\eHealth\Api;
 
 use Exception;
-use Illuminate\Validation\Rule;
 use App\Traits\WorkTimeUtilities;
 use GuzzleHttp\Promise\PromiseInterface;
 use App\Classes\eHealth\EHealthResponse;
@@ -46,7 +45,7 @@ class Division extends Request
         $this->setDefaultPageSize();
 
         $mergedQuery = array_merge(
-    $this->options['query'] ?? [],
+            $this->options['query'] ?? [],
             $query ?? []
         );
 
@@ -382,7 +381,6 @@ class Division extends Request
             'uuid' => 'required|uuid',
             'email' => 'required|string',
             'external_id' => 'nullable|string',
-            'legal_entity_uuid' => ['required', 'uuid', Rule::in([legalEntity()->uuid])],
             'location' => 'nullable|array',
             'location.latitude' => 'required_with:location|numeric',
             'location.longitude' => 'required_with:location|numeric',
