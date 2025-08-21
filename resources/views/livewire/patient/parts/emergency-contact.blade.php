@@ -96,6 +96,7 @@
                 <div class="form-group group">
                     <div class="phone-wrapper">
                         <input x-model="phone.number"
+                               x-mask="+380999999999"
                                type="tel"
                                name="emergencyContactPhone"
                                :id="'emergencyContactPhone-' + index"

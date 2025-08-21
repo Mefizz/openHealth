@@ -29,7 +29,7 @@ class EditLegalEntity extends LegalEntity
      */
     protected function getLegalEntity(): ?LegalEntityModel
     {
-        return $this->getLegalEntityFromAuth();
+        return legalEntity()->loadMissing(['licenses', 'address', 'phones', 'revisions']) ?? null;
     }
 
     protected function setLegalEntity(): bool
@@ -137,7 +137,7 @@ class EditLegalEntity extends LegalEntity
 
     public function updateLegalEntity()
     {
-        $this->legalEntityForm->onEditValidate();
+        $this->legalEntityForm->allFieldsValidate();
 
         if ($this->getErrorBag()->isNotEmpty()) {
             $this->dispatchBrowserEvent('scroll-to-error');

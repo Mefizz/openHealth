@@ -42,7 +42,7 @@
                         </div>
 
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-300">
-                            {{ __('Розмір завантажуваного файлу не більше 10МБ у форматі jpeg') }}
+                            {{ __('forms.max_file_size_and_format') }}
                         </p>
 
                         @error("form.uploadedDocuments.$key")
@@ -59,7 +59,7 @@
                     <x-slot name="label">
                         <x-forms.button-with-icon wire:click.prevent="sendFiles"
                                                   class="button-primary flex-row-reverse mt-8"
-                                                  label="{{ __('Відправити файли') }}"
+                                                  label="{{ __('forms.send_files') }}"
                                                   svgId="svg-arrow-right"
                         />
                     </x-slot>

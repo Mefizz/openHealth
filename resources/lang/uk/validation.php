@@ -192,7 +192,6 @@ return [
         'contact.phones.*.number' => 'Телефон',
         'contact.phones.*.type' => 'Тип Номера',
         'contact.email' => 'E-mail',
-        '*.type' => 'Тип спеціальності',
         'type' => 'Тип спеціальності',
         'owner' => [
             'firstName' => 'Ім’я',
@@ -272,6 +271,8 @@ return [
             'value' => 'законний представник пацієнта',
             'alias' => 'роль'
         ],
+
+        'authenticationMethod.type' => 'тип автентифікації',
 
         'addresses' => [
             'area' => 'область',
@@ -569,6 +570,7 @@ return [
             'wrongNumberFormat' => 'Неправильний формат номеру',
             'expiryDateGreat' => 'Дата не може бути більше поточної дати',
             'expiryDateLess' => 'Дата не може бути менше дати початку',
+            'expiryDateLessNow' => 'Дата не може бути менше поточної дати',
             'invalidNationalId' => 'Номер паспорта має бути: або 2 літери та 6 цифр, або 9 цифр',
             'invalidTaxId' => 'Ідентифікаційний номер повинен містити рівно 10 цифр',
             'date_iso' => 'Дата має бути в форматі ISO 8601',

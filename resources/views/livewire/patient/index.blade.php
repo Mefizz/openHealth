@@ -41,43 +41,20 @@
                     <p>{{ __('patients.patient_search') }}</p>
                 </div>
 
-                @include('livewire.patient.parts.search-filter')
+                @include('livewire.patient.parts.search-filter', ['context' => 'index'])
 
-                <div class="py-4">
+                <div class="mb-9 mt-6 flex gap-7">
                     <button wire:click.prevent="searchForPerson" class="flex items-center gap-2 button-primary">
                         <svg width="16" height="16">
                             <use xlink:href="#svg-search"></use>
                         </svg>
                         <span>{{ __('patients.search') }}</span>
                     </button>
-                </div>
-
-                <div class="mb-6 flex items-center gap-8">
-                    <label class="flex items-center space-x-2 cursor-pointer">
-                        <input type="radio" value="all" wire:model.live="activeFilter"
-                               class="sr-only" />
-                        <span class="{{ $activeFilter === 'all' ? 'button-primary' : 'button-minor' }}">
-                            {{ __('patients.all') }}
-                        </span>
-                    </label>
-                    <label class="flex items-center space-x-2 cursor-pointer">
-                        <input type="radio" value="eHEALTH" wire:model.live="activeFilter"
-                               class="sr-only" />
-                        <span class="{{ $activeFilter === 'eHEALTH' ? 'button-primary' : 'button-minor' }}">
-                            {{ __('patients.patients') }}
-                        </span>
-                    </label>
-                    <label class="flex items-center space-x-2 cursor-pointer">
-                        <input type="radio" value="APPLICATION" wire:model.live="activeFilter"
-                               class="sr-only" />
-                        <span class="{{ $activeFilter === 'APPLICATION' ? 'button-primary' : 'button-minor' }}">
-                            {{ __('patients.applications') }}
-                        </span>
-                    </label>
-                    <button type="button" wire:click="resetFilters" class="button-primary">
+                    <button type="button" wire:click="resetFilters" class="button-outline-primary">
                         Скинути всі фільтри
                     </button>
                 </div>
+
             </x-slot>
         </x-section-navigation>
 

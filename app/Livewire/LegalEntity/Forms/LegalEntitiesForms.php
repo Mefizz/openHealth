@@ -14,6 +14,7 @@ use App\Rules\ExpiryDate;
 use App\Rules\PhoneNumber;
 use App\Rules\InDictionary;
 use App\Rules\UniqueEdrpou;
+use App\Models\LegalEntity;
 use App\Rules\DocumentNumber;
 use App\Rules\PhoneDuplicates;
 use Illuminate\Support\Facades\Log;
@@ -22,7 +23,7 @@ use Illuminate\Validation\ValidationException;
 
 class LegalEntitiesForms extends Form
 {
-    public string $type = 'PRIMARY_CARE';
+    public string $type = LegalEntity::TYPE_PRIMARY_CARE;
 
     protected string $positionKeys;
 
@@ -42,7 +43,13 @@ class LegalEntitiesForms extends Form
 
     public bool $accreditationShow = false;
 
-    public ?array $accreditation = [];
+    public ?array $accreditation = [
+        'category' => null,
+        'orderNo' => null,
+        'orderDate' => null,
+        'issuedDate' => null,
+        'expiryDate' => null,
+    ];
 
     public array|null $license = [];
 
@@ -188,7 +195,7 @@ class LegalEntitiesForms extends Form
         ];
     }
 
-    public function onEditValidate()
+    public function allFieldsValidate()
     {
         $errors = [];
 

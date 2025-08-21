@@ -188,26 +188,7 @@
             </h2>
             <div id="accordion-open-body-4" class="hidden" aria-labelledby="accordion-open-heading-4" wire:ignore.self>
                 <div class="accordion-content dark:bg-gray-900 border-t-0">
-                    @foreach($authenticationMethods as $key => $authenticationMethod)
-                        <div class="form-row-4 items-baseline">
-                            <div class="form-group group">
-                                <p>{{ __('forms.auth_method') }}</p>
-                            </div>
-                            <div>
-                                <input wire:model="authenticationMethods.{{ $key }}.type"
-                                       type="hidden"
-                                       name="authenticationMethod"
-                                       id="authenticationMethod_{{ $key }}"
-                                />
-                                <input value="{{ AuthenticationMethod::from($authenticationMethod['type'])->label() }}"
-                                       type="text"
-                                       class="input"
-                                       placeholder=" "
-                                       autocomplete="off"
-                                />
-                            </div>
-                        </div>
-                    @endforeach
+                    @include('livewire.patient.records.authentication-methods')
                 </div>
             </div>
         </div>

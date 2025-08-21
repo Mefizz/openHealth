@@ -222,7 +222,7 @@ trait FormTrait
      *
      * @return void
      */
-    public function flashGeneralError(): void
+    protected function flashGeneralError(): void
     {
         $this->dispatch('flashMessage', [
             'message' => __('Виникла помилка. Зверніться до адміністратора.'),
@@ -237,16 +237,18 @@ trait FormTrait
      * @param  string  $message
      * @return void
      */
-    public function logEHealthError(EHealthResponse $response, string $message): void
+    protected function logEHealthError(EHealthResponse $response, string $message): void
     {
-        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1] ?? [];
+        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        $caller = collect($trace)
+            ->first(static fn (array $frame) => isset($frame['file']) && !str_contains($frame['file'], '/vendor/'));
 
         Log::channel('e_health_errors')->error($message, [
             'status' => $response->getStatusCode(),
             'error' => $response->getError(),
-            'file' => $trace['file'] ?? 'unknown',
-            'line' => $trace['line'] ?? 'unknown',
-            'function' => $trace['function'] ?? 'unknown'
+            'file' => $caller['file'] ?? 'unknown',
+            'line' => $caller['line'] ?? 'unknown',
+            'function' => $caller['function'] ?? 'unknown'
         ]);
     }
 
@@ -257,7 +259,7 @@ trait FormTrait
      * @param  string  $message
      * @return void
      */
-    public function logConnectionError(ConnectionException $exception, string $message): void
+    protected function logConnectionError(ConnectionException $exception, string $message): void
     {
         Log::channel('e_health_errors')->error($message, [
             'message' => $exception->getMessage(),

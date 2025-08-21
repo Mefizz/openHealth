@@ -24,6 +24,7 @@ return [
     'delete' => 'Видалити',
     'dismiss' => 'Звільнити',
     'edit' => 'Редагувати',
+    'view' => 'Переглянути',
     'enter' => 'Вхід',
     'go_to_edit' => 'Перейти до редагування',
     'next' => 'Далі',
@@ -31,11 +32,10 @@ return [
     'open' => 'Відкрити',
     'save' => 'Зберегти',
     'saving' => 'Збереження...',
+    'saved_successfully' => 'Дані успішно збережено',
     'name' => 'Назва',
     'withTerms' => 'з умовами використання',
     'accreditationShow' => 'Наявна акредитація',
-
-    
     'selectLevel' => 'Оберіть ступінь',
     'selectDocumentType' => 'Оберіть тип документа',
     'selectQualificationType' => 'Оберіть тип кваліфікіції',
@@ -94,6 +94,11 @@ return [
     'goToEdit' => 'Перейти до редагування',
     'requestSignedAndSentToEHealth' => 'Запит успішно підписано та надіслано до ЕСОЗ',
     'viewEmployee' => 'Перегляд співробітника',
+    'patient_has_no_auth_methods' => 'У пацієнта відсутні методи автентифікації',
+    'new_auth_method' => 'Новий метод автентифікації',
+    'send_files' => 'Відправити файли',
+    'max_file_size_and_format' => 'Розмір завантажуваного файлу не більше 10МБ у форматі jpeg',
+    'select_filter' => 'Оберіть фільтр',
 
     // Legal Entity
     'legal_entity_name' => 'Медична організація',
@@ -196,6 +201,7 @@ return [
     'about_myself' => 'Про мене',
     'patient' => 'Пацієнт',
     'complete_the_interaction_and_sign' => 'Завершити та підписати',
+    'save_and_send' => 'Зберегти та надіслати',
 
     // Documents
     'documents' => 'Документи',
@@ -296,6 +302,7 @@ return [
     'startDateWork' => 'Дата початку роботи',
     'selectDivision' => 'Обрати підрозділ',
     'add_new_division' => 'Додати місце надання послуг',
+    'edit_division' => 'Редагувати місце надання послуг',
     'selectDate' => 'Виберіть дату',
     'additional_info' => 'Додаткова інформація',
     'aboutMyself' => 'Про мене',
@@ -376,6 +383,7 @@ return [
     'get_link' => 'Отримати посилання',
     'return_to_login' => 'Повернутись на сторінку входу',
     'secure_page_description' => 'Здійснюється вхід на захищену сторінку. Будь ласка, підтвердіть пароль',
+    'send_for_approval' => 'Відправити на затвердження',
 
     // Notifications & Errors
     'no_actions_available' => 'У вас немає дозволених дій для цього розділу.',
@@ -416,5 +424,6 @@ return [
         'dismissed' => 'Звільнено',
         'active' => 'Активний',
         'non_active' => 'Не активний',
+        'draft' => 'Чернетка'
     ]
 ];
