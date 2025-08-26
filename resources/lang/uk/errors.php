@@ -30,6 +30,10 @@ return [
             'type mismatch' => 'невідповідність типу даних.',
             'does not match pattern' => 'не відповідає очікуваному формату.',
             'is not allowed for doctor' => 'даний тип кваліфікації не дозволено для лікаря.',
+            'type mismatch. Expected integer but got string' => 'Невірний тип даних (очікувалося число)',
+            'employee doesn\'t have speciality with active speciality_officio' => 'Відсутня основна спеціалізація',
+            'speciality not allowed' => 'Невірна спеціалізація для лікаря',
+            'Incorrect value.' => 'Некоректне значення.',
         ]
     ],
 ];
