@@ -34,6 +34,10 @@ return [
             'employee doesn\'t have speciality with active speciality_officio' => 'Відсутня основна спеціалізація',
             'speciality not allowed' => 'Невірна спеціалізація для лікаря',
             'Incorrect value.' => 'Некоректне значення.',
+            'required' => 'відсутнє',
+            'length' => 'необхідно додати хоча б один елемент',
+            'speciality_not_allowed' => 'спеціалізація ":speciality" не дозволена для лікаря.',
+            'speciality_officio_not_allowed' => 'спеціалізація ":speciality" з активним основним записом не дозволена для лікаря.',
         ]
     ],
 ];

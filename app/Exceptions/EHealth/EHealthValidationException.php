@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Exceptions\EHealth;
 
-use Illuminate\Support\Arr;
 use App\Core\Arr as AppArr;
+use Illuminate\Support\Arr;
 
 class EHealthValidationException extends EHealthException
 {
@@ -14,11 +14,21 @@ class EHealthValidationException extends EHealthException
         parent::__construct('eHealth API returned a validation error.');
     }
 
+    /**
+     * Get the full details of the exception.
+     *
+     * @return array
+     */
     public function getDetails(): array
     {
         return $this->details;
     }
 
+    /**
+     * Get the translated error message based on eHealth details.
+     *
+     * @return string
+     */
     public function getTranslatedMessage(): string
     {
         $eHealthFieldTranslations = [
@@ -44,7 +54,8 @@ class EHealthValidationException extends EHealthException
 
         $errorList = collect($invalidErrors)->map(function ($detail) use ($eHealthFieldTranslations) {
             $eHealthKey = AppArr::get($detail, 'entry') ?? AppArr::get($detail, 'param') ?? 'unknown';
-            $message = AppArr::get($detail, 'rules.0.description') ?? AppArr::get($detail, 'msg') ?? 'Incorrect value.';
+            $message = AppArr::get($detail, 'rules.0.description') ?? AppArr::get($detail, 'msg') ?? '';
+            $ruleName = AppArr::get($detail, 'rules.0.rule');
 
             if ($eHealthKey === 'status') {
                 return null;
@@ -53,13 +64,29 @@ class EHealthValidationException extends EHealthException
             $eHealthKey = str_replace(['$.', 'employee_request.'], '', $eHealthKey);
             $translatedKey = $eHealthFieldTranslations[$eHealthKey] ?? $eHealthKey;
 
-            $translatedMessage = __('errors.ehealth.messages.Incorrect value.');
-            if (str_contains($message, 'type mismatch')) {
-                $translatedMessage = __('errors.ehealth.messages.type mismatch. Expected integer but got string');
-            } elseif (str_contains($message, 'employee doesn\'t have speciality with active speciality_officio')) {
+            $translatedMessage = '';
+
+            if (str_contains($message, 'employee doesn\'t have speciality with active speciality_officio')) {
                 $translatedMessage = __('errors.ehealth.messages.employee doesn\'t have speciality with active speciality_officio');
+            } elseif (str_contains($message, 'speciality') && str_contains($message, ' with active speciality_officio is not allowed for doctor')) {
+                preg_match('/speciality (.+?) with active speciality_officio is not allowed for doctor/', $message, $matches);
+                $specialityName = $matches[1] ?? '';
+                $translatedMessage = __('errors.ehealth.messages.speciality_officio_not_allowed', ['speciality' => $specialityName]);
             } elseif (str_contains($message, 'speciality') && str_contains($message, 'not allowed for doctor')) {
                 $translatedMessage = __('errors.ehealth.messages.speciality not allowed for doctor');
+            } elseif (str_contains($message, 'type mismatch')) {
+                $translatedMessage = __('errors.ehealth.messages.type mismatch. Expected integer but got string');
+            }
+
+            if (empty($translatedMessage) && !empty($ruleName)) {
+                $translatedMessage = __('errors.ehealth.messages.' . $ruleName);
+                if ($translatedMessage === 'errors.ehealth.messages.' . $ruleName) {
+                    $translatedMessage = $message;
+                }
+            }
+
+            if (empty($translatedMessage)) {
+                $translatedMessage = __('errors.ehealth.messages.untranslated_error_message', ['message' => $message]);
             }
 
             return "{$translatedKey}: {$translatedMessage}";
