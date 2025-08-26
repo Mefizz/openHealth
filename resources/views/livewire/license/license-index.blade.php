@@ -1,25 +1,21 @@
 <div>
-    <x-section-navigation x-data="{ showFilter: false }" class="">
-        <x-slot name="title">{{ __('Ліцензії') }}</x-slot>
-
-        <x-slot name="navigation">
-            <div class="flex flex-col">
-                <div class="flex flex-wrap items-end justify-between gap-4" style="max-width: var(--container-6xl);">
-                    <div class="flex items-end gap-4">
-                    </div>
-                    <div class="ml-auto flex items-center gap-2 self-start -mt-16 translate-x-20">
-                        <button type="button" class="button-primary">
-                            <a href="{{ route('license.create', [legalEntity()]) }}">
-                                Нова ліцензія
-                            </a>
-                        </button>
-                        <button wire:click="sync" class="button-sync">
-                            Синхронізувати з ЕСОЗ
-                        </button>
-                    </div>
+    <x-section-navigation x-data="{ showFilter: false }" class="" title="{{ __('Ліцензії') }}">
+        <div class="flex flex-col">
+            <div class="flex flex-wrap items-end justify-between gap-4" style="max-width: var(--container-6xl);">
+                <div class="flex items-end gap-4">
+                </div>
+                <div class="ml-auto flex items-center gap-2 self-start mt-6 translate-x-6">
+                    <button type="button" class="button-primary">
+                        <a href="{{ route('license.create', [legalEntity()]) }}">
+                            Нова ліцензія
+                        </a>
+                    </button>
+                    <button wire:click="sync" class="button-sync">
+                        Синхронізувати з ЕСОЗ
+                    </button>
                 </div>
             </div>
-        </x-slot>
+        </div>
 
     </x-section-navigation>
 

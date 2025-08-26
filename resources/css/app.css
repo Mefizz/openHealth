@@ -58,6 +58,64 @@ input[required] ~ label:after {
     @apply bg-white dark:bg-gray-800
 }
 
+/* Standardized Navigation Classes */
+.navigation-container {
+    @apply p-4 bg-white block sm:flex items-center justify-between border-gray-200 lg:mt-1.5 dark:bg-gray-800 dark:border-gray-700;
+}
+
+.navigation-content {
+    @apply w-full mb-1;
+}
+
+.navigation-actions {
+    @apply mt-3 sm:mt-0 flex items-center gap-2;
+}
+
+.navigation-breadcrumb {
+    @apply flex mb-5;
+}
+
+.navigation-breadcrumb-list {
+    @apply inline-flex items-center space-x-1 text-sm font-medium md:space-x-2;
+}
+
+.navigation-breadcrumb-item {
+    @apply inline-flex items-center;
+}
+
+.navigation-breadcrumb-link {
+    @apply inline-flex items-center text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-white;
+}
+
+.navigation-breadcrumb-separator {
+    @apply w-6 h-6 text-gray-400;
+}
+
+.navigation-breadcrumb-current {
+    @apply ml-1 text-gray-400 md:ml-2 dark:text-gray-500;
+}
+
+.navigation-title {
+    @apply text-xl font-semibold text-gray-900 sm:text-2xl dark:text-white;
+}
+
+.navigation-description {
+    @apply pt-2 text-xs italic font-bold text-left font-normal text-gray-500 whitespace-nowrap dark:text-gray-700;
+}
+
+/* Unified section/form header with title left and actions right */
+.form-header {
+    @apply w-full flex flex-col gap-3 md:flex-row md:items-center md:justify-between;
+}
+
+.form-header-title {
+    @apply flex-1 min-w-0;
+}
+
+.form-header-actions {
+    @apply mt-3 md:mt-0 flex items-center gap-2;
+}
+
 .form {
     @apply py-6 px-4 md:max-w-6xl lg:py-10
 }
