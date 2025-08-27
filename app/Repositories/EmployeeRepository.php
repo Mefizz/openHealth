@@ -16,6 +16,7 @@ use App\Models\Employee\Employee;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Employee\BaseEmployee;
+use App\Enums\Employee\RequestStatus;
 use Illuminate\Http\RedirectResponse;
 use App\Enums\Employee\RevisionStatus;
 use App\Classes\eHealth\Api\EmployeeApi;
@@ -497,7 +498,7 @@ class EmployeeRepository
         $employeeRoles = $user->getRoleNames()->toArray();
 
         $employeeRequests = EmployeeRequest::employeeInstance($user->id, $legalEntity->uuid, $employeeRoles, true)
-            ->where('status', 'NEW')
+            ->whereIn('status', RequestStatus::getStatusesForSync())
             ->whereNotNull('uuid')
             ->get();
 
