@@ -21,12 +21,13 @@ class CipherApi
     /**
      * Send request to create session and subsequently upload KEYP.
      *
-     * @param  string  $dataSignature  Base64 encoded signed data.
-     * @param  string  $password  Password for KEYP creation.
-     * @param  string  $base64File  KEYP file in base64 format.
-     * @param  string  $knedp  Certificate Authority Identifier (KNEPD).
-     * @param  string  $taxId
-     * @param  string|null  $edrpou
+     * @param string      $dataSignature Base64 encoded signed data.
+     * @param string      $password      Password for KEYP creation.
+     * @param string      $base64File    KEYP file in base64 format.
+     * @param string      $knedp         Certificate Authority Identifier (KNEPD).
+     * @param string      $taxId
+     * @param string|null $edrpou
+     *
      * @return array|string Returns KEYP in base64 format.
      */
     public function sendSession(
@@ -35,7 +36,7 @@ class CipherApi
         string $base64File,
         string $knedp,
         string $taxId,
-        ?string $edrpou = null
+        ?string $edrpou
     ): array|string {
         $this->dataSignature = base64_encode($dataSignature);
         $this->password = $password;

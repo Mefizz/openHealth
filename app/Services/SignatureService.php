@@ -29,8 +29,10 @@ class SignatureService
         string $password,
         string $knedp,
         ?UploadedFile $keyFile,
-        string $taxId
+        string $taxId,
+        string $edrpou
     ): string|array {
+
         try {
             $base64FileContent = $this->getBase64KepFileContent($keyFile);
 
@@ -39,7 +41,8 @@ class SignatureService
                 $password,
                 $base64FileContent,
                 $knedp,
-                $taxId
+                $taxId,
+                $edrpou
             );
 
             if (empty($signedContent) || !is_string($signedContent)) {
