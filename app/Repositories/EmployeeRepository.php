@@ -23,6 +23,7 @@ use App\Classes\eHealth\Api\EmployeeApi;
 use App\Models\Employee\EmployeeRequest;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Contracts\Validation\Validator as ResponseValidator;
+use Illuminate\Database\Eloquent\Collection;
 
 class EmployeeRepository
 {
@@ -203,112 +204,66 @@ class EmployeeRepository
     }
 
     /**
-     * Handles the specific logic for creating a brand new EmployeeRequest and its Party,
-     * bypassing existing general update/create logic when no UUID is provided.
-     * This is the dedicated method for the "new request" scenario.
-     *
-     * @param array       $requestData The full request data from the form.
-     * @param LegalEntity $legalEntity The legal entity associated with the request.
-     *
-     * @return Employee|EmployeeRequest The newly created EmployeeRequest.
+     * Creates or updates an Employee from a PRE-VALIDATED E-Health data payload.
+     * This is the main public method for data synchronization.
      */
-    private function handleInitialEmployeeRequestCreation(
-        array $requestData,
-        LegalEntity $legalEntity
-    ): Employee|EmployeeRequest {
-        try {
-            $employeeRequestFillableFields = [
-                'position', 'start_date', 'end_date', 'employee_type', 'division_id',
-            ];
-            $partyFillableFields = [
-                'last_name', 'first_name', 'second_name', 'gender', 'birth_date',
-                'tax_id', 'no_tax_id', 'email', 'working_experience', 'about_myself',
-            ];
-
-            $filteredEmployeeRequestData = Arr::only($requestData, $employeeRequestFillableFields);
-            $filteredPartyData = Arr::only($requestData, $partyFillableFields);
-
-            $party = $this->findOrCreatePartyForEmployeeRequest($filteredPartyData);
-
-            $employeeRequest = new EmployeeRequest();
-            $employeeRequest->fill($filteredEmployeeRequestData);
-            $employeeRequest->uuid = null;
-            $employeeRequest->legal_entity_uuid = legalEntity()?->getUuid();
-            $employeeRequest->status = 'NEW';
-            $employeeRequest->legalEntity()->associate($legalEntity);
-            $employeeRequest->party()->associate($party);
-            $employeeRequest->save();
-
-            return $employeeRequest;
-
-        } catch (Exception $err) {
-            Log::error('Initial Employee Request Creation Error: ' . $err->getMessage(), ['exception' => $err]);
-            throw new \RuntimeException(__('Initial Employee Request Creation Error') . ' : ' . $err->getMessage());
-        }
-    }
-
-    private function findOrCreatePartyForEmployeeRequest(array $partyData): Party
+    public function createOrUpdateEmployeeFromEhealthData(?User $user, ?Party $party, array $ehealthData, string $authUserUUID, string $legalEntityUUID): void
     {
-        $party = null;
-
-        if (!empty($partyData['email'])) {
-            $party = Party::where('email', $partyData['email'])->first();
-        }
-
-        if ($party === null && !empty($partyData['tax_id'])) {
-            $party = Party::where('tax_id', $partyData['tax_id'])->first();
-        }
-
-        if ($party === null) {
-            $party = new Party();
-            $party->fill($partyData);
-            $party->save();
-        }
-
-        return $party;
-    }
-
-    /**
-     * Save employee data to the database
-     *
-     * @param User $user
-     * @param Party|null $party
-     * @param array $employeeData Data received from request to eHealth (GetEmployeesList|GetEmployeeDetails)
-     * @param string $authUserUUID
-     *
-     * @return bool
-     */
-    protected function updateEmployeeDataAtFirstLogin(User|null $user, Party|null $party, array $employeeData, string $authUserUUID, string $legalEntityUUID): void
-    {
-        $employeeResponse = schemaService()->setDataSchema($employeeData, app(EmployeeApi::class))
+        $employeeResponse = schemaService()->setDataSchema($ehealthData, app(EmployeeApi::class))
             ->responseSchemaNormalize()
             ->replaceIdsKeysToUuid(['id', 'legalEntityId', 'divisionId', 'partyId'])
             ->snakeCaseKeys(true)
             ->getNormalizedData();
 
-        // $legalEntity = !empty($user) ? $user->legalEntity : LegalEntity::where('uuid', $legalEntityUUID)->first(); // TODO: remove it if code below works
-        $legalEntity = legalEntity() ?? LegalEntity::where('uuid', $legalEntityUUID)->first(); // TODO: check if it will works
+        $legalEntity = legalEntity() ?? LegalEntity::where('uuid', $legalEntityUUID)->first();
 
         $employeeResponse['division_id'] = isset($employeeResponse['division_uuid'])
             ? Division::where('uuid', $employeeResponse['division_uuid'])->first()?->id
             : null;
 
-        // Update Party uuid because it is hasn't actual value in the employeeRequest
-        if (!empty($party) && $party->uuid !== $employeeResponse['party']['uuid']) {
+        if (!empty($party) && isset($employeeResponse['party']['uuid']) && $party->uuid !== $employeeResponse['party']['uuid']) {
             $party->uuid = $employeeResponse['party']['uuid'];
-
             $party->save();
         }
 
-        if ($user && empty($employeeData['userId'])) {
+        if ($user && empty($ehealthData['userId'])) {
             $employeeResponse['user_id'] = $user->id;
-
             $user->uuid = $authUserUUID;
-
             $user->save();
         }
 
         $this->store($employeeResponse, $legalEntity, new Employee());
+    }
+
+    /**
+     * Finds all pending employee requests for a given user and legal entity.
+     * This encapsulates the database query, keeping the service layer clean.
+     *
+     * @param User $user
+     * @param LegalEntity $legalEntity
+     *
+     * @return Collection
+     */
+    public function findPendingRequestsForUser(User $user, LegalEntity $legalEntity
+    ): Collection
+    {
+        $user->loadMissing('party');
+        $userPartyId = $user->party?->id;
+
+        return EmployeeRequest::query()
+            ->where('legal_entity_id', $legalEntity->id)
+            ->whereIn('status', RequestStatus::getStatusesForSync())
+            ->whereNotNull('uuid')
+            ->where(function ($query) use ($user, $userPartyId) {
+                // Find requests linked directly to the user...
+                $query->where('user_id', $user->id);
+
+                if ($userPartyId) {
+                    // ...or linked to the user's party, for legacy data.
+                    $query->orWhere('party_id', $userPartyId);
+                }
+            })
+            ->get();
     }
 
     /**
@@ -566,13 +521,13 @@ class EmployeeRepository
      * Update EmployeeRequest status and updated_at attributes
      * It mandatory for next employee updates to avoid repeat finished ones
      *
-     * @param \App\Models\Employee\EmployeeRequest $employeeRequest
-     * @param string $status
-     * @param string $updatedAt
+     * @param EmployeeRequest $employeeRequest
+     * @param string          $status
+     * @param string          $updatedAt
      *
      * @return void
      */
-    protected function updateEmployeeRequestStatus(EmployeeRequest $employeeRequest, string $status, string $updatedAt): void
+    public function updateEmployeeRequestStatus(EmployeeRequest $employeeRequest, string $status, string $updatedAt): void
     {
         $employeeRequest->status = $status;
         $employeeRequest->appliedAt = $updatedAt;
@@ -581,9 +536,18 @@ class EmployeeRepository
     }
 
     /**
+     * [backward compatibility]
+     * This method now proxies to the new, public method.
+     */
+    protected function updateEmployeeDataAtFirstLogin(?User $user, ?Party $party, array $employeeData, string $authUserUUID, string $legalEntityUUID): void
+    {
+        $this->createOrUpdateEmployeeFromEhealthData($user, $party, $employeeData, $authUserUUID, $legalEntityUUID);
+    }
+
+    /**
      * Prepare EmployeeData for employee update based on data stored in 'revisions' table
      *
-     * @param \App\Models\Employee\EmployeeRequest $employeeRequest
+     * @param EmployeeRequest $employeeRequest
      *
      * @return array
      */
@@ -691,5 +655,82 @@ class EmployeeRepository
             'start_date' => 'nullable|string',
             'end_date' => 'nullable|string',
         ]);
+    }
+
+    /**
+     * Handles the specific logic for creating a brand new EmployeeRequest and its Party,
+     * bypassing existing general update/create logic when no UUID is provided.
+     * This is the dedicated method for the "new request" scenario.
+     *
+     * @param array       $requestData The full request data from the form.
+     * @param LegalEntity $legalEntity The legal entity associated with the request.
+     *
+     * @return Employee|EmployeeRequest The newly created EmployeeRequest.
+     */
+    private function handleInitialEmployeeRequestCreation(
+        array $requestData,
+        LegalEntity $legalEntity
+    ): Employee|EmployeeRequest
+    {
+        try {
+            $employeeRequestFillableFields = [
+                'position', 'start_date', 'end_date', 'employee_type', 'division_id',
+            ];
+            $partyFillableFields = [
+                'last_name', 'first_name', 'second_name', 'gender', 'birth_date',
+                'tax_id', 'no_tax_id', 'email', 'working_experience', 'about_myself',
+            ];
+
+            $filteredEmployeeRequestData = Arr::only($requestData, $employeeRequestFillableFields);
+            $filteredPartyData = Arr::only($requestData, $partyFillableFields);
+
+            $party = $this->findOrCreatePartyForEmployeeRequest($filteredPartyData);
+
+            $user = null;
+            if (!empty($party->email)) {
+                $user = User::where('email', $party->email)->first();
+            }
+
+            $employeeRequest = new EmployeeRequest();
+            $employeeRequest->fill($filteredEmployeeRequestData);
+            $employeeRequest->uuid = null;
+            $employeeRequest->legal_entity_uuid = legalEntity()?->getUuid();
+            $employeeRequest->status = 'NEW';
+            $employeeRequest->legalEntity()->associate($legalEntity);
+            $employeeRequest->party()->associate($party);
+
+            if ($user) {
+                $employeeRequest->user()->associate($user);
+            }
+
+            $employeeRequest->save();
+
+            return $employeeRequest;
+
+        } catch (Exception $err) {
+            Log::error('Initial Employee Request Creation Error: ' . $err->getMessage(), ['exception' => $err]);
+            throw new \RuntimeException(__('Initial Employee Request Creation Error') . ' : ' . $err->getMessage());
+        }
+    }
+
+    private function findOrCreatePartyForEmployeeRequest(array $partyData): Party
+    {
+        $party = null;
+
+        if (!empty($partyData['email'])) {
+            $party = Party::where('email', $partyData['email'])->first();
+        }
+
+        if ($party === null && !empty($partyData['tax_id'])) {
+            $party = Party::where('tax_id', $partyData['tax_id'])->first();
+        }
+
+        if ($party === null) {
+            $party = new Party();
+            $party->fill($partyData);
+            $party->save();
+        }
+
+        return $party;
     }
 }

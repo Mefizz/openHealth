@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Auth\EHealth\Services\TokenStorage;
+use App\Events\EHealthUserLoggedIn;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\LegalEntity;
@@ -108,6 +109,8 @@ class EHealthLoginController extends Controller
             Log::error(__('auth.login.error.test_user_email', [], 'en'));
             return $this->breakAuth('auth.login.error.test_user_email');
         }
+
+        EHealthUserLoggedIn::dispatch($user, $legalEntity, $authUserUUID);
 
         auth('ehealth')->login($user);
 
