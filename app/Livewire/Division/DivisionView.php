@@ -10,7 +10,6 @@ use App\Traits\AddressSearch;
 use App\Traits\WorkTimeUtilities;
 use App\Livewire\Division\Trait\HasAction;
 
-
 class DivisionView extends DivisionComponent
 {
     use WorkTimeUtilities,
@@ -44,7 +43,7 @@ class DivisionView extends DivisionComponent
         $this->divisionForm->setDivision($division->toArray());
 
         // TODO: This need to be refactored after teh multiaddress will works
-        $this->divisionForm->setDivisionParam('addresses', $division->address->toArray());
+        $this->divisionForm->setDivisionParam('addresses', $division->addresses->toArray());
         $this->address = $this->divisionForm->getDivisionParam('addresses');
 
         $this->divisionForm->setDivisionParam('phones', $division->phones->toArray()); // TODO: need refactor this to multiphone array

@@ -24,7 +24,6 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  */
 class Division extends Model
 {
-
     use HasCamelCasing;
 
     public const string TYPE_FAP = 'FAP';
@@ -63,7 +62,7 @@ class Division extends Model
     ];
 
     /**
-     * Returns an array of available divison types.
+     * Returns an array of available division types.
      *
      * @return array
      */

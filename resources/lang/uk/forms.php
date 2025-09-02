@@ -8,7 +8,7 @@ return [
     'actions' => 'Дії',
     'accept' => 'Я приймаю',
     'activate' => 'Активувати',
-    'active' => 'Активувний',
+    'active' => 'Активний',
     'add' => 'Додати',
     'agree' => 'Я погоджуюсь',
     'back' => 'Назад',
@@ -38,7 +38,7 @@ return [
     'accreditationShow' => 'Наявна акредитація',
     'selectLevel' => 'Оберіть ступінь',
     'selectDocumentType' => 'Оберіть тип документа',
-    'selectQualificationType' => 'Оберіть тип кваліфікіції',
+    'selectQualificationType' => 'Оберіть тип кваліфікації',
     'start_time' => 'Час початку',
     'end_time' => 'Час закінчення',
     'addTime' => 'Додати час',
@@ -100,6 +100,9 @@ return [
     'max_file_size_and_format' => 'Розмір завантажуваного файлу не більше 10МБ у форматі jpeg',
     'select_filter' => 'Оберіть фільтр',
     'success_response' => 'Запит виконано успішно',
+    'notifications' => 'Сповіщення',
+    'mark_as_read' => 'Позначити як прочитане',
+    'empty' => 'Пусто',
     'important' => 'Важливо',
 
     // Legal Entity
@@ -132,7 +135,9 @@ return [
     'ipn' => 'ІПН',
     'choose_legal_entity' => 'Будь ласка, оберіть медичний заклад зі списку',
     'synchronise_with_eHealth' => 'Синхронізувати з ЕСОЗ',
+    'synchronise_data_with_EHealth' => 'Синхронізувати дані з ЕСОЗ',
     'website_hint' => 'Сайт має бути вказаний у форматі "google.com"',
+    'legal_entity_updated' => 'Дані медичного закладу було оновлено',
 
     // Division
     'divisions' => 'Місця надання послуг',
@@ -174,7 +179,6 @@ return [
     'add_employee' => 'Додати співробітника',
     'edit_employee' => 'Зміна даних співробітника',
     'view_employee' => 'Перегляд данних співробітника',
-    'view' => 'Переглянyти',
     'employee_requests' => 'Запити співробітників',
     'edit_employee_request' => 'Редагування запиту співробітника',
     'view_employee_request' => 'Перегляд запиту співробітника',
@@ -188,6 +192,7 @@ return [
     'last_name' => 'Прізвище',
     'second_name' => 'По батькові',
     'birth_date' => 'Дата народження',
+    'birth_date_abbreviated' => 'Д.Н.',
     'birth_country' => 'Країна народження',
     'birth_settlement' => 'Місто народження',
     'gender' => 'Стать',
@@ -287,9 +292,7 @@ return [
     'building' => 'Будинок',
     'apartment' => 'Квартира',
     'zip_code' => 'Поштовий індекс',
-    'latitude' => 'Широта',
     'house_number' => 'Номер будинку',
-    'longitude' => 'Довгота',
 
     // Signature & Auth
     'signature' => 'Підписання',
@@ -452,6 +455,9 @@ return [
         'active' => 'Активний',
         'non_active' => 'Не активний',
         'draft' => 'Чернетка',
-        'unsynced' => 'Не синхронізовано' 
-    ]
+        'unsynced' => 'Не синхронізовано'
+    ],
+
+    // Declarations
+    'declarations' => 'Декларації',
 ];

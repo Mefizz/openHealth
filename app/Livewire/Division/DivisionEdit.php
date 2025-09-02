@@ -22,9 +22,9 @@ use Arr;
 
 class DivisionEdit extends DivisionComponent
 {
-    use WorkTimeUtilities,
-        AddressSearch,
-        HasAction;
+    use WorkTimeUtilities;
+    use AddressSearch;
+    use HasAction;
 
     /**
      * Array containing dictionary names only used within the component.
@@ -100,7 +100,7 @@ class DivisionEdit extends DivisionComponent
         $this->divisionForm->setDivision($division->toArray());
 
         // TODO: This need to be refactored after the multiaddress will works
-        $this->divisionForm->setDivisionParam('addresses', $division->address->toArray());
+        $this->divisionForm->setDivisionParam('addresses', $division->addresses->toArray());
         $this->address = $this->divisionForm->getDivisionParam('addresses');
 
         $this->divisionForm->setDivisionParam('phones', $division->phones->toArray()); // TODO: need refactor this to multiphone array
