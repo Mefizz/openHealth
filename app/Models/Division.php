@@ -177,10 +177,6 @@ class Division extends Model
             return $query;
         }
 
-        $driver = $query->getConnection()->getDriverName();
-
-        return $driver === 'pgsql'
-            ? $query->whereRaw('LOWER(name) LIKE ?', [ '%' . strtolower($toSearch) . '%'])
-            : $query->where('name', 'like', "%{$toSearch}%");
+        return $query->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($toSearch) . '%']);
     }
 }
