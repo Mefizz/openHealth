@@ -6,68 +6,55 @@ namespace App\Classes\eHealth\Api;
 
 use App\Classes\eHealth\EHealthRequest;
 use App\Models\LegalEntity;
-use App\Models\Relations\Party;
 use App\Models\User;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 class Employee extends EHealthRequest
 {
     public const string URL = '/api/employees';
-    public const string EMPLOYEE_TYPE_OWNER = 'OWNER';
 
     /**
-     * Get a list of employees from E-Health with pagination and optional filters.
+     * Gets a single page of employees from E-Health.
+     * This method is now responsible for only one request.
      *
      * @param array $filters An associative array of query parameters to filter the results.
+     * @param int   $page    The page number to fetch.
      *
-     * @return array
+     * @return array The JSON response from the API, decoded into an associative array.
      * @throws ConnectionException
      */
-    public function getMany(array $filters): array
+    public function getMany(array $filters, int $page = 1): array
     {
-        $employees = [];
-        $page = 1;
         $perPage = config('ehealth.api.page_size', 150);
-        $totalPages = 1;
 
-        while ($page <= $totalPages) {
-            $queryParams = array_merge($filters, [
-                'page'      => $page,
-                'page_size' => $perPage
-            ]);
+        $queryParams = array_merge($filters, [
+            'page'      => $page,
+            'page_size' => $perPage
+        ]);
 
-            $response = $this->get(self::URL, $queryParams);
-
-            if (isset($response['data']) && is_array($response['data'])) {
-                array_push($employees, ...$response['data']);
-            }
-
-            $totalPages = $response['paging']['total_pages'] ?? 1;
-            $page++;
-        }
-
-        if (count($employees) > 1) {
-            $ownerIndex = array_search(self::EMPLOYEE_TYPE_OWNER, array_column($employees, 'employee_type'), true);
-            if ($ownerIndex !== false && isset($employees[0])) {
-                $tmp = $employees[$ownerIndex];
-                $employees[$ownerIndex] = $employees[0];
-                $employees[0] = $tmp;
-            }
-        }
-
-        return $employees;
+        return $this->get(self::URL, $queryParams)->json();
     }
 
     /**
      * Prepares a basic data structure from the eHealth API response.
-     * It no longer contains database queries.
+     * Uses pre-fetched maps to avoid N+1 database queries.
      *
      * @param array $ehealthData Raw data for one employee from the E-Health API.
+     * @param LegalEntity $legalEntity
+     * @param User|null $user
+     * @param Collection $partiesMap A collection of Party models keyed by UUID.
+     * @param Collection $divisionsMap A collection of Division models keyed by UUID.
      * @return array The partially prepared data.
      */
-    public static function prepareEmployeeDataForDb(array $ehealthData, LegalEntity $legalEntity, ?User $user = null): array
-    {
+    public static function prepareEmployeeDataForDb(
+        array $ehealthData,
+        LegalEntity $legalEntity,
+        ?User $user,
+        Collection $partiesMap,
+        Collection $divisionsMap
+    ): array {
         $prepared = [
             'uuid' => $ehealthData['id'],
             'status' => $ehealthData['status'],
@@ -83,23 +70,21 @@ class Employee extends EHealthRequest
             'division_id' => null,
         ];
 
-        if (isset($ehealthData['party']['id'])) {
-            $party = Party::firstWhere('uuid', $ehealthData['party']['id']);
-            if ($party) {
-                $prepared['party_id'] = $party->id;
-                $user = $user ?? $party->user;
-            }
+        $partyUuid = $ehealthData['party']['id'] ?? null;
+        if ($partyUuid && $partiesMap->has($partyUuid)) {
+            $party = $partiesMap->get($partyUuid);
+            $prepared['party_id'] = $party->id;
+            $user = $user ?? $party->user;
         }
 
         if ($user) {
             $prepared['user_id'] = $user->id;
         }
 
-        if (isset($ehealthData['division']['id'])) {
-            $division = Division::firstWhere('uuid', $ehealthData['division']['id']);
-            if ($division) {
-                $prepared['division_id'] = $division->id;
-            }
+        $divisionUuid = $ehealthData['division']['id'] ?? null;
+        if ($divisionUuid && $divisionsMap->has($divisionUuid)) {
+            $division = $divisionsMap->get($divisionUuid);
+            $prepared['division_id'] = $division->id;
         }
 
         return $prepared;
