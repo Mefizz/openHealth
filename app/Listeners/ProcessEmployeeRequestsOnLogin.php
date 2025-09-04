@@ -8,10 +8,13 @@ use App\Classes\eHealth\EHealth;
 use App\Enums\Status;
 use App\Events\EHealthUserLogin;
 use App\Models\Division;
+use App\Models\LegalEntity;
 use App\Models\Relations\Party;
+use App\Models\User;
 use App\Repositories\EmployeeRepository;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -47,21 +50,16 @@ readonly class ProcessEmployeeRequestsOnLogin
             ];
 
             $ehealthResponse = EHealth::employee()->getMany($filterParams);
-            $employeesFromApi = $ehealthResponse['data'] ?? [];
+            $employeesFromApi = $ehealthResponse->getData();
 
             if (empty($employeesFromApi)) {
                 return;
             }
 
-            // 1. Collect all unique Party and Division UUIDs from the API response.
-            $partyUuids = collect($employeesFromApi)->pluck('party.id')->filter()->unique()->all();
-            $divisionUuids = collect($employeesFromApi)->pluck('division.id')->filter()->unique()->all();
-
-            // 2. Fetch all required models in a single query for each type and key them by UUID for fast lookup.
+            $partyUuids = collect($employeesFromApi)->pluck('party.uuid')->filter()->unique()->all();
+            $divisionUuids = collect($employeesFromApi)->pluck('division.uuid')->filter()->unique()->all();
             $partiesMap = Party::whereIn('uuid', $partyUuids)->with('user')->get()->keyBy('uuid');
             $divisionsMap = Division::whereIn('uuid', $divisionUuids)->get()->keyBy('uuid');
-
-
 
             $approvedEmployeesByPosition = collect($employeesFromApi)->groupBy('position');
 
@@ -84,7 +82,7 @@ readonly class ProcessEmployeeRequestsOnLogin
                     continue;
                 }
 
-                $employeesToUpsert[] = EHealth::employee()::prepareEmployeeDataForDb(
+                $employeesToUpsert[] = $this->prepareEmployeeDataForUpsert(
                     $approvedData,
                     $event->legalEntity,
                     $event->user,
@@ -109,18 +107,14 @@ readonly class ProcessEmployeeRequestsOnLogin
 
             DB::transaction(function () use ($employeesToUpsert, $requestsToUpdateData, $revisionIdsToApply) {
                 $this->employeeRepository->upsertEmployees($employeesToUpsert);
-
                 $employeeUuids = array_column($employeesToUpsert, 'uuid');
                 $uuidToIdMap = $this->employeeRepository->getEmployeeIdsByUuids($employeeUuids);
-
                 foreach ($requestsToUpdateData as &$data) {
                     $data['employee_id'] = $uuidToIdMap[$data['employee_uuid']] ?? null;
                     unset($data['employee_uuid']);
                 }
                 unset($data);
-
                 $this->employeeRepository->bulkUpdateEmployeeRequests($requestsToUpdateData);
-
                 if (!empty($revisionIdsToApply)) {
                     $this->employeeRepository->bulkApplyRevisions($revisionIdsToApply);
                 }
@@ -134,5 +128,53 @@ readonly class ProcessEmployeeRequestsOnLogin
             ]);
             throw $e;
         }
+    }
+
+    /**
+     * Prepares data for a single employee record for database insertion/update.
+     * This logic is now correctly placed within the listener that orchestrates the process.
+     *
+     * @param array       $ehealthData  Validated and transformed data from the API client.
+     * @param LegalEntity $legalEntity
+     * @param User        $user
+     * @param Collection  $partiesMap
+     * @param Collection  $divisionsMap
+     * @return array
+     */
+    private function prepareEmployeeDataForUpsert(
+        array $ehealthData,
+        LegalEntity $legalEntity,
+        User $user,
+        Collection $partiesMap,
+        Collection $divisionsMap
+    ): array {
+        $prepared = [
+            'uuid' => $ehealthData['id'],
+            'status' => $ehealthData['status'],
+            'position' => $ehealthData['position'],
+            'employee_type' => $ehealthData['employee_type'],
+            'start_date' => $ehealthData['start_date'],
+            'end_date' => $ehealthData['end_date'],
+            'inserted_at' => Carbon::now(),
+            'legal_entity_id' => $legalEntity->id,
+            'legal_entity_uuid' => $legalEntity->uuid,
+            'party_id' => null,
+            'user_id' => $user->id,
+            'division_id' => null,
+        ];
+
+        $partyUuid = $ehealthData['party']['uuid'] ?? null;
+        if ($partyUuid && $partiesMap->has($partyUuid)) {
+            $party = $partiesMap->get($partyUuid);
+            $prepared['party_id'] = $party->id;
+            $prepared['user_id'] = $party->user->id ?? $user->id;
+        }
+
+        $divisionUuid = $ehealthData['division']['uuid'] ?? null;
+        if ($divisionUuid && $divisionsMap->has($divisionUuid)) {
+            $prepared['division_id'] = $divisionsMap->get($divisionUuid)->id;
+        }
+
+        return $prepared;
     }
 }

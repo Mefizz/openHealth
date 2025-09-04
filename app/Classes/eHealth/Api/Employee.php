@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Classes\eHealth\Api;
 
 use App\Classes\eHealth\EHealthRequest;
-use App\Models\LegalEntity;
-use App\Models\User;
+use App\Classes\eHealth\EHealthResponse;
+use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class Employee extends EHealthRequest
 {
@@ -17,76 +17,97 @@ class Employee extends EHealthRequest
 
     /**
      * Gets a single page of employees from E-Health.
-     * This method is now responsible for only one request.
+     * It now attaches a validator to process the response.
      *
      * @param array $filters An associative array of query parameters to filter the results.
      * @param int   $page    The page number to fetch.
      *
-     * @return array The JSON response from the API, decoded into an associative array.
+     * @return PromiseInterface|EHealthResponse The EHealthResponse object containing the validated and transformed data.
      * @throws ConnectionException
      */
-    public function getMany(array $filters, int $page = 1): array
+    public function getMany(array $filters, int $page = 1): PromiseInterface|EHealthResponse
     {
-        $perPage = config('ehealth.api.page_size', 150);
+        $this->setValidator($this->validateMany(...));
+        $this->setDefaultPageSize();
 
-        $queryParams = array_merge($filters, [
-            'page'      => $page,
-            'page_size' => $perPage
-        ]);
+        $mergedQuery = array_merge(
+            $this->options['query'] ?? [],
+            $filters,
+            ['page' => $page]
+        );
 
-        return $this->get(self::URL, $queryParams)->json();
+        return $this->get(self::URL, $mergedQuery);
     }
 
     /**
-     * Prepares a basic data structure from the eHealth API response.
-     * Uses pre-fetched maps to avoid N+1 database queries.
+     * Validates the response for a list of employees.
      *
-     * @param array $ehealthData Raw data for one employee from the E-Health API.
-     * @param LegalEntity $legalEntity
-     * @param User|null $user
-     * @param Collection $partiesMap A collection of Party models keyed by UUID.
-     * @param Collection $divisionsMap A collection of Division models keyed by UUID.
-     * @return array The partially prepared data.
+     * @param EHealthResponse $response The response from the eHealth API.
+     * @return array The validated and transformed data.
      */
-    public static function prepareEmployeeDataForDb(
-        array $ehealthData,
-        LegalEntity $legalEntity,
-        ?User $user,
-        Collection $partiesMap,
-        Collection $divisionsMap
-    ): array {
-        $prepared = [
-            'uuid' => $ehealthData['id'],
-            'status' => $ehealthData['status'],
-            'position' => $ehealthData['position'],
-            'employee_type' => $ehealthData['employee_type'],
-            'start_date' => Carbon::parse($ehealthData['start_date'])->toDateString(),
-            'end_date' => isset($ehealthData['end_date']) ? Carbon::parse($ehealthData['end_date'])->toDateString() : null,
-            'inserted_at' => Carbon::now(),
-            'legal_entity_id' => $legalEntity->id,
-            'legal_entity_uuid' => $legalEntity->uuid,
-            'party_id' => null,
-            'user_id' => null,
-            'division_id' => null,
-        ];
-
-        $partyUuid = $ehealthData['party']['id'] ?? null;
-        if ($partyUuid && $partiesMap->has($partyUuid)) {
-            $party = $partiesMap->get($partyUuid);
-            $prepared['party_id'] = $party->id;
-            $user = $user ?? $party->user;
+    protected function validateMany(EHealthResponse $response): array
+    {
+        $transformedData = [];
+        foreach ($response->getData() as $item) {
+            $transformedData[] = self::replaceEHealthPropNames($item);
         }
 
-        if ($user) {
-            $prepared['user_id'] = $user->id;
+        $validator = Validator::make($transformedData, [
+            '*' => 'required|array',
+            '*.uuid' => 'required|uuid',
+            '*.status' => 'required|string',
+            '*.position' => 'required|string',
+            '*.employee_type' => 'required|string',
+            '*.start_date' => 'required|date_format:Y-m-d',
+            '*.end_date' => 'nullable|date_format:Y-m-d',
+            '*.is_active' => 'required|boolean',
+            '*.party' => 'required|array',
+            '*.party.uuid' => 'required|uuid',
+        ]);
+
+        if ($validator->fails()) {
+            Log::channel('e_health_errors')->error(
+                'EHealth Employee validation failed: ' . implode(', ', $validator->errors()->all())
+            );
+            // Ви можете тут кинути виняток, щоб зупинити процес
+            // throw new \Illuminate\Validation\ValidationException($validator);
         }
 
-        $divisionUuid = $ehealthData['division']['id'] ?? null;
-        if ($divisionUuid && $divisionsMap->has($divisionUuid)) {
-            $division = $divisionsMap->get($divisionUuid);
-            $prepared['division_id'] = $division->id;
-        }
+        return $validator->validated();
+    }
 
-        return $prepared;
+    /**
+     * Replaces eHealth property names with the ones used in the application (e.g., id -> uuid).
+     *
+     * @param array $properties Raw properties from a single API item.
+     * @return array Properties with application-friendly names.
+     */
+    protected static function replaceEHealthPropNames(array $properties): array
+    {
+        $replaced = [];
+        foreach ($properties as $name => $value) {
+            switch ($name) {
+                case 'id':
+                    $replaced['uuid'] = $value;
+                    break;
+                case 'party':
+                    $value['uuid'] = $value['id'];
+                    unset($value['id']);
+                    $replaced['party'] = $value;
+                    break;
+                case 'division':
+                    if (is_array($value)) {
+                        $value['uuid'] = $value['id'];
+                        unset($value['id']);
+                    }
+                    $replaced['division'] = $value;
+                    break;
+
+                default:
+                    $replaced[$name] = $value;
+                    break;
+            }
+        }
+        return $replaced;
     }
 }
