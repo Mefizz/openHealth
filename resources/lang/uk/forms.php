@@ -8,7 +8,7 @@ return [
     'actions' => 'Дії',
     'accept' => 'Я приймаю',
     'activate' => 'Активувати',
-    'active' => 'Активувний',
+    'active' => 'Активний',
     'add' => 'Додати',
     'agree' => 'Я погоджуюсь',
     'back' => 'Назад',
@@ -38,7 +38,7 @@ return [
     'accreditationShow' => 'Наявна акредитація',
     'selectLevel' => 'Оберіть ступінь',
     'selectDocumentType' => 'Оберіть тип документа',
-    'selectQualificationType' => 'Оберіть тип кваліфікіції',
+    'selectQualificationType' => 'Оберіть тип кваліфікації',
     'start_time' => 'Час початку',
     'end_time' => 'Час закінчення',
     'addTime' => 'Додати час',
@@ -99,6 +99,11 @@ return [
     'send_files' => 'Відправити файли',
     'max_file_size_and_format' => 'Розмір завантажуваного файлу не більше 10МБ у форматі jpeg',
     'select_filter' => 'Оберіть фільтр',
+    'success_response' => 'Запит виконано успішно',
+    'notifications' => 'Сповіщення',
+    'mark_as_read' => 'Позначити як прочитане',
+    'empty' => 'Пусто',
+    'important' => 'Важливо',
 
     // Legal Entity
     'legal_entity_name' => 'Медична організація',
@@ -130,7 +135,9 @@ return [
     'ipn' => 'ІПН',
     'choose_legal_entity' => 'Будь ласка, оберіть медичний заклад зі списку',
     'synchronise_with_eHealth' => 'Синхронізувати з ЕСОЗ',
+    'synchronise_data_with_EHealth' => 'Синхронізувати дані з ЕСОЗ',
     'website_hint' => 'Сайт має бути вказаний у форматі "google.com"',
+    'legal_entity_updated' => 'Дані медичного закладу було оновлено',
 
     // Division
     'divisions' => 'Місця надання послуг',
@@ -145,6 +152,7 @@ return [
     'external_id' => 'Зовнішній ідентифікатор',
     'schedule' => 'Графік роботи',
     'schedule_note' => "ВАЖЛИВО: Всі дні з незаповненими даними автоматично отримують статус 'Не працює'",
+    'shift' => 'зміна',
     'by_shift' => 'Позмінно',
     'add_shift' => 'Додати зміну',
 
@@ -156,7 +164,8 @@ return [
     'allDay' => 'Цілий день',
     'openedBy' => 'Відчиняється о',
     'closedBy' => 'Закривається о',
-    'doesNotWork' => 'Не працює',
+    'does_not_work' => 'Не працює',
+    'works' => 'Працює',
     'healthcareService' => 'Послуга здоров\'я',
     'add_healthcare_service' => 'Додати послугу',
     'available_time' => 'Час Доступності',
@@ -183,6 +192,7 @@ return [
     'last_name' => 'Прізвище',
     'second_name' => 'По батькові',
     'birth_date' => 'Дата народження',
+    'birth_date_abbreviated' => 'Д.Н.',
     'birth_country' => 'Країна народження',
     'birth_settlement' => 'Місто народження',
     'gender' => 'Стать',
@@ -223,10 +233,20 @@ return [
     'add_role' => 'Додати роль',
     'role_choose' => 'Обрати роль',
     'start_date_work' => 'Дата початку роботи',
+    'division_search' => 'Пошук місць надання послуг',
     'employee_type' => 'Тип працівника',
+    'basic_data' => 'Основні дані',
+    'housing' => 'Корпус',
+    'mountainous_status' => 'Має статус гірського',
+    'add_work_schedule' => 'Додати графік роботи',
+    'work_schedule' => 'Графік роботи',
+    'opening' => 'Відчиняється:',
+    'closing' => 'Зачиняється:',
+    'remove_work_schedule' => 'Прибрати графік роботи',
 
     // Doctor Specific
     'education' => 'Освіта',
+    'educations' => 'Освіти',
     'add_education' => 'Додати освіту',
     'education_type' => 'Тип освіти',
     'add_education_type' => 'Додати тип освіти',
@@ -272,6 +292,7 @@ return [
     'building' => 'Будинок',
     'apartment' => 'Квартира',
     'zip_code' => 'Поштовий індекс',
+    'house_number' => 'Номер будинку',
 
     // Signature & Auth
     'signature' => 'Підписання',
@@ -347,6 +368,8 @@ return [
     'externalContractorsNumber' => 'Номер договору з субпідрядником',
     'externalContractorsIssuedAt' => 'Дата укладання контракту з субпідрядником',
     'externalContractorsExpiresAt' => 'Дата закінчення договору з субпідрядником',
+    'ehealth_error_is_missing' => 'відсутнє',
+    'ehealth_error_additional_properties' => 'містить недійсні дані',
     'statusReason' => 'Причина зміни статусу',
     'insertedAtContract' => 'Дата підписання договору',
     'numberContract' => 'Номер договору',
@@ -383,10 +406,17 @@ return [
     'get_link' => 'Отримати посилання',
     'return_to_login' => 'Повернутись на сторінку входу',
     'secure_page_description' => 'Здійснюється вхід на захищену сторінку. Будь ласка, підтвердіть пароль',
+    'key_file_description' => 'КЕП',
     'send_for_approval' => 'Відправити на затвердження',
 
     // Notifications & Errors
     'no_actions_available' => 'У вас немає дозволених дій для цього розділу.',
+    'validation_fix_fields' => 'Будь ласка, виправте помилки в полях: :fields.',
+    'ehealth_validation_error_header' => 'eHealth відхилив запит через невірні дані. Будь ласка, виправте:',
+    'invalid_kep_password' => 'Невірний пароль до ключа або ключ пошкоджено. Будь ласка, перевірте дані та спробуйте ще раз.',
+    'section_contains_errors' => 'Будь ласка, перевірте помилки в цьому розділі.',
+    'section_not_filled' => 'Не заповнений блок ":section"',
+    'validation_error_unknown' => 'Виникла помилка валідації. Будь ласка, перевірте всі поля форми.',
     'signature_validation_error' => 'Помилка під час підписання',
     'validation_failed_check_form' => 'Помилка при заповнені форми',
     'errors' => [
@@ -424,6 +454,10 @@ return [
         'dismissed' => 'Звільнено',
         'active' => 'Активний',
         'non_active' => 'Не активний',
-        'draft' => 'Чернетка'
-    ]
+        'draft' => 'Чернетка',
+        'unsynced' => 'Не синхронізовано'
+    ],
+
+    // Declarations
+    'declarations' => 'Декларації',
 ];

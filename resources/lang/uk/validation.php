@@ -229,6 +229,23 @@ return [
         'documents.*.number' => __('forms.document_number'),
         'documents.*.issuedBy' => __('forms.document_issued_by'),
         'documents.*.issuedAt' => __('forms.document_issued_at'),
+        'form.documents.min' => 'Необхідно додати хоча б один документ, що посвідчує особу.',
+        'form.doctor.educations.min' => 'Для ролі лікаря необхідно заповнити розділ "Освіта".',
+        'form.doctor.specialities.min' => 'Для ролі лікаря необхідно заповнити розділ "Спеціальності".',
+        'form.party.email.unique' => 'Користувач з такою поштою вже зареєстрований у цій мед. організації.',
+        'form.documents' => __('forms.documents'),
+        'form.doctor.educations' => __('forms.education'),
+        'form.doctor.specialities' => __('forms.specialities'),
+        'form.doctor.qualifications' => __('forms.qualifications'),
+        'form.doctor.scienceDegrees' => __('forms.science_degree'),
+
+        // Поля всередині розділу "Освіта"
+        'doctor.educations.*.city' => __('forms.city'),
+        'doctor.educations.*.institutionName' => __('forms.institutionName'),
+
+        // Поля всередині розділу "Спеціальності"
+        'doctor.specialities.*.attestationName' => __('forms.issued_by'),
+        'doctor.specialities.*.level' => __('forms.speciality_level'),
 
         // Position
         'position' => __('forms.position'),
@@ -375,7 +392,8 @@ return [
                     'location' => [
                         'required_type' => 'Для даного типу медичного закладу заповнення полів Location - обов\'язкове',
                         'longitude_required' => 'Якщо введено широту, довгота також обов\'язкова',
-                        'latitude_required' => 'Якщо введено довготу, широта також обов\'язкова'
+                        'latitude_required' => 'Якщо введено довготу, широта також обов\'язкова',
+                        'loсation_misformat' => 'Ціла частина має бути від 1 до 90. Дробова - до 6 знаків',
                     ],
                     'type' => 'Не вірний тип місця надання послуг',
                     'mapping' => 'Вказаний тип місця надання послуг не дозволяється для поточного закладу',
@@ -485,7 +503,22 @@ return [
             ]
 
         ],
-        //! Licence
+
+        'party.documents' => 'Документи',
+
+        // Form fields
+        'form.doctor.educations.0.city' => 'Освіта (місто)',
+        'form.doctor.educations.0.institutionName' => 'Освіта (назва закладу)',
+        'form.doctor.specialities.0.attestationName' => 'Спеціалізація (назва атестації)',
+        'form.doctor.specialities.0.level' => 'Рівень спеціалізації',
+        'form.doctor.qualifications.0.institutionName' => 'Кваліфікація (назва закладу)',
+        'form.doctor.scienceDegrees.0.city' => 'Науковий ступінь (місто)',
+        'form.doctor.scienceDegrees.0.institutionName' => 'Науковий ступінь (назва закладу)',
+
+        // Documents
+        'documents.*.expirationDate' => 'Дійсний до',
+
+        // Licence
         'issuedBy' => 'ким видано ліцензію',
         'issuedDate' => 'дата видачі ліцензії',
         'activeFromDate' => 'дата початку дії ліцензії',
