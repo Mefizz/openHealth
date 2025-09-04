@@ -1,47 +1,68 @@
-@props(['title' => null, 'description' => null])
+@props(['title' => null, 'description' => null, 'breadcrumbs' => []])
 
-<div {{ $attributes->merge(['class' => 'navigation-container']) }}>
-    <div class="navigation-content">
-        @if($title)
-            <div class="form-header mb-4">
-                <div class="form-header-title">
-                    <nav class="navigation-breadcrumb" aria-label="Breadcrumb">
-                        <ol class="navigation-breadcrumb-list">
-                            <li class="navigation-breadcrumb-item">
-                                <a href="#" class="navigation-breadcrumb-link">
-                                    <svg class="w-5 h-5 mr-2.5" fill="currentColor" viewBox="0 0 20 20"
-                                         xmlns="http://www.w3.org/2000/svg">
-                                        <path
-                                            d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
-                                    </svg>
-                                    Головна
-                                </a>
-                            </li>
-                            <li class="navigation-breadcrumb-item">
-                                <div class="flex items-center">
-                                    <svg class="navigation-breadcrumb-separator" fill="currentColor" viewBox="0 0 20 20"
-                                         xmlns="http://www.w3.org/2000/svg">
-                                        <path fill-rule="evenodd"
-                                              d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                              clip-rule="evenodd"></path>
-                                    </svg>
-                                    <span class="navigation-breadcrumb-current" aria-current="page">{{ $title }}</span>
-                                </div>
-                            </li>
-                        </ol>
-                    </nav>
-                    <h1 class="navigation-title">{{ $title }}</h1>
+@php
+if (empty($breadcrumbs)) {
+    // Fallback for legacy calls: show simple 'Головна → Title' format
+    $crumbs = [
+        ['label' => __('Головна')],
+        $title ? ['label' => $title] : null
+    ];
+    $crumbs = array_filter($crumbs);
+} else {
+    $crumbs = $breadcrumbs;
+}
+@endphp
 
-                    @if($description)
-                        <p class="navigation-description">
-                            <span>{{ $description }}</span>
-                        </p>
+<div {{ $attributes->merge(['class' => 'section-card']) }}>
+    <!-- Breadcrumbs at the very top -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <ol class="breadcrumb-list">
+            @php $crumbs = array_values($crumbs); @endphp
+            @foreach($crumbs as $index => $crumb)
+                @php
+                    $isFirst = $index === 0;
+                    $isLast = $index === count($crumbs) - 1;
+                    $hasUrl = isset($crumb['url']) && filled($crumb['url']);
+                @endphp
+                <li @if($isFirst) class="breadcrumb-first" @endif @if($isLast) aria-current="page" @endif>
+                    @if($isFirst)
+                        <a href="{{ route('dashboard', [legalEntity()]) }}" class="breadcrumb-link">
+                            <svg class="breadcrumb-home-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z"/>
+                            </svg>
+                            {{ $crumb['label'] }}
+                        </a>
+                    @else
+                        <div class="breadcrumb-separator">
+                            <svg class="breadcrumb-chevron" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+                            </svg>
+                            @if($hasUrl && !$isLast)
+                                <a href="{{ $crumb['url'] }}" class="breadcrumb-item-link">{{ $crumb['label'] }}</a>
+                            @else
+                                <span class="breadcrumb-item-text">{{ $crumb['label'] }}</span>
+                            @endif
+                        </div>
                     @endif
-                </div>
-                <div class="form-header-actions">
-                    {{ $slot }}
-                </div>
+                </li>
+            @endforeach
+        </ol>
+    </nav>
+
+    <!-- Title row with page title and action buttons -->
+    <header class="page-header">
+        <div class="page-header-content">
+            @if($title)
+                <h1 class="page-title">{{ $title }}</h1>
+            @endif
+            @if($description)
+                <p class="page-description">{{ $description }}</p>
+            @endif
+        </div>
+        @if(trim($slot))
+            <div class="button-group">
+                {{ $slot }}
             </div>
         @endif
-    </div>
+    </header>
 </div>
