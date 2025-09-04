@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Livewire\Division\Trait\HasAction;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
-use Arr;
+use Illuminate\Support\Arr;
 
 class DivisionEdit extends DivisionComponent
 {
@@ -137,6 +137,10 @@ class DivisionEdit extends DivisionComponent
 
                 session()->flash('error', __('errors.database.messages.save_error'));
             }
+        } else {
+
+            Log::info('Division form validation failed, dispatching scroll event');
+            $this->dispatch('division-form-failed');
         }
 
         return null;
