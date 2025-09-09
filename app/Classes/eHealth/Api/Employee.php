@@ -41,10 +41,13 @@ class Employee extends EHealthRequest
         return $this->get(self::URL, $mergedQuery);
     }
 
+    /**
+     * @throws ConnectionException
+     */
     public function getDetails(string $uuid, $query = null): PromiseInterface|EHealthResponse
     {
         $this->setValidator($this->validateDetails(...));
-        return parent::get(self::URL . '/' . $uuid, $query);
+        return $this->get(self::URL . '/' . $uuid, $query);
     }
 
     /**
