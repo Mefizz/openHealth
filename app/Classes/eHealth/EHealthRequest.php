@@ -12,6 +12,7 @@ use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\HigherOrderTapProxy;
 use Illuminate\Http\Client\Response;
+use Log;
 
 abstract class EHealthRequest extends PendingRequest
 {
@@ -65,23 +66,21 @@ abstract class EHealthRequest extends PendingRequest
      *
      * @throws EHealthValidationException|EHealthResponseException|ConnectionException
      */
-    public function send(string $method, string $url, array $options = []): EHealthResponse|Response
+    /**
+     * Перехоплюємо відправку запиту для логування.
+     * Цей метод буде викликатися замість батьківського.
+     */
+    public function send(string $method, string $url, array $options = []): Response
     {
-        $response = parent::send($method, $url, $options);
+        // Логуємо деталі запиту ПЕРЕД відправкою
+        Log::info('Sending E-Health Request...', [
+            'method' => $method,
+            'url' => $this->baseUrl . $url,
+            'options' => $options // Тут будуть всі хедери, тіло і т.д.
+        ]);
 
-        if (!is_a($response, EHealthResponse::class)) {
-            return $response;
-        }
-
-        if ($response->successful()) {
-            return $response;
-        }
-
-        if ($response->status() === 422) {
-            throw new EHealthValidationException($response->json());
-        }
-
-        throw new EHealthResponseException($response);
+        // Викликаємо оригінальний метод відправки з батьківського класу
+        return parent::send($method, $url, $options);
     }
 
     /**

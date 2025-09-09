@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\Core\Arr;
+use App\Exceptions\EHealth\EHealthResponseException;
 use Exception;
 use App\Models\User;
 use App\Models\LegalEntity;
 use App\Models\Relations\Party;
 use App\Models\Employee\Employee;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Employee\BaseEmployee;
@@ -17,6 +20,8 @@ use App\Enums\Employee\RevisionStatus;
 use App\Models\Employee\EmployeeRequest;
 use Illuminate\Database\Eloquent\Collection;
 use InvalidArgumentException;
+use App\Classes\eHealth\Api\Employee as ApiEmployee;
+use Throwable;
 
 class EmployeeRepository
 {
@@ -31,15 +36,16 @@ class EmployeeRepository
     protected ?RevisionRepository      $revisionRepository;
 
     public function __construct(
-        UserRepository          $userRepository,
-        PartyRepository         $partyRepository,
-        PhoneRepository         $phoneRepository,
-        DocumentRepository      $documentRepository,
-        EducationRepository     $educationRepository,
-        ScienceDegreeRepository $scienceDegreeRepository,
-        QualificationRepository $qualificationRepository,
-        SpecialityRepository    $specialityRepository,
-        RevisionRepository      $revisionRepository
+        UserRepository               $userRepository,
+        PartyRepository              $partyRepository,
+        PhoneRepository              $phoneRepository,
+        DocumentRepository           $documentRepository,
+        EducationRepository          $educationRepository,
+        ScienceDegreeRepository      $scienceDegreeRepository,
+        QualificationRepository      $qualificationRepository,
+        SpecialityRepository         $specialityRepository,
+        RevisionRepository           $revisionRepository,
+        private readonly ApiEmployee $employeeApi,
     ) {
         $this->userRepository = $userRepository;
         $this->partyRepository = $partyRepository;
@@ -253,84 +259,128 @@ class EmployeeRepository
     }
 
     /**
-     * Retrieves a map of employee UUIDs to their primary IDs.
+     * @param LegalEntity $legalEntity
      *
-     * @param array $uuids
-     * @return array ['uuid' => 'id', ...]
+     * @return array ['total' => int, 'processed' => int]
+     * @throws ConnectionException|EHealthResponseException|Throwable*@throws ConnectionException
      */
-    public function getEmployeeIdsByUuids(array $uuids): array
+    public function syncWithEHealth(LegalEntity $legalEntity): array
     {
-        if (empty($uuids)) {
-            return [];
+        $response = $this->employeeApi->getMany(['legal_entity_id' => $legalEntity->uuid]);
+        $employeesData = $response->validate();
+
+        if (empty($employeesData)) {
+            return ['total' => 0, 'processed' => 0];
         }
 
-        return Employee::whereIn('uuid', $uuids)->pluck('id', 'uuid')->all();
-    }
-
-    /**
-     * Updates multiple EmployeeRequest records in a single query using a CASE statement.
-     *
-     * @param array $requestsData ['request_id' => ['column' => 'value', ...]]
-     */
-    public function bulkUpdateEmployeeRequests(array $requestsData): void
-    {
-        if (empty($requestsData)) {
-            return;
+        $upsertData = [];
+        foreach ($employeesData as $employee) {
+            $upsertData[] = [
+                'uuid' => $employee['uuid'],
+                'status' => $employee['status'],
+                'position' => $employee['position'],
+                'employee_type' => $employee['employee_type'],
+                'start_date' => $employee['start_date'],
+                'end_date' => $employee['end_date'],
+                'is_active' => $employee['is_active'],
+                'legal_entity_id' => $legalEntity->id,
+            ];
         }
 
-        $requestIds = array_keys($requestsData);
-        $table = new EmployeeRequest()->getTable();
+        $this->upsertEmployees($upsertData);
 
-        // Prepare CASE parts for each column that needs to be updated.
-        $cases = [];
-        $bindings = [];
-        $columns = array_keys(reset($requestsData)); // e.g., ['employee_id', 'applied_at', 'status']
+        $employeeUuids = array_column($upsertData, 'uuid');
+        $employeeModels = Employee::with('party')->whereIn('uuid', $employeeUuids)->get()->keyBy('uuid');
 
-        foreach ($columns as $column) {
-            // Use double quotes for PostgreSQL compatibility.
-            $cases[$column] = "CASE \"id\" ";
-            foreach ($requestsData as $id => $data) {
-                $cases[$column] .= "WHEN ? THEN ? ";
-                $bindings[] = $id;
-                $bindings[] = $data[$column];
+        $processedCount = 0;
+
+        foreach ($employeeModels as $uuid => $model) {
+            try {
+                $detailsResponse = $this->employeeApi->getDetails($uuid);
+                $detailsData = $detailsResponse->validate();
+
+                DB::transaction(function () use ($model, $detailsData) {
+                    $this->processSyncedEmployee($model, $detailsData);
+                });
+
+                $processedCount++;
+
+                sleep($this->employeeApi::TIME_COOLDOWN);
+
+            } catch (\Exception $e) {
+                Log::error("Failed to process details for employee UUID: {$uuid}", [
+                    'message' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                continue;
             }
-            $cases[$column] .= "ELSE \"$column\" END";
         }
 
-        // Assemble the SQL query with PostgreSQL-compatible syntax.
-        $updateQuery = "UPDATE \"{$table}\" SET ";
-        $updateStatements = [];
-        foreach ($cases as $column => $case) {
-            $updateStatements[] = "\"{$column}\" = {$case}";
-        }
-        $updateQuery .= implode(', ', $updateStatements);
-        $updateQuery .= " WHERE \"id\" IN (" . rtrim(str_repeat('?,', count($requestIds)), ',') . ")";
-
-        $bindings = array_merge($bindings, $requestIds);
-
-        DB::update($updateQuery, $bindings);
+        return ['total' => count($employeesData), 'processed' => $processedCount];
     }
 
     /**
-     * Applies multiple revisions in a single query.
+     * @param Employee $employeeModel
+     * @param array    $detailsData
      *
-     * @param array $revisionIds
+     * @throws Throwable
      */
-    public function bulkApplyRevisions(array $revisionIds): void
+    public function processSyncedEmployee(Employee $employeeModel, array $detailsData): void
     {
-        if (empty($revisionIds)) {
-            return;
+        $partyData = Arr::pull($detailsData, 'party', []);
+        $doctorData = Arr::pull($detailsData, 'doctor', []);
+
+        $employeeModel->update($detailsData);
+
+        $party = $this->updateOrCreatePartyForEmployee($employeeModel, $partyData);
+
+        if ($employeeModel->employee_type === 'DOCTOR') {
+            $educationsData = Arr::get($doctorData, 'educations', []);
+            $specialitiesData = Arr::get($doctorData, 'specialities', []);
+
+            if (empty($educationsData) || empty($specialitiesData)) {
+                throw new \RuntimeException(sprintf(
+                                         'Doctor UUID %s is missing required data. Education: %d, Specialities: %d.',
+                                         $employeeModel->uuid,
+                                         count($educationsData),
+                                         count($specialitiesData)
+                                     ));
+            }
         }
 
-        // Updated:
-        // 1. Use the correct table name 'revisions'.
-        // 2. Set status via Enum for reliability.
-        // 3. Add 'deleted_at' to simulate soft deletion, as in the setApplied() method.
-        DB::table('revisions')
-            ->whereIn('id', $revisionIds)
-            ->update([
-                         'status' => RevisionStatus::APPLIED->value,
-                         'deleted_at' => now()
-                     ]);
+        $this->documentRepository->syncDocuments($party, Arr::pull($partyData, 'documents', []));
+        $this->phoneRepository->syncPhones($party, Arr::pull($partyData, 'phones', []));
+
+        if ($employeeModel->employee_type === 'DOCTOR') {
+            $this->educationRepository->syncEducations($employeeModel, Arr::get($doctorData, 'educations', []));
+            $this->specialityRepository->syncSpecialities($employeeModel, Arr::get($doctorData, 'specialities', []));
+            $this->qualificationRepository->syncQualifications($employeeModel, Arr::get($doctorData, 'qualifications', []));
+            $this->scienceDegreeRepository->syncScienceDegrees($employeeModel, Arr::get($doctorData, 'science_degree', []));
+        }
+    }
+
+    /**
+     *
+     * @param Employee $employee
+     * @param array $partyData
+     * @return Party
+     */
+    private function updateOrCreatePartyForEmployee(Employee $employee, array $partyData): Party
+    {
+        $partyUuid = $partyData['uuid'] ?? null;
+
+        unset($partyData['uuid'], $partyData['phones'], $partyData['documents']);
+
+        $party = Party::updateOrCreate(
+            ['uuid' => $partyUuid],
+            $partyData
+        );
+
+        if ($employee->party_id !== $party->id) {
+            $employee->party()->associate($party);
+            $employee->save();
+        }
+
+        return $party;
     }
 }
