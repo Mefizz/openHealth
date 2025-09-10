@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Listeners;
 
 use App\Classes\eHealth\EHealth;
+use App\Core\Arr;
 use App\Enums\Employee\RevisionStatus;
 use App\Enums\Status;
 use App\Events\EHealthUserLogin;
 use App\Models\Employee\Employee;
 use App\Repositories\EmployeeRepository;
+use App\Repositories\Repository;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -18,40 +20,32 @@ use Throwable;
 
 readonly class ProcessEmployeeRequestsOnLogin
 {
-    public function __construct(
-        private EmployeeRepository $employeeRepository
-    )
-    {
-    }
-
     /**
      * @throws Throwable
      * @throws ConnectionException
      */
     public function handle(EHealthUserLogin $event): void
     {
+        // If user doesn't have party, the employee wasn't added through our MIS
+        if (!$event->user?->party?->uuid) {
+            return;
+        }
+
+        $pendingRequests = Repository::employee()->findPendingRequestsForUser($event->user, $event->legalEntity);
+
+        if ($pendingRequests->isEmpty()) {
+            return;
+        }
+
         try {
-            $pendingRequests = $this->employeeRepository->findPendingRequestsForUser($event->user, $event->legalEntity);
-            if ($pendingRequests->isEmpty()) {
-                return;
-            }
-
-            $userParty = $event->user->party;
-            if (!$userParty?->uuid) {
-                Log::warning(
-                    'User does not have a party UUID, cannot process employee requests.',
-                    ['user_id' => $event->user->id]
-                );
-                return;
-            }
-
             $ehealthResponse = EHealth::employee()->getMany(
                 [
                     'legal_entity_id' => $event->legalEntity->uuid,
-                    'party_id' => $userParty->uuid,
+                    'party_id' => $event->user->party->uuid,
                     'status' => Status::APPROVED->value,
                 ]
             );
+
             $employeesFromApi = $ehealthResponse->getData();
 
             if (empty($employeesFromApi)) {
@@ -86,12 +80,24 @@ readonly class ProcessEmployeeRequestsOnLogin
             }
 
             DB::transaction(function() use ($approvedData, $request) {
-                $detailsResponse = EHealth::employee()->getDetails($approvedData['id']);
-                $detailsData     = $detailsResponse->validate();
+                $detailsResponse = EHealth::employee()->getDetails($approvedData['id'], groupByEntities: true);
+                [
+                    'employee' => $employee,
+                    'party' => $party,
+                    'documents' => $documents,
+                    'phones' => $phones,
+                    'educations' => $educations,
+                    'specialities' => $specialities,
+                    'qualifications' => $qualifications,
+                    'scienceDegrees' => $scienceDegrees,
+                ] = $detailsResponse->validate();
 
-                $employeeModel = Employee::firstOrNew(['uuid' => $detailsData['uuid']]);
-
-                $this->employeeRepository->processSyncedEmployee($employeeModel, $detailsData);
+                $employeeModel = Employee::firstOrNew(
+                    ['uuid' => Arr::pull($employee, 'uuid')],
+                    $employee
+                );
+                $employeeModel->save();
+                Repository::employee()->updateDetails($employeeModel, $party, $documents, $phones, $educations, $specialities, $qualifications, $scienceDegrees);
 
                 $request->status = Status::APPROVED->value;
                 $request->applied_at = Carbon::parse($approvedData['updated_at'] ?? 'now');

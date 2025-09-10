@@ -66,21 +66,23 @@ abstract class EHealthRequest extends PendingRequest
      *
      * @throws EHealthValidationException|EHealthResponseException|ConnectionException
      */
-    /**
-     * Перехоплюємо відправку запиту для логування.
-     * Цей метод буде викликатися замість батьківського.
-     */
-    public function send(string $method, string $url, array $options = []): Response
+    public function send(string $method, string $url, array $options = []): EHealthResponse|Response
     {
-        // Логуємо деталі запиту ПЕРЕД відправкою
-        Log::info('Sending E-Health Request...', [
-            'method' => $method,
-            'url' => $this->baseUrl . $url,
-            'options' => $options // Тут будуть всі хедери, тіло і т.д.
-        ]);
+        $response = parent::send($method, $url, $options);
 
-        // Викликаємо оригінальний метод відправки з батьківського класу
-        return parent::send($method, $url, $options);
+        if (!is_a($response, EHealthResponse::class)) {
+            return $response;
+        }
+
+        if ($response->successful()) {
+            return $response;
+        }
+
+        if ($response->status() === 422) {
+            throw new EHealthValidationException($response->json());
+        }
+
+        throw new EHealthResponseException($response);
     }
 
     /**

@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Core\Arr;
-use App\Exceptions\EHealth\EHealthResponseException;
 use Exception;
 use App\Models\User;
 use App\Models\LegalEntity;
 use App\Models\Relations\Party;
 use App\Models\Employee\Employee;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Employee\BaseEmployee;
@@ -19,6 +17,7 @@ use App\Enums\Employee\RequestStatus;
 use App\Enums\Employee\RevisionStatus;
 use App\Models\Employee\EmployeeRequest;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 use App\Classes\eHealth\Api\Employee as ApiEmployee;
 use Throwable;
@@ -242,145 +241,129 @@ class EmployeeRepository
     }
 
     /**
-     * Creates or updates multiple Employee records in a single query.
-     *
-     * @param array $employees
-     */
-    public function upsertEmployees(array $employees): void
-    {
-        if (empty($employees)) {
-            return;
-        }
-
-        // Define the unique key (uuid) and the columns to update if the record exists.
-        $updateColumns = array_keys(reset($employees));
-
-        Employee::upsert($employees, ['uuid'], $updateColumns);
-    }
-
-    /**
-     * @param LegalEntity $legalEntity
-     *
-     * @return array ['total' => int, 'processed' => int]
-     * @throws ConnectionException|EHealthResponseException|Throwable*@throws ConnectionException
-     */
-    public function syncWithEHealth(LegalEntity $legalEntity): array
-    {
-        $response = $this->employeeApi->getMany(['legal_entity_id' => $legalEntity->uuid]);
-        $employeesData = $response->validate();
-
-        if (empty($employeesData)) {
-            return ['total' => 0, 'processed' => 0];
-        }
-
-        $upsertData = [];
-        foreach ($employeesData as $employee) {
-            $upsertData[] = [
-                'uuid' => $employee['uuid'],
-                'status' => $employee['status'],
-                'position' => $employee['position'],
-                'employee_type' => $employee['employee_type'],
-                'start_date' => $employee['start_date'],
-                'end_date' => $employee['end_date'],
-                'is_active' => $employee['is_active'],
-                'legal_entity_id' => $legalEntity->id,
-            ];
-        }
-
-        $this->upsertEmployees($upsertData);
-
-        $employeeUuids = array_column($upsertData, 'uuid');
-        $employeeModels = Employee::with('party')->whereIn('uuid', $employeeUuids)->get()->keyBy('uuid');
-
-        $processedCount = 0;
-
-        foreach ($employeeModels as $uuid => $model) {
-            try {
-                $detailsResponse = $this->employeeApi->getDetails($uuid);
-                $detailsData = $detailsResponse->validate();
-
-                DB::transaction(function () use ($model, $detailsData) {
-                    $this->processSyncedEmployee($model, $detailsData);
-                });
-
-                $processedCount++;
-
-                sleep($this->employeeApi::TIME_COOLDOWN);
-
-            } catch (\Exception $e) {
-                Log::error("Failed to process details for employee UUID: {$uuid}", [
-                    'message' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
-                ]);
-                continue;
-            }
-        }
-
-        return ['total' => count($employeesData), 'processed' => $processedCount];
-    }
-
-    /**
-     * @param Employee $employeeModel
-     * @param array    $detailsData
-     *
+     * @param Employee|int|string $employee the model or identifier (ID or UUID) of the employee to update
+     * @param array $party
+     * @param array $documents
+     * @param array $phones
+     * @param array|null $educations
+     * @param array|null $specialties
+     * @param array|null $qualifications
+     * @param array|null $scienceDegrees
+     * @return Employee Updated employee
      * @throws Throwable
      */
-    public function processSyncedEmployee(Employee $employeeModel, array $detailsData): void
+    public function updateDetails(
+        Employee|int|string $employee,
+        array $party,
+        array $documents,
+        array $phones,
+        ?array $educations = null,
+        ?array $specialities = null,
+        ?array $qualifications = null,
+        ?array $scienceDegrees = null,
+
+    ): Employee
     {
-        $partyData = Arr::pull($detailsData, 'party', []);
-        $doctorData = Arr::pull($detailsData, 'doctor', []);
+        $model = $this->getEmployeeByIdentifier($employee);
 
-        $employeeModel->update($detailsData);
+        if (is_null($model)) {
+            throw new InvalidArgumentException('Employee model or valid Employee identifier must be provided');
+        }
+        DB::transaction(function () use ($model, $party, $documents, $phones, $educations, $specialities, $qualifications, $scienceDegrees) {
+            $this->updatePartyByUuid($model, $party);
 
-        $party = $this->updateOrCreatePartyForEmployee($employeeModel, $partyData);
+            $model->party->documents()->delete();
+            $model->party->documents()->createMany($documents);
 
-        if ($employeeModel->employee_type === 'DOCTOR') {
-            $educationsData = Arr::get($doctorData, 'educations', []);
-            $specialitiesData = Arr::get($doctorData, 'specialities', []);
+            $model->party->phones()->delete();
+            $model->party->phones()->createMany($phones);
 
-            if (empty($educationsData) || empty($specialitiesData)) {
-                throw new \RuntimeException(sprintf(
-                                         'Doctor UUID %s is missing required data. Education: %d, Specialities: %d.',
-                                         $employeeModel->uuid,
-                                         count($educationsData),
-                                         count($specialitiesData)
-                                     ));
+            if (!is_null($educations)) {
+                $model->educations()->delete();
+                $model->educations()->createMany($educations);
             }
-        }
 
-        $this->documentRepository->syncDocuments($party, Arr::pull($partyData, 'documents', []));
-        $this->phoneRepository->syncPhones($party, Arr::pull($partyData, 'phones', []));
+            if (!is_null($specialities)) {
+                $model->specialities()->delete();
+                $model->specialities()->createMany($specialities);
+            }
 
-        if ($employeeModel->employee_type === 'DOCTOR') {
-            $this->educationRepository->syncEducations($employeeModel, Arr::get($doctorData, 'educations', []));
-            $this->specialityRepository->syncSpecialities($employeeModel, Arr::get($doctorData, 'specialities', []));
-            $this->qualificationRepository->syncQualifications($employeeModel, Arr::get($doctorData, 'qualifications', []));
-            $this->scienceDegreeRepository->syncScienceDegrees($employeeModel, Arr::get($doctorData, 'science_degree', []));
-        }
+            if (!is_null($qualifications)) {
+                $model->qualifications()->delete();
+                $model->qualifications()->createMany($qualifications);
+            }
+
+            if (!is_null($scienceDegrees)) {
+                $model->scienceDegrees()->delete();
+                $model->scienceDegrees()->createMany($scienceDegrees);
+            }
+        });
+
+        return $model;
     }
 
     /**
-     *
-     * @param Employee $employee
-     * @param array $partyData
-     * @return Party
+     * @param Employee|string|int $employee Employee Model, ID or UUID of the employee
+     * @return ?Employee
      */
-    private function updateOrCreatePartyForEmployee(Employee $employee, array $partyData): Party
+    public function getEmployeeByIdentifier(Employee|string|int $employee): ?Employee
     {
-        $partyUuid = $partyData['uuid'] ?? null;
-
-        unset($partyData['uuid'], $partyData['phones'], $partyData['documents']);
-
-        $party = Party::updateOrCreate(
-            ['uuid' => $partyUuid],
-            $partyData
-        );
-
-        if ($employee->party_id !== $party->id) {
-            $employee->party()->associate($party);
-            $employee->save();
+        if (is_a($employee, Employee::class)) {
+            return $employee;
         }
 
-        return $party;
+        if (is_int($employee)) {
+            return Employee::with('party')->find($employee);
+        }
+
+        if (Str::isUuid($employee)) {
+            return Employee::with('party')->where('uuid', $employee)->first();
+        }
+
+        return null;
+    }
+
+    /**
+     * The logic behind the party update or create is as follows:
+     * 1. Check party by UUID. Possible scenario: the party already exists in the system
+     * 2. If user already has a party, update it.
+     * 3. If user does not have a party, but there is a party with the same UUID, update it and establish the relation.
+     * 4. If neither of the above, create a new party and establish the relation.
+     */
+    protected function updatePartyByUuid(Employee $model, array $party): void
+    {
+        $partyUuid = Arr::get($party, 'uuid');
+        $partyByUuid = Party::where('uuid', $partyUuid)->first();
+
+        // If the model doesn't have a party and party doesn't exist, create new one. It's a brand-new person
+        if (!$partyByUuid && !$model->party) {
+            $newParty = new Party($party);
+            $model->party()->associate($newParty);
+            $newParty->save();
+
+            // If the model doesn't have a related party but the party already exists, update it and relate - the scenario of a new employee with already created person/party
+        } else if ($partyByUuid && !$model->party) {
+            $model->party()->associate($partyByUuid)->save();
+
+            // The model already has a related party, update it and change the UUID - the case when eHealth creates another party, probably merge scenario
+        } else if (!$partyByUuid && $model->party) {
+            $model->party()->update($party);
+            // Both the model and the party exist, check if they are the same
+        } else if ($partyByUuid && $model->party) {
+
+            // uuid is the same, just update
+            if ($partyByUuid->uuid == $model->party->uuid) {
+                $model->party()->update($party);
+            } else {
+
+                // Different uuid, need to merge the results, prioritizing the eHealth data
+                $result = array_merge(
+                    $model->party()->toArray(),
+                    $partyByUuid->toArray()
+                );
+
+                $model->party()->update($result);
+            }
+        }
     }
 }

@@ -6,6 +6,7 @@ namespace App\Classes\eHealth\Api;
 
 use App\Classes\eHealth\EHealthRequest;
 use App\Classes\eHealth\EHealthResponse;
+use App\Core\Arr;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Log;
@@ -15,7 +16,10 @@ class Employee extends EHealthRequest
 {
     public const string URL = '/api/employees';
 
-    public const int TIME_COOLDOWN = 3; // seconds
+    /**
+     * If true, groups the response by entities associated with the employee, e.g., employee itself, party, educations, specialities, etc.
+     */
+    public bool $groupByEntities = false;
 
     /**
      * Gets a single page of employees from E-Health.
@@ -44,9 +48,11 @@ class Employee extends EHealthRequest
     /**
      * @throws ConnectionException
      */
-    public function getDetails(string $uuid, $query = null): PromiseInterface|EHealthResponse
+    public function getDetails(string $uuid, $query = null, bool $groupByEntities = false): PromiseInterface|EHealthResponse
     {
         $this->setValidator($this->validateDetails(...));
+        $this->groupByEntities = $groupByEntities;
+
         return $this->get(self::URL . '/' . $uuid, $query);
     }
 
@@ -164,7 +170,34 @@ class Employee extends EHealthRequest
             );
         }
 
-        return $validator->validated();
+        $validated = $validator->validated();
+
+        if (!$this->groupByEntities) {
+            return $validated;
+        }
+
+        // Party related data
+        $party = Arr::pull($validated, 'party');
+        $documents = Arr::pull($party, 'documents', []);
+        $phones = Arr::pull($party, 'phones', []);
+
+        // Doctor related data
+        $doctor = Arr::pull($validated, 'doctor', []);
+        $educations = Arr::pull($doctor, 'educations', []);
+        $specialities = Arr::pull($doctor, 'specialties', []);
+        $qualifications = Arr::pull($doctor, 'qualifications', []);
+        $scienceDegrees = Arr::pull($doctor, 'scienceDegrees', []);
+
+        return [
+            'employee' => $validated,
+            'party' => $party,
+            'documents' => $documents,
+            'phones' => $phones,
+            'educations' => $educations,
+            'specialities' => $specialities,
+            'qualifications' => $qualifications,
+            'scienceDegrees' => $scienceDegrees,
+        ];
     }
 
     /**
@@ -205,6 +238,7 @@ class Employee extends EHealthRequest
                     break;
             }
         }
+
         return $replaced;
     }
 }

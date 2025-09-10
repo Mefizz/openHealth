@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
+use Nette\Schema\ValidationException;
 
 #[AllowDynamicProperties]
 class EmployeeIndex extends EmployeeComponent
@@ -233,72 +234,59 @@ class EmployeeIndex extends EmployeeComponent
     {
         try {
             $response = EHealth::employee()->getMany(['legal_entity_id' => legalEntity()->uuid]);
-            $employeesFromApi = $response->validate();
-
-            if (empty($employeesFromApi)) {
-                $this->dispatch('flashMessage', ['message' => __('employees.sync.no_employees_found'), 'type' => 'info']);
-                return;
-            }
-
-            $currentLegalEntityId = legalEntity()->id;
-            foreach ($employeesFromApi as $employeeData) {
-                $upsertData[] = [
-                    'uuid' => $employeeData['uuid'],
-                    'status' => $employeeData['status'],
-                    'position' => $employeeData['position'],
-                    'employee_type' => $employeeData['employee_type'],
-                    'start_date' => $employeeData['start_date'],
-                    'end_date' => $employeeData['end_date'],
-                    'is_active' => $employeeData['is_active'],
-                    'legal_entity_id' => $currentLegalEntityId,
-                ];
-            }
-
-            Repository::employee()->upsertEmployees($upsertData);
-
-            $employeeUuids = array_column($employeesFromApi, 'uuid');
-            $models = Employee::whereIn('uuid', $employeeUuids)->get();
-
-            $user = Auth::user();
-
-            $batch = Bus::batch(
-                $models->map(fn (Employee $model) => new EmployeeDetailsUpsert($model))
-            )->then(function (Batch $batch) use ($user) {
-                $message = __('employees.sync.completed_successfully', [
-                    'processed' => $batch->processedJobs,
-                    'total' => $batch->totalJobs,
-                ]);
-                if ($user) {
-                    $user->notify(new EmployeeSyncCompleted($message, 'success'));
-                }
-            })->catch(function (Batch $batch, \Throwable $e) use ($user) {
-                $message = __('employees.sync.failed');
-                if ($user) {
-                    $user->notify(new EmployeeSyncCompleted($message, 'error'));
-                }
-                Log::error('Employee sync batch failed.', [
-                    'batch_id' => $batch->id,
-                    'exception' => $e
-                ]);
-            })->name('Employee Full Sync')->dispatch();
-
-            $this->batchId = $batch->id;
-
-            $this->dispatch('flashMessage', [
-                'message' => __('employees.sync.started'),
-                'type' => 'success'
-            ]);
-
         } catch (ConnectionException $e) {
             Log::error('Employee sync failed: No connection to E-Health.', ['error' => $e->getMessage()]);
             $this->dispatch('flashMessage', ['message' => __('errors.ehealth.messages.no_connection'), 'type' => 'error']);
+            return;
         } catch (EHealthResponseException $e) {
             Log::error('Employee sync failed: E-Health API error.', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             $this->dispatch('flashMessage', ['message' => __('employees.requestError', ['error' => $e->getMessage()]), 'type' => 'error']);
+            return;
         } catch (\Exception $e) {
             Log::error('Employee sync failed: An unexpected error occurred during initiation.', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             $this->dispatch('flashMessage', ['message' => __('employees.sync.error'), 'type' => 'error']);
+            return;
         }
+
+        $employees = $response->validate();
+        data_forget($employees, '*.party');
+        data_forget($employees, '*.doctor');
+        data_fill($employees, '*.legal_entity_id', legalEntity()->id);
+
+        Employee::upsert($employees, uniqueBy: ['uuid']);
+        $models = Employee::with('party')->filterByUuids(array_column($employees, 'uuid'))->get();
+
+        $user = Auth::user();
+
+        $batch = Bus::batch(
+            $models->map(fn (Employee $model) => new EmployeeDetailsUpsert(
+                $model, $user,
+                session()->get(config('ehealth.api.oauth.bearer_token'))
+            ))
+
+        )->then(function (Batch $batch) use ($user) {
+            $message = __('employees.sync.completed_successfully', [
+                'processed' => $batch->processedJobs,
+                'total' => $batch->totalJobs,
+            ]);
+            $user->notify(new EmployeeSyncCompleted($message, 'success'));
+
+        })->catch(callback: function (Batch $batch, \Throwable $e) use ($user) {
+            $message = __('employees.sync.failed');
+            $user->notify(new EmployeeSyncCompleted($message, 'error'));
+
+            Log::error('Employee sync batch failed.', [
+                'batch_id' => $batch->id,
+                'exception' => $e
+            ]);
+        })->name('Employee Full Sync')->dispatch();
+
+        $this->batchId = $batch->id;
+
+        $this->dispatch('flashMessage', [
+            'message' => __('employees.sync.started'),
+            'type' => 'success'
+        ]);
     }
 
     public function confirmRequestDeletion(int $id): void

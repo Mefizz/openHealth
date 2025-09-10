@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Employee\Employee;
+use App\Models\User;
 use App\Repositories\Repository;
 use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,9 +13,6 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\Middleware\RateLimited;
 use Illuminate\Queue\SerializesModels;
 use App\Classes\eHealth\EHealth;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\ValidationException;
-use Throwable;
 
 class EmployeeDetailsUpsert implements ShouldQueue
 {
@@ -24,12 +22,14 @@ class EmployeeDetailsUpsert implements ShouldQueue
     public int $backoff = 60;
 
     public function __construct(
-        public Employee $employee
+        public Employee $employee,
+        public User $user,
+        protected string $token
     ) {}
 
     public function middleware(): array
     {
-        return [new RateLimited('ehealth-api')];
+        return [new RateLimited('ehealth-employee-get')];
     }
 
     public function handle(): void
@@ -38,26 +38,18 @@ class EmployeeDetailsUpsert implements ShouldQueue
             return;
         }
 
-        try {
-            $response = EHealth::employee()->getDetails($this->employee->uuid);
-            $detailsData = $response->validate();
+        $response = EHealth::employee()->withToken($this->token)->getDetails($this->employee->uuid, groupByEntities: true);
 
-            Repository::employee()->processSyncedEmployee($this->employee, $detailsData);
+        [
+            'party' => $party,
+            'documents' => $documents,
+            'phones' => $phones,
+            'educations' => $educations,
+            'specialities' => $specialities,
+            'qualifications' => $qualifications,
+            'scienceDegrees' => $scienceDegrees,
+        ] = $response->validate();
 
-        } catch (ValidationException $e) {
-
-            Log::warning('Skipping employee sync due to invalid data from E-Health.', [
-                'uuid' => $this->employee->uuid,
-                'validation_errors' => $e->errors(),
-            ]);
-
-        } catch (Throwable $e) {
-
-            Log::error('Job EmployeeDetailsUpsert failed for UUID: ' . $this->employee->uuid, [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            $this->fail($e);
-        }
+        Repository::employee()->updateDetails($this->employee, $party, $documents, $phones, $educations, $specialities, $qualifications, $scienceDegrees);
     }
 }
