@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Livewire\Employee;
 
+use App\Models\LegalEntity;
 use App\Traits\FormTrait;
+use Illuminate\Database\Eloquent\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -20,6 +22,7 @@ abstract class EmployeeComponent extends Component
     public bool $isPersonalDataLocked = false;
     #[Locked]
     public ?int $employeeRequestId = null;
+    public Collection $divisions;
 
 
     public ?array $dictionaryNames = [
@@ -30,6 +33,13 @@ abstract class EmployeeComponent extends Component
 
     public ?array $dictionaries = [];
     public array $employeeTypePosition = [];
+
+    public function boot(): void
+    {
+        if (!isset($this->divisions)) {
+            $this->divisions = new Collection();
+        }
+    }
 
     /**
      * This is the single, public method that child components will call.
@@ -58,6 +68,7 @@ abstract class EmployeeComponent extends Component
         }
     }
 
+    //used on blade employee.employee-create
     #[Computed]
     public function employeeFullName(): string
     {
@@ -74,5 +85,10 @@ abstract class EmployeeComponent extends Component
         }
 
         return '';
+    }
+
+    protected function loadDivisions(LegalEntity $legalEntity): void
+    {
+        $this->divisions = $legalEntity->divisions()->where('is_active', true)->get(['id', 'name']);
     }
 }

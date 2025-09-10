@@ -29,16 +29,9 @@ class EmployeeEdit extends EmployeeComponent
     public function mount(LegalEntity $legalEntity, Employee $employee): void
     {
         $this->loadDictionaries();
-
-        // 1. We receive the initial model from the route.
+        $this->loadDivisions($legalEntity);
         $this->employee = $employee;
-
-        // 2. We store its ID in a public, locked property. This is the only state
-        //    that will persist between requests on the frontend.
         $this->employeeId = $employee->id;
-
-        // 3. We populate the public Form Object ($this->form) with the initial data.
-        //    The template will be bound to this public Form Object.
         $this->isPersonalDataLocked = true;
         $this->form->hydrate($this->employee);
     }

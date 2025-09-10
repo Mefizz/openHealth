@@ -19,6 +19,7 @@ class EmployeeShow extends EmployeeComponent
     public function mount(LegalEntity $legalEntity, Employee $employee): void
     {
         $this->loadDictionaries();
+        $this->loadDivisions($legalEntity);
         $this->employee = $employee;
         $this->employeeId = $employee->id;
         $this->form->hydrate($this->employee);

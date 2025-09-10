@@ -81,7 +81,11 @@ class EmployeeForm extends Form
             'employeeType' => ['required', 'string', Rule::in(array_keys($this->component->dictionaries['EMPLOYEE_TYPE'] ?? []))],
             'startDate' => ['required', 'date_format:Y-m-d'],
             'endDate' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:startDate'],
-            'divisionId' => ['nullable', 'string'],
+            'divisionId' => [
+                'nullable',
+                'string',
+                Rule::exists('divisions', 'id')->where('legal_entity_id', legalEntity()->id)
+            ],
         ];
     }
 
