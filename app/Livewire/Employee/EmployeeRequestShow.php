@@ -22,11 +22,9 @@ class EmployeeRequestShow extends EmployeeComponent
     public function mount(LegalEntity $legalEntity, EmployeeRequest $employee_request): void
     {
         $this->loadDictionaries();
-
-
+        $this->loadDivisions($legalEntity);
         $this->employee = $employee_request;
         $this->employeeRequestId = $employee_request->id;
-
         $this->form->hydrate($this->employee);
     }
 
