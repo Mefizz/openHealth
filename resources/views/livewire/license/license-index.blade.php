@@ -1,5 +1,5 @@
 <div>
-    <x-section-navigation x-data="{ showFilter: false }" class="" title="{{ __('Ліцензії') }}">
+    <x-header-navigation x-data="{ showFilter: false }" class="" title="{{ __('Ліцензії') }}">
         <div class="flex flex-col">
             <div class="flex flex-wrap items-end justify-between gap-4 max-w-6xl">
                 <div class="flex items-end gap-4">
@@ -16,7 +16,7 @@
                 </div>
             </div>
         </div>
-    </x-section-navigation>
+    </x-header-navigation>
 
     <div class="max-w-7xl mx-auto">
         <table class="table-input w-full">

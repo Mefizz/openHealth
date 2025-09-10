@@ -3,7 +3,7 @@
 @section('title', __('forms.license.edit'))
 
 @section('header')
-    <x-section-navigation 
+    <x-header-navigation 
         :breadcrumbs="[
             ['label' => __('Головна'), 'url' => route('dashboard')],
             ['label' => __('Ліцензії'), 'url' => '/licenses'],
@@ -14,7 +14,7 @@
         <div class="button-group">
             <x-button form="license-form" class="btn-primary">{{ __('Зберегти') }}</x-button>
         </div>
-    </x-section-navigation>
+    </x-header-navigation>
 @endsection
 
 @section('body')
