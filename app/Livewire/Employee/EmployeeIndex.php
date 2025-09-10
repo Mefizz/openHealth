@@ -79,31 +79,27 @@ class EmployeeIndex extends EmployeeComponent
     {
         $legalEntityId = $this->legalEntity->id;
 
-        // --- Step 1: Build the base query with all filters to get only the IDs ---
         $query = Party::query()
             ->where(function ($q) use ($legalEntityId) {
                 $q->whereHas('employees', fn($sub) => $sub->where('legal_entity_id', $legalEntityId))
                     ->orWhereHas('employeeRequests', fn($sub) => $sub->where('legal_entity_id', $legalEntityId));
             });
 
-        // Apply Status Filter
         if (!empty($this->status)) {
-            $query->where(function ($q) {
-                // Use the Status enum for the filter values
+            $query->where(function ($statusQuery) {
                 $employeeStatuses = array_intersect($this->status, [Status::APPROVED->value, Status::DISMISSED->value]);
                 if (!empty($employeeStatuses)) {
-                    $q->orWhereHas('employees', fn($sub) => $sub->whereIn('status', $employeeStatuses));
+                    $statusQuery->orWhereHas('employees', fn($sub) => $sub->whereIn('status', $employeeStatuses));
                 }
-                // Use the Status enum for the 'NEW' case
+
                 if (in_array(Status::NEW->value, $this->status, true)) {
-                    $q->orWhereHas('employeeRequests');
+                    $statusQuery->orWhereHas('employeeRequests');
                 }
             });
         } else {
             $query->whereRaw('1=0');
         }
 
-        // Apply Name Search
         if (!empty($this->search)) {
             $query->where(function($q) {
                 $q->where('last_name', 'ilike', "%{$this->search}%")
@@ -112,7 +108,6 @@ class EmployeeIndex extends EmployeeComponent
             });
         }
 
-        // Apply Advanced Filters
         if (!empty($this->filter['phone'])) {
             $query->whereHas('phones', fn($q) => $q->where('number', 'like', '%' . $this->filter['phone'] . '%'));
         }
@@ -132,35 +127,43 @@ class EmployeeIndex extends EmployeeComponent
             });
         }
 
-        // --- Step 2: Get the paginated result of IDs. This is fast. ---
         $paginator = $query->paginate(10);
 
-        // --- Step 3: Now, get the full models for the current page with all relationships. ---
         $partiesOnPage = Party::whereIn('id', $paginator->pluck('id')->all())
             ->with([
                        'phones',
-                       'employees' => fn($q) => $q->where('legal_entity_id', $legalEntityId)->with('division'),
-                       'employeeRequests' => fn($q) => $q->where('legal_entity_id', $legalEntityId)->with('division'),
+                       'employees' => function ($q) use ($legalEntityId) {
+                           $q->where('legal_entity_id', $legalEntityId)->with('division');
+                           $employeeStatuses = array_intersect($this->status, [Status::APPROVED->value, Status::DISMISSED->value]);
+
+                           if (!empty($employeeStatuses)) {
+                               $q->whereIn('status', $employeeStatuses);
+                           } else {
+                               $q->whereRaw('1=0');
+                           }
+                       },
+                       'employeeRequests' => function ($q) use ($legalEntityId) {
+                           $q->where('legal_entity_id', $legalEntityId)->with('division');
+
+                           if (!in_array(Status::NEW->value, $this->status, true)) {
+                               $q->whereRaw('1=0');
+                           }
+                       },
                    ])
             ->get()
             ->sortBy(function ($party) {
-                // Use the Status enum for the sorting logic as well
                 $hasActiveEmployees = $party->employees->where('status', Status::APPROVED->value)->isNotEmpty();
                 $hasRequests = $party->employeeRequests->isNotEmpty();
 
-                // Prioritize Active Employees first
                 if ($hasActiveEmployees) {
                     return 1;
                 }
-                // Then, drafts (requests)
                 if ($hasRequests) {
                     return 2;
                 }
-                // Finally, dismissed employees
                 return 3;
             });
 
-        // --- Step 4: Return a new paginator instance with the sorted items. ---
         return new LengthAwarePaginator(
             $partiesOnPage,
             $paginator->total(),
