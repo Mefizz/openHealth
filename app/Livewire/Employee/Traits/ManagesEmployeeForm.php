@@ -464,7 +464,7 @@ trait ManagesEmployeeForm
         $requestToSign->load('revision');
         $nestedDataForRevision = $requestToSign->revision->data;
         $payloadToSign = $this->preparePayloadForEHealth($nestedDataForRevision);
-dd($payloadToSign);
+
         return signatureService()->signData(
             $payloadToSign,
             $this->form->password,
