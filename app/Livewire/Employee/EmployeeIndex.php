@@ -61,6 +61,12 @@ class EmployeeIndex extends EmployeeComponent
     public function boot(): void
     {
         $this->legalEntity = legalEntity();
+    }
+
+    public function mount(LegalEntity $legalEntity): void
+    {
+        $this->legalEntity = $legalEntity;
+        $this->loadDivisions($legalEntity);
         $this->loadDictionaries();
     }
 
@@ -79,88 +85,94 @@ class EmployeeIndex extends EmployeeComponent
     {
         $legalEntityId = $this->legalEntity->id;
 
-        $query = Party::query()
-            ->where(function ($q) use ($legalEntityId) {
-                $q->whereHas('employees', fn($sub) => $sub->where('legal_entity_id', $legalEntityId))
-                    ->orWhereHas('employeeRequests', fn($sub) => $sub->where('legal_entity_id', $legalEntityId));
-            });
+        $employeeConstraints = function ($query) {
+            $employeeStatuses = array_intersect($this->status, [Status::APPROVED->value, Status::DISMISSED->value]);
 
-        if (!empty($this->status)) {
-            $query->where(function ($statusQuery) {
-                $employeeStatuses = array_intersect($this->status, [Status::APPROVED->value, Status::DISMISSED->value]);
-                if (!empty($employeeStatuses)) {
-                    $statusQuery->orWhereHas('employees', fn($sub) => $sub->whereIn('status', $employeeStatuses));
-                }
+            if (empty($employeeStatuses)) {
+                return $query->whereRaw('1=0');
+            }
 
-                if (in_array(Status::NEW->value, $this->status, true)) {
-                    $statusQuery->orWhereHas('employeeRequests');
-                }
-            });
-        } else {
-            $query->whereRaw('1=0');
-        }
+            $query->whereIn('status', $employeeStatuses);
+
+            if (!empty($this->filter['division_id'])) {
+                $query->where('division_id', $this->filter['division_id']);
+            }
+            if (!empty($this->filter['role'])) {
+                $query->where('employee_type', $this->filter['role']);
+            }
+            if (!empty($this->filter['position'])) {
+                $query->where('position', $this->filter['position']);
+            }
+        };
+
+        $requestConstraints = function ($query) {
+            if (!in_array(Status::NEW->value, $this->status, true)) {
+                return $query->whereRaw('1=0');
+            }
+
+            $query->whereNull('applied_at')
+                ->whereIn('status', [Status::NEW->value, Status::SIGNED->value]);
+
+            if (!empty($this->filter['division_id'])) {
+                $query->where('division_id', $this->filter['division_id']);
+            }
+            if (!empty($this->filter['role'])) {
+                $query->where('employee_type', 'like', $this->filter['role']);
+            }
+            if (!empty($this->filter['position'])) {
+                $query->where('position', 'like', $this->filter['position']);
+            }
+        };
+
+        $query = Party::query();
+
+        $query->where(function ($q) use ($legalEntityId) {
+            $q->whereHas('employees', fn($sub) => $sub->where('legal_entity_id', $legalEntityId))
+                ->orWhereHas('employeeRequests', fn($sub) => $sub->where('legal_entity_id', $legalEntityId));
+        });
 
         if (!empty($this->search)) {
-            $query->where(function($q) {
-                $q->where('last_name', 'ilike', "%{$this->search}%")
-                    ->orWhere('first_name', 'ilike', "%{$this->search}%")
-                    ->orWhere('second_name', 'ilike', "%{$this->search}%");
-            });
+            $query->where(fn($q) => $q->where('last_name', 'ilike', "%{$this->search}%")
+                ->orWhere('first_name', 'ilike', "%{$this->search}%")
+                ->orWhere('second_name', 'ilike', "%{$this->search}%"));
         }
-
         if (!empty($this->filter['phone'])) {
             $query->whereHas('phones', fn($q) => $q->where('number', 'like', '%' . $this->filter['phone'] . '%'));
         }
         if (!empty($this->filter['email'])) {
             $query->where('email', 'ilike', '%' . $this->filter['email'] . '%');
         }
-        if (!empty($this->filter['role'])) {
-            $query->where(function($q) {
-                $q->whereHas('employees', fn($sub) => $sub->where('employee_type', $this->filter['role']))
-                    ->orWhereHas('employeeRequests', fn($sub) => $sub->where('employee_type', 'like', $this->filter['role']));
+
+        if (!empty($this->status)) {
+            $query->where(function ($q) use ($employeeConstraints, $requestConstraints) {
+                $q->whereHas('employees', $employeeConstraints)
+                    ->orWhereHas('employeeRequests', $requestConstraints);
             });
-        }
-        if (!empty($this->filter['position'])) {
-            $query->where(function($q) {
-                $q->whereHas('employees', fn($sub) => $sub->where('position', $this->filter['position']))
-                    ->orWhereHas('employeeRequests', fn($sub) => $sub->where('position', 'like', $this->filter['position']));
-            });
+        } else {
+            $query->whereRaw('1=0');
         }
 
-        $paginator = $query->paginate(10);
+        $paginator = $query->select('id')->paginate(10);
 
         $partiesOnPage = Party::whereIn('id', $paginator->pluck('id')->all())
             ->with([
                        'phones',
-                       'employees' => function ($q) use ($legalEntityId) {
-                           $q->where('legal_entity_id', $legalEntityId)->with('division');
-                           $employeeStatuses = array_intersect($this->status, [Status::APPROVED->value, Status::DISMISSED->value]);
-
-                           if (!empty($employeeStatuses)) {
-                               $q->whereIn('status', $employeeStatuses);
-                           } else {
-                               $q->whereRaw('1=0');
-                           }
+                       'employees' => function ($query) use ($legalEntityId, $employeeConstraints) {
+                           $query->where('legal_entity_id', $legalEntityId)->with('division');
+                           $employeeConstraints($query);
                        },
-                       'employeeRequests' => function ($q) use ($legalEntityId) {
-                           $q->where('legal_entity_id', $legalEntityId)->with('division');
-
-                           if (!in_array(Status::NEW->value, $this->status, true)) {
-                               $q->whereRaw('1=0');
-                           }
+                       'employeeRequests' => function ($query) use ($legalEntityId, $requestConstraints) {
+                           $query->where('legal_entity_id', $legalEntityId)->with('division');
+                           $requestConstraints($query);
                        },
                    ])
             ->get()
+            ->filter(fn($party) => $party->employees->isNotEmpty() || $party->employeeRequests->isNotEmpty())
             ->sortBy(function ($party) {
-                $hasActiveEmployees = $party->employees->where('status', Status::APPROVED->value)->isNotEmpty();
+                $hasActiveEmployees = $party->employees->isNotEmpty();
                 $hasRequests = $party->employeeRequests->isNotEmpty();
-
-                if ($hasActiveEmployees) {
-                    return 1;
-                }
-                if ($hasRequests) {
-                    return 2;
-                }
+                if ($hasActiveEmployees) return 1;
+                if ($hasRequests) return 2;
                 return 3;
             });
 
