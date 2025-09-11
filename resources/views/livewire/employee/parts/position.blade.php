@@ -40,7 +40,7 @@
                 <option value="">{{ __('forms.select_division') }}</option>
 
                 @foreach($this->divisions as $division)
-                    <option value="{{ $division->id }}">{{ $division->name }}</option>
+                    <option value="{{ $division['id'] }}">{{ $division['name'] }}</option>
                 @endforeach
             </select>
             <label for="division" class="label">{{ __('forms.division') }}</label>
