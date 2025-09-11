@@ -468,6 +468,7 @@ trait ManagesEmployeeForm
                 'legal_entity_uuid' => legalEntity()->uuid,
                 'inserted_at' => Carbon::now(),
                 'status' => RequestStatus::SIGNED,
+                'division_id' => $request->division_id,
             ]
         );
 
