@@ -23,7 +23,7 @@ class EmployeeRequest extends EHealthRequest
      * @param string $signedContent The base64 encoded signed string.
      *
      * @return array The response data from eHealth on success.
-     * @throws EHealthValidationException|ConnectionException|RuntimeException
+     * @throws ConnectionException|RuntimeException
      */
     public function create(string $signedContent): array
     {

@@ -98,8 +98,6 @@ class Employee extends EHealthRequest
             Log::channel('e_health_errors')->error(
                 'EHealth Employee validation failed: ' . implode(', ', $validator->errors()->all())
             );
-            // Ви можете тут кинути виняток, щоб зупинити процес
-            // throw new \Illuminate\Validation\ValidationException($validator);
         }
 
         return $validator->validated();
@@ -127,7 +125,7 @@ class Employee extends EHealthRequest
             'party' => 'required|array',
             'party.uuid' => 'required|uuid',
             'party.no_tax_id' => 'required|boolean',
-            'party.tax_id' => 'required|string', // might be passport data if no_tax_id is true
+            'party.tax_id' => 'required|string',
             'party.first_name' => 'required|string',
             'party.last_name' => 'required|string',
             'party.second_name' => 'nullable|string',
@@ -147,21 +145,39 @@ class Employee extends EHealthRequest
             'party.document.*.issued_by' => 'sometimes|string',
 
             'doctor' => 'sometimes|array',
-            'doctor.specialities' => 'required_with:*.doctor|array',
-            'doctor.specialities.*.speciality' => 'required_with:*.doctor|string',
-            'doctor.specialities.*.speciality_officio' => 'required_with:*.doctor|boolean',
-            'doctor.specialities.*.attestation_date' => 'required_with:*.doctor|date_format:Y-m-d',
-            'doctor.specialities.*.attestation_name' => 'required_with:*.doctor|string',
-            'doctor.specialities.*.certificate_number' => 'required_with:*.doctor|string',
+            'doctor.specialities' => 'required_with:doctor|array',
+            'doctor.specialities.*.speciality' => 'required_with:doctor|string',
+            'doctor.specialities.*.speciality_officio' => 'required_with:doctor|boolean',
+            'doctor.specialities.*.attestation_date' => 'required_with:doctor|date_format:Y-m-d',
+            'doctor.specialities.*.attestation_name' => 'required_with:doctor|string',
+            'doctor.specialities.*.certificate_number' => 'required_with:doctor|string',
             'doctor.specialities.*.level' => 'string',
 
-            'doctor.educations' => 'required_with:*.doctor|array',
-            'doctor.educations.*.city' => 'required_with:*.doctor|string',
-            'doctor.educations.*.country' => 'required_with:*.doctor|string',
-            'doctor.educations.*.degree' => 'required_with:*.doctor|string',
-            'doctor.educations.*.diploma_number' => 'required_with:*.doctor|string',
-            'doctor.educations.*.institution_name' => 'required_with:*.doctor|string',
-            'doctor.educations.*.speciality' => 'required_with:*.doctor|string',
+            'doctor.educations' => 'required_with:doctor|array',
+            'doctor.educations.*.city' => 'required_with:doctor|string',
+            'doctor.educations.*.country' => 'required_with:doctor|string',
+            'doctor.educations.*.degree' => 'required_with:doctor|string',
+            'doctor.educations.*.diploma_number' => 'required_with:doctor|string',
+            'doctor.educations.*.institution_name' => 'required_with:doctor|string',
+            'doctor.educations.*.speciality' => 'required_with:doctor|string',
+
+            'doctor.science_degree' => 'sometimes|nullable|array',
+            'doctor.science_degree.country' => 'required_with:doctor.science_degree|string',
+            'doctor.science_degree.city' => 'required_with:doctor.science_degree|string',
+            'doctor.science_degree.degree' => 'required_with:doctor.science_degree|string',
+            'doctor.science_degree.institution_name' => 'required_with:doctor.science_degree|string',
+            'doctor.science_degree.diploma_number' => 'required_with:doctor.science_degree|string',
+            'doctor.science_degree.speciality' => 'required_with:doctor.science_degree|string',
+            'doctor.science_degree.issued_date' => 'nullable|date_format:Y-m-d',
+
+            'doctor.qualifications' => 'sometimes|array',
+            'doctor.qualifications.*.type' => 'required_with:doctor.qualifications|string',
+            'doctor.qualifications.*.institution_name' => 'required_with:doctor.qualifications|string',
+            'doctor.qualifications.*.speciality' => 'required_with:doctor.qualifications|string',
+            'doctor.qualifications.*.issued_date' => 'required_with:doctor.qualifications|date_format:Y-m-d',
+            'doctor.qualifications.*.certificate_number' => 'required_with:doctor.qualifications|string',
+            'doctor.qualifications.*.valid_to' => 'nullable|date_format:Y-m-d|after_or_equal:doctor.qualifications.*.issued_date',
+            'doctor.qualifications.*.additional_info' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {

@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Livewire\WithFileUploads;
 use RuntimeException;
+use Throwable;
 
 trait ManagesEmployeeForm
 {
@@ -35,6 +36,9 @@ trait ManagesEmployeeForm
 
     abstract protected function getEmployeeRequestForSave(): ?EmployeeRequest;
 
+    /**
+     * @throws \Throwable
+     */
     private function processAndSave(): void
     {
         // Livewire automatically handles validation on state-changing methods.
@@ -72,20 +76,24 @@ trait ManagesEmployeeForm
         Log::info('Attempting to sign.');
 
         try {
-            // STEP 1: Always save the latest form data before signing.
             $this->processAndSave();
-
-            // STEP 2: Validate and get the draft request.
             $requestToSign = $this->validateAndGetDraft();
-
-            // STEP 3: Sign the data.
             $signedContent = $this->signDataWithCipher($requestToSign);
 
-            // STEP 4: Send the data to the eHealth API.
-            $eHealthResponse = new EHealthEmployeeRequest()->create($signedContent);
-            $this->updateLocalRecords($requestToSign, $eHealthResponse);
+            $eHealthResponseAsArray = new EHealthEmployeeRequest()->create($signedContent);
 
-            // STEP 5: Redirect on success.
+
+            if (isset($eHealthResponseAsArray['error'])) {
+
+                throw new EHealthValidationException(
+                    $eHealthResponseAsArray['error']['message'] ?? 'E-Health Validation Failed'
+                );
+            }
+
+            $validatedData = $eHealthResponseAsArray;
+
+            $this->updateLocalRecords($requestToSign, $validatedData);
+
             session()?->flash('success', __('employees.sign_success'));
             $this->resetSignatureFields();
             Log::info('Successfully signed and will redirect.');
@@ -94,6 +102,16 @@ trait ManagesEmployeeForm
 
         } catch (Exception $e) {
             $this->handleGeneralException($e);
+
+        } catch (Throwable $e) {
+            Log::critical('A critical throwable was caught during the signing process.', [
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+            ]);
+
+            $this->dispatch('flashMessage', ['message' => __('errors.unexpected_error'), 'type' => 'error', 'persistent' => true]);
+            $this->dispatch('close-signature-modal');
         }
     }
 
@@ -445,7 +463,8 @@ trait ManagesEmployeeForm
     {
         $requestToSign->load('revision');
         $nestedDataForRevision = $requestToSign->revision->data;
-        $payloadToSign = EHealthEmployeePayload::prepare($nestedDataForRevision);
+        $payloadToSign = $this->preparePayloadForEHealth($nestedDataForRevision);
+dd($payloadToSign);
         return signatureService()->signData(
             $payloadToSign,
             $this->form->password,
@@ -453,6 +472,61 @@ trait ManagesEmployeeForm
             $this->form->keyContainerUpload,
             Auth::user()->party->tax_id
         );
+    }
+
+    /**
+     * Prepares the nested data from a Revision for the eHealth API payload.
+     *
+     * @param array $nestedData The data from the Revision model.
+     * @return array The payload ready for the eHealth API.
+     */
+    private function preparePayloadForEHealth(array $nestedData): array
+    {
+        $payload = [
+            'position' => Arr::get($nestedData, 'employee_request_data.position'),
+            'start_date' => Arr::get($nestedData, 'employee_request_data.start_date'),
+            'end_date' => Arr::get($nestedData, 'employee_request_data.end_date'),
+            'employee_type' => Arr::get($nestedData, 'employee_request_data.employee_type'),
+            'division_id' => Arr::get($nestedData, 'employee_request_data.division_id'),
+            'legal_entity_id' => Arr::get($nestedData, 'employee_request_data.legal_entity_id'),
+            'status' => 'NEW',
+            'party' => [
+                'first_name' => Arr::get($nestedData, 'party.first_name'),
+                'last_name' => Arr::get($nestedData, 'party.last_name'),
+                'second_name' => Arr::get($nestedData, 'party.second_name'),
+                'birth_date' => Arr::get($nestedData, 'party.birth_date'),
+                'gender' => Arr::get($nestedData, 'party.gender'),
+                'no_tax_id' => (bool) Arr::get($nestedData, 'party.no_tax_id'),
+                'tax_id' => Arr::get($nestedData, 'party.tax_id'),
+                'email' => Arr::get($nestedData, 'party.email'),
+                'documents' => Arr::get($nestedData, 'documents'),
+                'phones' => Arr::get($nestedData, 'phones'),
+                'working_experience' => (int) Arr::get($nestedData, 'party.working_experience'),
+                'about_myself' => Arr::get($nestedData, 'party.about_myself'),
+            ],
+        ];
+
+        if (Arr::get($nestedData, 'employee_request_data.employee_type') === 'DOCTOR') {
+            $doctorData = [
+                'educations' => Arr::get($nestedData, 'doctor.educations'),
+                'qualifications' => Arr::get($nestedData, 'doctor.qualifications'),
+                'specialities' => Arr::get($nestedData, 'doctor.specialities'),
+                'science_degree' => Arr::get($nestedData, 'doctor.science_degree'),
+            ];
+
+            $payload['doctor'] = $doctorData;
+        }
+
+        // Clean up empty fields
+        $payload = array_filter($payload, fn($value) => !is_null($value) && $value !== '');
+        if (isset($payload['party'])) {
+            $payload['party'] = array_filter($payload['party'], fn($value) => !is_null($value) && $value !== '');
+        }
+        if (isset($payload['doctor'])) {
+            $payload['doctor'] = array_filter($payload['doctor'], fn($value) => !is_null($value) && $value !== '' && !empty($value));
+        }
+
+        return ['employee_request' => $payload];
     }
 
     /**
@@ -468,13 +542,14 @@ trait ManagesEmployeeForm
                 'legal_entity_uuid' => legalEntity()->uuid,
                 'inserted_at' => Carbon::now(),
                 'status' => RequestStatus::SIGNED,
+                'division_id' => $request->division_id,
             ]
         );
 
         $request->revision->update(
             [
                 'ehealth_response' => $eHealthResponse['ehealth_response'],
-                'status'           => RevisionStatus::SENT,
+                'status' => RevisionStatus::SENT,
             ]
         );
     }
