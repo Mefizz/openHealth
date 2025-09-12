@@ -72,83 +72,60 @@ class Login extends Component
     /**
      * Handle an incoming authentication request.
      */
+    /**
+     * Повна версія з "гібридною" логікою для eHealth та дебагом.
+     */
     public function login(): RedirectResponse|Redirector
     {
         $key = $this->throttleKey();
-
         $credentials = $this->validate();
 
-        // This need to avoid further user authentication for local auth
-        if (!empty($this->legalEntityUUID)) {
-            unset($credentials['legalEntityUUID']);
+        if ($this->isLocalAuth) {
+            // === СТАНДАРТНИЙ ЛОКАЛЬНИЙ ВХІД (ЗАЛИШАЄМО ЯК Є) ===
+            if (!empty($this->legalEntityUUID)) unset($credentials['legalEntityUUID']);
+            if (!$this->ensureIsNotRateLimited($credentials)) {
+                $seconds = RateLimiter::availableIn($key);
+                return Redirect::route('login')->with('error', __('auth.throttle', ['minutes' => ceil($seconds / 60), 'seconds' => $seconds]));
+            }
+            if (!Auth::attempt($credentials)) {
+                RateLimiter::hit($key, config('ehealth.auth.decay_seconds'));
+                $this->addError('email', __('auth.login.error.validation.credentials'));
+                return back();
+            }
+            $this->clearLoginAttempts();
+            Session::regenerate();
+            $user = Auth::user();
+            $accessibleLegalEntities = $user->accessibleLegalEntities()->toArray();
+            if (!empty($accessibleLegalEntities)) {
+                session()->flash('user_accessible_legal_entities', $accessibleLegalEntities);
+                return redirect(route('legalEntity.select'));
+            } else {
+                return redirect(route('legal-entity.new.create'));
+            }
         }
 
-        // Check if user doesn't block by attempts exceeding
-        if (! $this->ensureIsNotRateLimited($credentials)) {
-            // Number of seconds before login retry
-            $seconds = RateLimiter::availableIn($key);
-
-            return Redirect::route('login')->with('error', __('auth.throttle', [
-                'minutes' => ceil($seconds / 60),
-                'seconds' => $seconds
-            ]));
-        }
-
-        $user = User::where('email', $this->email)->first();
-
-        if (!$user) {
-            $this->addError('email', __('auth.login.error.validation.auths'));
-
+        // === ГІБРИДНА ЛОГІКА ДЛЯ EHEALTH ===
+        if (empty($this->legalEntityUUID)) {
+            Log::error("Legal entity hasn't been chosen for email {$this->email}");
             return back();
         }
-
-        // Save user's email into the session, required to check whether we can allow access on the test server
+        session()->put('selected_legal_entity_uuid_for_ehealth', $this->legalEntityUUID);
         if (App::isLocal()) {
             session()->put('selected_email', $this->email);
         }
 
-        if (!$user->hasVerifiedEmail()) {
-            // Save user's id to send a verification link again (if needed)
-            session()->put('unverified_user_id', $user->id);
+        $user = User::where('email', $this->email)->first();
 
-            return redirect(route('verification.notice'));
-        }
-
-        if (!$this->isLocalAuth) {
-            if (!empty($this->legalEntityUUID)) {
-                // Temporary save the UUID of the selected Legal Entity
-                session()->put('selected_legal_entity_uuid_for_ehealth', $this->legalEntityUUID);
-            } else {
-                Log::error("Legal entity hasn't been choose for email {$user->email}");
-
-                return back();
+        if ($user) {
+            // ІСНУЮЧИЙ КОРИСТУВАЧ EHEALTH
+            if (!$user->hasVerifiedEmail()) {
+                session()->put('unverified_user_id', $user->id);
+                return redirect(route('verification.notice'));
             }
-
-            return Redirect::to(
-                $this->buildEHealthLoginUrl($user)
-            );
-        }
-
-        if (!Auth::attempt($credentials)) {
-            RateLimiter::hit($key, config('ehealth.auth.decay_seconds'));
-
-            $this->addError('email', __('auth.login.error.validation.credentials'));
-
-            return back();
-        }
-
-        $this->clearLoginAttempts();
-        Session::regenerate();
-
-        // Get an array of the LegalEntity id's connected to this $user
-        $accessibleLegalEntities = $user->accessibleLegalEntities()->toArray();
-
-        if (!empty($accessibleLegalEntities)) {
-            session()->flash('user_accessible_legal_entities', $accessibleLegalEntities);
-
-            return redirect( route('legalEntity.select'));
+            return Redirect::to($this->buildEHealthLoginUrl($user));
         } else {
-            return redirect( route('legal-entity.new.create'));
+            // НОВИЙ КОРИСТУВАЧ EHEALTH
+            return Redirect::to($this->buildEHealthLoginUrlForNewUser($this->email, $this->legalEntityUUID));
         }
     }
 
@@ -228,37 +205,57 @@ class Login extends Component
     *
     * @return string
     */
+    /**
+     * Метод для існуючих користувачів (залишається без змін).
+     */
     protected function buildEHealthLoginUrl(User $user): string
     {
-        // Base URL and client ID
         $baseUrl = config('ehealth.api.auth_host');
         $redirectUri = config('ehealth.api.redirect_uri');
-
         $selectedLegalEntityClientId = $this->getLegalEntityClientIdFromUuid($this->legalEntityUUID);
-
         $legalEntityId = LegalEntity::byUuid($this->legalEntityUUID)->first()->id;
-
-        // Base query parameters
         $queryParams = [
             'client_id' => $selectedLegalEntityClientId ?? '',
             'redirect_uri' => $redirectUri,
             'response_type' => 'code'
         ];
 
-        // Set a temporary team/legalEntity ID, this should be overridden once a user actually logs in.
-        // Spatie Permissions sets permissions globally, they can't be loaded by querying relations tables
         setPermissionsTeamId($legalEntityId);
         $user->unsetRelation('roles')->unsetRelation('permissions');
-
-        // Additional query parameters if email is provided
         if (!empty($user->email)) {
             $queryParams['email'] = $user->email;
             $queryParams['scope'] = $user->getScopes($selectedLegalEntityClientId);
         }
-
         session()->put(config('ehealth.api.auth_ehealth'), $user->id);
 
-        // Build the full URL with query parameters
+        // --- ДЕБАГ ДЛЯ ІСНУЮЧОГО ЮЗЕРА ---
+        Log::debug('EHEALTH PARAMS (EXISTING USER):', $queryParams);
+
+        return $baseUrl . '?' . http_build_query($queryParams);
+    }
+
+    /**
+     * ОСТАННІЙ ТЕСТ: Запит АБСОЛЮТНОГО МІНІМУМУ скоупів.
+     * Тільки ідентифікація, жодних прав.
+     */
+    protected function buildEHealthLoginUrlForNewUser(string $email, string $legalEntityUuid): string
+    {
+        $baseUrl = config('ehealth.api.auth_host');
+        $redirectUri = config('ehealth.api.redirect_uri');
+        $selectedLegalEntityClientId = $this->getLegalEntityClientIdFromUuid($legalEntityUuid);
+
+        // Ми просимо тільки підтвердити особу. Більше нічого.
+        // Це стандарт OpenID Connect для базової автентифікації.
+        $identificationScopes = 'openid email';
+
+        $queryParams = [
+            'client_id' => $selectedLegalEntityClientId ?? '',
+            'redirect_uri' => $redirectUri,
+            'response_type' => 'code',
+            'email' => $email,
+            'scope' => $identificationScopes,
+        ];
+
         return $baseUrl . '?' . http_build_query($queryParams);
     }
 
