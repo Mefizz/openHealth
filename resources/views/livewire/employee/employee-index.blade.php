@@ -208,13 +208,13 @@
     </x-section-navigation>
 
     <x-section>
-        <div class="space-y-6 employee-section-no-left-padding">
+        <div class="space-y-6 employee-section-no-left-padding mt-4">
             <div class="employee-table-container table-container-responsive">
             @forelse($parties as $party)
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6" wire:key="party-{{ $party->id }}">
+                <fieldset class="fieldset" wire:key="party-{{ $party->id }}">
+                    <legend class="legend">{{ $party->fullName }}</legend>
                     <div class="flex flex-wrap items-start justify-between gap-4 border-b border-gray-200 dark:border-gray-700 pb-4">
                         <div>
-                            <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ $party->fullName }}</h3>
                             <div class="flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 mt-2">
                                 @if ($mobilePhone = $party->phones->firstWhere('type', 'MOBILE'))
                                     <span class="flex items-center gap-1.5">
@@ -311,7 +311,7 @@
                             </table>
                         </div>
                     </div>
-                </div>
+                </fieldset>
             @empty
                 <div class="text-center py-16">
                     <p class="text-gray-500 dark:text-gray-400 text-lg">{{__('forms.nothing_found')}}</p>
