@@ -8,18 +8,12 @@ use App\Enums\Status;
 use App\Models\Relations\Phone;
 use App\Models\Relations\Address;
 use App\Models\Employee\Employee;
-use App\Models\Division;
-use App\Models\Contract;
-use App\Models\License;
-use App\Models\Revision;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Collection;
 use App\Casts\LegalEntityArchiveCast;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Employee\EmployeeRequest;
 use Eloquence\Behaviours\HasCamelCasing;
-use Illuminate\Database\Eloquent\Builder;
 use App\Casts\LegalEntityAccreditationCast;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -156,13 +150,5 @@ class LegalEntity extends Model
     public function revisions(): MorphMany
     {
         return $this->morphMany(Revision::class, 'revisionable');
-    }
-
-    /**
-     * Scope a query to get an Legal Entity depends on it's UUID
-     */
-    public function scopeByUuid(Builder $query, string $legalEntityUUID): void
-    {
-        $query->where('uuid', $legalEntityUUID);
     }
 }
