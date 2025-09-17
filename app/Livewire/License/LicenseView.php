@@ -6,6 +6,7 @@ namespace App\Livewire\License;
 
 use App\Models\LegalEntity;
 use App\Models\License;
+use Illuminate\View\View;
 
 class LicenseView extends LicenseEdit
 {
@@ -16,7 +17,7 @@ class LicenseView extends LicenseEdit
         $this->license = $license;
     }
 
-    public function render()
+    public function render(): View
     {
         return view('livewire.license.license-view')->with([
             'license' => $this->license,

@@ -4,17 +4,28 @@ declare(strict_types=1);
 
 namespace App\Livewire\License;
 
+use App\Traits\FormTrait;
 use Livewire\Component;
-use App\Livewire\License\Forms\LicenseForm;
+use App\Livewire\License\Forms\LicenseForm as Form;
 
 abstract class LicenseComponent extends Component
 {
-    public LicenseForm $form;
+    use FormTrait;
+
+    public Form $form;
 
     public array $licenseTypes = [];
 
     public function boot(): void
     {
         $this->licenseTypes = dictionary()->getDictionary('LICENSE_TYPE');
+
+        if (legalEntity()->type === 'OUTPATIENT' || legalEntity()->type === 'PHARMACY') {
+            $this->licenseTypes = ['PHARMACY_DRUGS' => $this->licenseTypes['PHARMACY_DRUGS']];
+        }
+
+        if (legalEntity()->type === 'PRIMARY_CARE') {
+            $this->licenseTypes = ['MSP' => $this->licenseTypes['MSP']];
+        }
     }
 }

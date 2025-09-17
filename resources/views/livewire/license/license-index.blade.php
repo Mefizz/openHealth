@@ -7,7 +7,7 @@
                 <div class="ml-auto flex items-center gap-2 self-start -mt-9 translate-x-6">
                     <button type="button" class="button-primary">
                         <a href="{{ route('license.create', [legalEntity()]) }}">
-                            {{__('forms.license.create')}}
+                            {{ __('forms.license.create') }}
                         </a>
                     </button>
                     <button wire:click="sync" class="button-sync">
@@ -48,7 +48,8 @@
                         @if($license->is_primary)
                             <a href="{{ route('license.view', [legalEntity(), $license->id]) }}"
                                class="text-gray-800 dark:text-gray-200 hover:text-black dark:hover:text-white"
-                               title="Переглянути">
+                               title="Переглянути"
+                            >
                                 <svg class="w-5 h-5 svg-hover-action" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                                      viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                     <path d="M1.5 12s4-7.5 10.5-7.5S22.5 12 22.5 12s-4 7.5-10.5 7.5S1.5 12 1.5 12z"/>
@@ -95,6 +96,7 @@
             </tbody>
         </table>
     </div>
+
     <div class="mt-4">
         <x-pagination :pagination="$licensesPagination" />
     </div>

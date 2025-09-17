@@ -20,6 +20,7 @@ class License extends Model
         'uuid',
         'legal_entity_id',
         'type',
+        'is_active',
         'issued_by',
         'issued_date',
         'active_from_date',
