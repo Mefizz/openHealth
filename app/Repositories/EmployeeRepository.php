@@ -191,24 +191,24 @@ readonly class EmployeeRepository
      * @param array|null   $educations
      * @param array|null   $specialities
      * @param array|null   $qualifications
-     * @param array|null   $scienceDegreeData
+     * @param array|null   $scienceDegree
      *
      * @return Employee Updated employee
      * @throws Throwable
      */
     public function updateDetails(
         BaseEmployee $employee,
-        array $party,
-        array $documents,
-        array $phones,
-        ?array $educations = null,
-        ?array $specialities = null,
-        ?array $qualifications = null,
-        ?array $scienceDegreeData = null,
+        array        $party,
+        array        $documents,
+        array        $phones,
+        ?array       $educations = null,
+        ?array       $specialities = null,
+        ?array       $qualifications = null,
+        ?array       $scienceDegree = null,
     ): BaseEmployee {
         $model = $employee;
 
-        DB::transaction(function () use ($model, $party, $documents, $phones, $educations, $specialities, $qualifications, $scienceDegreeData) {
+        DB::transaction(function () use ($model, $party, $documents, $phones, $educations, $specialities, $qualifications, $scienceDegree) {
             $this->updatePartyByUuid($model, $party);
 
             $model->party->syncMany('documents', $documents);
@@ -217,8 +217,8 @@ readonly class EmployeeRepository
             $model->syncMany('specialities', $specialities);
             $model->syncMany('qualifications', $qualifications);
 
-            if (!empty($scienceDegreeData)) {
-                $model->scienceDegree()->updateOrCreate([], $scienceDegreeData);
+            if (!empty($scienceDegree)) {
+                $model->scienceDegree()->updateOrCreate([], $scienceDegree);
             } else {
                 $model->scienceDegree()->delete();
             }

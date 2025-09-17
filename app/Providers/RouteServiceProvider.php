@@ -33,14 +33,6 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
-//        RateLimiter::for('ehealth-employee-get', static function ($job) {
-//            return [
-//                Limit::perMinute(20),
-//
-//                Limit::perSecond(1)->by($job->employee->legal_entity_id ?? null),
-//            ];
-//        });
-
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')

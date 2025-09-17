@@ -1,31 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Traits;
 
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 trait SyncsMorphManyRelations
 {
     /**
-     * Smartly syncs a morphMany relationship.
-     * It handles both a single associative array (one record) and an array of arrays (multiple records).
+     * Synchronizes a morphMany relationship by deleting all existing related models
+     * and creating new ones from the provided data. The entire operation is atomic.
+     * It intelligently handles a single record (associative array) or multiple records (array of arrays).
+     * If the provided data is null, the method does nothing.
      *
      * @param string     $relation The name of the morphMany relationship method (e.g., 'educations').
-     * @param array|null $data     The data to sync. Can be null, a single record, or multiple records.
+     * @param array|null $data     The data to sync.
      *
      * @return void
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function syncMany(string $relation, ?array $data): void
     {
         if (is_null($data)) {
-            $dataToCreate = [];
-        } elseif (!empty($data) && !array_is_list($data)) {
-            // If $data is not empty and is NOT a list, it's a single associative array.
-            // Wrap it in an array to make it compatible with createMany.
+            return;
+        }
+
+        if (!empty($data) && !array_is_list($data)) {
             $dataToCreate = [$data];
         } else {
-            // It's already an array of records (a list) or an empty array.
             $dataToCreate = $data;
         }
 

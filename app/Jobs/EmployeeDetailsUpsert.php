@@ -21,7 +21,11 @@ use Throwable;
 
 class EmployeeDetailsUpsert implements ShouldQueue
 {
-    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Batchable;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     public int $tries = 3;
     public int $backoff = 60;
@@ -32,7 +36,6 @@ class EmployeeDetailsUpsert implements ShouldQueue
         protected string $token
     ) {
     }
-
 
     /**
      * @throws Throwable
@@ -52,9 +55,9 @@ class EmployeeDetailsUpsert implements ShouldQueue
 
             Repository::employee()->updateDetails(
                 $this->employee,
-                $validatedData['party'] ?? [],
-                $validatedData['documents'] ?? [],
-                $validatedData['phones'] ?? [],
+                $validatedData['party'],
+                $validatedData['documents'],
+                $validatedData['phones'],
                 $validatedData['educations'] ?? null,
                 $validatedData['specialities'] ?? null,
                 $validatedData['qualifications'] ?? null,
@@ -69,6 +72,7 @@ class EmployeeDetailsUpsert implements ShouldQueue
                     'errors' => $e->errors(),
                 ]);
                 $this->fail($e);
+
                 return;
             }
 
