@@ -184,20 +184,20 @@ readonly class EmployeeRepository
     }
 
     /**
-     * @param BaseEmployee $employee the model or identifier (ID or UUID) of the employee to update
-     * @param array        $party
-     * @param array        $documents
-     * @param array        $phones
-     * @param array|null   $educations
-     * @param array|null   $specialities
-     * @param array|null   $qualifications
-     * @param array|null   $scienceDegree
+     * @param Employee|EmployeeRequest $employee the model or identifier (ID or UUID) of the employee to update
+     * @param array                    $party
+     * @param array                    $documents
+     * @param array                    $phones
+     * @param array|null               $educations
+     * @param array|null               $specialities
+     * @param array|null               $qualifications
+     * @param array|null               $scienceDegree
      *
-     * @return Employee Updated employee
+     * @return Employee|EmployeeRequest Updated employee
      * @throws Throwable
      */
     public function updateDetails(
-        BaseEmployee $employee,
+        Employee|EmployeeRequest $employee,
         array        $party,
         array        $documents,
         array        $phones,
@@ -205,11 +205,13 @@ readonly class EmployeeRepository
         ?array       $specialities = null,
         ?array       $qualifications = null,
         ?array       $scienceDegree = null,
-    ): BaseEmployee {
+    ): Employee|EmployeeRequest {
         $model = $employee;
 
         DB::transaction(function () use ($model, $party, $documents, $phones, $educations, $specialities, $qualifications, $scienceDegree) {
-            $this->updatePartyByUuid($model, $party);
+            $partyAttributes = array_diff_key($party, array_flip(['documents', 'phones']));
+
+            $this->updatePartyByUuid($model, $partyAttributes);
 
             $model->party->syncMany('documents', $documents);
             $model->party->syncMany('phones', $phones);
@@ -234,7 +236,7 @@ readonly class EmployeeRepository
      * 3. If user does not have a party, but there is a party with the same UUID, update it and establish the relation.
      * 4. If neither of the above, create a new party and establish the relation.
      */
-    protected function updatePartyByUuid(Employee $model, array $party): void
+    protected function updatePartyByUuid(Employee|EmployeeRequest $model, array $party): void
     {
         $partyUuid = Arr::get($party, 'uuid');
         $partyByUuid = Party::where('uuid', $partyUuid)->first();
