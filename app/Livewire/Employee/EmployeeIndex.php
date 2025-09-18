@@ -59,6 +59,12 @@ class EmployeeIndex extends EmployeeComponent
     public function boot(): void
     {
         $this->legalEntity = legalEntity();
+    }
+
+    public function mount(LegalEntity $legalEntity): void
+    {
+        $this->legalEntity = $legalEntity;
+        $this->loadDivisions($legalEntity);
         $this->loadDictionaries();
     }
 
@@ -77,89 +83,102 @@ class EmployeeIndex extends EmployeeComponent
     {
         $legalEntityId = $this->legalEntity->id;
 
-        // --- Step 1: Build the base query with all filters to get only the IDs ---
-        $query = Party::query()
-            ->where(function ($q) use ($legalEntityId) {
-                $q->whereHas('employees', fn ($sub) => $sub->where('legal_entity_id', $legalEntityId))
-                    ->orWhereHas('employeeRequests', fn ($sub) => $sub->where('legal_entity_id', $legalEntityId));
-            });
+        $employeeConstraints = function ($query) {
+            $employeeStatuses = array_intersect($this->status, [Status::APPROVED->value, Status::DISMISSED->value]);
 
-        // Apply Status Filter
-        if (!empty($this->status)) {
-            $query->where(function ($q) {
-                // Use the Status enum for the filter values
-                $employeeStatuses = array_intersect($this->status, [Status::APPROVED->value, Status::DISMISSED->value]);
-                if (!empty($employeeStatuses)) {
-                    $q->orWhereHas('employees', fn ($sub) => $sub->whereIn('status', $employeeStatuses));
-                }
-                // Use the Status enum for the 'NEW' case
-                if (in_array(Status::NEW->value, $this->status, true)) {
-                    $q->orWhereHas('employeeRequests');
-                }
-            });
-        } else {
-            $query->whereRaw('1=0');
-        }
+            if (empty($employeeStatuses)) {
+                return $query->whereRaw('1=0');
+            }
 
-        // Apply Name Search
+            $query->whereIn('status', $employeeStatuses);
+
+            if (!empty($this->filter['division_id'])) {
+                $query->where('division_id', $this->filter['division_id']);
+            }
+            if (!empty($this->filter['role'])) {
+                $query->where('employee_type', $this->filter['role']);
+            }
+            if (!empty($this->filter['position'])) {
+                $query->where('position', $this->filter['position']);
+            }
+        };
+
+        $requestConstraints = function ($query) {
+            if (!in_array(Status::NEW->value, $this->status, true)) {
+                return $query->whereRaw('1=0');
+            }
+
+            $query->whereNull('applied_at')
+                ->whereIn('status', [Status::NEW->value, Status::SIGNED->value]);
+
+            if (!empty($this->filter['division_id'])) {
+                $query->where('division_id', $this->filter['division_id']);
+            }
+            if (!empty($this->filter['role'])) {
+                $query->where('employee_type', 'like', $this->filter['role']);
+            }
+            if (!empty($this->filter['position'])) {
+                $query->where('position', 'like', $this->filter['position']);
+            }
+        };
+
+        $query = Party::query();
+
+        $query->where(function ($q) use ($legalEntityId) {
+            $q->whereHas('employees', fn ($sub) => $sub->where('legal_entity_id', $legalEntityId))
+                ->orWhereHas('employeeRequests', fn ($sub) => $sub->where('legal_entity_id', $legalEntityId));
+        });
+
         if (!empty($this->search)) {
-            $query->where(function ($q) {
-                $q->where('last_name', 'ilike', "%{$this->search}%")
-                    ->orWhere('first_name', 'ilike', "%{$this->search}%")
-                    ->orWhere('second_name', 'ilike', "%{$this->search}%");
-            });
+            $query->where(fn ($q) => $q->where('last_name', 'ilike', "%{$this->search}%")
+                ->orWhere('first_name', 'ilike', "%{$this->search}%")
+                ->orWhere('second_name', 'ilike', "%{$this->search}%"));
         }
-
-        // Apply Advanced Filters
         if (!empty($this->filter['phone'])) {
             $query->whereHas('phones', fn ($q) => $q->where('number', 'like', '%' . $this->filter['phone'] . '%'));
         }
         if (!empty($this->filter['email'])) {
             $query->where('email', 'ilike', '%' . $this->filter['email'] . '%');
         }
-        if (!empty($this->filter['role'])) {
-            $query->where(function ($q) {
-                $q->whereHas('employees', fn ($sub) => $sub->where('employee_type', $this->filter['role']))
-                    ->orWhereHas('employeeRequests', fn ($sub) => $sub->where('employee_type', 'like', $this->filter['role']));
+
+        if (!empty($this->status)) {
+            $query->where(function ($q) use ($employeeConstraints, $requestConstraints) {
+                $q->whereHas('employees', $employeeConstraints)
+                    ->orWhereHas('employeeRequests', $requestConstraints);
             });
-        }
-        if (!empty($this->filter['position'])) {
-            $query->where(function ($q) {
-                $q->whereHas('employees', fn ($sub) => $sub->where('position', $this->filter['position']))
-                    ->orWhereHas('employeeRequests', fn ($sub) => $sub->where('position', 'like', $this->filter['position']));
-            });
+        } else {
+            $query->whereRaw('1=0');
         }
 
-        // --- Step 2: Get the paginated result of IDs. This is fast. ---
-        $paginator = $query->paginate(10);
+        $paginator = $query->select('id')->paginate(10);
 
-        // --- Step 3: Now, get the full models for the current page with all relationships. ---
         $partiesOnPage = Party::whereIn('id', $paginator->pluck('id')->all())
             ->with([
                        'phones',
-                       'employees' => fn ($q) => $q->where('legal_entity_id', $legalEntityId)->with('division'),
-                       'employeeRequests' => fn ($q) => $q->where('legal_entity_id', $legalEntityId)->with('division'),
+                       'employees' => function ($query) use ($legalEntityId, $employeeConstraints) {
+                           $query->where('legal_entity_id', $legalEntityId)->with('division');
+                           $employeeConstraints($query);
+                       },
+                       'employeeRequests' => function ($query) use ($legalEntityId, $requestConstraints) {
+                           $query->where('legal_entity_id', $legalEntityId)->with('division');
+                           $requestConstraints($query);
+                       },
                    ])
             ->get()
+            ->filter(fn ($party) => $party->employees->isNotEmpty() || $party->employeeRequests->isNotEmpty())
             ->sortBy(function ($party) {
-                // Use the Status enum for the sorting logic as well
-                $hasActiveEmployees = $party->employees->where('status', Status::APPROVED->value)->isNotEmpty();
+                $hasActiveEmployees = $party->employees->isNotEmpty();
                 $hasRequests = $party->employeeRequests->isNotEmpty();
-
-                // Prioritize Active Employees first
                 if ($hasActiveEmployees) {
                     return 1;
                 }
-                // Then, drafts (requests)
                 if ($hasRequests) {
                     return 2;
                 }
 
-                // Finally, dismissed employees
                 return 3;
             });
 
-        // --- Step 4: Return a new paginator instance with the sorted items. ---
         return new LengthAwarePaginator(
             $partiesOnPage,
             $paginator->total(),

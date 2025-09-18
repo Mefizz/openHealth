@@ -113,18 +113,19 @@
                         </div>
                     </div>
                     <div class="form-row-4">
-                        <div class="form-group group">
-                            <select wire:model.live="filter.division_id"
-                                    name="filter_division"
-                                    id="filter_division"
-                                    class="input peer text-gray-500 dark:bg-gray-800 dark:text-gray-400"
-                            >
-                                <option value="">Всі підрозділи</option>
-                                @foreach($divisions ?? [] as $division)
-                                    <option value="{{ $division->id }}">{{ $division->name }}</option>
+                        <div class="form-group">
+                            <select name="division"
+                                    id="division"
+                                    class="peer input appearance-none bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                                    wire:model.live="filter.division_id">
+                                <option value="">{{ __('forms.select_division') }}</option>
+
+                                @foreach($this->divisions as $division)
+                                    <option value="{{ $division['id'] }}">{{ $division['name'] }}</option>
                                 @endforeach
                             </select>
-                            <label for="filter_division" class="label">Медичний заклад</label>
+                            <label for="division" class="label">{{ __('forms.division') }}</label>
+                            @error('filter.division_id') <p class="text-error">{{ $message }}</p> @enderror
                         </div>
                         <div class="form-group group" x-data="{ open: false, selectedStatuses: @entangle('status').live }">
                             <label for="statusFilter" class="label">Статус</label>
