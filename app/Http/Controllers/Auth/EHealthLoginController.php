@@ -200,6 +200,10 @@ class EHealthLoginController extends Controller
                     'email_verified_at' => now()
             ]);
 
+            if ($party) {
+                $user->party()->save($party);
+            }
+
             Mail::to($user->email)->send(new UserCredentialsMail($ehealthEmail, $password));
 
             // If we have party with such email, then the user is fully verified beacause the email is confirmed by eHealth (if we're here)
