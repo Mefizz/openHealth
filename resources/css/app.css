@@ -625,13 +625,15 @@ input:-webkit-autofill {
 
 @media (min-width: 2048px) {
     .shift-content {
-        padding-left: 15%;
+        @apply mx-auto px-[12%];
+        max-width: 1280px; /* або інше значення */
     }
 }
 
 @media (min-width: 2560px) {
     .shift-content {
-        padding-left: 12%;
+        @apply mx-auto px-[10%];
+        max-width: 1280px; /* або інше значення */
     }
 }
 

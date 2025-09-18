@@ -211,7 +211,7 @@
     </x-header-navigation>
     <x-section class="shift-content">
         <div class="space-y-6 employee-section-no-left-padding mt-6">
-            <div class="employee-table-container table-container-responsive">
+            <div class="table-container-responsive ml-3.5">
             @forelse($parties as $party)
                     <fieldset class="p-4 sm:p-8 sm:pb-10 mb-16 mt-6 border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 max-w-[1280px]" wire:key="party-{{ $party->id }}">
                     <legend class="legend">{{ $party->fullName }}</legend>
@@ -277,7 +277,7 @@
                                         <td class="td-input break-words whitespace-normal align-top">{{ $dictionaries['EMPLOYEE_TYPE'][$positionToShow->employee_type] ?? $positionToShow->employee_type }}</td>
                                         <td class="td-input break-words whitespace-normal align-top">{{ $positionToShow->division->name ?? 'N/A' }}</td>
 
-                                        <td class="td-input break-words whitespace-normal align-top">
+                                        <td class="td-input break-words whitespace-nowrap align-top">
                                             @php
                                                 // First, check if the record is an Employee model. This is the highest priority.
                                                 $isEmployee = $positionToShow instanceof \App\Models\Employee\Employee;
@@ -301,7 +301,6 @@
                                                 @endif
                                             @endif
                                         </td>
-
                                         <td class="td-input text-center">
                                             @include('livewire.employee.parts.actions-dropdown', [
                                                 'position' => $positionToShow
@@ -322,7 +321,7 @@
             </div>
         </div>
 
-        <div class="mt-8">
+        <div class="mt-8 pl-3.5 pb-8 lg:pl-8 2xl:pl-5">
             {{ $parties->links() }}
         </div>
     </x-section>
