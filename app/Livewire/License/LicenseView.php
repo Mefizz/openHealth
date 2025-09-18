@@ -19,8 +19,6 @@ class LicenseView extends LicenseEdit
 
     public function render(): View
     {
-        return view('livewire.license.license-view')->with([
-            'license' => $this->license,
-        ]);
+        return view('livewire.license.license-view')->with(['license' => $this->license]);
     }
 }

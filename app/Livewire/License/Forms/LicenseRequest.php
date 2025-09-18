@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\License\Forms;
 
 use App\Classes\eHealth\Api\License;
@@ -8,11 +10,11 @@ class LicenseRequest extends License
 {
     public static function getLicenses(array $params = []): array
     {
-        if(!isset($params['page'])) {
+        if (!isset($params['page'])) {
             $params['page'] = 1;
         }
 
-        if(!isset($params['page_size'])) {
+        if (!isset($params['page_size'])) {
             $params['page_size'] = 50;
         }
 
@@ -34,14 +36,6 @@ class LicenseRequest extends License
         );
 
         return !empty($licenseApi) ? $licenseApi : [];
-    }
-
-    public static function create($data): array
-    {
-        $data['type'] = 'MSP';
-        $licenseCreateApi = self::_create($data);
-
-        return !empty($licenseCreateApi) ? $licenseCreateApi : [];
     }
 
     public static function update($id, $data): array

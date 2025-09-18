@@ -10,12 +10,12 @@
                    name="licenseType"
                    id="licenseType"
                    class="peer input dark:text-gray-400"
-                   value="{{ $form->isPrimary ? __('forms.license.is_primary') : __('forms.license.is_not_primary') }}"
+                   value="{{ __('licenses.not_primary') }}"
                    disabled
                    placeholder=" "
             />
 
-            <label for="licenseType" class="label">{{ __('forms.license.kind') }}</label>
+            <label for="licenseType" class="label">{{ __('licenses.kind') }}</label>
         </div>
 
         <div class="form-group">
@@ -28,7 +28,7 @@
                    required
             />
 
-            <label for="orderNumber" class="label">{{ __('forms.license.order_no') }}</label>
+            <label for="orderNumber" class="label">{{ __('licenses.order_no') }}</label>
         </div>
     </div>
 
@@ -70,7 +70,7 @@
                 @endforeach
             </ul>
 
-            <label class="label" for="licenseType">{{ __('forms.license.type') }}</label>
+            <label class="label" for="licenseType">{{ __('licenses.type') }}</label>
             <input type="hidden" name="licenseType" :value="selected">
         </div>
     </div>
@@ -85,7 +85,7 @@
                    placeholder=" "
                    required
             />
-            <label for="issuedBy" class="label">{{ __('forms.license.issued_by') }}</label>
+            <label for="issuedBy" class="label">{{ __('licenses.issued_by') }}</label>
         </div>
         <div class="form-group">
             <input wire:model="form.whatLicensed"
@@ -96,7 +96,7 @@
                    placeholder=" "
                    required
             />
-            <label for="whatLicensed" class="label">{{ __('forms.license.what_licensed') }}</label>
+            <label for="whatLicensed" class="label">{{ __('licenses.what_licensed') }}</label>
         </div>
     </div>
 
@@ -109,7 +109,7 @@
                    class="peer input"
                    placeholder=" "
             />
-            <label for="licenseNumber" class="label">{{ __('forms.license.number') }}</label>
+            <label for="licenseNumber" class="label">{{ __('licenses.number') }}</label>
         </div>
 
         <div class="form-group datepicker-wrapper relative w-full">
@@ -122,7 +122,7 @@
                    required
                    datepicker-max-date="{{ now()->format('Y-m-d') }}"
             />
-            <label for="dateOfLicenseIssuance" class="wrapped-label">{{ __('forms.license.issued_date') }}</label>
+            <label for="dateOfLicenseIssuance" class="wrapped-label">{{ __('licenses.issued_date') }}</label>
         </div>
     </div>
 
@@ -137,7 +137,7 @@
                    required
                    datepicker-max-date="{{ now()->format('Y-m-d') }}"
             />
-            <label for="activeFromDate" class="wrapped-label">{{ __('forms.license.active_from_date') }}</label>
+            <label for="activeFromDate" class="wrapped-label">{{ __('licenses.active_from_date') }}</label>
         </div>
 
         <div class="form-group datepicker-wrapper relative w-full">
@@ -149,14 +149,14 @@
                    placeholder=" "
                    datepicker-min-date="{{ now()->format('Y-m-d') }}"
             />
-            <label for="expiryDate" class="wrapped-label">{{ __('forms.license.expiry_date') }}</label>
+            <label for="expiryDate" class="wrapped-label">{{ __('licenses.expiry_date') }}</label>
         </div>
     </div>
 
     <div class="flex justify-start gap-4 mt-10">
-        <button type="button" class="button-minor">
+        <a href="{{ url()->previous() }}" type="button" class="button-minor">
             {{ __('forms.cancel') }}
-        </button>
+        </a>
         <button wire:click="create" type="submit" class="button-primary">
             {{ __('licenses.add') }}
         </button>

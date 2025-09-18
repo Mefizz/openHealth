@@ -23,6 +23,7 @@ class License extends Model
         'is_active',
         'issued_by',
         'issued_date',
+        'issuer_status',
         'active_from_date',
         'order_no',
         'license_number',
