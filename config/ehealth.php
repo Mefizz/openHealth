@@ -425,6 +425,7 @@ return [
         'emails' => env('TEST_CLIENT_EMAILS') ? explode(',', env('TEST_CLIENT_EMAILS')) : [],
     ],
 
+    // https://e-health-ua.atlassian.net/wiki/spaces/EH/pages/583404101/Scopes+model#Roles-scopes
     'roles' => [
         'OWNER' => [
             'capitation_report:read',
@@ -434,12 +435,12 @@ return [
             'connection:refresh_secret',
             'connection:write',
             'contract:read',
-            'contract:write',
-            'contract_request:approve',
-            'contract_request:create',
+            'contract:write', // missing in MSP type PRIMARY_CARE
+            'contract_request:approve', // missing in MSP type PRIMARY_CARE
+            'contract_request:create', // // missing in MSP type PRIMARY_CARE
             'contract_request:read',
-            'contract_request:sign',
-            'contract_request:terminate',
+            'contract_request:sign', // missing in MSP type PRIMARY_CARE
+            'contract_request:terminate', // missing in MSP type PRIMARY_CARE
             'declaration:read',
             'declaration_request:approve',
             'declaration_request:read',

@@ -9,6 +9,7 @@ use App\Models\LegalEntity;
 use App\Classes\eHealth\Request;
 use App\Classes\eHealth\Exceptions\ApiException;
 use Illuminate\Support\Facades\Session;
+use Spatie\Permission\Models\Role;
 
 class EmployeeApi
 {
@@ -73,7 +74,19 @@ class EmployeeApi
 
         if (!$user) {
             $role = Session::get('first_login_role');
-            $scope = implode(' ', config("ehealth.roles.$role"));
+
+            $permissions = Role::where('name', $role)
+                ->whereGuardName('ehealth')
+                ->firstOrFail()
+                ->permissions()
+                ->pluck('name')
+                ->toArray();
+
+            if ($legalEntity->type === LegalEntity::TYPE_PRIMARY_CARE && $role === 'OWNER') {
+                $permissions = self::excludeContractPermissions($permissions);
+            }
+
+            $scope = implode(' ', $permissions);
         } else {
             $scope = $user->getScopes($legalEntity->clientId);
         }
@@ -170,6 +183,19 @@ class EmployeeApi
         $url = config('ehealth.api.domain') . "/api/employee_requests/$requestId";
 
         return new Request('GET', $url, [])->sendRequest();
+    }
+
+    private static function excludeContractPermissions(array $permissions): array
+    {
+        $contractPermissions = [
+            'contract:write',
+            'contract_request:approve',
+            'contract_request:create',
+            'contract_request:sign',
+            'contract_request:terminate',
+        ];
+
+        return array_diff($permissions, $contractPermissions);
     }
 
     public static function schemaRequest(): array

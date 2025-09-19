@@ -12,7 +12,6 @@ use App\Mail\UserCredentialsMail;
 use App\Models\User;
 use App\Models\LegalEntity;
 use Closure;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -28,7 +27,6 @@ use App\Classes\eHealth\Request as EHealthRequest;
 use App\Models\Relations\Party;
 use Illuminate\Contracts\Validation\Validator as ResponseValidator;
 use Illuminate\Validation\Rule;
-use Spatie\Permission\Models\Role;
 
 class EHealthLoginController extends Controller
 {
@@ -102,7 +100,7 @@ class EHealthLoginController extends Controller
 
         $legalEntity = LegalEntity::whereUuid($authLegalEntityUUID)->firstOrFail();
 
-        auth()->shouldUse('ehealth');
+        Auth::shouldUse('ehealth');
 
         $user = $this->findOrCreateUser($legalEntity, $authUserUUID);
 
@@ -118,15 +116,16 @@ class EHealthLoginController extends Controller
             return $this->breakAuth('auth.login.error.test_user_email');
         }
 
-        EHealthUserLogin::dispatch($user, $legalEntity, $authUserUUID, $this->isFirstLogin);
-
-        auth('ehealth')->login($user);
+        Auth::guard('ehealth')->login($user);
 
         if ($this->isPartiallyVerified) {
-            Session::put('selected_legal_entity_uuid', $selectedLegalEntityUuidFromSession);
+            Session::put('selected_legal_entity_uuid', $legalEntity->uuid);
+            $user->assignRole(Session::pull('first_login_role'));
 
             return Redirect::route('party.verify');
         }
+
+        EHealthUserLogin::dispatch($user, $legalEntity, $authUserUUID, $this->isFirstLogin);
 
         if ($legalEntity) {
             Log::info(__('auth.login.success.user_auth', [], 'en'), ['User ID' => $user->id]);
@@ -213,25 +212,10 @@ class EHealthLoginController extends Controller
                 'password' => Hash::make($password),
                 'email_verified_at' => now()
             ]);
-          
+
             if ($party) {
                 $user->party()->save($party);
             }
-
-            $roleName = Session::pull('first_login_role');
-
-            $roles = Role::where('name', $roleName)
-                ->whereIn('guard_name', ['web', 'ehealth'])
-                ->get();
-
-            // Give permissions for created user
-            foreach ($roles as $role) {
-                DB::table('model_has_roles')->insert([
-                    'role_id' => $role->id,
-                    'model_type' => User::class,
-                    'model_id' => $user->id,
-                    'legal_entity_id' => $legalEntity->id
-                ]);
 
             Mail::to($user->email)->send(new UserCredentialsMail($ehealthEmail, $password));
 
