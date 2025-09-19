@@ -166,7 +166,8 @@ readonly class ProcessEmployeeRequestsOnLogin
             'legal_entity_uuid' => $approvedData['legal_entity']['id'] ?? null,
             'legal_entity_id' => $employeeRequest->legal_entity_id,
             'party_id' => $employeeRequest->party_id,
-            'user_id' => $user->id,
+            // Get user_id from the related party, with a fallback to the event user for safety.
+            'user_id' => $employeeRequest->party->user_id ?? $user->id,
             'division_id' => $employeeRequest->division_id,
         ]);
     }
