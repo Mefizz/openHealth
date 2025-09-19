@@ -10,7 +10,6 @@ use App\Enums\Status;
 use App\Events\EHealthUserLogin;
 use App\Models\Employee\Employee;
 use App\Repositories\Repository;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Spatie\Permission\PermissionRegistrar;
@@ -70,39 +69,29 @@ readonly class ProcessEmployeeRequestsOnLogin
 
                 $approvedData = $apiEmployeesCollection->pull($matchIndex);
 
-                $employeeData = [
-                    'uuid' => Arr::get($approvedData, 'id'),
-                    'status' => Arr::get($approvedData, 'status'),
-                    'position' => Arr::get($approvedData, 'position'),
-                    'employee_type' => Arr::get($approvedData, 'employee_type'),
-                    'start_date' => Arr::get($approvedData, 'start_date'),
-                    'end_date' => Arr::get($approvedData, 'end_date'),
-                    'is_active' => Arr::get($approvedData, 'is_active', true),
-                    'legal_entity_uuid' => Arr::get($approvedData, 'legal_entity.id'),
-                ];
+                $employeeApiKeys = ['id', 'status', 'position', 'employee_type', 'start_date', 'end_date', 'is_active'];
+                $employeeData = array_intersect_key($approvedData, array_flip($employeeApiKeys));
 
+                $employeeData['uuid'] = $employeeData['id'];
+                unset($employeeData['id']);
+                $employeeData['legal_entity_uuid'] = $approvedData['legal_entity']['id'] ?? null;
                 $employeeData['legal_entity_id'] = $request->legal_entity_id;
                 $employeeData['party_id'] = $request->party_id;
                 $employeeData['user_id'] = $request->user_id;
                 $employeeData['division_id'] = $request->division_id;
 
-                $apiPartyData = Arr::get($approvedData, 'party', []);
-                $partyData = [
-                    'uuid' => Arr::get($apiPartyData, 'id'),
-                    'first_name' => Arr::get($apiPartyData, 'first_name'),
-                    'last_name' => Arr::get($apiPartyData, 'last_name'),
-                    'second_name' => Arr::get($apiPartyData, 'second_name'),
-                    'birth_date' => Arr::get($apiPartyData, 'birth_date'),
-                    'gender' => Arr::get($apiPartyData, 'gender'),
-                    'no_tax_id' => Arr::get($apiPartyData, 'no_tax_id'),
-                    'tax_id' => Arr::get($apiPartyData, 'tax_id'),
-                    'email' => Arr::get($apiPartyData, 'email'),
-                ];
-                $documents = Arr::get($apiPartyData, 'documents', []);
-                $phones = Arr::get($apiPartyData, 'phones', []);
+                $apiPartyData = $approvedData['party'] ?? [];
+                $partyApiKeys = ['id', 'first_name', 'last_name', 'second_name', 'birth_date', 'gender', 'no_tax_id', 'tax_id', 'email'];
+                $partyData = array_intersect_key($apiPartyData, array_flip($partyApiKeys));
+                if (isset($partyData['id'])) {
+                    $partyData['uuid'] = $partyData['id'];
+                    unset($partyData['id']);
+                }
 
-                $doctorDataKey = strtolower(Arr::get($approvedData, 'employee_type', ''));
-                $doctorData = Arr::get($approvedData, $doctorDataKey, []);
+                $documents = $apiPartyData['documents'] ?? [];
+                $phones = $apiPartyData['phones'] ?? [];
+                $doctorDataKey = strtolower($approvedData['employee_type'] ?? '');
+                $doctorData = $approvedData[$doctorDataKey] ?? [];
 
                 DB::transaction(
                     static function () use ($employeeData, $partyData, $documents, $phones, $doctorData, $request) {
@@ -116,10 +105,10 @@ readonly class ProcessEmployeeRequestsOnLogin
                             $partyData,
                             $documents,
                             $phones,
-                            Arr::get($doctorData, 'educations'),
-                            Arr::get($doctorData, 'specialities'),
-                            Arr::get($doctorData, 'qualifications'),
-                            Arr::get($doctorData, 'scienceDegree')
+                            $doctorData['educations'] ?? null,
+                            $doctorData['specialities'] ?? null,
+                            $doctorData['qualifications'] ?? null,
+                            $doctorData['scienceDegree'] ?? null
                         );
 
                         $user = $employeeModel->user;
@@ -127,8 +116,13 @@ readonly class ProcessEmployeeRequestsOnLogin
                         $legalEntityId = $employeeModel->legal_entity_id;
 
                         if ($user && $roleName && $legalEntityId) {
+                            setPermissionsTeamId($legalEntityId);
 
-                            $user->assignRole($roleName, $legalEntityId);
+                            $user->unsetRelation('roles');
+
+                            if (!$user->hasRole($roleName)) {
+                                $user->assignRole($roleName);
+                            }
 
                             app(PermissionRegistrar::class)->forgetCachedPermissions();
                         }
