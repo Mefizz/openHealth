@@ -8,11 +8,6 @@ use App\Enums\Status;
 use App\Models\Relations\Phone;
 use App\Models\Relations\Address;
 use App\Models\Employee\Employee;
-use App\Models\Division;
-use App\Models\Contract;
-use App\Models\License;
-use App\Models\Revision;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Collection;
 use App\Casts\LegalEntityArchiveCast;
@@ -164,5 +159,10 @@ class LegalEntity extends Model
     public function scopeByUuid(Builder $query, string $legalEntityUUID): void
     {
         $query->where('uuid', $legalEntityUUID);
+    }
+
+    public function hasActivePrimaryLicense(): bool
+    {
+        return $this->licenses->contains(fn (License $license) => $license->isPrimary && $license->isActive);
     }
 }
