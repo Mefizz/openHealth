@@ -62,7 +62,36 @@ class ProcessNewEmployeeRequests extends BaseEmployeeListener
             }
         }
 
-        // Now, return the full, validated response for the main logic to process.
         return $response->validate();
+    }
+
+    /**
+     * After fetching employees, this method tries to find a "verified" party
+     * from the eHealth response and updates the local user's party with the official UUID.
+     * This is crucial for linking a newly registered user with their official eHealth profile.
+     *
+     * @param EHealthUserLogin $event The event instance.
+     * @param array &$ehealthEmployees The array of employees fetched from eHealth.
+     * @return void
+     */
+    protected function afterFetchingEmployees(EHealthUserLogin $event, array &$ehealthEmployees): void
+    {
+        if (empty($ehealthEmployees)) {
+            return;
+        }
+
+        $verifiedPartyData = null;
+        foreach ($ehealthEmployees as $employee) {
+            if (($employee['party']['verification_status'] ?? null) === 'VERIFIED') {
+                $verifiedPartyData = $employee['party'];
+                break;
+            }
+        }
+
+        $partyDataToUse = $verifiedPartyData ?? ($ehealthEmployees[0]['party'] ?? null);
+
+        if ($partyDataToUse && isset($partyDataToUse['uuid'])) {
+            $event->user->party->update(['uuid' => $partyDataToUse['uuid']]);
+        }
     }
 }

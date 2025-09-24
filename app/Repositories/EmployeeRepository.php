@@ -263,6 +263,7 @@ readonly class EmployeeRepository
                 );
 
                 $model->party()->update($result);
+
             }
         }
     }

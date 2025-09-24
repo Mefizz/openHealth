@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Listeners\eHealth;
 
-use App\Classes\eHealth\Api\Employee as EmployeeApi;
+use App\Classes\eHealth\EHealth;
+use App\Core\Arr;
 use App\Enums\Employee\RevisionStatus;
 use App\Enums\Status;
 use App\Events\EHealthUserLogin;
+use App\Models\Division;
 use App\Models\Employee\Employee;
 use App\Models\Employee\EmployeeRequest;
 use App\Repositories\Repository;
@@ -29,6 +31,7 @@ abstract class BaseEmployeeListener
 
         try {
             $ehealthEmployees = $this->fetchEmployeesFromApi($event);
+            $this->afterFetchingEmployees($event, $ehealthEmployees);
         } catch (Throwable $e) {
             Log::error('Failed to fetch employee list from E-Health.', [
                 'listener' => static::class,
@@ -59,16 +62,18 @@ abstract class BaseEmployeeListener
             return; // Nothing to create
         }
 
+        $newEhealthEmployees = collect($ehealthEmployees)->whereIn('uuid', $newEmployeeUuids);
+
         // Find the corresponding local requests for the new employees
-        $pendingRequests = $this->getPendingRequestsForNewEmployees($event, collect($ehealthEmployees), $newEmployeeUuids);
+        $pendingRequestsPairs = $this->getPendingRequestsForNewEmployees($event, $newEhealthEmployees);
 
-        foreach ($pendingRequests as $employeeRequest) {
+        foreach ($pendingRequestsPairs as $pair) {
+            $employeeRequest = $pair['request'];
+            $approvedData = $pair['api_data'];
+
             try {
-                // Find the full data for this specific new employee from the API response
-                $approvedData = collect($ehealthEmployees)->firstWhere('uuid', $employeeRequest->employee_uuid_from_api);
-
                 if ($approvedData) {
-                    $this->createEmployeeFromRequest($employeeRequest, $approvedData, $event->user);
+                    $this->createEmployeeFromRequest($employeeRequest, $approvedData);
                 }
             } catch (Throwable $e) {
                 Log::error('Failed to process a new employee from request.', [
@@ -92,31 +97,38 @@ abstract class BaseEmployeeListener
     abstract protected function fetchEmployeesFromApi(EHealthUserLogin $event): array;
 
     /**
+     * A hook method that can be implemented by child listeners
+     * to perform actions after the employee list has been fetched from eHealth.
+     *
+     * @param EHealthUserLogin $event The event instance.
+     * @param array &$ehealthEmployees The array of employees fetched from eHealth.
+     * @return void
+     */
+    protected function afterFetchingEmployees(EHealthUserLogin $event, array &$ehealthEmployees): void
+    {
+        // By default, do nothing.
+    }
+
+    /**
      * Find local EmployeeRequest records that match the new employees found in the API response.
      */
-    protected function getPendingRequestsForNewEmployees(EHealthUserLogin $event, Collection $ehealthEmployees, array $newEmployeeUuids): Collection
+    protected function getPendingRequestsForNewEmployees(EHealthUserLogin $event, Collection $newEmployeesFromApi): Collection
     {
-        $newEmployeesFromApi = $ehealthEmployees->whereIn('uuid', $newEmployeeUuids);
-
         $pendingRequests = Repository::employee()->findPendingRequestsForUser($event->user, $event->legalEntity);
 
-        // We need to match local requests to the API response by position and type,
-        // then attach the final employee UUID to the request object for later use.
         return $pendingRequests->map(function (EmployeeRequest $request) use ($newEmployeesFromApi) {
             $apiMatch = $newEmployeesFromApi->firstWhere(function ($apiEmployee) use ($request) {
                 return $apiEmployee['position'] === $request->position
-                    && $apiEmployee['employee_type'] === $request->employee_type;
+                    && $apiEmployee['employee_type'] === $request->employee_type
+                    && $apiEmployee['start_date'] === $request->start_date?->format('Y-m-d');
             });
 
             if ($apiMatch) {
-                // Temporarily attach the final UUID to the request model
-                $request->employee_uuid_from_api = $apiMatch['uuid'];
-
-                return $request;
+                return ['request' => $request, 'api_data' => $apiMatch];
             }
 
             return null;
-        })->filter(); // Remove requests that didn't have a match
+        })->filter();
     }
 
     /**
@@ -126,52 +138,54 @@ abstract class BaseEmployeeListener
      */
     protected function createEmployeeFromRequest(EmployeeRequest $employeeRequest, array $approvedData): void
     {
-        // THE SOURCE OF TRUTH: Data from the revision, which the user signed.
-        $revisionData = $employeeRequest->revision->data;
+        $sourceData = $employeeRequest->revision->data;
 
-        // Manually build the employee data array from the correct sources
-        $employeeData = [
-            // Data from the Revision (what user signed)
-            'position' => $revisionData['employee_request_data']['position'],
-            'employee_type' => $revisionData['employee_request_data']['employee_type'],
-            'start_date' => $revisionData['employee_request_data']['start_date'],
-            'end_date' => $revisionData['employee_request_data']['end_date'],
-            'division_id' => $revisionData['employee_request_data']['division_id'],
+        $mappedData = EHealth::employeeRequest()->mapCreate($sourceData);
 
-            // Data from existing relationships
-            'legal_entity_id' => $employeeRequest->legal_entity_id,
-            'legal_entity_uuid' => $employeeRequest->legal_entity_uuid,
-            'inserted_at' => now(),
-            'party_id' => $employeeRequest->party_id,
-            'user_id' => $employeeRequest->party->user_id,
+        $employeeData = array_merge(
+            $mappedData['employee'],
+            [
+                'legal_entity_id' => $employeeRequest->legal_entity_id,
+                'legal_entity_uuid' => $employeeRequest->legal_entity_uuid,
+                'party_id' => $employeeRequest->party_id,
+                'user_id' => $employeeRequest->party->user_id,
+                'inserted_at' => now(),
+                'uuid' => $approvedData['uuid'],
+                'status' => $approvedData['status'],
+                'is_active' => $approvedData['is_active'] ?? true,
+            ]
+        );
 
-            // Final, confirmed data from the live E-Health response
-            'uuid' => $approvedData['uuid'],
-            'status' => $approvedData['status'],
-            'is_active' => $approvedData['is_active'] ?? true,
-        ];
+        $localDivisionId = Arr::get($mappedData, 'employee.division_id');
+        if ($localDivisionId) {
+            $division = Division::find($localDivisionId);
+            $employeeData['division_uuid'] = $division?->uuid;
+        }
 
-        // Party and Doctor data can still be mapped as they operate on correct sub-arrays
-        $partyData = EmployeeApi::mapPartyData($revisionData['party'] ?? []);
-        $doctorData = $revisionData['doctor'] ?? [];
+        $partyData = array_merge(
+            $mappedData['party'],
+            ['uuid' => Arr::get($approvedData, 'party.uuid')]
+        );
 
-        DB::transaction(function () use ($employeeData, $partyData, $doctorData, $revisionData, $employeeRequest) {
+        $documentsData = $mappedData['documents'];
+        $phonesData = $mappedData['phones'];
+        $doctorData = $mappedData;
+
+        DB::transaction(function () use ($employeeData, $partyData, $doctorData, $documentsData, $phonesData, $employeeRequest) {
             $employeeModel = Employee::updateOrCreate(
                 ['uuid' => $employeeData['uuid']],
                 $employeeData
             );
-
             Repository::employee()->updateDetails(
                 $employeeModel,
                 $partyData,
-                $revisionData['documents'] ?? [],
-                $revisionData['phones'] ?? [],
+                $documentsData,
+                $phonesData,
                 $doctorData['educations'] ?? null,
                 $doctorData['specialities'] ?? null,
                 $doctorData['qualifications'] ?? null,
-                $doctorData['scienceDegree'] ?? null
+                $doctorData['science_degree'] ?? null
             );
-
             $this->assignRoleToUser($employeeModel);
             $this->finalizeEmployeeRequest($employeeRequest, $employeeModel);
         });
@@ -188,7 +202,7 @@ abstract class BaseEmployeeListener
 
         if ($user && $roleName && $legalEntityId) {
             setPermissionsTeamId($legalEntityId);
-            $user->unsetRelation('roles');
+            $user->unsetRelation('roles')->unsetRelation('permissions');
 
             if (!$user->hasRole($roleName)) {
                 $user->assignRole($roleName);

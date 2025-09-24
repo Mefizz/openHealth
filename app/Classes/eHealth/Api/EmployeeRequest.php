@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Classes\eHealth\Api;
 
 use App\Classes\eHealth\EHealthRequest;
-use App\Exceptions\EHealth\EHealthValidationException;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Arr;
 use RuntimeException;
 
 class EmployeeRequest extends EHealthRequest
@@ -23,7 +23,7 @@ class EmployeeRequest extends EHealthRequest
      * @param string $signedContent The base64 encoded signed string.
      *
      * @return array The response data from eHealth on success.
-     * @throws EHealthValidationException|ConnectionException|RuntimeException
+     * @throws ConnectionException|RuntimeException
      */
     public function create(string $signedContent): array
     {
@@ -34,6 +34,24 @@ class EmployeeRequest extends EHealthRequest
         return [
             'id' => $response->json('data.id'),
             'ehealth_response' => $response->json(),
+        ];
+    }
+
+    public function mapCreate(array $sourceData): array
+    {
+
+        $partyData = $sourceData['party'] ?? [];
+        $doctorData = $sourceData['doctor'] ?? [];
+
+        return [
+            'employee' => Arr::get($sourceData, 'employee_request_data', []),
+            'party' => Arr::except($partyData, ['documents', 'phones']),
+            'documents' => $sourceData['documents'] ?? [],
+            'phones' => $sourceData['phones'] ?? [],
+            'educations' => $doctorData['educations'] ?? [],
+            'specialities' => $doctorData['specialities'] ?? [],
+            'qualifications' => $doctorData['qualifications'] ?? [],
+            'science_degree' => $doctorData['science_degree'] ?? null,
         ];
     }
 

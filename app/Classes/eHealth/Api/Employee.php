@@ -117,19 +117,6 @@ class Employee extends EHealthRequest
         $employeeTypeKey = strtolower($transformedData['employee_type'] ?? '');
         $doctorTypes = implode(',', config('ehealth.doctors_type', []));
 
-        // =================================================================================
-        //  COMMENT REGARDING DATA VALIDATION FROM E-HEALTH
-        // =================================================================================
-        //  The validation logic below has been relaxed compared to the original implementation.
-        //  Reason: The E-Health API sometimes returns incomplete or logically incorrect data.
-        //  For example, for documents, the issue date (issued_at) may be missing,
-        //  and for qualifications, the expiration date (valid_to) may be earlier than the issue date.
-        //
-        //  To avoid synchronization failures due to such data issues on the E-Health side,
-        //  we accept this data but leave this comment as a warning.
-        //  In an ideal world, these rules should be stricter (e.g., 'required' instead of 'nullable').
-        // =================================================================================
-
         $rules = [
             'uuid' => 'required|uuid',
             'status' => 'required|string',
@@ -158,10 +145,8 @@ class Employee extends EHealthRequest
             'party.documents' => 'required|array|min:1',
             'party.documents.*.type' => 'required|string',
             'party.documents.*.number' => 'required|string',
-//            'party.documents.*.issued_by' => 'sometimes|string',
-            'party.documents.*.issued_by' => 'sometimes|nullable|string',
-            //            'party.documents.*.issued_at' => 'required|date_format:Y-m-d',
-            'party.documents.*.issued_at' => 'nullable|date_format:Y-m-d',
+            'party.documents.*.issued_by' => 'sometimes|string',
+            'party.documents.*.issued_at' => 'required|date_format:Y-m-d',
         ];
 
         if (!empty($employeeTypeKey)) {
@@ -277,71 +262,5 @@ class Employee extends EHealthRequest
         }
 
         return $replaced;
-    }
-
-    /**
-     * Prepares data for the Employee model from an API response.
-     */
-    public static function mapEmployeeData(array $apiData, EmployeeRequest $employeeRequest): array
-    {
-        $employeeApiKeys = ['id', 'status', 'position', 'employee_type', 'start_date', 'end_date', 'is_active'];
-        $employeeData = array_intersect_key($apiData, array_flip($employeeApiKeys));
-
-        $employeeData['uuid'] = $employeeData['id'];
-        unset($employeeData['id']);
-
-        return array_merge($employeeData, [
-            'legal_entity_uuid' => $apiData['legal_entity']['id'] ?? null,
-            'legal_entity_id' => $employeeRequest->legal_entity_id,
-            'party_id' => $employeeRequest->party_id,
-            'user_id' => $employeeRequest->party->user_id,
-            'division_id' => $employeeRequest->division_id,
-        ]);
-    }
-
-    /**
-     * Prepares data for the Party model from an API response.
-     */
-    public static function mapPartyData(array $apiPartyData): array
-    {
-        $partyApiKeys = ['id', 'first_name', 'last_name', 'second_name', 'birth_date', 'gender', 'no_tax_id', 'tax_id', 'email'];
-        $partyData = array_intersect_key($apiPartyData, array_flip($partyApiKeys));
-
-        if (isset($partyData['id'])) {
-            $partyData['uuid'] = $partyData['id'];
-            unset($partyData['id']);
-        }
-
-        return $partyData;
-    }
-
-    /**
-     * Prepares doctor-specific data from an API response.
-     */
-    public static function mapDoctorData(array $apiData): array
-    {
-        $doctorDataKey = strtolower($apiData['employee_type'] ?? '');
-
-        return $apiData[$doctorDataKey] ?? [];
-    }
-
-    /**
-     * Prepares the nested data structure for a Revision from flat form data.
-     */
-    public static function mapRevisionData(array $flatData): array
-    {
-        $employeeChunk = Arr::only($flatData, ['position', 'employee_type', 'start_date', 'end_date', 'division_id']);
-        $partyChunk = Arr::only($flatData, ['last_name', 'first_name', 'second_name', 'gender', 'birth_date', 'tax_id', 'no_tax_id', 'email', 'working_experience', 'about_myself']);
-        $documentsChunk = $flatData['documents'] ?? [];
-        $phonesChunk = $flatData['phones'] ?? [];
-        $doctorChunk = $flatData['doctor'] ?? [];
-
-        return [
-            'employee_request_data' => $employeeChunk,
-            'party' => $partyChunk,
-            'documents' => $documentsChunk,
-            'phones' => $phonesChunk,
-            'doctor' => $doctorChunk,
-        ];
     }
 }

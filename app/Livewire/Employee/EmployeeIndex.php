@@ -24,6 +24,10 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
+use Spatie\Permission\PermissionRegistrar;
+use Throwable;
 
 #[AllowDynamicProperties]
 class EmployeeIndex extends EmployeeComponent
@@ -238,6 +242,15 @@ class EmployeeIndex extends EmployeeComponent
                         'end_date' => Carbon::now()->format('Y-m-d'),
                     ]
                 );
+
+                if ($user = $employee->user) {
+                    $roleToRemove = $employee->employee_type;
+                    if ($user->hasRole($roleToRemove)) {
+                        $user->removeRole($roleToRemove);
+
+                    }
+                }
+
                 $this->dispatch('flashMessage', ['message' => __('employees.dismissalSuccess'), 'type' => 'success']);
             } else {
                 $this->dispatch('flashMessage', ['message' => __('employees.dismissalEhealthError'), 'type' => 'error']);
@@ -249,6 +262,11 @@ class EmployeeIndex extends EmployeeComponent
         $this->closeModal();
     }
 
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws Throwable
+     * @throws NotFoundExceptionInterface
+     */
     public function sync(): void
     {
         try {
@@ -287,6 +305,13 @@ class EmployeeIndex extends EmployeeComponent
                 session()->get(config('ehealth.api.oauth.bearer_token'))
             ))
         )->then(function (Batch $batch) use ($user) {
+
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+            Log::info('Employee sync batch completed successfully. Spatie permissions cache cleared.', [
+                'batch_id' => $batch->id,
+            ]);
+
             $message = __('employees.sync.completed_successfully', [
                 'processed' => $batch->processedJobs,
                 'total' => $batch->totalJobs,
