@@ -2,24 +2,34 @@
 @use('Carbon\CarbonImmutable')
 
 <div>
-    <x-section-navigation x-data="{ showFilter: true }">
+    <x-header-navigation x-data="{ showFilter: true }">
         <x-slot name="title">
             {{ __('forms.declarations') }}
         </x-slot>
 
+        <div class="ml-auto flex items-center gap-2 mt-2 lg:mt-0">
+            <button wire:click="sync" class="button-sync flex items-center gap-2 whitespace-nowrap">
+                @icon('refresh', 'w-4 h-4')
+                {{ __('forms.synchronise_data_with_EHealth') }}
+            </button>
+        </div>
+
         <x-slot name="navigation">
             <div class="flex">
                 <div class="w-full">
+                    <div class="shift-content">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-1">
                             @icon('search-outline', 'w-4 h-4.5 text-gray-800 dark:text-white')
                             <p class="default-p">{{ __('declarations.search') }}</p>
                         </div>
 
-                        <div class="flex items-center gap-4 pl-30">
-                            <p class="default-p">{{ __('declarations.count_active') }}:</p>
-                            <span class="badge-green">{{ $countActive }}</span>
-                        </div>
+                        @isset($countActive)
+                            <div class="flex items-center gap-4 pl-30">
+                                <p class="default-p">{{ __('declarations.count_active') }}:</p>
+                                <span class="badge-green">{{ $countActive }}</span>
+                            </div>
+                        @endisset
                     </div>
 
                     {{-- Search by name --}}
@@ -46,42 +56,37 @@
                         {{-- Show different filters for owner --}}
                         @if(Auth::user()->hasRole('OWNER'))
                             @include('livewire.declaration.parts.owner-filters')
+                        @else
+                            @include('livewire.declaration.parts.basic-filters')
                         @endif
-
-                        @include('livewire.declaration.parts.basic-filters')
                     </div>
                 </div>
-
-                <div class="ml-auto flex items-center gap-2 self-start -mt-14 translate-x-7">
-                    <button wire:click="sync" class="button-sync flex items-center gap-2 whitespace-nowrap">
-                        @icon('refresh', 'w-4 h-4')
-                        {{ __('forms.synchronise_data_with_EHealth') }}
-                    </button>
                 </div>
             </div>
         </x-slot>
-    </x-section-navigation>
+    </x-header-navigation>
 
-    <div class="max-w-7xl mx-auto">
-        <table class="table-input w-full">
-            <thead class="thead-input">
-            <tr>
-                <th scope="col" class="th-input">{{__('forms.full_name')}}</th>
-                <th scope="col" class="th-input">{{__('forms.number')}}</th>
-                <th scope="col" class="th-input">{{__('forms.birth_date_abbreviated')}}</th>
-                <th scope="col" class="th-input">{{__('employees.doctor')}}</th>
-                <th scope="col" class="th-input">{{__('forms.status.label')}}</th>
-                <th scope="col" class="th-input">{{__('forms.action')}}</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach($declarations as $declaration)
+    @if($declarations->isNotEmpty())
+        <div class="max-w-7xl mx-auto">
+            <table class="table-input w-full">
+                <thead class="thead-input">
                 <tr>
-                    <td class="td-input">{{ $declaration->person->fullName }}</td>
-                    <td class="td-input">{{ $declaration->declarationNumber }}</td>
-                    <td class="td-input">{{ CarbonImmutable::parse($declaration->person->birth_date)->format('d.m.Y') }}</td>
-                    <td class="td-input">{{ $declaration->employee->fullName }}</td>
-                    <td class="td-input">
+                    <th scope="col" class="th-input">{{__('forms.full_name')}}</th>
+                    <th scope="col" class="th-input">{{__('forms.number')}}</th>
+                    <th scope="col" class="th-input">{{__('forms.birth_date_abbreviated')}}</th>
+                    <th scope="col" class="th-input">{{__('employees.doctor')}}</th>
+                    <th scope="col" class="th-input">{{__('forms.status.label')}}</th>
+                    <th scope="col" class="th-input">{{__('forms.action')}}</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach($declarations as $declaration)
+                    <tr>
+                        <td class="td-input">{{ $declaration->person->fullName }}</td>
+                        <td class="td-input">{{ $declaration->declarationNumber }}</td>
+                        <td class="td-input">{{ CarbonImmutable::parse($declaration->person->birth_date)->format('d.m.Y') }}</td>
+                        <td class="td-input">{{ $declaration->employee->fullName }}</td>
+                        <td class="td-input">
                         <span class="{{
                             match($declaration->status) {
                                 Status::DRAFT => 'badge-dark',
@@ -93,96 +98,99 @@
                         }}">
                             {{ $declaration->status->label() }}
                         </span>
-                    </td>
-                    <td x-data="{ openDropdown: false }" class="relative td-input text-center overflow-visible">
-                        <button @click.stop="openDropdown = !openDropdown" type="button" class="cursor-pointer">
-                            @if($declaration->type === 'declaration' || $declaration->status === Status::REJECTED)
-                                @can('view', $declaration)
-                                    <a href="{{ route('declaration.view', [legalEntity(), $declaration->id]) }}">
-                                        @icon('eye', 'w-6 h-6 text-gray-800 dark:text-white')
+                        </td>
+                        <td x-data="{ openDropdown: false }" class="relative td-input text-center overflow-visible">
+                            <button @click.stop="openDropdown = !openDropdown" type="button" class="cursor-pointer">
+                                @if($declaration->type === 'declaration' || $declaration->status === Status::REJECTED)
+                                    @can('view', $declaration)
+                                        <a href="{{ route('declaration.view', [legalEntity(), $declaration->id]) }}">
+                                            @icon('eye', 'w-6 h-6 text-gray-800 dark:text-white')
+                                        </a>
+                                    @endcan
+                                @else
+                                    @icon('edit-user-outline', 'w-6 h-6 text-gray-800 dark:text-white')
+                                @endif
+                            </button>
+
+                            <div x-show="openDropdown"
+                                 @click.outside="openDropdown = false"
+                                 x-transition
+                                 class="absolute right-0 mt-2 z-10 w-fit bg-white rounded divide-y divide-gray-100 shadow"
+                                 style="display: none"
+                            >
+                                @if($declaration->type === 'request' && $declaration->status === Status::DRAFT)
+                                    <a href="{{ route('declaration.edit', [legalEntity(), $declaration->person->id, $declaration->id]) }}"
+                                       @click="openDropdown = false"
+                                       class="cursor-pointer text-[#222222] text-nowrap flex gap-3 items-center py-2 pl-4 pr-10"
+                                    >
+                                        @icon('check-circle', 'w-5 h-5 text-red-500')
+                                        {{ __('Продовжити створення декларації') }}
                                     </a>
-                                @endcan
-                            @else
-                                @icon('edit-user-outline', 'w-6 h-6 text-gray-800 dark:text-white')
-                            @endif
-                        </button>
 
-                        <div x-show="openDropdown"
-                             @click.outside="openDropdown = false"
-                             x-transition
-                             class="absolute right-0 mt-2 z-10 w-fit bg-white rounded divide-y divide-gray-100 shadow"
-                             style="display: none"
-                        >
-                            @if($declaration->type === 'request' && $declaration->status === Status::DRAFT)
-                                <a href="{{ route('declaration.edit', [legalEntity(), $declaration->person->id, $declaration->id]) }}"
-                                   @click="openDropdown = false"
-                                   class="cursor-pointer text-[#222222] text-nowrap flex gap-3 items-center py-2 pl-4 pr-10"
-                                >
-                                    @icon('check-circle', 'w-5 h-5 text-red-500')
-                                    {{ __('Продовжити створення декларації') }}
-                                </a>
-
-                                <button wire:click="destroy('{{ $declaration['id'] }}')"
-                                        @click="openDropdown = false"
-                                        class="cursor-pointer text-nowrap text-red-500 flex gap-3 items-center py-2 pl-4 pr-5"
-                                >
-                                    @icon('delete', 'w-5 h-5')
-                                    {{ __('Видалити заявку на декларацію') }}
-                                </button>
-                            @endif
-
-                            @if($declaration->type === 'request' && $declaration->status === Status::NEW)
-                                @can('approve', $declaration)
-                                    <button wire:click="approve({{ $declaration->person->id }}, {{ $declaration->id }})"
-                                            @click="openDropdown = false"
-                                            class="cursor-pointer text-[#222222] text-nowrap flex gap-3 items-center py-2 pl-4 pr-19"
-                                    >
-                                        @icon('check-circle', 'w-5 h-5 text-red-500')
-                                        {{ __('declarations.approve') }}
-                                    </button>
-                                @endcan
-
-                                @can('reject', $declaration)
-                                    <button wire:click="reject('{{ $declaration['uuid'] }}')"
+                                    <button wire:click="destroy('{{ $declaration['id'] }}')"
                                             @click="openDropdown = false"
                                             class="cursor-pointer text-nowrap text-red-500 flex gap-3 items-center py-2 pl-4 pr-5"
                                     >
                                         @icon('delete', 'w-5 h-5')
-                                        {{ __('declarations.reject_declaration_request') }}
+                                        {{ __('Видалити заявку на декларацію') }}
                                     </button>
-                                @endcan
-                            @endif
+                                @endif
 
-                            @if($declaration->type === 'request' && $declaration->status === Status::APPROVED)
-                                @can('sign', $declaration)
-                                    <button wire:click="sign({{ $declaration->person->id }}, {{ $declaration->id }})"
+                                @if($declaration->type === 'request' && $declaration->status === Status::NEW)
+                                    @can('approve', $declaration)
+                                        <button
+                                            wire:click="approve({{ $declaration->person->id }}, {{ $declaration->id }})"
                                             @click="openDropdown = false"
                                             class="cursor-pointer text-[#222222] text-nowrap flex gap-3 items-center py-2 pl-4 pr-19"
-                                    >
-                                        @icon('check-circle', 'w-5 h-5 text-red-500')
-                                        {{ __('declarations.sign') }}
-                                    </button>
-                                @endcan
+                                        >
+                                            @icon('check-circle', 'w-5 h-5 text-red-500')
+                                            {{ __('declarations.approve') }}
+                                        </button>
+                                    @endcan
 
-                                @can('reject', $declaration)
-                                    <button wire:click="reject('{{ $declaration['uuid'] }}')"
+                                    @can('reject', $declaration)
+                                        <button wire:click="reject('{{ $declaration['uuid'] }}')"
+                                                @click="openDropdown = false"
+                                                class="cursor-pointer text-nowrap text-red-500 flex gap-3 items-center py-2 pl-4 pr-5"
+                                        >
+                                            @icon('delete', 'w-5 h-5')
+                                            {{ __('declarations.reject_declaration_request') }}
+                                        </button>
+                                    @endcan
+                                @endif
+
+                                @if($declaration->type === 'request' && $declaration->status === Status::APPROVED)
+                                    @can('sign', $declaration)
+                                        <button
+                                            wire:click="sign({{ $declaration->person->id }}, {{ $declaration->id }})"
                                             @click="openDropdown = false"
-                                            class="cursor-pointer text-nowrap text-red-500 flex gap-3 items-center py-2 pl-4 pr-5"
-                                    >
-                                        @icon('delete', 'w-5 h-5')
-                                        {{ __('declarations.reject_declaration_request') }}
-                                    </button>
-                                @endcan
-                            @endif
-                        </div>
-                    </td>
-                </tr>
-            @endforeach
-            </tbody>
-        </table>
-    </div>
+                                            class="cursor-pointer text-[#222222] text-nowrap flex gap-3 items-center py-2 pl-4 pr-19"
+                                        >
+                                            @icon('check-circle', 'w-5 h-5 text-red-500')
+                                            {{ __('declarations.sign') }}
+                                        </button>
+                                    @endcan
 
-    <div class="mt-4">
+                                    @can('reject', $declaration)
+                                        <button wire:click="reject('{{ $declaration['uuid'] }}')"
+                                                @click="openDropdown = false"
+                                                class="cursor-pointer text-nowrap text-red-500 flex gap-3 items-center py-2 pl-4 pr-5"
+                                        >
+                                            @icon('delete', 'w-5 h-5')
+                                            {{ __('declarations.reject_declaration_request') }}
+                                        </button>
+                                    @endcan
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+
+    <div class="mt-8 pl-3.5 pb-8 lg:pl-8 2xl:pl-5">
         {{ $declarations->links() }}
     </div>
 

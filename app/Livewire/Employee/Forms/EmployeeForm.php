@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Employee\Forms;
 
 use App\Core\Arr;
@@ -50,7 +52,7 @@ class EmployeeForm extends Form
 
     public array $doctor = [
         'specialities' => [],
-        'scienceDegrees' => [],
+        'scienceDegree' => [],
         'qualifications' => [],
         'educations' => [],
     ];
@@ -81,7 +83,11 @@ class EmployeeForm extends Form
             'employeeType' => ['required', 'string', Rule::in(array_keys($this->component->dictionaries['EMPLOYEE_TYPE'] ?? []))],
             'startDate' => ['required', 'date_format:Y-m-d'],
             'endDate' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:startDate'],
-            'divisionId' => ['nullable', 'string'],
+            'divisionId' => [
+                'nullable',
+                'string',
+                Rule::exists('divisions', 'id')->where('legal_entity_id', legalEntity()->id)
+            ],
         ];
     }
 
@@ -147,58 +153,58 @@ class EmployeeForm extends Form
         $doctorTypes = config('ehealth.doctors_type');
         $isDoctor = in_array($this->employeeType, $doctorTypes, true);
 
-    $educationRules = ['nullable', 'array'];
-    $specialitiesRules = ['nullable', 'array'];
+        $educationRules = ['nullable', 'array'];
+        $specialitiesRules = ['nullable', 'array'];
 
-    if ($isDoctor) {
-        $educationRules[] = 'required';
-        $educationRules[] = 'min:1';
-        $specialitiesRules[] = 'required';
-        $specialitiesRules[] = 'min:1';
+        if ($isDoctor) {
+            $educationRules[] = 'required';
+            $educationRules[] = 'min:1';
+            $specialitiesRules[] = 'required';
+            $specialitiesRules[] = 'min:1';
+        }
+
+        $scienceDegreeRules = ['nullable', 'array'];
+        $qualificationsRules = ['nullable', 'array'];
+
+        return [
+            'doctor.educations' => $educationRules,
+            'doctor.educations.*.country' => ['required', 'string', 'max:255'],
+            'doctor.educations.*.city' => ['required', 'string', 'max:255', new Cyrillic()],
+            'doctor.educations.*.institutionName' => ['required', 'string', 'max:255', new Cyrillic()],
+            'doctor.educations.*.issuedDate' => ['nullable', 'date'],
+            'doctor.educations.*.diplomaNumber' => ['required', 'string', 'max:255'],
+            'doctor.educations.*.degree' => ['required', 'string', 'max:255'],
+            'doctor.educations.*.speciality' => ['required', 'string', 'max:255'],
+
+            'doctor.specialities' => $specialitiesRules,
+            'doctor.specialities.*.speciality' => ['required', 'string', 'max:255'],
+            'doctor.specialities.*.specialityOfficio' => ['required', 'boolean'],
+            'doctor.specialities.*.level' => ['required', 'string', 'max:255'],
+            'doctor.specialities.*.qualificationType' => ['required', 'string'],
+            'doctor.specialities.*.attestationName' => ['required', 'string', 'max:255', new Cyrillic()],
+            'doctor.specialities.*.attestationDate' => ['required', 'date'],
+            'doctor.specialities.*.validToDate' => ['nullable', 'date'],
+            'doctor.specialities.*.certificateNumber' => ['required', 'string', 'max:255'],
+
+            'doctor.scienceDegree' => $scienceDegreeRules,
+            'doctor.scienceDegree.country' => ['required_with:doctor.scienceDegree', 'string', 'max:255'],
+            'doctor.scienceDegree.city' => ['required_with:doctor.scienceDegree', 'string', 'max:255', new Cyrillic()],
+            'doctor.scienceDegree.degree' => ['required_with:doctor.scienceDegree', 'string', 'max:255'],
+            'doctor.scienceDegree.institutionName' => ['required_with:doctor.scienceDegree', 'string', 'max:255', new Cyrillic()],
+            'doctor.scienceDegree.diplomaNumber' => ['required_with:doctor.scienceDegree', 'string', 'max:255'],
+            'doctor.scienceDegree.speciality' => ['required_with:doctor.scienceDegree', 'string', 'max:255'],
+            'doctor.scienceDegree.issuedDate' => ['nullable', 'date'],
+
+            'doctor.qualifications' => $qualificationsRules,
+            'doctor.qualifications.*.type' => ['required', 'string', 'max:255'], // Словник
+            'doctor.qualifications.*.institutionName' => ['required', 'string', 'max:255', new Cyrillic()],
+            'doctor.qualifications.*.speciality' => ['required', 'string', 'max:255'], // Словник
+            'doctor.qualifications.*.issuedDate' => ['required', 'date'],
+            'doctor.qualifications.*.certificateNumber' => ['required', 'string', 'max:255'],
+            'doctor.qualifications.*.validTo' => ['nullable', 'date', 'after_or_equal:doctor.qualifications.*.issuedDate'],
+            'doctor.qualifications.*.additionalInfo' => ['nullable', 'string', new Cyrillic()],
+        ];
     }
-
-    $scienceDegreesRules = ['nullable', 'array'];
-    $qualificationsRules = ['nullable', 'array'];
-
-    return [
-        'doctor.educations' => $educationRules,
-        'doctor.educations.*.country' => ['required', 'string', 'max:255'],
-        'doctor.educations.*.city' => ['required', 'string', 'max:255', new Cyrillic()],
-        'doctor.educations.*.institutionName' => ['required', 'string', 'max:255', new Cyrillic()],
-        'doctor.educations.*.issuedDate' => ['nullable', 'date'],
-        'doctor.educations.*.diplomaNumber' => ['required', 'string', 'max:255'],
-        'doctor.educations.*.degree' => ['required', 'string', 'max:255'],
-        'doctor.educations.*.speciality' => ['required', 'string', 'max:255'],
-
-        'doctor.specialities' => $specialitiesRules,
-        'doctor.specialities.*.speciality' => ['required', 'string', 'max:255'],
-        'doctor.specialities.*.specialityOfficio' => ['required', 'boolean'],
-        'doctor.specialities.*.level' => ['required', 'string', 'max:255'],
-        'doctor.specialities.*.qualificationType' => ['required', 'string'],
-        'doctor.specialities.*.attestationName' => ['required', 'string', 'max:255', new Cyrillic()],
-        'doctor.specialities.*.attestationDate' => ['required', 'date'],
-        'doctor.specialities.*.validToDate' => ['nullable', 'date'],
-        'doctor.specialities.*.certificateNumber' => ['required', 'string', 'max:255'],
-
-        'doctor.scienceDegrees' => $scienceDegreesRules,
-        'doctor.scienceDegrees.*.country' => ['required', 'string', 'max:255'],
-        'doctor.scienceDegrees.*.city' => ['required', 'string', 'max:255', new Cyrillic()],
-        'doctor.scienceDegrees.*.degree' => ['required', 'string', 'max:255'], // Словник
-        'doctor.scienceDegrees.*.institutionName' => ['required', 'string', 'max:255', new Cyrillic()],
-        'doctor.scienceDegrees.*.diplomaNumber' => ['required', 'string', 'max:255'],
-        'doctor.scienceDegrees.*.speciality' => ['required', 'string', 'max:255'],
-        'doctor.scienceDegrees.*.issuedDate' => ['nullable', 'date'],
-
-        'doctor.qualifications' => $qualificationsRules,
-        'doctor.qualifications.*.type' => ['required', 'string', 'max:255'], // Словник
-        'doctor.qualifications.*.institutionName' => ['required', 'string', 'max:255', new Cyrillic()],
-        'doctor.qualifications.*.speciality' => ['required', 'string', 'max:255'], // Словник
-        'doctor.qualifications.*.issuedDate' => ['required', 'date'],
-        'doctor.qualifications.*.certificateNumber' => ['required', 'string', 'max:255'],
-        'doctor.qualifications.*.validTo' => ['nullable', 'date', 'after_or_equal:doctor.qualifications.*.issuedDate'],
-        'doctor.qualifications.*.additionalInfo' => ['nullable', 'string', new Cyrillic()],
-    ];
-}
 
     /**
      * The single "smart" method to populate the form from any data source.
@@ -253,7 +259,7 @@ class EmployeeForm extends Form
         $phones = $party->phones;
         // Only overwrite phones if the form is empty
         if ($phones->isNotEmpty() && empty($this->party['phones'][0]['number'])) {
-            $this->party['phones'] = $phones->map(fn($p) => ['type' => $p->type, 'number' => $p->number])->toArray();
+            $this->party['phones'] = $phones->map(fn ($p) => ['type' => $p->type, 'number' => $p->number])->toArray();
         }
 
         $documents = $party->documents;
@@ -272,7 +278,7 @@ class EmployeeForm extends Form
 
     private function hydrateFromEmployee(Employee $employee): void
     {
-        $employee->loadMissing(['party.phones', 'party.documents', 'educations', 'specialities', 'qualifications', 'scienceDegrees']);
+        $employee->loadMissing(['party.phones', 'party.documents', 'educations', 'specialities', 'qualifications', 'scienceDegree']);
         if ($employee->party) {
             $this->populatePartyData($employee->party);
         }
@@ -282,10 +288,10 @@ class EmployeeForm extends Form
         $this->endDate = $employee->end_date?->format('Y-m-d');
         $this->divisionId = $employee->division_id;
 
-        $this->doctor['educations'] = $employee->educations->map(fn($edu) => Arr::toCamelCase($edu->toArray()))->toArray();
-        $this->doctor['specialities'] = $employee->specialities->map(fn($spec) => Arr::toCamelCase($spec->toArray()))->toArray();
-        $this->doctor['qualifications'] = $employee->qualifications->map(fn($spec) => Arr::toCamelCase($spec->toArray()))->toArray();
-        $this->doctor['scienceDegrees'] = $employee->scienceDegrees->map(fn($spec) => Arr::toCamelCase($spec->toArray()))->toArray();
+        $this->doctor['educations'] = $employee->educations->map(fn ($edu) => Arr::toCamelCase($edu->toArray()))->toArray();
+        $this->doctor['specialities'] = $employee->specialities->map(fn ($spec) => Arr::toCamelCase($spec->toArray()))->toArray();
+        $this->doctor['qualifications'] = $employee->qualifications->map(fn ($spec) => Arr::toCamelCase($spec->toArray()))->toArray();
+        $this->doctor['scienceDegree'] = Arr::toCamelCase($employee->scienceDegree?->toArray() ?? []);
     }
 
     /**
@@ -301,11 +307,12 @@ class EmployeeForm extends Form
         $this->employeeType = $revisionData['employee_request_data']['employee_type'] ?? '';
         $this->startDate = $revisionData['employee_request_data']['start_date'] ?? '';
         $this->documents = Arr::toCamelCase($revisionData['documents'] ?? []);
-        $this->doctor = Arr::toCamelCase($revisionData['doctor'] ?? []);
+        $doctorDataFromRevision = Arr::toCamelCase($revisionData['doctor'] ?? []);
+        $this->doctor = array_merge($this->doctor, $doctorDataFromRevision);
+
         $this->party = array_merge($this->party, Arr::toCamelCase($revisionData['party'] ?? []));
         $this->party['phones'] = !empty($revisionData['phones']) ? Arr::toCamelCase($revisionData['phones']) : [['type' => 'MOBILE', 'number' => '']];
 
-        // 2. Overwrite with live data from the Party, but without overwriting documents
         if ($request->party) {
             $this->populatePartyData($request->party);
         }

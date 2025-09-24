@@ -623,15 +623,14 @@ input:-webkit-autofill {
     }
 }
 
-@media (min-width: 2048px) {
-    .shift-content {
-        @apply mx-auto px-[12%];
-    }
-}
+
 
 @media (min-width: 2560px) {
     .shift-content {
+ i425_adapt-small-screens
         @apply mx-auto px-[10%];
+
+        @apply m-auto ml-[10%];
     }
 }
 

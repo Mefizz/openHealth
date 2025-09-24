@@ -113,6 +113,7 @@
                                 </select>
                                 <label for="filter_position" class="label">Посада</label>
                             </div>
+
                         </div>
                         <div class="form-row-4">
                             <div class="form-group group">
