@@ -15,7 +15,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Classes\eHealth\EHealth;
-use Spatie\Permission\PermissionRegistrar;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class EmployeeDetailsUpsert implements ShouldQueue
@@ -62,21 +62,24 @@ class EmployeeDetailsUpsert implements ShouldQueue
 
         $this->employee->refresh();
 
-        $user = $this->employee->user;
+        $user = $this->employee->party->user;
+
+        if (!$user) {
+            Log::info('Employee sync: User does not exist yet for party.', [
+                'party_id' => $this->employee->party_id,
+                'employee_uuid' => $this->employee->uuid,
+            ]);
+
+            return;
+        }
+
         $roleName = $this->employee->employee_type;
         $legalEntityId = $this->employee->legal_entity_id;
 
-        if ($user && $roleName && $legalEntityId) {
-            setPermissionsTeamId($legalEntityId);
+        setPermissionsTeamId($legalEntityId);
 
-            $user->unsetRelation('roles')->unsetRelation('permissions');
-
-            if (!$user->hasRole($roleName)) {
-                $user->assignRole($roleName);
-
-                app(PermissionRegistrar::class)->forgetCachedPermissions();
-            }
-
+        if (!$user->hasRole($roleName)) {
+            $user->assignRole($roleName);
         }
     }
 }

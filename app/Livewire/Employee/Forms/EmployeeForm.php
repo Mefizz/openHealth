@@ -196,9 +196,9 @@ class EmployeeForm extends Form
             'doctor.scienceDegree.issuedDate' => ['nullable', 'date'],
 
             'doctor.qualifications' => $qualificationsRules,
-            'doctor.qualifications.*.type' => ['required', 'string', 'max:255'], // Словник
+            'doctor.qualifications.*.type' => ['required', 'string', 'max:255'],
             'doctor.qualifications.*.institutionName' => ['required', 'string', 'max:255', new Cyrillic()],
-            'doctor.qualifications.*.speciality' => ['required', 'string', 'max:255'], // Словник
+            'doctor.qualifications.*.speciality' => ['required', 'string', 'max:255'],
             'doctor.qualifications.*.issuedDate' => ['required', 'date'],
             'doctor.qualifications.*.certificateNumber' => ['required', 'string', 'max:255'],
             'doctor.qualifications.*.validTo' => ['nullable', 'date', 'after_or_equal:doctor.qualifications.*.issuedDate'],

@@ -5,16 +5,17 @@ declare(strict_types=1);
 namespace App\Listeners\eHealth;
 
 use App\Classes\eHealth\EHealth;
+use App\Core\Arr;
 use App\Enums\Employee\RevisionStatus;
 use App\Enums\Status;
 use App\Events\EHealthUserLogin;
+use App\Models\Division;
 use App\Models\Employee\Employee;
 use App\Models\Employee\EmployeeRequest;
 use App\Repositories\Repository;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Spatie\Permission\PermissionRegistrar;
 use Throwable;
 
 abstract class BaseEmployeeListener
@@ -95,6 +96,14 @@ abstract class BaseEmployeeListener
      */
     abstract protected function fetchEmployeesFromApi(EHealthUserLogin $event): array;
 
+    /**
+     * A hook method that can be implemented by child listeners
+     * to perform actions after the employee list has been fetched from eHealth.
+     *
+     * @param EHealthUserLogin $event The event instance.
+     * @param array &$ehealthEmployees The array of employees fetched from eHealth.
+     * @return void
+     */
     protected function afterFetchingEmployees(EHealthUserLogin $event, array &$ehealthEmployees): void
     {
         // By default, do nothing.
@@ -129,20 +138,44 @@ abstract class BaseEmployeeListener
      */
     protected function createEmployeeFromRequest(EmployeeRequest $employeeRequest, array $approvedData): void
     {
-        $mappedData = EHealth::employeeRequest()::mapCreate($employeeRequest, $approvedData);
+        $sourceData = $employeeRequest->revision->data;
 
-        $employeeData = $mappedData['employee'];
-        $partyData = $mappedData['party'];
-        $doctorData = $mappedData['doctor'];
+        $mappedData = EHealth::employeeRequest()->mapCreate($sourceData);
+
+        $employeeData = array_merge(
+            $mappedData['employee'],
+            [
+                'legal_entity_id' => $employeeRequest->legal_entity_id,
+                'legal_entity_uuid' => $employeeRequest->legal_entity_uuid,
+                'party_id' => $employeeRequest->party_id,
+                'user_id' => $employeeRequest->party->user_id,
+                'inserted_at' => now(),
+                'uuid' => $approvedData['uuid'],
+                'status' => $approvedData['status'],
+                'is_active' => $approvedData['is_active'] ?? true,
+            ]
+        );
+
+        $localDivisionId = Arr::get($mappedData, 'employee.division_id');
+        if ($localDivisionId) {
+            $division = Division::find($localDivisionId);
+            $employeeData['division_uuid'] = $division?->uuid;
+        }
+
+        $partyData = array_merge(
+            $mappedData['party'],
+            ['uuid' => Arr::get($approvedData, 'party.uuid')]
+        );
+
         $documentsData = $mappedData['documents'];
         $phonesData = $mappedData['phones'];
+        $doctorData = $mappedData;
 
         DB::transaction(function () use ($employeeData, $partyData, $doctorData, $documentsData, $phonesData, $employeeRequest) {
             $employeeModel = Employee::updateOrCreate(
                 ['uuid' => $employeeData['uuid']],
                 $employeeData
             );
-
             Repository::employee()->updateDetails(
                 $employeeModel,
                 $partyData,
@@ -153,7 +186,6 @@ abstract class BaseEmployeeListener
                 $doctorData['qualifications'] ?? null,
                 $doctorData['science_degree'] ?? null
             );
-
             $this->assignRoleToUser($employeeModel);
             $this->finalizeEmployeeRequest($employeeRequest, $employeeModel);
         });
@@ -174,8 +206,6 @@ abstract class BaseEmployeeListener
 
             if (!$user->hasRole($roleName)) {
                 $user->assignRole($roleName);
-
-                app(PermissionRegistrar::class)->forgetCachedPermissions();
             }
         }
     }

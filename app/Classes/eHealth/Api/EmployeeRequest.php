@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Classes\eHealth\Api;
 
 use App\Classes\eHealth\EHealthRequest;
-use App\Core\Arr;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Arr;
 use RuntimeException;
 
 class EmployeeRequest extends EHealthRequest
@@ -37,39 +37,21 @@ class EmployeeRequest extends EHealthRequest
         ];
     }
 
-    public static function mapCreate(EmployeeRequest $employeeRequest, array $approvedData): array
+    public function mapCreate(array $sourceData): array
     {
-        $revisionData = $employeeRequest->revision->data;
 
-        $employeeData = array_merge(
-            $revisionData['employee_request_data'] ?? [],
-            [
-                'legal_entity_id' => $employeeRequest->legal_entity_id,
-                'legal_entity_uuid' => $employeeRequest->legal_entity_uuid,
-                'party_id' => $employeeRequest->party_id,
-                'user_id' => $employeeRequest->party->user_id,
-                'inserted_at' => now(),
-            ],
-            [
-                'uuid' => $approvedData['uuid'],
-                'status' => $approvedData['status'],
-                'is_active' => $approvedData['is_active'] ?? true,
-            ]
-        );
-
-        $partyData = $revisionData['party'] ?? [];
-        $partyData['uuid'] = Arr::get($approvedData, 'party.uuid');
-
-        $phonesData = $revisionData['phones'] ?? [];
-        $documentsData = $revisionData['documents'] ?? [];
-        $doctorData = $revisionData['doctor'] ?? [];
+        $partyData = $sourceData['party'] ?? [];
+        $doctorData = $sourceData['doctor'] ?? [];
 
         return [
-            'employee' => $employeeData,
-            'party' => $partyData,
-            'phones' => $phonesData,
-            'documents' => $documentsData,
-            'doctor' => $doctorData,
+            'employee' => Arr::get($sourceData, 'employee_request_data', []),
+            'party' => Arr::except($partyData, ['documents', 'phones']),
+            'documents' => $sourceData['documents'] ?? [],
+            'phones' => $sourceData['phones'] ?? [],
+            'educations' => $doctorData['educations'] ?? [],
+            'specialities' => $doctorData['specialities'] ?? [],
+            'qualifications' => $doctorData['qualifications'] ?? [],
+            'science_degree' => $doctorData['science_degree'] ?? null,
         ];
     }
 

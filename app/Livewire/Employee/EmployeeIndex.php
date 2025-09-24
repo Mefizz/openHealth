@@ -24,7 +24,10 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use Spatie\Permission\PermissionRegistrar;
+use Throwable;
 
 #[AllowDynamicProperties]
 class EmployeeIndex extends EmployeeComponent
@@ -225,6 +228,7 @@ class EmployeeIndex extends EmployeeComponent
         $employee = Employee::find($this->employeeToDeactivateId);
         if (!$employee) {
             $this->closeModal();
+
             return;
         }
 
@@ -234,7 +238,7 @@ class EmployeeIndex extends EmployeeComponent
             if (!empty($response)) {
                 $employee->update(
                     [
-                        'status'   => Status::DISMISSED->value,
+                        'status' => Status::DISMISSED->value,
                         'end_date' => Carbon::now()->format('Y-m-d'),
                     ]
                 );
@@ -244,10 +248,8 @@ class EmployeeIndex extends EmployeeComponent
                     if ($user->hasRole($roleToRemove)) {
                         $user->removeRole($roleToRemove);
 
-                        app(PermissionRegistrar::class)->forgetCachedPermissions();
                     }
                 }
-                // !!! КІНЕЦЬ ПОКРАЩЕННЯ !!!
 
                 $this->dispatch('flashMessage', ['message' => __('employees.dismissalSuccess'), 'type' => 'success']);
             } else {
@@ -260,6 +262,11 @@ class EmployeeIndex extends EmployeeComponent
         $this->closeModal();
     }
 
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws Throwable
+     * @throws NotFoundExceptionInterface
+     */
     public function sync(): void
     {
         try {
@@ -298,6 +305,13 @@ class EmployeeIndex extends EmployeeComponent
                 session()->get(config('ehealth.api.oauth.bearer_token'))
             ))
         )->then(function (Batch $batch) use ($user) {
+
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+            Log::info('Employee sync batch completed successfully. Spatie permissions cache cleared.', [
+                'batch_id' => $batch->id,
+            ]);
+
             $message = __('employees.sync.completed_successfully', [
                 'processed' => $batch->processedJobs,
                 'total' => $batch->totalJobs,
