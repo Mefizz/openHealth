@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Livewire\Employee\Traits;
 
-use App\Classes\eHealth\Api\Employee as EmployeeApi;
 use App\Classes\eHealth\Api\EmployeeRequest as EHealthEmployeeRequest;
 use App\Core\Arr;
 use App\Enums\Employee\RequestStatus;
 use App\Enums\Employee\RevisionStatus;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
+use App\Models\Division;
 use App\Models\Employee\BaseEmployee;
 use App\Models\Employee\EmployeeRequest;
 use App\Models\Relations\Party;
@@ -139,7 +139,7 @@ trait ManagesEmployeeForm
         $this->employeeRequest->fill($requestAttributes)->save();
 
         // Step 3: Update the revision to reflect the latest state.
-        $nestedDataForRevision = EmployeeApi::mapRevisionData($preparedDataForDb);
+        $nestedDataForRevision = $this->mapRevisionData($preparedDataForDb);
         if ($this->employeeRequest->revision) {
             $this->employeeRequest->revision->update(['data' => $nestedDataForRevision]);
         } else {
@@ -182,7 +182,7 @@ trait ManagesEmployeeForm
             legalEntity()
         );
 
-        $nestedDataForRevision = EmployeeApi::mapRevisionData($preparedDataForDb);
+        $nestedDataForRevision = $this->mapRevisionData($preparedDataForDb);
         $this->saveRevisionForRequest($newRequest, $nestedDataForRevision);
 
         $this->employeeRequest = $newRequest;
@@ -439,64 +439,76 @@ trait ManagesEmployeeForm
     }
 
     /**
-     * Prepares the nested data from a Revision for the eHealth API payload.
-     *
-     * @param array $nestedData The data from the Revision model.
-     * @return array The payload ready for the eHealth API.
+     * Prepares the nested data structure for a Revision from flat form data.
      */
+    private function mapRevisionData(array $flatData): array
+    {
+        $employeeChunk = Arr::only($flatData, ['position', 'employee_type', 'start_date', 'end_date', 'division_id']);
+        $partyChunk = Arr::only($flatData, ['last_name', 'first_name', 'second_name', 'gender', 'birth_date', 'tax_id', 'no_tax_id', 'email', 'working_experience', 'about_myself']);
+        $documentsChunk = $flatData['documents'] ?? [];
+        $phonesChunk = $flatData['phones'] ?? [];
+        $doctorChunk = $flatData['doctor'] ?? [];
+
+        return [
+            'employee_request_data' => $employeeChunk,
+            'party' => $partyChunk,
+            'documents' => $documentsChunk,
+            'phones' => $phonesChunk,
+            'doctor' => $doctorChunk,
+        ];
+    }
+
     private function preparePayloadForEHealth(array $nestedData): array
     {
+        $localDivisionId = Arr::get($nestedData, 'employee_request_data.division_id');
+        $divisionUuid = $localDivisionId ? Division::find($localDivisionId)?->uuid : null;
+
+        $partyPayload = Arr::only($nestedData['party'] ?? [], [
+            'first_name', 'last_name', 'second_name', 'birth_date', 'gender',
+            'tax_id', 'email', 'about_myself'
+        ]);
+
+        $partyPayload['no_tax_id'] = (bool) Arr::get($nestedData, 'party.no_tax_id');
+        $partyPayload['working_experience'] = (int) Arr::get($nestedData, 'party.working_experience');
+        $partyPayload['documents'] = $nestedData['documents'] ?? [];
+        $partyPayload['phones'] = $nestedData['phones'] ?? [];
+
         $payload = [
             'position' => Arr::get($nestedData, 'employee_request_data.position'),
             'start_date' => Arr::get($nestedData, 'employee_request_data.start_date'),
             'end_date' => Arr::get($nestedData, 'employee_request_data.end_date'),
             'employee_type' => Arr::get($nestedData, 'employee_request_data.employee_type'),
-            'division_id' => Arr::get($nestedData, 'employee_request_data.division_id'),
-            'legal_entity_id' => Arr::get($nestedData, 'employee_request_data.legal_entity_id'),
+            'division_id' => $divisionUuid,
+            'legal_entity_id' => legalEntity()->uuid,
             'status' => 'NEW',
-            'party' => [
-                'first_name' => Arr::get($nestedData, 'party.first_name'),
-                'last_name' => Arr::get($nestedData, 'party.last_name'),
-                'second_name' => Arr::get($nestedData, 'party.second_name'),
-                'birth_date' => Arr::get($nestedData, 'party.birth_date'),
-                'gender' => Arr::get($nestedData, 'party.gender'),
-                'no_tax_id' => (bool) Arr::get($nestedData, 'party.no_tax_id'),
-                'tax_id' => Arr::get($nestedData, 'party.tax_id'),
-                'email' => Arr::get($nestedData, 'party.email'),
-                'documents' => Arr::get($nestedData, 'documents'),
-                'phones' => Arr::get($nestedData, 'phones'),
-                'working_experience' => (int) Arr::get($nestedData, 'party.working_experience'),
-                'about_myself' => Arr::get($nestedData, 'party.about_myself'),
-            ],
+            'party' => $partyPayload,
         ];
 
         $doctorTypes = config('ehealth.doctors_type', []);
         $employeeType = Arr::get($nestedData, 'employee_request_data.employee_type');
 
-
         if (in_array($employeeType, $doctorTypes, true)) {
-            $doctorData = [
-                'educations' => Arr::get($nestedData, 'doctor.educations'),
-                'qualifications' => Arr::get($nestedData, 'doctor.qualifications'),
-                'specialities' => Arr::get($nestedData, 'doctor.specialities'),
-                'science_degree' => Arr::get($nestedData, 'doctor.science_degree'),
-            ];
-
-            $payloadKey = strtolower($employeeType);
-            $payload[$payloadKey] = $doctorData;
+            $doctorData = Arr::get($nestedData, 'doctor');
+            if (!empty($doctorData)) {
+                $payloadKey = strtolower($employeeType);
+                $payload[$payloadKey] = $doctorData;
+            }
         }
 
-        // Clean up empty fields
-        $payload = array_filter($payload, fn($value) => !is_null($value) && $value !== '');
-        if (isset($payload['party'])) {
-            $payload['party'] = array_filter($payload['party'], fn ($value) => !is_null($value) && $value !== '');
+        return ['employee_request' => $this->array_filter_recursive($payload)];
+    }
+
+    private function array_filter_recursive(array $array): array
+    {
+        foreach ($array as $key => &$value) {
+            if (is_array($value)) {
+                $value = $this->array_filter_recursive($value);
+            }
         }
 
-        if (isset($payloadKey, $payload[$payloadKey])) {
-            $payload[$payloadKey] = array_filter($payload[$payloadKey], fn ($value) => !is_null($value) && $value !== '' && !empty($value));
-        }
-
-        return ['employee_request' => $payload];
+        return array_filter($array, function ($value) {
+            return !is_null($value) && $value !== '' && $value !== [];
+        });
     }
 
     /**

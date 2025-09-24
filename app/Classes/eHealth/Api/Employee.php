@@ -7,7 +7,6 @@ namespace App\Classes\eHealth\Api;
 use App\Classes\eHealth\EHealthRequest;
 use App\Classes\eHealth\EHealthResponse;
 use App\Core\Arr;
-use App\Models\Employee\EmployeeRequest;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Log;
@@ -117,19 +116,6 @@ class Employee extends EHealthRequest
 
         $employeeTypeKey = strtolower($transformedData['employee_type'] ?? '');
         $doctorTypes = implode(',', config('ehealth.doctors_type', []));
-
-        // =================================================================================
-        //  COMMENT REGARDING DATA VALIDATION FROM E-HEALTH
-        // =================================================================================
-        //  The validation logic below has been relaxed compared to the original implementation.
-        //  Reason: The E-Health API sometimes returns incomplete or logically incorrect data.
-        //  For example, for documents, the issue date (issued_at) may be missing,
-        //  and for qualifications, the expiration date (valid_to) may be earlier than the issue date.
-        //
-        //  To avoid synchronization failures due to such data issues on the E-Health side,
-        //  we accept this data but leave this comment as a warning.
-        //  In an ideal world, these rules should be stricter (e.g., 'required' instead of 'nullable').
-        // =================================================================================
 
         $rules = [
             'uuid' => 'required|uuid',
@@ -276,92 +262,5 @@ class Employee extends EHealthRequest
         }
 
         return $replaced;
-    }
-
-    /**
-     * Prepares data for the Party model from an API response.
-     */
-    public static function mapPartyData(array $apiPartyData): array
-    {
-        $partyApiKeys = ['id', 'first_name', 'last_name', 'second_name', 'birth_date', 'gender', 'no_tax_id', 'tax_id', 'email'];
-        $partyData = array_intersect_key($apiPartyData, array_flip($partyApiKeys));
-
-        if (isset($partyData['id'])) {
-            $partyData['uuid'] = $partyData['id'];
-            unset($partyData['id']);
-        }
-
-        return $partyData;
-    }
-
-    /**
-     * Prepares a complete data structure for creating a new Employee
-     * by combining data from the signed Revision and the approved API response.
-     *
-     * @param EmployeeRequest $employeeRequest The local request containing the revision.
-     * @param array           $approvedData    The final, confirmed data from the E-Health API.
-     *
-     * @return array A structured array with data for employee, party, doctor, etc.
-     */
-    public static function mapCreate(EmployeeRequest $employeeRequest, array $approvedData): array
-    {
-        // THE SOURCE OF TRUTH: Data from the revision, which the user signed.
-        $revisionData = $employeeRequest->revision->data;
-
-        // 1. Prepare Employee data
-        $employeeData = [
-            // Data from the Revision (what user signed)
-            'position' => $revisionData['employee_request_data']['position'],
-            'employee_type' => $revisionData['employee_request_data']['employee_type'],
-            'start_date' => $revisionData['employee_request_data']['start_date'],
-            'end_date' => $revisionData['employee_request_data']['end_date'],
-            'division_id' => $revisionData['employee_request_data']['division_id'],
-
-            // Data from existing relationships
-            'legal_entity_id' => $employeeRequest->legal_entity_id,
-            'legal_entity_uuid' => $employeeRequest->legal_entity_uuid,
-            'inserted_at' => now(),
-            'party_id' => $employeeRequest->party_id,
-            'user_id' => $employeeRequest->party->user_id,
-
-            // Final, confirmed data from the live E-Health response
-            'uuid' => $approvedData['uuid'],
-            'status' => $approvedData['status'],
-            'is_active' => $approvedData['is_active'] ?? true,
-        ];
-
-        // 2. Prepare related data using existing mappers
-        $partyData = self::mapPartyData($revisionData['party'] ?? []);
-        $doctorData = $revisionData['doctor'] ?? []; // This already contains nested structure
-
-        // 3. Return a structured payload
-        return [
-            'employee' => $employeeData,
-            'party' => $partyData,
-            'doctor' => $doctorData,
-            // We can also return documents and phones directly from revision
-            'documents' => $revisionData['documents'] ?? [],
-            'phones' => $revisionData['phones'] ?? [],
-        ];
-    }
-
-    /**
-     * Prepares the nested data structure for a Revision from flat form data.
-     */
-    public static function mapRevisionData(array $flatData): array
-    {
-        $employeeChunk = Arr::only($flatData, ['position', 'employee_type', 'start_date', 'end_date', 'division_id']);
-        $partyChunk = Arr::only($flatData, ['last_name', 'first_name', 'second_name', 'gender', 'birth_date', 'tax_id', 'no_tax_id', 'email', 'working_experience', 'about_myself']);
-        $documentsChunk = $flatData['documents'] ?? [];
-        $phonesChunk = $flatData['phones'] ?? [];
-        $doctorChunk = $flatData['doctor'] ?? [];
-
-        return [
-            'employee_request_data' => $employeeChunk,
-            'party' => $partyChunk,
-            'documents' => $documentsChunk,
-            'phones' => $phonesChunk,
-            'doctor' => $doctorChunk,
-        ];
     }
 }

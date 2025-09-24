@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Listeners\eHealth;
 
-use App\Classes\eHealth\Api\Employee as EmployeeApi;
+use App\Classes\eHealth\EHealth;
 use App\Enums\Employee\RevisionStatus;
 use App\Enums\Status;
 use App\Events\EHealthUserLogin;
@@ -129,8 +129,7 @@ abstract class BaseEmployeeListener
      */
     protected function createEmployeeFromRequest(EmployeeRequest $employeeRequest, array $approvedData): void
     {
-        // NEW: Get all prepared data from the mapper method
-        $mappedData = EmployeeApi::mapCreate($employeeRequest, $approvedData);
+        $mappedData = EHealth::employeeRequest()::mapCreate($employeeRequest, $approvedData);
 
         $employeeData = $mappedData['employee'];
         $partyData = $mappedData['party'];
@@ -152,7 +151,7 @@ abstract class BaseEmployeeListener
                 $doctorData['educations'] ?? null,
                 $doctorData['specialities'] ?? null,
                 $doctorData['qualifications'] ?? null,
-                $doctorData['scienceDegree'] ?? null
+                $doctorData['science_degree'] ?? null
             );
 
             $this->assignRoleToUser($employeeModel);

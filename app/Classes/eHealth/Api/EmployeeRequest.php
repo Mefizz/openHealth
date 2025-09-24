@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Classes\eHealth\Api;
 
 use App\Classes\eHealth\EHealthRequest;
-use App\Exceptions\EHealth\EHealthValidationException;
+use App\Core\Arr;
 use Illuminate\Http\Client\ConnectionException;
 use RuntimeException;
 
@@ -23,7 +23,7 @@ class EmployeeRequest extends EHealthRequest
      * @param string $signedContent The base64 encoded signed string.
      *
      * @return array The response data from eHealth on success.
-     * @throws EHealthValidationException|ConnectionException|RuntimeException
+     * @throws ConnectionException|RuntimeException
      */
     public function create(string $signedContent): array
     {
@@ -34,6 +34,42 @@ class EmployeeRequest extends EHealthRequest
         return [
             'id' => $response->json('data.id'),
             'ehealth_response' => $response->json(),
+        ];
+    }
+
+    public static function mapCreate(EmployeeRequest $employeeRequest, array $approvedData): array
+    {
+        $revisionData = $employeeRequest->revision->data;
+
+        $employeeData = array_merge(
+            $revisionData['employee_request_data'] ?? [],
+            [
+                'legal_entity_id' => $employeeRequest->legal_entity_id,
+                'legal_entity_uuid' => $employeeRequest->legal_entity_uuid,
+                'party_id' => $employeeRequest->party_id,
+                'user_id' => $employeeRequest->party->user_id,
+                'inserted_at' => now(),
+            ],
+            [
+                'uuid' => $approvedData['uuid'],
+                'status' => $approvedData['status'],
+                'is_active' => $approvedData['is_active'] ?? true,
+            ]
+        );
+
+        $partyData = $revisionData['party'] ?? [];
+        $partyData['uuid'] = Arr::get($approvedData, 'party.uuid');
+
+        $phonesData = $revisionData['phones'] ?? [];
+        $documentsData = $revisionData['documents'] ?? [];
+        $doctorData = $revisionData['doctor'] ?? [];
+
+        return [
+            'employee' => $employeeData,
+            'party' => $partyData,
+            'phones' => $phonesData,
+            'documents' => $documentsData,
+            'doctor' => $doctorData,
         ];
     }
 
