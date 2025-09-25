@@ -13,6 +13,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\Middleware\RateLimited;
 use Illuminate\Queue\SerializesModels;
 use App\Classes\eHealth\EHealth;
 use Illuminate\Support\Facades\Log;
@@ -34,6 +35,11 @@ class EmployeeDetailsUpsert implements ShouldQueue
         public User $user,
         protected string $token
     ) {
+    }
+
+    public function middleware(): RateLimited
+    {
+        return new RateLimited('ehealth-employee-get');
     }
 
     /**
