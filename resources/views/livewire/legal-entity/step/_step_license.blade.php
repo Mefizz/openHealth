@@ -52,7 +52,7 @@
             @endif
 
             <label for="licenseType" class="label z-10">
-                {{ __('forms.license.type') }}
+                {{ __('licenses.type') }}
             </label>
         </div>
 
@@ -75,7 +75,7 @@
             @endif
 
             <label for="licenseNumber" class="label z-10">
-                {{ __('forms.license.number') }}
+                {{ __('licenses.number') }}
             </label>
         </div>
 
@@ -157,7 +157,7 @@
             @endif
 
             <label for="licenseActiveFromDate" class="label z-10">
-                {{ __('forms.license.active_from_date') }}
+                {{ __('licenses.active_from_date') }}
             </label>
         </div>
 
@@ -201,7 +201,7 @@
             />
 
             <label for="licenseWhatLicensed" class="label z-10">
-                {{ __('forms.license.what_licensed') }}
+                {{ __('licenses.what_licensed') }}
             </label>
         </div>
 
@@ -225,7 +225,7 @@
             @endif
 
             <label for="licenseOrderNumber" class="label z-10">
-                {{ __('forms.license.order_no') }}
+                {{ __('licenses.order_no') }}
             </label>
         </div>
     </div>
