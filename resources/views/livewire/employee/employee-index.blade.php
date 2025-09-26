@@ -18,7 +18,7 @@
 
 
         <x-slot name="navigation">
-            <div class="flex flex-col my-4">
+            <div class="flex flex-col -my-4">
                 <div class="flex flex-wrap items-end justify-between gap-4">
                     <div class="flex flex-col lg:flex-row items-stretch lg:items-end gap-2 lg:gap-4 w-full">
                         <div class="w-full lg:w-96">
@@ -200,11 +200,15 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="w-full flex justify-start mt-4">
-                            <button type="button" wire:click="resetFilters" class="button-primary">
-                                {{ __('forms.reset_all_filters') }}
+                    </div>
+                    <div class="mb-9 mt-6 flex flex-col sm:flex-row gap-2 w-full">
+                            <button type="button" class="flex items-center gap-2 button-primary">
+                                @icon('search', 'w-4 h-4')
+                                <span>{{ __('forms.search') }}</span>
                             </button>
-                        </div>
+                        <button type="button" class="button-primary-outline">
+                            {{ __('forms.reset_all_filters') }}
+                        </button>
                     </div>
                 </div>
             </div>
