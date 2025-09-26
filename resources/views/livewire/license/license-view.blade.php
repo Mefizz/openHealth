@@ -10,7 +10,7 @@
         </x-header-navigation>
     </div>
 
-    <fieldset class="fieldset">
+    <fieldset class="fieldset shift-content">
         <legend class="legend">
             {{ __('licenses.details') }}
         </legend>

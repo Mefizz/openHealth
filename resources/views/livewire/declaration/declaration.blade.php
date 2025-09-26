@@ -7,7 +7,7 @@
         </x-slot>
     </x-header-navigation>
 
-    <form class="form">
+    <form class="form shift-content">
         @include('livewire.declaration.parts.main-information')
         @include('livewire.declaration.parts.authentication')
 

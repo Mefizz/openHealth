@@ -10,7 +10,7 @@
         <div class="ml-auto flex items-center gap-2 mt-2 lg:mt-0">
             <button wire:click="sync" class="button-sync flex items-center gap-2 whitespace-nowrap">
                 @icon('refresh', 'w-4 h-4')
-                {{ __('forms.synchronise_data_with_EHealth') }}
+                {{ __('forms.synchronise_with_eHealth') }}
             </button>
         </div>
 

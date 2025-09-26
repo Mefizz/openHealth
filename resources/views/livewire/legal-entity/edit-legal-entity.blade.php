@@ -3,7 +3,7 @@
         <x-slot name="title">{{ __('forms.edit_legal_entity') }}</x-slot>
     </x-header-navigation>
 
-    <section class="section-form"
+    <section class="section-form shift-content"
         x-data="{
             activeStep: 0,
             isEdit: @json($isEdit),
