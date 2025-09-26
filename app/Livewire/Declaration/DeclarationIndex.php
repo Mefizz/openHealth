@@ -103,7 +103,12 @@ class DeclarationIndex extends Component
                 ->when(
                     !$user?->hasRole('OWNER'),
                     fn (Builder $query) => $query->whereIn('employee_id', $this->employeeIds)
-                )->get()
+                )->with([
+                    'person:id,first_name,last_name,second_name,birth_date',
+                    'employee:id,party_id',
+                    'employee.party:id,first_name,last_name,second_name'
+                ])
+                ->get()
                 ->each->setAttribute('type', 'declaration');
         }
 
@@ -195,9 +200,11 @@ class DeclarationIndex extends Component
             return;
         }
 
+        $declarationRequest = DeclarationRequest::findOrFail($declarationRequestId);
+
         $this->redirectRoute(
             'declaration.edit',
-            [legalEntity(), 'patientId' => $patientId, 'declarationRequestId' => $declarationRequestId],
+            [legalEntity(), 'patientId' => $patientId, 'declarationRequest' => $declarationRequest],
             navigate: true
         );
     }
@@ -209,10 +216,11 @@ class DeclarationIndex extends Component
         }
 
         Session::flash('showSignModal');
+        $declarationRequest = DeclarationRequest::findOrFail($declarationRequestId);
 
         $this->redirectRoute(
             'declaration.edit',
-            [legalEntity(), 'patientId' => $patientId, 'declarationRequestId' => $declarationRequestId],
+            [legalEntity(), 'patientId' => $patientId, 'declarationRequest' => $declarationRequest],
             navigate: true
         );
     }

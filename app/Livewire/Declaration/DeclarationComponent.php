@@ -496,7 +496,10 @@ abstract class DeclarationComponent extends Component
             ->where('legal_entity_id', legalEntity()->id)
             ->whereNotNull('division_id')
             ->whereHas('specialities', fn (Builder $query) => $query->where('speciality_officio', true))
-            ->with(['division', 'legalEntity', 'party'])
+            ->with([
+                'division:id,uuid,name',
+                'party:id,first_name,last_name,second_name'
+            ])
             ->get();
         $this->employeesInfo = $employees->map(static fn (Employee $employee) => [
             'employeeId' => $employee->uuid,

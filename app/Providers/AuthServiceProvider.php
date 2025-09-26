@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Models\Division;
-use App\Policies\DivisionPolicy;
 use Illuminate\Support\Facades\Auth;
 use App\Auth\EHealth\Guards\EHealthGuard;
 use App\Auth\EHealth\Services\TokenStorage;
