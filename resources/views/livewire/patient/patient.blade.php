@@ -6,7 +6,7 @@
     </x-header-navigation>
 
     @if($viewState === 'default')
-        <section class="section-form">
+        <section class="section-form shift-content">
             <form class="form">
                 @include('livewire.patient.parts.patient')
                 @include('livewire.patient.parts.documents')

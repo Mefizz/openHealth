@@ -625,7 +625,8 @@ input:-webkit-autofill {
 
 @media (min-width: 2560px) {
     .shift-content {
-        @apply m-auto ml-[10%];
+        @apply mx-auto px-[10%] ml-[12%] ml-[10%];
+
     }
 }
 

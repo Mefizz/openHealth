@@ -18,7 +18,7 @@
 
 
         <x-slot name="navigation">
-            <div class="flex flex-col">
+            <div class="flex flex-col -my-4">
                 <div class="flex flex-wrap items-end justify-between gap-4">
                     <div class="flex flex-col lg:flex-row items-stretch lg:items-end gap-2 lg:gap-4 w-full">
                         <div class="w-full lg:w-96">
@@ -48,7 +48,7 @@
                             </x-forms.form-group>
                         </div>
                         <button class="button-minor flex items-center justify-center gap-2 w-full lg:w-auto self-stretch lg:self-auto mt-2 lg:mt-3.5"
-                            @click="showFilter = !showFilter">
+                                @click="showFilter = !showFilter">
                             <svg width="16" height="16" id="svg-adjustments" viewBox="0 0 16 16" fill="none"
                                  xmlns="http://www.w3.org/2000/svg">
                                 <path
@@ -200,11 +200,15 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="w-full flex justify-start mt-4">
-                            <button type="button" wire:click="resetFilters" class="button-primary">
-                                {{ __('forms.reset_all_filters') }}
+                    </div>
+                    <div class="mb-9 mt-6 flex flex-col sm:flex-row gap-2 w-full">
+                            <button type="button" class="flex items-center gap-2 button-primary">
+                                @icon('search', 'w-4 h-4')
+                                <span>{{ __('forms.search') }}</span>
                             </button>
-                        </div>
+                        <button type="button" class="button-primary-outline">
+                            {{ __('forms.reset_all_filters') }}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -212,7 +216,7 @@
     </x-header-navigation>
     <x-section class="shift-content">
         <div class="space-y-6 employee-section-no-left-padding mt-6">
-            <div class="table-container-responsive ml-3.5">
+            <div class="table-container-responsive overflow-x-auto" style="max-width:100%;">
                 @forelse($parties as $party)
                     <fieldset class="p-4 sm:p-8 sm:pb-10 mb-16 mt-6 border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 max-w-[1280px]" wire:key="party-{{ $party->id }}">
                         <legend class="legend">{{ $party->fullName }}</legend>
@@ -254,7 +258,7 @@
                         </div>
                         <div class="flow-root mt-4">
                             <div class="max-w-screen-xl">
-                                <table class="table-input w-full table-fixed">
+                                <table class="table-input w-full table-fixed min-w-[600px] text-sm">
                                     <thead class="thead-input">
                                     <tr>
                                         <th scope="col" class="th-input w-[28%]">Посада</th>

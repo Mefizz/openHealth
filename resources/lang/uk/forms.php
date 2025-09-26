@@ -100,6 +100,7 @@ return [
     'empty' => 'Пусто',
     'important' => 'Важливо',
     'reset_all_filters' => 'Скинути всі фільтри',
+    'search' => 'Шукати',
 
     // Legal Entity
     'create_legal_entity' => 'Зареєструвати заклад',

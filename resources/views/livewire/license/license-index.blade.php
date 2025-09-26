@@ -17,7 +17,7 @@
                     @endcan
                     <button wire:click="sync" class="button-sync flex items-center gap-2">
                         @icon('refresh', 'w-4 h-4')
-                        {{ __('forms.synchronise_data_with_EHealth') }}
+                        {{ __('forms.synchronise_with_eHealth') }}
                     </button>
                 </div>
             </div>

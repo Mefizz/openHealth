@@ -71,7 +71,7 @@ if (empty($breadcrumbs)) {
         </header>
 
         @isset($navigation)
-            <div class="page-navigation mt-4">
+            <div class="page-navigation mt-8">
                 {{ $navigation }}
             </div>
         @endisset
