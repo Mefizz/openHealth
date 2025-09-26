@@ -158,16 +158,16 @@ class EmployeeIndex extends EmployeeComponent
 
         $partiesOnPage = Party::whereIn('id', $paginator->pluck('id')->all())
             ->with([
-                       'phones',
-                       'employees' => function ($query) use ($legalEntityId, $employeeConstraints) {
-                           $query->where('legal_entity_id', $legalEntityId)->with('division');
-                           $employeeConstraints($query);
-                       },
-                       'employeeRequests' => function ($query) use ($legalEntityId, $requestConstraints) {
-                           $query->where('legal_entity_id', $legalEntityId)->with('division');
-                           $requestConstraints($query);
-                       },
-                   ])
+                'phones',
+                'employees' => function ($query) use ($legalEntityId, $employeeConstraints) {
+                    $query->where('legal_entity_id', $legalEntityId)->with('division');
+                    $employeeConstraints($query);
+                },
+                'employeeRequests' => function ($query) use ($legalEntityId, $requestConstraints) {
+                    $query->where('legal_entity_id', $legalEntityId)->with('division');
+                    $requestConstraints($query);
+                },
+            ])
             ->get()
             ->filter(fn ($party) => $party->employees->isNotEmpty() || $party->employeeRequests->isNotEmpty())
             ->sortBy(function ($party) {
