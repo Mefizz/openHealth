@@ -12,24 +12,89 @@
     natcasesort($dictionaries['STREET_TYPE']);
 @endphp
 
-<div class="{{ $class }}">
+<div
+    x-data="{
+        searchStartLength: 2,
+        address: $wire.entangle('address'),
+        readonly: {{ $readonly ? 'true' : 'false' }},
+        selecting: false,
+        clearStreet() {
+            this.address.building = '';
+            this.address.apartment = '';
+            this.address.zip = '';
+        },
+        clearSettlement() {
+            this.address.streetType = '';
+            this.address.street = '';
+            this.clearStreet();
+        },
+        clearRegion() {
+            this.address.settlementType = '';
+            this.address.settlement = '';
+            this.address.settlementId = '';
+            this.clearSettlement();
+        },
+        clearArea() {
+            this.address.region = '';
+            this.clearRegion();
+        },
+        init() {
+            this.$watch('address.area', value => {
+                    this.clearArea();
+            });
+            this.$watch('address.region', value => {
+                    if (!this.selecting) {
+                        return;
+                    }
+
+                    this.clearRegion();
+            });
+            this.$watch('address.settlement', value => {
+                    if (this.address.area === 'М.КИЇВ') {
+                        this.address.settlementType = 'CITY';
+                        this.address.settlement = 'Київ';
+                        this.address.settlementId = 'adaa4abf-f530-461c-bcbf-a0ac210d955b';
+
+                        return;
+                    }
+
+                    if (!this.selecting) {
+                        return;
+                    }
+
+                    this.clearSettlement();
+            });
+            this.$watch('address.street', value => {
+                if (!this.selecting) {
+                    return;
+                }
+
+                this.clearStreet();
+            });
+        }
+    }"
+    x-init="init()"
+    class="{{ $class }}"
+>
     {{-- AREA --}}
     <div class="form-group group !z-[18]">
-        <select wire:model.live="address.area"
-                required
-                id="addressArea"
-                aria-describedby="{{ $hasAreaError ? 'addressAreaErrorHelp' : '' }}"
-                class="input-select text-gray-800 {{ $hasAreaError ? 'input-error border-red-500 focus:border-red-500' : ''}} peer"
-                :disabled="{{ $readonly ? 'true' : 'false' }}"
+        <select
+            x-model.live="address.area"
+            required
+            id="addressArea"
+            aria-describedby="{{ $hasAreaError ? 'addressAreaErrorHelp' : '' }}"
+            class="input-select text-gray-800 {{ $hasAreaError ? 'input-error border-red-500 focus:border-red-500' : ''}} peer"
+            :disabled="readonly"
         >
             <option value="_placeholder_" hidden>-- {{ __('forms.select') }} --</option>
-            @nonempty($regions)
-                @foreach ($regions as $regionItem)
+
+                @forelse ($regions as $regionItem)
                     <option value="{{ $regionItem['name'] }}">
                         {{ $regionItem['name'] }}
                     </option>
-                @endforeach
-            @endnonempty
+                @empty
+                @endforelse
+
         </select>
 
         @if($hasAreaError)
@@ -44,76 +109,109 @@
     </div>
 
     {{-- REGION --}}
-    <div class="form-group group !z-[17]">
-        <div @mouseleave="timeout = setTimeout(() => { showTo = false }, 800)"
-             x-data="{
-                showTo: false,
-                srch: $wire.entangle('districtsSearching'),
-                init() {
-                    $watch('srch', (value) => {
-                        if (value) {
-                            this.showTo = true;
-                        }
-                    })
-                }
-            }"
-        >
-            <input wire:model.live.debounce.400ms="address.region"
-                   type="text"
-                   placeholder=" "
-                   id="addressRegion"
-                   autocomplete="off"
-                   x-ref="regionField"
-                   aria-describedby="{{ $hasRegionError ? 'addressRegionErrorHelp' : '' }}"
-                   class="input {{ $hasRegionError ? 'input-error border-red-500 focus:border-red-500' : ''}} peer"
-                   :disabled="{{ empty($address['area']) || (isset($address['area']) && $address['area'] === 'М.КИЇВ') || $readonly ? 'true' : 'false' }}"
-            />
+    <div class="form-group group !z-[17]"
+        {{-- @mouseleave="timeout = setTimeout(() => { showTo = false }, 800)" --}}
+        x-data="{
+            showTo: false,
+            districts: $wire.entangle('districts'),
+            initialized: false,
+            init() {
+                // tracking changes of region, but skip first time
+                this.$watch('address.region', value => {
+                    if (!this.initialized) {
+                        this.initialized = true;
 
-            <template x-if="showTo">
-                <div @click.away="showTo = false"
-                     x-transition
-                     class="absolute left-0 right-0 top-full bg-white border border-gray-300 rounded-bl-md rounded-br-md shadow-lg dark:bg-gray-800 dark:border-gray-500"
-                >
-                    <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownHoverButton">
-                        @forelse ($districts as $district)
-                            <li @click="
-                                    $refs.regionField.value = '{{ str_replace("'", "\\'", $district['name']) }}';
-                                    $wire.call('selectDistrict', '{{ str_replace("'", "\\'", $district['name']) }}');
-                                    showTo = false;
-                                "
-                                class="cursor-pointer px-4 py-2 hover:bg-gray-100 dark:hover:text-gray-200 dark:hover:bg-blue-800"
-                            >
-                                {{ $district['name'] }}
-                            </li>
-                        @empty
-                            <li class="cursor-default px-4 py-2">
-                                {{ __('forms.nothing_found') }}
-                            </li>
-                        @endforelse
-                    </ul>
-                </div>
-            </template>
+                        return; // do nothing at first time
+                    }
 
-            @if($hasRegionError)
-                <p id="addressRegionErrorHelp" class="text-error">
-                    {{ $errors->first('address.region') }}
-                </p>
-            @endif
+                    if (this.selecting || address.area === 'М.КИЇВ') return;
 
-            <label for="addressRegion" class="label z-10">
-                {{ __('forms.region') }}
-            </label>
-        </div>
+                    if (!value || value.length < searchStartLength) {
+                        this.showTo = false;
+                        return;
+                    }
+
+                    $wire.call('updateAddressRegion', value).then(() => this.showTo = true);
+                });
+
+                // when Livewire returned districts — decide to show dropdown or not
+                this.$watch('districts', value => {
+                    if (this.selecting) {
+                        return;
+                    }
+
+                    this.showTo = Array.isArray(value) && value.length > 0;
+                });
+            }
+        }"
+        x-init="init()"
+    >
+        <input
+            x-model.debounce.400ms="address.region"
+            @keydown.escape="showTo = false"
+            @change="showTo = false"
+            @blur="selecting = false; districts = []"
+            type="text"
+            placeholder=" "
+            id="addressRegion"
+            autocomplete="off"
+            aria-describedby="{{ $hasRegionError ? 'addressRegionErrorHelp' : '' }}"
+            class="input {{ $hasRegionError ? 'input-error border-red-500 focus:border-red-500' : ''}} peer"
+            :disabled="!address.area || address.area === 'М.КИЇВ' || readonly"
+        />
+
+        <template x-if="showTo">
+            <div
+                x-on:click.away="showTo = false"
+                x-transition
+                class="absolute left-0 right-0 top-full bg-white border border-gray-300 rounded-bl-md rounded-br-md shadow-lg dark:bg-gray-800 dark:border-gray-500"
+            >
+                <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownHoverButton">
+                    <template x-for="district in districts" :key="district.id">
+                        <li
+                            x-on:mousedown.stop="
+                                selecting = true;
+                                showTo = false;
+
+                                address.region = district.name.replace(/'/g, '\'');
+                            "
+                            class="cursor-pointer px-4 py-2 hover:bg-gray-100 dark:hover:text-gray-200 dark:hover:bg-blue-800"
+                        >
+                            <span x-text="district.name"></span>
+                        </li>
+                    </template>
+
+                    <template x-if="!districts || (Array.isArray(districts) && districts.length === 0)">
+                        <li class="cursor-default px-4 py-2">
+                            {{ __('forms.nothing_found') }}
+                        </li>
+                    </template>
+                </ul>
+            </div>
+        </template>
+
+        @if($hasRegionError)
+            <p id="addressRegionErrorHelp" class="text-error">
+                {{ $errors->first('address.region') }}
+            </p>
+        @endif
+
+        <label for="addressRegion" class="label z-10">
+            {{ __('forms.region') }}
+        </label>
     </div>
 
     {{-- TYPE --}}
     <div class="form-group group !z-[16]">
-        <select wire:model.live="address.settlementType"
-                required
-                id="addressSettlementType"
-                aria-describedby="{{ $hasSettlementTypeError ? 'addressSettlementTypeErrorHelp' : '' }}"
-                class="input-select text-gray-800 {{ $hasSettlementTypeError ? 'input-error border-red-500 focus:border-red-500' : ''}} peer"
-                :disabled="{{ empty($address['region']) || $readonly ? 'true' : 'false' }}"
+        <select
+            {{-- wire:model.live="address.settlementType" --}}
+            x-model="address.settlementType"
+            required
+            @blur="selecting=false"
+            id="addressSettlementType"
+            aria-describedby="{{ $hasSettlementTypeError ? 'addressSettlementTypeErrorHelp' : '' }}"
+            class="input-select text-gray-800 {{ $hasSettlementTypeError ? 'input-error border-red-500 focus:border-red-500' : ''}} peer"
+            :disabled="!address.region || readonly"
         >
             <option value="_placeholder_" selected hidden>-- {{ __('forms.select') }} --</option>
 
@@ -141,76 +239,110 @@
     </div>
 
     {{-- SETTLEMENT --}}
-    <div class="form-group group !z-[15]">
-        <div @mouseleave="timeout = setTimeout(() => { showTo = false }, 800)"
-             x-data="{
-                showTo: false,
-                srch: $wire.entangle('settlementsSearching'),
-                init() {
-                    $watch('srch', (value) => {
-                        if (value) {
-                            this.showTo = true;
-                        }
-                    })
-                },
-            }"
-        >
-            <input wire:model.live.debounce.400ms="address.settlement"
-                   required
-                   type="text"
-                   placeholder=" "
-                   id="addressSettlement"
-                   autocomplete="off"
-                   x-ref="settlementField"
-                   aria-describedby="{{ $hasSettlementError? 'addressSettlementErrorHelp' : '' }}"
-                   class="input {{ $hasSettlementError ? 'input-error border-red-500 focus:border-red-500' : ''}} peer"
-                   :disabled="{{ empty($address['settlementType']) || (isset($address['area']) && $address['area']) === 'М.КИЇВ' || $readonly ? 'true' : 'false' }}"
-            />
+    <div class="form-group group !z-[15]"
+        {{-- @mouseleave="timeout = setTimeout(() => { showTo = false }, 800)" --}}
+        x-data="{
+            showTo: false,
+            settlements: $wire.entangle('settlements'),
+            initialized: false,
+            init() {
+                this.$watch('address.settlement', value => {
+                    // tracking changes of settlement, but skip first time
+                    if (!this.initialized) {
+                        this.initialized = true;
 
-            <template x-if="showTo">
-                <div @click.away="showTo = false"
-                     x-transition
-                     class="absolute left-0 right-0 top-full bg-white border border-gray-300 rounded-bl-md rounded-br-md shadow-lg dark:bg-gray-800 dark:border-gray-500"
-                >
-                    <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownHoverButton">
-                        @forelse ($settlements as $settlement)
-                            <li @click="
-                                    $refs.settlementField.value = '{{ str_replace("'", "\\'", $settlement['name']) }}';
-                                    $wire.call('selectSettlements', '{{ str_replace("'", "\\'", $settlement['name']) }}', '{{ $settlement['id'] }}');
-                                    showTo = false;
-                                "
-                                class="cursor-pointer px-4 py-2 hover:bg-gray-100 dark:hover:text-gray-200 dark:hover:bg-blue-800"
-                            >
-                                {{ $settlement['name'] }}
-                            </li>
-                        @empty
-                            <li class="cursor-default px-4 py-2">
-                                {{ __('forms.nothing_found') }}
-                            </li>
-                        @endforelse
-                    </ul>
-                </div>
-            </template>
+                        return; // do nothing at first time
+                    }
 
-            @if($hasSettlementError)
-                <p id="addressSettlementErrorHelp" class="text-error">
-                    {{ $errors->first('address.settlement') }}
-                </p>
-            @endif
+                    if (this.selecting || address.area === 'М.КИЇВ') return;
 
-            <label for="addressSettlement" class="label z-10">
-                {{ __('forms.settlement') }}
-            </label>
-        </div>
+                    if (!value || value.length < searchStartLength) {
+                        this.showTo = false;
+                        return;
+                    }
+
+                    $wire.call('updateAddressSettlement', value)
+                        .then(() =>  this.showTo = true);
+                });
+
+                // when Livewire returned settlements — decide to show dropdown or not
+                this.$watch('settlements', value => {
+                    if (this.selecting) {
+                        return;
+                    }
+
+                    this.showTo = Array.isArray(value) && value.length > 0;
+                });
+            }
+        }"
+        x-init="init()"
+    >
+        <input
+            x-model.debounce.400ms="address.settlement"
+            @keydown.escape="showTo = false"
+            @change="showTo = false; settlemets = []"
+            @blur="selecting = false"
+            required
+            type="text"
+            placeholder=" "
+            id="addressSettlement"
+            autocomplete="off"
+            aria-describedby="{{ $hasSettlementError? 'addressSettlementErrorHelp' : '' }}"
+            class="input {{ $hasSettlementError ? 'input-error border-red-500 focus:border-red-500' : ''}} peer"
+            :disabled="!address.settlementType || address.area === 'М.КИЇВ' || readonly"
+        />
+
+        <template x-if="showTo && address.area !== 'М.КИЇВ'">
+            <div
+                @click.away="showTo = false"
+                x-transition
+                class="absolute left-0 right-0 top-full bg-white border border-gray-300 rounded-bl-md rounded-br-md shadow-lg dark:bg-gray-800 dark:border-gray-500"
+            >
+                <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownHoverButton">
+                    <template x-for="settlement in settlements" :key="settlement.id">
+                        <li
+                            x-on:mousedown.stop="
+                                selecting = true;
+                                showTo = false;
+
+                                address.settlement = settlement.name.replace(/'/g, '\'');
+                                address.settlementId = settlement.id;
+                            "
+                            class="cursor-pointer px-4 py-2 hover:bg-gray-100 dark:hover:text-gray-200 dark:hover:bg-blue-800"
+                        >
+                            <span x-text="settlement.name"></span>
+                        </li>
+                    </template>
+
+                    <template x-if="!settlements || (Array.isArray(settlements) && settlements.length === 0)">
+                        <li class="cursor-default px-4 py-2">
+                            {{ __('forms.nothing_found') }}
+                        </li>
+                    </template>
+                </ul>
+            </div>
+        </template>
+
+        @if($hasSettlementError)
+            <p id="addressSettlementErrorHelp" class="text-error">
+                {{ $errors->first('address.settlement') }}
+            </p>
+        @endif
+
+        <label for="addressSettlement" class="label z-10">
+            {{ __('forms.settlement') }}
+        </label>
     </div>
 
     {{-- STREET_TYPE --}}
     <div class="form-group group !z-[14]">
-        <select wire:model.live="address.streetType"
-                id="addressStreetType"
-                aria-describedby="{{ $hasStreetTypeError ? 'addressStreetTypeErrorHelp' : '' }}"
-                class="input-select text-gray-800 {{ $hasStreetTypeError ? 'input-error border-red-500 focus:border-red-500' : ''}} peer"
-                :disabled="{{ empty($address['settlement']) || $readonly ? 'true' : 'false' }}"
+        <select
+            x-model="address.streetType"
+            id="addressStreetType"
+            @blur="selecting=false"
+            aria-describedby="{{ $hasStreetTypeError ? 'addressStreetTypeErrorHelp' : '' }}"
+            class="input-select text-gray-800 {{ $hasStreetTypeError ? 'input-error border-red-500 focus:border-red-500' : ''}} peer"
+            :disabled="!address.settlement || readonly"
         >
             <option value="_placeholder_" selected hidden>-- {{ __('forms.select') }} --</option>
 
@@ -238,76 +370,113 @@
     </div>
 
     {{-- STREET --}}
-    <div class="form-group group !z-[13]">
-        <input wire:model.live.debounce.400ms="address.street"
-               type="text"
-               placeholder=" "
-               id="addressStreet"
-               autocomplete="off"
-               x-ref="streetField"
-               aria-describedby="{{ $hasStreetError ? 'addressStreetErrorHelp' : '' }}"
-               class="input {{ $hasStreetError ? 'input-error border-red-500 focus:border-red-500' : ''}} peer"
-               :disabled="{{ empty($address['settlementType']) || $readonly ? 'true' : 'false' }}"
-        />
+    <div class="form-group group !z-[13]"
+       {{-- @mouseleave="timeout = setTimeout(() => { showTo = false }, 800)" --}}
+        x-data="{
+            showTo: false,
+            streets: $wire.entangle('streets'),
+            initialized: false,
+            init() {
+                this.$watch('address.street', value => {
+                    // tracking changes of settlement, but skip first time
+                    if (!this.initialized) {
+                        this.initialized = true;
 
-        <div @mouseleave="timeout = setTimeout(() => { showTo = false }, 800)"
-             x-data="{
-                showTo: false,
-                srch: $wire.entangle('streetsSearching'),
-                init() {
-                    $watch('srch', (value) => {
-                            this.showTo = true;
-                    })
-                }
-            }"
-        >
-            <div @click.away="showTo = false"
-                 x-cloak
-                 x-transition
-                 x-show="showTo"
-                 class="absolute left-0 right-0 top-full bg-white border border-gray-300 rounded-bl-md rounded-br-md shadow-lg dark:bg-gray-800 dark:border-gray-500"
-                 :disabled="{{ $readonly ? 'true' : 'false' }}"
+                        return; // at first time do nothing
+                    }
+
+                    // skip when selecting from dropdown or selecting Kyiv area
+                    if (this.selecting  || address.area === 'М.КИЇВ') {
+                        return;
+                    }
+
+                    if (!value || value.length < searchStartLength) {
+                        this.showTo = false;
+                        return;
+                    }
+
+                    $wire.call('updateAddressStreet', value).then(() => this.showTo = true);
+                });
+
+                // when Livewire returned streets — decide to show dropdown or not
+                this.$watch('streets', value => {
+                    if (this.selecting) {
+                        return;
+                    }
+
+                    this.showTo = Array.isArray(value) && value.length > 0;
+                });
+            }
+        }"
+        x-init="init()"
+    >
+            <input
+                x-model.debounce.400ms="address.street"
+                @keydown.escape="showTo = false"
+                @change="showTo = false; settlemets = []"
+                @blur="selecting = false"
+                type="text"
+                placeholder=" "
+                id="addressStreet"
+                autocomplete="off"
+                aria-describedby="{{ $hasStreetError ? 'addressStreetErrorHelp' : '' }}"
+                class="input {{ $hasStreetError ? 'input-error border-red-500 focus:border-red-500' : ''}} peer"
+                :disabled="(!address.settlementType && !selecting) || readonly"
+            />
+
+            <div x-cloak x-show="showTo"
+                @click.away="showTo = false"
+
+                x-transition
+
+                class="absolute left-0 right-0 top-full bg-white border border-gray-300 rounded-bl-md rounded-br-md shadow-lg dark:bg-gray-800 dark:border-gray-500"
+                {{-- :disabled="{{ $readonly ? 'true' : 'false' }}" --}}
             >
                 <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownHoverButton">
-                    @forelse ($streets as $street)
-                        <li @click="
-                                $refs.streetField.value = '{{ str_replace("'", "\\'", $street['name']) }}';
-                                $wire.call('selectStreets', '{{ str_replace("'", "\\'", $street['name']) }}');
+                    <template x-for="street in streets" :key="street.id">
+                        <li
+                            x-on:mousedown.stop="
+                                selecting = true;
                                 showTo = false;
+
+                                address.street = street.name.replace(/'/g, '\'');
                             "
                             class="cursor-pointer px-4 py-2 hover:bg-gray-100 dark:hover:text-gray-200 dark:hover:bg-blue-800"
                         >
-                            {{ $street['name'] }}
+                            <span x-text="street.name"></span>
                         </li>
-                    @empty
+                    </template>
+
+                    <template x-if="!streets || (Array.isArray(streets) && streets.length === 0)">
                         <li class="cursor-default px-4 py-2">
                             {{ __('forms.nothing_found') }}
                         </li>
-                    @endforelse
+                    </template>
                 </ul>
             </div>
-        </div>
 
-        @if($hasStreetError)
-            <p id="addressStreetErrorHelp" class="text-error">
-                {{ $errors->first('address.street') }}
-            </p>
-        @endif
 
-        <label for="addressStreet" class="label z-10">
-            {{ __('forms.street') }}
-        </label>
+            @if($hasStreetError)
+                <p id="addressStreetErrorHelp" class="text-error">
+                    {{ $errors->first('address.street') }}
+                </p>
+            @endif
+
+            <label for="addressStreet" class="label z-10">
+                {{ __('forms.street') }}
+            </label>
     </div>
 
     {{-- BUILDING --}}
     <div class="form-group group !z-[12]">
-        <input wire:model="address.building"
-               type="text"
-               placeholder=" "
-               id="addressBuilding"
-               aria-describedby="{{ $hasBuildingError ? 'addressBuildingErrorHelp' : '' }}"
-               class="input {{ $hasBuildingError ? 'input-error border-red-500 focus:border-red-500' : ''}} peer"
-               :disabled="{{ empty($address['settlement']) || $readonly ? 'true' : 'false' }}"
+        <input
+            x-model="address.building"
+            type="text"
+            placeholder=" "
+            id="addressBuilding"
+            aria-describedby="{{ $hasBuildingError ? 'addressBuildingErrorHelp' : '' }}"
+            class="input {{ $hasBuildingError ? 'input-error border-red-500 focus:border-red-500' : ''}} peer"
+            :disabled="!address.street || readonly"
         />
 
         @if($hasBuildingError)
@@ -323,13 +492,14 @@
 
     {{-- APARTMENT --}}
     <div class="form-group group !z-[11]">
-        <input wire:model="address.apartment"
-               type="text"
-               placeholder=" "
-               id="addressApartment"
-               aria-describedby="{{ $hasApartmentError ? 'addressApartmentErrorHelp' : '' }}"
-               class="input {{ $hasApartmentError ? 'input-error border-red-500 focus:border-red-500' : ''}} peer"
-               :disabled="{{ empty($address['settlement']) || $readonly ? 'true' : 'false' }}"
+        <input
+            x-model="address.apartment"
+            type="text"
+            placeholder=" "
+            id="addressApartment"
+            aria-describedby="{{ $hasApartmentError ? 'addressApartmentErrorHelp' : '' }}"
+            class="input {{ $hasApartmentError ? 'input-error border-red-500 focus:border-red-500' : ''}} peer"
+            :disabled="!address.street || readonly"
         />
 
         @if($hasApartmentError)
@@ -345,14 +515,15 @@
 
     {{-- ZIP --}}
     <div class="form-group group">
-        <input wire:model="address.zip"
-               type="text"
-               x-mask="99999"
-               placeholder=" "
-               id="addressZip"
-               aria-describedby="{{ $hasZipError ? 'addressZipErrorHelp' : '' }}"
-               class="input {{ $hasZipError ? 'input-error border-red-500 focus:border-red-500' : ''}} peer"
-               :disabled="{{ empty($address['settlement']) || $readonly ? 'true' : 'false' }}"
+        <input
+            x-model="address.zip"
+            type="text"
+            x-mask="99999"
+            placeholder=" "
+            id="addressZip"
+            aria-describedby="{{ $hasZipError ? 'addressZipErrorHelp' : '' }}"
+            class="input {{ $hasZipError ? 'input-error border-red-500 focus:border-red-500' : ''}} peer"
+            :disabled="!address.street || readonly"
         />
 
         @if($hasZipError)
