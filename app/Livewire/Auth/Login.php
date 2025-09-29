@@ -111,8 +111,8 @@ class Login extends Component
 
         $user = User::where('email', $this->email)->first();
 
-        // If first login(user doesn't exist in users table)
-        if (!$user) {
+        // If first login(user doesn't exist in users table, or UUID is empty)
+        if (!$user || empty($user->uuid)) {
             $this->showRoleSelect = true;
 
             if (empty($this->role)) {
@@ -148,21 +148,7 @@ class Login extends Component
                 return back();
             }
 
-            $path = $this->buildEHealthLoginUrl($user);
-            $scopeValue = Str::of($path)->after('scope=');
-
-            if (empty($this->role) && $scopeValue->isEmpty()) {
-                $this->showRoleSelect = true;
-                $this->addError('role', __('Будь ласка, оберіть роль.'));
-
-                return back();
-            }
-
-            if ($scopeValue->isEmpty()) {
-                $path = $this->buildFirstEHealthLoginUrl();
-            }
-
-            return Redirect::to($path);
+            return Redirect::to($this->buildEHealthLoginUrl($user));
         }
 
         if (!Auth::attempt($credentials)) {
