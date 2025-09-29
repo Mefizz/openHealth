@@ -53,7 +53,7 @@
                 <div class="form-group group">
                     <select wire:model="role" class="input-select peer">
                         <option value="" selected>{{ __('forms.select') }}</option>
-                        @foreach(array_keys(config('ehealth.roles')) as $role)
+                        @foreach($rolesList as $role)
                             <option value="{{ $role }}">{{ __("auth.login.role.$role") }}</option>
                         @endforeach
                     </select>

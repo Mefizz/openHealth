@@ -44,11 +44,14 @@ class Login extends Component
 
     public bool $isFirstLogin = false;
 
+    public $rolesList = [];
+
     public bool $showRoleSelect = false;
 
     public function mount(): void
     {
         $this->legalEntitiesList = $this->getLegalEntitiesList();
+        $this->rolesList = Role::pluck('name', 'id')->unique()->toArray();
     }
 
     /**
@@ -145,7 +148,21 @@ class Login extends Component
                 return back();
             }
 
-            return Redirect::to($this->buildEHealthLoginUrl($user));
+            $path = $this->buildEHealthLoginUrl($user);
+            $scopeValue = Str::of($path)->after('scope=');
+
+            if (empty($this->role) && $scopeValue->isEmpty()) {
+                $this->showRoleSelect = true;
+                $this->addError('role', __('Будь ласка, оберіть роль.'));
+
+                return back();
+            }
+
+            if ($scopeValue->isEmpty()) {
+                $path = $this->buildFirstEHealthLoginUrl();
+            }
+
+            return Redirect::to($path);
         }
 
         if (!Auth::attempt($credentials)) {

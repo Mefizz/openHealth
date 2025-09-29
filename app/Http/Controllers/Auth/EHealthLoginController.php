@@ -6,7 +6,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Auth\EHealth\Services\TokenStorage;
 use App\Classes\eHealth\Exceptions\ApiException;
-use App\Events\EhealthUserLoggedIn;
 use App\Events\EHealthUserLogin;
 use App\Http\Controllers\Controller;
 use App\Mail\UserCredentialsMail;
@@ -231,6 +230,12 @@ class EHealthLoginController extends Controller
 
             // If we have party with such email, then the user is fully verified because the email is confirmed by eHealth (if we're here)
             $this->isPartiallyVerified = empty($party);
+        }
+
+        // Assume that user isPartiallyVerified because we need to connect User with Employees, also set uuid
+        if ($user && empty($user->uuid)) {
+            $this->isPartiallyVerified = true;
+            $user->update(['uuid' => $authUserUUID]);
         }
 
         $this->isFirstLogin = true;
