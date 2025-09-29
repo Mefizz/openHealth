@@ -20,27 +20,6 @@ trait AddressSearch
 
     public ?array $streets = [];
 
-    /**
-     * Flag to indicate districts searching attempt
-     *
-     * @var bool
-     */
-    public bool $districtsSearching = false;
-
-    /**
-     * Flag to indicate settlements searching attempt
-     *
-     * @var bool
-     */
-    public bool $settlementsSearching = false;
-
-    /**
-     * Flag to indicate streets searching attempt
-     *
-     * @var bool
-     */
-    public bool $streetsSearching = false;
-
     public function addressValidation(): array
     {
         $errors = [];
@@ -52,17 +31,6 @@ trait AddressSearch
         }
 
         return $errors;
-    }
-
-    public function updatedAddressArea($value)
-    {
-        if ($value === 'М.КИЇВ') {
-            $this->address['region'] = '';
-            $this->address['settlement'] = 'Київ';
-            $this->address['settlementType'] = 'CITY';
-            $this->address['streetType'] = 'STREET';
-            $this->address['settlementId'] = 'adaa4abf-f530-461c-bcbf-a0ac210d955b';
-        }
     }
 
     public function setAddressesFields($addresses)
@@ -79,56 +47,31 @@ trait AddressSearch
         }
     }
 
-    // Reset fields for cases when different fields selection
-    public function updated($field)
-    {
-        $fieldsToReset = match (substr($field, strrpos($field, '.') + 1)) {
-            'area' => ['region', 'settlement', 'settlementId', 'settlementType', 'streetType', 'street', 'building', 'apartment', 'zip'],
-            'region' => ['settlement', 'settlementId', 'settlementType', 'streetType', 'street', 'building', 'apartment', 'zip'],
-            'settlement' => ['streetType', 'street', 'building', 'apartment', 'zip'],
-            'street' => ['building', 'apartment', 'zip'],
-            default => []
-        };
-
-        foreach ($fieldsToReset as $fieldToReset) {
-            $this->address[$fieldToReset] = '';
-        }
-    }
-
-    public function updatedAddressRegion($value)
+    public function updateAddressRegion($value)
     {
         $this->districts = [];
-        $this->districtsSearching = !$this->districtsSearching;
 
         if (strlen($value) > 2) {
             $this->getDistricts();
         }
-    }
+   }
 
-    public function updatedAddressStreet($value)
+    public function updateAddressStreet($value)
     {
         $this->streets = [];
-        $this->streetsSearching = !$this->streetsSearching;
 
         if (strlen($value) > 2) {
             $this->getStreets();
         }
     }
 
-    public function updatedAddressSettlement($value)
+    public function updateAddressSettlement($value)
     {
         $this->settlements = [];
-        $this->settlementsSearching = !$this->settlementsSearching;
 
         if (strlen($value) > 2) {
             $this->getSettlements();
         }
-    }
-
-    public function selectDistrict($name)
-    {
-        $this->address['region'] = $name;
-        $this->districts = [];
     }
 
     public function selectStreets($name)
