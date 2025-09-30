@@ -44,11 +44,14 @@ class Login extends Component
 
     public bool $isFirstLogin = false;
 
+    public $rolesList = [];
+
     public bool $showRoleSelect = false;
 
     public function mount(): void
     {
         $this->legalEntitiesList = $this->getLegalEntitiesList();
+        $this->rolesList = Role::pluck('name', 'id')->unique()->toArray();
     }
 
     /**
@@ -108,8 +111,8 @@ class Login extends Component
 
         $user = User::where('email', $this->email)->first();
 
-        // If first login(user doesn't exist in users table)
-        if (!$user) {
+        // If first login(user doesn't exist in users table, or UUID is empty)
+        if (!$user || empty($user->uuid)) {
             $this->showRoleSelect = true;
 
             if (empty($this->role)) {
