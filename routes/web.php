@@ -50,6 +50,8 @@ use App\Livewire\Patient\Records\PatientData;
 use App\Livewire\Patient\Records\PatientEpisodes;
 use App\Livewire\Patient\Records\PatientSummary;
 use App\Livewire\Procedure\ProcedureCreate;
+use App\Models\Declaration;
+use App\Models\DeclarationRequest;
 use App\Models\Division;
 use App\Models\HealthcareService;
 use App\Models\LegalEntity;
@@ -97,7 +99,6 @@ Route::middleware('guest')->group(function () {
 Route::post('logout', Logout::class)->name('logout');
 
 /* Dashboard */
-
 Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
     Route::get('/verify-personality', VerifyPersonality::class)->name('party.verify');
 
@@ -111,109 +112,114 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
             ->name('legal-entity.new.create');
     });
 
-    Route::middleware(['can:access,legalEntity'])->prefix('/dashboard/{legalEntity}')->whereNumber('legalEntity')->group(function () {
+    Route::middleware(['can:access,legalEntity'])->prefix('/dashboard/{legalEntity}')
+        ->whereNumber('legalEntity')
+        ->group(function () {
+            Route::get('/', Dashboard::class)->name('dashboard');
 
-        Route::get('/', Dashboard::class)->name('dashboard');
+            Route::get('/edit', EditLegalEntity::class)
+                ->can('edit', LegalEntity::class)
+                ->name('legal-entity.edit');
 
-        Route::get('/edit', EditLegalEntity::class)
-            ->can('edit', LegalEntity::class)
-            ->name('legal-entity.edit');
+            Route::get('/create', CreateLegalEntity::class)
+                ->can('create', LegalEntity::class)
+                ->name('legal-entity.create');
 
-        Route::get('/create', CreateLegalEntity::class)
-            ->can('create', LegalEntity::class)
-            ->name('legal-entity.create');
+            Route::prefix('division')->middleware(['permission:division:read|division:details'])->group(function () {
+                Route::get('/', DivisionIndex::class)->name('division.index')->can('viewAny', Division::class);
 
-        Route::prefix('division')->middleware(['permission:division:read|division:details'])->group(function () {
-            Route::get('/', DivisionIndex::class)->name('division.index')->can('viewAny', Division::class);
+                Route::get('/create', DivisionCreate::class)->name('division.create')->can('create', Division::class);
+                Route::get('/{division}', DivisionView::class)->name('division.view')->can('viewAny', Division::class);
+                Route::get('/{division}/edit', DivisionEdit::class)->name('division.edit')->can('update', 'division');
 
-            Route::get('/create', DivisionCreate::class)->name('division.create')->can('create', Division::class);
-            Route::get('/{division}', DivisionView::class)->name('division.view')->can('viewAny', Division::class);
-            Route::get('/{division}/edit', DivisionEdit::class)->name('division.edit')->can('update', 'division');
-
-            Route::get('/{division}/healthcare-service', HealthcareServiceIndex::class)
-                ->name('healthcare-service.index')
-                ->can('viewAny', HealthcareService::class);
-            Route::get('/{division}/healthcare-service/create', HealthcareServiceCreate::class)
-                ->name('healthcare-service.create')
-                ->can('create', HealthcareService::class);
-        });
-
-        Route::prefix('employee')->name('employee.')->middleware('auth')->group(function () {
-            Route::get('/', EmployeeIndex::class)->name('index');
-
-            Route::get('/{employee}', EmployeeShow::class)
-                ->name('show')->middleware('can:view,employee');
-
-            Route::get('/{employee}/edit', EmployeeEdit::class)
-                ->name('edit')->middleware('can:update,employee');
-        });
-
-        // --- Group for Employee Requests ---
-        Route::prefix('employee-request')->name('employee-request.')->middleware('auth')->group(function () {
-            Route::get('/create', EmployeeCreate::class)->name('create');
-            Route::get('/party/{party}/position-add', EmployeePositionAdd::class)->name('position-add');
-
-            Route::get('/{employee_request}', EmployeeRequestShow::class)
-                ->name('show')->middleware('can:view,employee_request');
-
-            Route::get('/{employee_request}/edit', EmployeeRequestEdit::class)
-                ->name('edit')->middleware('can:update,employee_request');
-        });
-
-        Route::prefix('contract')->group(function () {
-            Route::get('/', ContractIndex::class)->name('contract.index');
-            Route::get('/form/{id?}', ContractForm::class)->name('contract.form');
-        });
-
-        // Routes related to legal entity licenses; primary license can't be edited
-        Route::prefix('license')->middleware(['permission:license:read|license:write'])->group(function () {
-
-            Route::get('/', LicenseIndex::class)->name('license.index')->can('viewAny', License::class);
-            Route::get('/create', LicenseCreate::class)->name('license.create')->can('create', License::class);
-
-            Route::middleware(['can:view,license'])->prefix('{license}')->whereNumber('license')->group(function () {
-                Route::get('/', static function (LegalEntity $legalEntity, License $license) {
-                    if (Gate::allows('update', [$license, $legalEntity]) &&
-                        !$license->isPrimary && $legalEntity->type === LegalEntity::TYPE_PHARMACY) {
-                        return App::call(LicenseEdit::class, [$legalEntity, $license]);
-                    } elseif (Gate::allows('view', [$license, $legalEntity])) {
-                        return App::call(LicenseView::class, [$legalEntity, $license]);
-                    }
-
-                    // If both check is false
-                    abort(404);
-                })->name('license.view');
+                Route::get('/{division}/healthcare-service', HealthcareServiceIndex::class)
+                    ->name('healthcare-service.index')
+                    ->can('viewAny', HealthcareService::class);
+                Route::get('/{division}/healthcare-service/create', HealthcareServiceCreate::class)
+                    ->name('healthcare-service.create')
+                    ->can('create', HealthcareService::class);
             });
-        });
 
-        Route::get('/declaration', DeclarationIndex::class)->name('declaration.index');
+            Route::prefix('employee')->name('employee.')->middleware('auth')->group(function () {
+                Route::get('/', EmployeeIndex::class)->name('index');
 
-        Route::group(['middleware' => ['role:OWNER|ADMIN|DOCTOR']], static function () {
+                Route::get('/{employee}', EmployeeShow::class)
+                    ->name('show')->middleware('can:view,employee');
+
+                Route::get('/{employee}/edit', EmployeeEdit::class)
+                    ->name('edit')->middleware('can:update,employee');
+            });
+
+            // --- Group for Employee Requests ---
+            Route::prefix('employee-request')->name('employee-request.')->middleware('auth')->group(function () {
+                Route::get('/create', EmployeeCreate::class)->name('create');
+                Route::get('/party/{party}/position-add', EmployeePositionAdd::class)->name('position-add');
+
+                Route::get('/{employee_request}', EmployeeRequestShow::class)
+                    ->name('show')->middleware('can:view,employee_request');
+
+                Route::get('/{employee_request}/edit', EmployeeRequestEdit::class)
+                    ->name('edit')->middleware('can:update,employee_request');
+            });
+
+            Route::prefix('contract')->group(function () {
+                Route::get('/', ContractIndex::class)->name('contract.index');
+                Route::get('/form/{id?}', ContractForm::class)->name('contract.form');
+            });
+
+            // Routes related to legal entity licenses; primary license can't be edited
+            Route::prefix('license')->middleware(['permission:license:read|license:write'])
+                ->name('license.')
+                ->group(function () {
+                    Route::get('/', LicenseIndex::class)->name('index')->can('viewAny', License::class);
+                    Route::get('/create', LicenseCreate::class)->name('create')->can('create', License::class);
+
+                    Route::middleware(['can:view,license'])->prefix('{license}')->whereNumber('license')->group(
+                        function () {
+                            Route::get('/', static function (LegalEntity $legalEntity, License $license) {
+                                if (Gate::allows('update', [$license, $legalEntity]) &&
+                                    !$license->isPrimary && $legalEntity->type === LegalEntity::TYPE_PHARMACY) {
+                                    return App::call(LicenseEdit::class, [$legalEntity, $license]);
+                                } elseif (Gate::allows('view', [$license, $legalEntity])) {
+                                    return App::call(LicenseView::class, [$legalEntity, $license]);
+                                }
+
+                                // If both check is false
+                                abort(404);
+                            })->name('view');
+                        }
+                    );
+                });
+
+            Route::get('/declaration', DeclarationIndex::class)
+                ->name('declaration.index')
+                ->can('viewAny', Declaration::class);
+
             Route::prefix('patient')->group(static function () {
-                Route::get('/', PatientIndex::class)
-                    ->can('viewAny', Person::class)
-                    ->name('patient.index');
-                Route::get('/create', PatientCreate::class)
-                    ->can('create', PersonRequest::class)
-                    ->name('patient.create');
-                Route::get('/edit/{id}', PatientEdit::class)
-                    ->can('create', PersonRequest::class)
-                    ->name('patient.edit');
+                Route::name('patient.')->group(static function () {
+                    Route::get('/', PatientIndex::class)->can('viewAny', Person::class)->name('index');
+                    Route::get('/create', PatientCreate::class)->can('create', PersonRequest::class)->name('create');
+                    Route::get('/edit/{id}', PatientEdit::class)->can('create', PersonRequest::class)->name('edit');
 
-                Route::get('/declaration/{declaration}', DeclarationView::class)
-                    ->can('view', 'declaration')
-                    ->name('declaration.view')
-                    ->whereNumber('declaration');
-                Route::get('/{patientId}/declaration/create', DeclarationCreate::class)
-                    ->name('declaration.create')
-                    ->whereNumber('patientId');
-                Route::get('/{patientId}/declaration/{declarationRequestId}', DeclarationEdit::class)
-                    ->name('declaration.edit')
-                    ->whereNumber(['patientId', 'declarationRequestId']);
+                    Route::get('/{patientId}/patient-data', PatientData::class)->name('patient-data');
+                    Route::get('/{patientId}/summary', PatientSummary::class)->name('summary');
+                    Route::get('/{patientId}/episodes', PatientEpisodes::class)->name('episodes');
+                });
 
-                Route::get('/{patientId}/patient-data', PatientData::class)->name('patient.patient-data');
-                Route::get('/{patientId}/summary', PatientSummary::class)->name('patient.summary');
-                Route::get('/{patientId}/episodes', PatientEpisodes::class)->name('patient.episodes');
+                Route::name('declaration.')->group(static function () {
+                    Route::get('/declaration/{declaration}', DeclarationView::class)
+                        ->can('view', 'declaration')
+                        ->name('view')
+                        ->whereNumber('declaration');
+                    Route::get('/{patientId}/declaration/create', DeclarationCreate::class)
+                        ->name('create')
+                        ->can('create', DeclarationRequest::class)
+                        ->whereNumber('patientId');
+                    Route::get('/{patientId}/declaration/{declarationRequest}', DeclarationEdit::class)
+                        ->name('edit')
+                        ->can('update', 'declarationRequest')
+                        ->whereNumber(['patientId', 'declarationRequest']);
+                });
 
                 Route::can('create' . Encounter::class)->group(static function () {
                     Route::get('/{patientId}/encounter/create', EncounterCreate::class)->name('encounter.create');
@@ -231,7 +237,6 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                 });
             });
         });
-    });
 });
 
 Route::get('/page-not-found', fn () => view('errors.404'))->name('url.page-not-found');

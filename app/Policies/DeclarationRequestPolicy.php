@@ -36,6 +36,24 @@ class DeclarationRequestPolicy
     }
 
     /**
+     * Determine whether the user can continue to create declaration request in status DRAFT.
+     */
+    public function update(User $user, DeclarationRequest $declarationRequest): Response
+    {
+        if ($declarationRequest->legalEntityId !== legalEntity()->id) {
+            return Response::denyWithStatus(404);
+        }
+
+        $user->load(['party:id,user_id,tax_id', 'party.employees:id,uuid,party_id']);
+        // Check if belongs to employee_id
+        if (!$user->party->employees->contains('id', $declarationRequest->employeeId)) {
+            return Response::denyWithStatus(404);
+        }
+
+        return Response::allow();
+    }
+
+    /**
      * Determine whether the user can create declaration request.
      */
     public function approve(User $user): Response

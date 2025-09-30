@@ -137,10 +137,9 @@
 
                                     @if($declaration->type === 'request' && $declaration->status === Status::NEW)
                                         @can('approve', $declaration)
-                                            <button
-                                                wire:click="approve({{ $declaration->person->id }}, {{ $declaration->id }})"
-                                                @click="openDropdown = false"
-                                                class="cursor-pointer text-[#222222] text-nowrap flex gap-3 items-center py-2 pl-4 pr-19"
+                                            <button @click="openDropdown = false"
+                                                    wire:click="approve({{ $declaration->person->id }}, {{ $declaration->id }})"
+                                                    class="cursor-pointer text-[#222222] text-nowrap flex gap-3 items-center py-2 pl-4 pr-19"
                                             >
                                                 @icon('check-circle', 'w-5 h-5 text-red-500')
                                                 {{ __('declarations.approve') }}
@@ -160,10 +159,9 @@
 
                                     @if($declaration->type === 'request' && $declaration->status === Status::APPROVED)
                                         @can('sign', $declaration)
-                                            <button
-                                                wire:click="sign({{ $declaration->person->id }}, {{ $declaration->id }})"
-                                                @click="openDropdown = false"
-                                                class="cursor-pointer text-[#222222] text-nowrap flex gap-3 items-center py-2 pl-4 pr-19"
+                                            <button @click="openDropdown = false"
+                                                    wire:click="sign({{ $declaration->person->id }}, {{ $declaration->id }})"
+                                                    class="cursor-pointer text-[#222222] text-nowrap flex gap-3 items-center py-2 pl-4 pr-19"
                                             >
                                                 @icon('check-circle', 'w-5 h-5 text-red-500')
                                                 {{ __('declarations.sign') }}
