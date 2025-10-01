@@ -221,7 +221,7 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                         ->whereNumber(['patientId', 'declarationRequest']);
                 });
 
-                Route::can('create' . Encounter::class)->group(static function () {
+                Route::can('create', Encounter::class)->group(static function () {
                     Route::get('/{patientId}/encounter/create', EncounterCreate::class)->name('encounter.create');
                     Route::get('/{patientId}/encounter/{encounterId}', EncounterEdit::class)->name('encounter.edit');
                 });
