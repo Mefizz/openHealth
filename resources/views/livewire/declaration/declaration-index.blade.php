@@ -15,7 +15,6 @@
         <x-slot name="navigation">
             <div class="flex">
                 <div class="w-full">
-                    <div class="shift-content">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-1">
                                 @icon('search-outline', 'w-4 h-4.5 text-gray-800 dark:text-white')
@@ -60,7 +59,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
         </x-slot>
     </x-header-navigation>
 

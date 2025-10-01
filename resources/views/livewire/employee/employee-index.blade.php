@@ -48,7 +48,7 @@
                                 </x-slot>
                             </x-forms.form-group>
                         </div>
-                        <button class="button-minor flex items-center justify-center gap-2 w-full lg:w-auto self-stretch lg:self-auto mt-2 lg:mt-3.5"
+                        <button class="button-minor flex items-center justify-center gap-2 w-full lg:w-auto self-stretch lg:self-auto lg:-translate-y-[9px]"
                                 @click="showFilter = !showFilter">
                             <svg width="16" height="16" id="svg-adjustments" viewBox="0 0 16 16" fill="none"
                                  xmlns="http://www.w3.org/2000/svg">
@@ -204,7 +204,8 @@
             </div>
         </x-slot>
     </x-header-navigation>
-    <x-section class="shift-content">
+
+    <x-section class="shift-content max-w-7xl mx-auto pl-3.5">
         <div class="space-y-6 employee-section-no-left-padding mt-6">
             <div class="table-container-responsive overflow-x-auto" style="max-width:100%;">
                 @forelse($parties as $party)
