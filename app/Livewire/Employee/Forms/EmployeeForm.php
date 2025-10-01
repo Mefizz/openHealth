@@ -286,7 +286,7 @@ class EmployeeForm extends Form
         $this->employeeType = $employee->employee_type;
         $this->startDate = $employee->start_date?->format('Y-m-d');
         $this->endDate = $employee->end_date?->format('Y-m-d');
-        $this->divisionId = $employee->division_id;
+        $this->divisionId = $employee->division_id !== null ? (string) $employee->division_id : null;
 
         $this->doctor['educations'] = $employee->educations->map(fn ($edu) => Arr::toCamelCase($edu->toArray()))->toArray();
         $this->doctor['specialities'] = $employee->specialities->map(fn ($spec) => Arr::toCamelCase($spec->toArray()))->toArray();
