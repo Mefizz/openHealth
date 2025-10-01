@@ -185,29 +185,6 @@ class PatientIndex extends Component
     }
 
     /**
-     * Redirect to patient data route.
-     *
-     * @param  string  $patientId
-     * @return void
-     */
-    public function redirectToRecord(string $patientId): void
-    {
-        $this->handleRedirect($patientId, 'patient.patient-data');
-    }
-
-    /**
-     * Redirect to create encounter route.
-     *
-     * @param  string  $patientId
-     * @return void
-     */
-
-    public function redirectToEncounter(string $patientId): void
-    {
-        $this->handleRedirect($patientId, 'encounter.create');
-    }
-
-    /**
      * Delete person request.
      *
      * @param  int  $id
@@ -221,24 +198,13 @@ class PatientIndex extends Component
     }
 
     /**
-     * Redirect to the diagnostic report creation page.
-     *
-     * @param  int  $patientId
-     * @return void
-     */
-    public function createDiagnosticReport(int $patientId): void
-    {
-        $this->redirectRoute('diagnostic-report.create', [legalEntity(), 'patientId' => $patientId]);
-    }
-
-    /**
      * Stores patient data in the DB and redirects to route by name.
      *
      * @param  string  $patientId
      * @param  string  $routeName
      * @return void
      */
-    private function handleRedirect(string $patientId, string $routeName): void
+    public function redirectTo(string $patientId, string $routeName): void
     {
         if (uuid_is_valid($patientId)) {
             // IF UUID is valid, then find for it in DB
@@ -253,9 +219,9 @@ class PatientIndex extends Component
                 $person = $this->storeNewPerson($patientData);
             }
 
-            $this->redirectRoute($routeName, [legalEntity(), 'patientId' => $person->id], navigate: true);
+            $this->redirectRoute($routeName, [legalEntity(), 'patientId' => $person->id]);
         } else {
-            $this->redirectRoute($routeName, [legalEntity(), 'patientId' => $patientId], navigate: true);
+            $this->redirectRoute($routeName, [legalEntity(), 'patientId' => $patientId]);
         }
     }
 

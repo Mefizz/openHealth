@@ -53,12 +53,14 @@
                         </td>
                         <td class="px-6 py-4 text-center align-top">
                             @if($license->isPrimary)
+                                @can('view', $license)
                                 <a href="{{ route('license.view', [legalEntity(), $license->id]) }}"
                                    class="text-gray-800 dark:text-gray-200 hover:text-black dark:hover:text-white"
                                    title="{{ __('forms.view') }}"
                                 >
                                     @icon('eye', 'w-5 h-5 svg-hover-action')
                                 </a>
+                                @endcan
                             @else
                                 <div x-data="{ open: false }" class="relative inline-block text-left">
                                     <button @click="open = !open"
@@ -77,15 +79,14 @@
                                          class="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white dark:bg-gray-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
                                     >
                                         <div class="py-1">
+                                            @can('view', $license)
                                             <a href="{{ route('license.view', [legalEntity(), $license->id]) }}"
                                                class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
                                             >
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                          d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                </svg>
+                                                @icon('eye', 'w-5 h-5 svg-hover-action')
                                                 {{ __('forms.view') }}
                                             </a>
+                                            @endcan
                                             <a href="{{ route('license.view', [legalEntity(), $license->id]) }}"
                                                class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
                                             >
