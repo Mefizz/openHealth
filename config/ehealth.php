@@ -137,6 +137,10 @@ return [
     'doctors_type' => [
         'LABORANT', 'DOCTOR', 'MED_ADMIN', 'ASSISTANT', 'MED_COORDINATOR'
     ],
+
+    'pharmacy_employee_types' => [
+        'PHARMASIST',' PHARMACY_OWNER'
+    ],
     // https://e-health-ua.atlassian.net/wiki/spaces/EH/pages/583402009/Medical+Events+Dictionaries+and+configurations#legal_entity_encounter_classes
     'legal_entity_encounter_classes' => [
         'PRIMARY_CARE' => ['PHC'],

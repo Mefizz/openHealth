@@ -84,6 +84,10 @@ class EmployeeForm extends Form
             'startDate' => ['required', 'date_format:Y-m-d'],
             'endDate' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:startDate'],
             'divisionId' => [
+                Rule::requiredIf(function () {
+                    $pharmacyTypes = config('ehealth.pharmacy_employee_types', []);
+                    return in_array($this->employeeType, $pharmacyTypes, true);
+                }),
                 'nullable',
                 'string',
                 Rule::exists('divisions', 'id')->where('legal_entity_id', legalEntity()->id)

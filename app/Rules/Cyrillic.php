@@ -21,8 +21,8 @@ class Cyrillic implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!preg_match('/^[\p{Cyrillic}\s]+$/u', $value)) {
-            $fail(':Attribute має містити лише кириличні символи.');
+        if (!preg_match('/^[\p{Cyrillic}\s.]+$/u', $value)) {
+            $fail(':Attribute має містити лише кириличні символи, пробіли та крапки.');
         }
     }
 }
