@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use App\Repositories\EHealthDatabaseBatchRepository;
 use Illuminate\Bus\BatchFactory;
+use Illuminate\Pagination\Paginator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -61,5 +62,6 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // RateLimiter::for('ehealth-division-get', fn (object $job) => Limit::perMinute(50)->by($job->user->id));
+        Paginator::defaultView('vendor.pagination.tailwind');
     }
 }
