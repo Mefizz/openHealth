@@ -126,13 +126,13 @@
                                            placeholder="Оберіть статуси"
                                            x-on:click="open = !open"
                                            :value="selectedStatuses.length ? selectedStatuses.map(s => {
-                                            if (s === 'APPROVED') return {{ __('forms.active') }};
-                                            if (s === 'NEW') return {{ __('forms.draft') }};
-                                            if (s === 'DISMISSED') return {{ __('forms.dismissed') }};
-                                            if (s === 'VERIFIED') return {{ __('forms.verified') }};
-                                            if (s === 'NOT_VERIFIED') return {{ __('forms.not_verified') }};
-                                            return s;
-                                        }).join(', ') : ''"
+                                                if (s === 'APPROVED') return '{{ __('forms.active') }}';
+                                                if (s === 'NEW') return '{{ __('forms.draft') }}';
+                                                if (s === 'DISMISSED') return '{{ __('forms.dismissed') }}';
+                                                if (s === 'VERIFIED') return '{{ __('forms.verified') }}';
+                                                if (s === 'NOT_VERIFIED') return '{{ __('forms.not_verified') }}';
+                                                return s;
+                                            }).join(', ') : ''"
                                            readonly
                                     />
                                     <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
