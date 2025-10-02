@@ -62,6 +62,5 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // RateLimiter::for('ehealth-division-get', fn (object $job) => Limit::perMinute(50)->by($job->user->id));
-        Paginator::defaultView('vendor.pagination.tailwind');
     }
 }
