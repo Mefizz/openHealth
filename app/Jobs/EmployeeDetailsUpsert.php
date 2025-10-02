@@ -48,7 +48,7 @@ class EmployeeDetailsUpsert extends EHealthJob
     // Get data from EHealth API
     protected function sendRequest(string $token): PromiseInterface|EHealthResponse|null
     {
-        return EHealth::employee()->withToken($this->token)->getDetails($this->employee->uuid, groupByEntities: true);
+        return EHealth::employee()->withToken($token)->getDetails($this->employee->uuid, groupByEntities: true);
     }
 
     // Store or update data in the database
