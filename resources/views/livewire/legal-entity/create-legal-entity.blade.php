@@ -35,7 +35,7 @@
             wire:key="active-{{ $activeStep }}"
             class="steps"
         >
-            <div >
+            <div>
                 {{-- Steps Header --}}
                 <ol class="steps-header">
                     <template x-for="header in headers" :key="`step-header-${header.index}-${activeStep}`">
@@ -56,7 +56,7 @@
                             {{-- Prepend part to the title --}}
                             <template x-if="!isActive">
                                 <span x-text="header.index"
-                                    class="steps-header_index"
+                                      class="steps-header_index"
                                       :class="{
                                           'step-completed-color': header.complete && !isActive && !isValidationError,
                                           'step-incomplete-color': !header.complete && !isActive && !isValidationError,
@@ -69,7 +69,7 @@
                             <template x-if="isActive">
                                 <g transform="scale(1.3)" class="hidden sm:inline" :class="{ 'text-blue-600': isActive }">
                                     <svg class="w-4 h-4 sm:w-4 sm:h-4 mx-2.5" aria-hidden="true"
-                                        xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                                         xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                                         <path
                                             d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z" />
                                     </svg>
@@ -120,70 +120,71 @@
                     @include('livewire.legal-entity.step._step_additional_information')
                     @include('livewire.legal-entity.step._step_public_offer')
 
-                    <div class="steps-footer">
-                        {{-- Agreement checkbox --}}
-                        <div class="xl:w-1/2" x-show="isLastStep()" x-cloak>
-                            <div class="flex items-center">
-                                <input type="checkbox" value="isTermDisabled" id="public_offer_consent"
-                                    x-model="isTermDisabled"
-                                    wire:model="legalEntityForm.publicOffer.consent"
-                                    :checked="isTermDisabled"
-                                    class="steps-agreement_checkbox"
-                                />
-                                <label
-                                    for="public_offer_consent"
-                                    class="steps-agreement_label"
-                                >
-                                    {{ __('forms.agree') }}
-                                    <button
-                                        type="button"
-                                        class="steps-agreement_button cursor-pointer"
-                                        x-ref="openModalBtn"
-                                            @click="
-                                                $el.blur(); // Remove focus before Modal opening or else aria werning shows in console
-                                                openModal = true;
-                                        "
+                    <div class="steps-footer pt-6">
+                        <div class="mx-auto max-w-[880px] px-6 flex items-center">
+                            {{-- Agreement checkbox --}}
+                            <div class="xl:w-1/2" x-show="isLastStep()" x-cloak>
+                                <div class="flex items-center">
+                                    <input type="checkbox" value="isTermDisabled" id="public_offer_consent"
+                                           x-model="isTermDisabled"
+                                           wire:model="legalEntityForm.publicOffer.consent"
+                                           :checked="isTermDisabled"
+                                           class="steps-agreement_checkbox"
+                                    />
+                                    <label
+                                        for="public_offer_consent"
+                                        class="steps-agreement_label"
                                     >
-                                        {{ __('forms.withTerms') }}
-                                    </button>
-                                </label>
-                            </div>
+                                        {{ __('forms.agree') }}
+                                        <button
+                                            type="button"
+                                            class="steps-agreement_button cursor-pointer"
+                                            x-ref="openModalBtn"
+                                            @click="
+                                                    $el.blur(); // Remove focus before Modal opening or else aria werning shows in console
+                                                    openModal = true;
+                                            "
+                                        >
+                                            {{ __('forms.withTerms') }}
+                                        </button>
+                                    </label>
+                                </div>
 
-                            @error('legalEntityForm.public_offer.consent')
+                                @error('legalEntityForm.publicOffer.consent')
                                 <div class='validation-error'>
                                     {{ $message }}
                                 </div>
-                            @enderror
-                        </div>
+                                @enderror
+                            </div>
 
-                        <div class="w-full flex justify-end">
-                            <template x-if="isLastStep()">
-                                <button
-                                    type="button"
-                                    id="submit_button"
-                                    class="button-primary cursor-pointer"
-                                    wire:click="createLegalEntity"
-                                    :disabled="!isTermDisabled"
-                                >
-                                    {{ __('forms.sendRequest') }}
-                                </button>
-                            </template>
+                            <div class="ml-auto shrink-0 flex items-center gap-2 whitespace-nowrap">
+                                <template x-if="isLastStep()">
+                                    <button
+                                        type="button"
+                                        id="submit_button"
+                                        class="button-primary cursor-pointer"
+                                        wire:click="createLegalEntity"
+                                        :disabled="!isTermDisabled"
+                                    >
+                                        {{ __('forms.sendRequest') }}
+                                    </button>
+                                </template>
 
-                            <template x-if="!isLastStep()">
-                                <button
-                                    type="button"
-                                    id="next_button"
-                                    class="default-button cursor-pointer"
-                                    @click="$wire.nextStep(activeStep).then(result => result ? activeStep={{ $currentStep }} : activeStep)"
-                                >
-                                    {{ __('forms.next') }}
-                                </button>
-                            </template>
+                                <template x-if="!isLastStep()">
+                                    <button
+                                        type="button"
+                                        id="next_button"
+                                        class="default-button cursor-pointer"
+                                        @click="$wire.nextStep(activeStep).then(result => result ? activeStep={{ $currentStep }} : activeStep)"
+                                    >
+                                        {{ __('forms.next') }}
+                                    </button>
+                                </template>
+                            </div>
                         </div>
                     </div>
                 </form>
 
-                <!-- Main modal -->
                 <div
                     x-cloak
                     role="dialog"
@@ -195,14 +196,12 @@
                     class="fixed inset-0 z-[100] overflow-y-auto"
                     x-on:keydown.escape.prevent.stop="openModal = false"
                 >
-                    <!-- Modal overlay -->
                     <div
                         x-show="openModal"
                         @click="openModal = false"
                         class="fixed z-20 inset-0 bg-black/25"
                     ></div>
 
-                    <!-- Modal content -->
                     <div
                         x-on:click.stop
                         x-trap.noscroll.inert="openModal"
@@ -212,7 +211,6 @@
                         x-init="$watch('openModal', value => { if(value) { $nextTick(() => { $refs.modalContent.focus() }) } })"
                         class="relative w-[70%] h-[75vh] rounded-xl bg-white shadow-lg mx-auto mt-[15vh] flex flex-col dark:bg-gray-800 z-22"
                     >
-                        <!-- Modal header -->
                         <div class="p-6 border-b mb-2">
                             <div>
                                 <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Terms of Use</h3>
@@ -231,12 +229,10 @@
                             </button>
                         </div>
 
-                        <!-- Modal body -->
                         <div class="flex-1 overflow-y-auto p-6">
                             @include('components.terms')
                         </div>
 
-                        <!-- Modal footer -->
                         <div class="flex gap-4 flex-wrap justify-center p-4 border-t mt-2 mx-auto">
                             <button
                                 type="button"
@@ -250,7 +246,7 @@
                 </div>
             </div>
 
-        <x-forms.loading />
+            <x-forms.loading />
         </div>
     </section>
 </div>

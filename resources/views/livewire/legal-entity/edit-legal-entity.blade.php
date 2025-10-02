@@ -30,7 +30,7 @@
                 id="edit_legal_entity_form"
                 class="grid-cols-1"
             >
-                <div class="p-6.5">
+                <div class="p-5">
                     @include('livewire.legal-entity.step._step_edrpou', ['isEdit' => true])
                     @include('livewire.legal-entity.step._step_owner')
                     @include('livewire.legal-entity.step._step_contact')
@@ -44,7 +44,7 @@
                 <div class="mt-6 flex flex-col gap-6 xl:flex-row justify-between items-center">
                     {{-- Agreement checkbox --}}
                     <div class="form-group group">
-                        <div class="flex items-center">
+                        <div class="flex items-center p-5">
                             <input
                                 type="checkbox"
                                 value="isTermDisabled"
@@ -61,7 +61,7 @@
                                 {{__('forms.agree')}}
                                 <button
                                     type="button"
-                                    class="steps-agreement_button cursor-pointer"
+                                    class="steps-agreement_button cursor-pointer "
                                     x-ref="openModalBtn"
                                      @click="
                                         $el.blur(); // Remove focus before Modal opening or else aria werning shows in console
@@ -71,19 +71,17 @@
                                     {{ __('forms.withTerms') }}
                                 </button>
                             </label>
+                            <div class="xl:w-1/4 flex justify-end">
+                                <button
+                                    type="button"
+                                    class="button-primary cursor-pointer submit-button"
+                                    wire:click="updateLegalEntity"
+                                    :disabled="!isTermDisabled"
+                                >
+                                    {{ __('forms.sendRequest') }}
+                                </button>
+                            </div>
                         </div>
-                    </div>
-
-                    {{-- Submit button --}}
-                    <div class="xl:w-1/4 flex justify-end">
-                        <button
-                            type="button"
-                            class="button-primary cursor-pointer"
-                            wire:click="updateLegalEntity"
-                            :disabled="!isTermDisabled"
-                        >
-                            {{ __('forms.sendRequest') }}
-                        </button>
                     </div>
                 </div>
             </form>

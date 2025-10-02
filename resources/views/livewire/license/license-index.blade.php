@@ -6,7 +6,7 @@
         <div class="flex flex-col">
             <div class="flex flex-wrap items-end justify-between gap-4 max-w-6xl">
                 <div class="flex items-end gap-4"></div>
-                <div class="ml-auto flex items-center gap-6 self-start -mt-9 translate-x-6">
+                <div class="ml-auto flex items-center gap-6 self-start -mt-9 translate-x-4">
                     @can('create', $licenses)
                         <a href="{{ route('license.create', [legalEntity()]) }}"
                            class="button-primary flex items-center gap-2"
@@ -24,89 +24,99 @@
         </div>
     </x-header-navigation>
 
-    <div class="max-w-7xl mx-auto shift-content">
-        <table class="table-input w-full">
-            <thead class="thead-input">
-            <tr>
-                <th scope="col" class="th-input">{{__('licenses.type')}}</th>
-                <th scope="col" class="th-input">{{__('licenses.active_from_date_label')}}</th>
-                <th scope="col" class="th-input">{{__('licenses.expiry_date_label')}}</th>
-                <th scope="col" class="th-input">{{__('licenses.activity')}}</th>
-                <th scope="col" class="th-input">{{__('licenses.kind')}}</th>
-                <th scope="col" class="th-input">{{__('forms.action')}}</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach($licenses as $license)
+    <div class="flow-root mt-4 shift-content max-w-7xl mx-auto pl-3.5">
+        <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+            <table class="w-full min-w-[1100px] text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
-                    <td class="td-input">{{ $license->type->label() }}</td>
-                    <td class="td-input">{{ CarbonImmutable::parse($license->activeFromDate)->format('d.m.Y') }}</td>
-                    <td class="td-input">{{ CarbonImmutable::parse($license->expiryDate)->format('d.m.Y') }}</td>
-                    <td class="td-input">{{ $license->whatLicensed }}</td>
-                    <td class="td-input">
-                        @if($license->isPrimary)
-                            <span class="badge-green">{{ __('licenses.primary') }}</span>
-                        @else
-                            <span class="badge-yellow">{{ __('licenses.not_primary') }}</span>
-                        @endif
-                    </td>
-                    <td class="td-input text-center">
-                        @if($license->isPrimary)
-                            <a href="{{ route('license.view', [legalEntity(), $license->id]) }}"
-                               class="text-gray-800 dark:text-gray-200 hover:text-black dark:hover:text-white"
-                               title="{{ __('forms.view') }}"
-                            >
-                                @icon('eye', 'w-5 h-5 svg-hover-action')
-                            </a>
-                        @else
-                            <div x-data="{ open: false }" class="relative inline-block text-left">
-                                <button @click="open = !open"
-                                        @click.outside="open = false"
-                                        class="cursor-pointer text-gray-500 hover:text-gray-800 dark:hover:text-white focus:outline-none"
+                    <th scope="col" class="px-6 py-3">{{__('licenses.type')}}</th>
+                    <th scope="col" class="px-6 py-3">{{__('licenses.active_from_date_label')}}</th>
+                    <th scope="col" class="px-6 py-3">{{__('licenses.expiry_date_label')}}</th>
+                    <th scope="col" class="px-6 py-3">{{__('licenses.activity')}}</th>
+                    <th scope="col" class="px-6 py-3">{{__('licenses.kind')}}</th>
+                    <th scope="col" class="px-6 py-3 text-center">{{__('forms.action')}}</th>
+                </tr>
+                </thead>
+                <tbody>
+                @forelse($licenses as $license)
+                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                        <td class="px-6 py-4 break-words whitespace-normal align-top">{{ $license->type->label() }}</td>
+                        <td class="px-6 py-4 break-words whitespace-normal align-top">{{ CarbonImmutable::parse($license->activeFromDate)->format('d.m.Y') }}</td>
+                        <td class="px-6 py-4 break-words whitespace-normal align-top">{{ CarbonImmutable::parse($license->expiryDate)->format('d.m.Y') }}</td>
+                        <td class="px-6 py-4 break-words whitespace-normal align-top">{{ $license->whatLicensed }}</td>
+                        <td class="px-6 py-4 break-words whitespace-normal align-top">
+                            @if($license->isPrimary)
+                                <span class="badge-green">{{ __('licenses.primary') }}</span>
+                            @else
+                                <span class="badge-yellow">{{ __('licenses.not_primary') }}</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-center align-top">
+                            @if($license->isPrimary)
+                                <a href="{{ route('license.view', [legalEntity(), $license->id]) }}"
+                                   class="text-gray-800 dark:text-gray-200 hover:text-black dark:hover:text-white"
+                                   title="{{ __('forms.view') }}"
                                 >
-                                    <svg class="w-5 h-5" aria-hidden="true" fill="none" stroke="currentColor"
-                                         viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                    </svg>
-                                </button>
+                                    @icon('eye', 'w-5 h-5 svg-hover-action')
+                                </a>
+                            @else
+                                <div x-data="{ open: false }" class="relative inline-block text-left">
+                                    <button @click="open = !open"
+                                            @click.outside="open = false"
+                                            class="cursor-pointer text-gray-500 hover:text-gray-800 dark:hover:text-white focus:outline-none"
+                                    >
+                                        <svg class="w-5 h-5" aria-hidden="true" fill="none" stroke="currentColor"
+                                             viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                        </svg>
+                                    </button>
 
-                                <div x-show="open"
-                                     x-transition
-                                     class="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white dark:bg-gray-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                                >
-                                    <div class="py-1">
-                                        <a href="{{ route('license.view', [legalEntity(), $license->id]) }}"
-                                           class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
-                                        >
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                      d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                            </svg>
-                                            {{ __('forms.view') }}
-                                        </a>
-                                        <a href="{{ route('license.view', [legalEntity(), $license->id]) }}"
-                                           class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
-                                        >
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                            </svg>
-                                            {{ __('forms.update') }}
-                                        </a>
+                                    <div x-show="open"
+                                         x-transition
+                                         class="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white dark:bg-gray-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                                    >
+                                        <div class="py-1">
+                                            <a href="{{ route('license.view', [legalEntity(), $license->id]) }}"
+                                               class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                            >
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                          d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                                {{ __('forms.view') }}
+                                            </a>
+                                            <a href="{{ route('license.view', [legalEntity(), $license->id]) }}"
+                                               class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                            >
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                                </svg>
+                                                {{ __('forms.update') }}
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        @endif
-                    </td>
-                </tr>
-            @endforeach
-            </tbody>
-        </table>
-    </div>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td class="text-black w-full p-4 border-gray-200 text-center dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                            colspan="6"
+                        >
+                            <p>{{ __('forms.nothing_found') }}</p>
+                        </td>
+                    </tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
 
-    <div class="mt-4">
-        {{ $licenses->links() }}
+        <div class="mt-4">
+            {{ $licenses->links() }}
+        </div>
     </div>
 
     <x-messages/>

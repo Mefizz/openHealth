@@ -30,8 +30,8 @@
         </div>
     </x-header-navigation>
 
-    <div class="shift-content flex flex-wrap items-end justify-between gap-4">
-        <div class="w-96 ml-3.5">
+    <div class="shift-content flex flex-wrap items-end justify-between gap-4 max-w-7xl mx-auto pl-2.5">
+    <div class="w-96 ml-3.5">
             <x-forms.form-group>
                 <x-slot name="label">
                     <label for="divisionSearch"
@@ -59,37 +59,36 @@
         </div>
     </div>
 
-    <div class="flow-root mt-4 shift-content">
-        <div class="max-w-screen-xl">
-            <table class="table-input w-full table-fixed">
-
-                <thead class="thead-input">
+    <div class="flow-root mt-4 shift-content max-w-7xl mx-auto pl-3.5">
+        <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+            <table class="w-full min-w-[1100px] table-fixed text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
-                    <th scope="col" class="th-input text-left w-[20%]">{{ __('forms.name') }}</th>
-                    <th scope="col" class="th-input text-left w-[15%]">{{ __('forms.type') }}</th>
-                    <th scope="col" class="th-input text-left w-[20%]">{{ __('forms.phone') }}</th>
-                    <th scope="col" class="th-input text-left w-[20%]">{{ __('forms.email') }}</th>
-                    <th scope="col" class="th-input text-left w-[15%]">{{ __('forms.status.label') }}</th>
-                    <th scope="col" class="th-input text-left w-[6%]">{{ __('forms.action') }}</th>
+                    <th class="px-6 py-3 w-[22%]">{{ __('forms.name') }}</th>
+                    <th class="px-6 py-3 w-[15%]">{{ __('forms.type') }}</th>
+                    <th class="px-6 py-3 w-[18%]">{{ __('forms.phone') }}</th>
+                    <th class="px-6 py-3 w-[23%]">{{ __('forms.email') }}</th>
+                    <th class="px-6 py-3 w-[14%]">{{ __('forms.status.label') }}</th>
+                    <th class="px-6 py-3 w-[6%]  whitespace-nowrap">{{ __('forms.action') }}</th>
                 </tr>
                 </thead>
 
                 <tbody>
                 @forelse ($divisions as $division)
-                    <tr x-data="{ divisionTypes: $wire.entangle('dictionaries.DIVISION_TYPE') }">
-                        <td class="td-input break-words whitespace-normal align-top">
+                    <tr x-data="{ divisionTypes: $wire.entangle('dictionaries.DIVISION_TYPE') }" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white break-words whitespace-normal align-top">
                             <p>{{ $division->name ?? '' }}</p>
-                        </td>
+                        </th>
                         <td x-text="divisionTypes['{{ $division->type }}']"
-                            class="td-input break-words whitespace-normal align-top"
+                            class="px-6 py-4 break-words whitespace-normal align-top"
                         ></td>
-                        <td class="td-input break-words whitespace-normal align-top">
+                        <td class="px-6 py-4 break-words whitespace-normal align-top">
                             <p>{{ $division->phones()->first()?->number ?? '' }}</p>
                         </td>
-                        <td class="td-input break-words whitespace-normal align-top">
+                        <td class="px-6 py-4 break-words whitespace-normal align-top">
                             <p>{{ $division->email ?? '' }}</p>
                         </td>
-                        <td class="td-input break-words whitespace-normal align-top">
+                        <td class="px-6 py-4 break-words whitespace-normal align-top">
                             @if ($division->status === Status::INACTIVE)
                                 <span class="badge-red">{{ __('forms.status.non_active') }}</span>
                             @elseif ($division->status === Status::DRAFT)
@@ -100,7 +99,7 @@
                                 <span class="badge-green">{{ __('forms.status.active') }}</span>
                             @endif
                         </td>
-                        <td class="td-input text-center">
+                        <td class="px-6 py-4 text-center">
                             <div class="flex justify-center relative">
                                 <div x-data="{
                                          open: false,
