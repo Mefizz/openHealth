@@ -157,7 +157,7 @@
                                 @enderror
                             </div>
 
-                            <div class="ms-auto flex-shrink-0 flex justify-end">
+                            <div class="ml-auto shrink-0 flex items-center gap-2 whitespace-nowrap">
                                 <template x-if="isLastStep()">
                                     <button
                                         type="button"

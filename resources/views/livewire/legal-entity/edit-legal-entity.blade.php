@@ -71,19 +71,17 @@
                                     {{ __('forms.withTerms') }}
                                 </button>
                             </label>
+                            <div class="xl:w-1/4 flex justify-end">
+                                <button
+                                    type="button"
+                                    class="button-primary cursor-pointer submit-button"
+                                    wire:click="updateLegalEntity"
+                                    :disabled="!isTermDisabled"
+                                >
+                                    {{ __('forms.sendRequest') }}
+                                </button>
+                            </div>
                         </div>
-                    </div>
-
-                    {{-- Submit button --}}
-                    <div class="xl:w-1/4 flex justify-end">
-                        <button
-                            type="button"
-                            class="button-primary cursor-pointer"
-                            wire:click="updateLegalEntity"
-                            :disabled="!isTermDisabled"
-                        >
-                            {{ __('forms.sendRequest') }}
-                        </button>
                     </div>
                 </div>
             </form>
