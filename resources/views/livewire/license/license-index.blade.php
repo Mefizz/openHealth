@@ -24,7 +24,7 @@
         </div>
     </x-header-navigation>
 
-    <div class="flow-root mt-4 shift-content max-w-7xl mx-auto pl-3.5">
+    <div class="flow-root mt-4 shift-content pl-3.5">
         <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
             <table class="w-full min-w-[1100px] text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
