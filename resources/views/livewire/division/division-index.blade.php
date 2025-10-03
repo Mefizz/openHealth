@@ -59,7 +59,8 @@
         </div>
     </div>
 
-    <div class="flow-root mt-4 shift-content pl-3.5">
+    <div class="flow-root mt-8 shift-content pl-3.5">
+        <div class="max-w-screen-xl">
         <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
             <table class="w-full min-w-[1100px] table-fixed text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -231,6 +232,7 @@
                                             </a>
                                         @endcan
                                     </div>
+
                                 </div>
                             </div>
                         </td>
@@ -256,4 +258,5 @@
     @include('livewire.division.modal.confirmation-modal')
 
     <x-forms.loading/>
+</div>
 </div>
