@@ -205,7 +205,7 @@
         </x-slot>
     </x-header-navigation>
 
-    <x-section class="shift-content max-w-7xl mx-auto pl-3.5">
+    <x-section class="shift-content pl-3.5">
         <div class="space-y-6 employee-section-no-left-padding mt-6">
             <div class="table-container-responsive overflow-x-auto" style="max-width:100%;">
                 @forelse($parties as $party)

@@ -30,7 +30,7 @@
         </div>
     </x-header-navigation>
 
-    <div class="shift-content flex flex-wrap items-end justify-between gap-4 max-w-7xl mx-auto pl-2.5">
+    <div class="shift-content flex flex-wrap items-end justify-between gap-4 pl-2.5">
     <div class="w-96 ml-3.5">
             <x-forms.form-group>
                 <x-slot name="label">
@@ -59,7 +59,8 @@
         </div>
     </div>
 
-    <div class="flow-root mt-4 shift-content max-w-7xl mx-auto pl-3.5">
+    <div class="flow-root mt-8 shift-content pl-3.5">
+        <div class="max-w-screen-xl">
         <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
             <table class="w-full min-w-[1100px] table-fixed text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -231,6 +232,7 @@
                                             </a>
                                         @endcan
                                     </div>
+
                                 </div>
                             </div>
                         </td>
@@ -256,4 +258,5 @@
     @include('livewire.division.modal.confirmation-modal')
 
     <x-forms.loading/>
+</div>
 </div>

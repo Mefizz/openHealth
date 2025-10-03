@@ -167,7 +167,7 @@ input:-webkit-autofill:active {
 }
 
 .input-select {
-    @apply input dark:border-gray-700 dark:focus:border-blue-500 dark:bg-gray-800
+    @apply input dark:border-gray-700 dark:focus:border-blue-500 dark:bg-gray-800 pl-1
 }
 
 .input-select option {
