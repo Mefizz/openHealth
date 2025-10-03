@@ -99,7 +99,7 @@
     <ul x-show="open"
         x-cloak
         :id="$id('listbox')"
-        class="py-2 text-sm text-gray-700 dark:text-gray-200 absolute z-17 mt-1 w-full bg-white border border-gray-400 rounded shadow max-h-60 overflow-auto"
+        class="py-2 text-sm text-gray-700 dark:text-gray-400 absolute z-17 mt-1 w-full bg-white border border-gray-400 rounded shadow max-h-60 overflow-auto"
     >
         <template x-if="filtered.length > 0">
             <template x-for="(option, index) in filtered" :key="index">

@@ -26,9 +26,9 @@
         @include('livewire.encounter.procedure-parts.used-codes')
 
         <div class="flex gap-8">
-            <button wire:click.prevent="" type="submit" class="button-minor">
-                {{ __('forms.delete') }}
-            </button>
+            <a href="{{ url()->previous() }}" type="submit" class="button-minor">
+                {{ __('forms.back') }}
+            </a>
 
             <button @click.prevent="$wire.save(modalProcedure)" type="submit" class="button-primary">
                 {{ __('forms.save') }}

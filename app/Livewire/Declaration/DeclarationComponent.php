@@ -111,6 +111,11 @@ abstract class DeclarationComponent extends Component
      */
     protected string $patientUuid;
 
+    public function boot(): void
+    {
+        $this->getDictionary();
+    }
+
     protected function baseMount(int $patientId): void
     {
         $patient = Person::select(['uuid', 'first_name', 'last_name', 'second_name'])
@@ -120,7 +125,6 @@ abstract class DeclarationComponent extends Component
         $this->patientId = $patientId;
         $this->patientUuid = $patient->uuid;
 
-        $this->getDictionary();
         $this->setEmployeesInfo();
 
         $this->form->personId = $this->patientUuid;
