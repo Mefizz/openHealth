@@ -16,11 +16,11 @@
 @endsection
 
 @section('additional-buttons')
-    <div class="mb-[10px] flex flex-col gap-6 xl:flex-row justify-start items-center w-full">
+    <div class="flex items-center gap-2">
         <button
             type="button"
             id="save_button"
-            class="button-primary cursor-pointer"
+            class="button-primary cursor-pointer inline-flex items-center leading-none mb-0"
             wire:click="store"
         >
             {{ __('forms.save') }}
@@ -35,7 +35,7 @@
                     actionTitle=@js(__('divisions.modals.delete.title'));
                     actionButtonText=@js(__('forms.delete'));
                 "
-                class="alternative-button cursor-pointer mt-2"
+                class="alternative-button cursor-pointer inline-flex items-center leading-none mb-0"
             >
                 {{ __('forms.delete') }}
             </button>
@@ -44,7 +44,7 @@
         <button
             type="button"
             id="save_button"
-            class="button-primary cursor-pointer"
+            class="button-primary cursor-pointer inline-flex items-center leading-none mb-0"
             wire:click="update"
         >
             {{ __('forms.save_and_send') }}

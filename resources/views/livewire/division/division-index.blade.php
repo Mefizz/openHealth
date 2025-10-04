@@ -76,7 +76,10 @@
 
                 <tbody>
                 @forelse ($divisions as $division)
-                    <tr x-data="{ divisionTypes: $wire.entangle('dictionaries.DIVISION_TYPE') }" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                    <tr
+                        wire:key = '{{ $division->id }}'
+                        x-data="{ divisionTypes: $wire.entangle('dictionaries.DIVISION_TYPE') }"
+                        class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white break-words whitespace-normal align-top">
                             <p>{{ $division->name ?? '' }}</p>
                         </th>
@@ -89,6 +92,7 @@
                         <td class="px-6 py-4 break-words whitespace-normal align-top">
                             <p>{{ $division->email ?? '' }}</p>
                         </td>
+
                         <td class="px-6 py-4 break-words whitespace-normal align-top">
                             @if ($division->status === Status::INACTIVE)
                                 <span class="badge-red">{{ __('forms.status.non_active') }}</span>
@@ -132,6 +136,7 @@
                                             type="button"
                                             class="hover:text-primary cursor-pointer"
                                             outline="none"
+                                            id="menu-{{ $division->id }}"
                                     >
                                         <svg class="svg-hover-action w-6 h-6 text-gray-800 dark:text-white"
                                              aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18"
@@ -141,13 +146,16 @@
                                                   d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"/>
                                         </svg>
                                     </button>
-                                    <div x-show="open"
-                                         x-cloak
-                                         x-ref="panel"
-                                         x-transition.origin.top.left
-                                         @click.outside="close($refs.button)"
-                                         :id="$id('dropdown-button')"
-                                         class="absolute right-0 mt-2 w-40 rounded-md bg-white shadow-md z-50"
+
+                                    <div
+                                        x-show="open"
+                                        x-cloak
+                                        x-ref="panel"
+                                        x-transition.origin.top.left
+                                        @click.outside="close($refs.button)"
+                                        :id="$id('dropdown-button')"
+                                        class="absolute right-0 mt-2 w-40 rounded-md bg-white shadow-md z-50"
+                                        wire:key="menu-{{ $division->id }}-{{ is_string($division->status) ? $division->status : ($division->status?->value ?? 'unknown') }}"
                                     >
                                         @can('create', HealthcareService::class)
                                             <a href="{{ route('healthcare-service.index', [legalEntity(), $division]) }}"
@@ -174,25 +182,9 @@
                                             </a>
                                         @endcan
 
-                                        @can('deactivate', $division)
-                                            <a href="#"
-                                               @click.prevent="
-                                                   divisionId= {{ $division->id }};
-                                                   textConfirmation = @js(__('divisions.modals.deactivate.confirmation_text'));
-                                                   actionType = 'deactivate';
-                                                   actionTitle = @js(__('divisions.modals.deactivate.title'));
-                                                   actionButtonText = @js(__('forms.deactivate'));
-                                                   open = !open;
-                                               "
-                                               class="flex items-center gap-2 w-full last-of-type:rounded-b-md px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50"
-                                            >
-                                                @icon('delete', 'w-5 h-5 text-red-600')
-                                                {{ __('forms.deactivate') }}
-                                            </a>
-                                        @endcan
-
                                         @can('activate', $division)
                                             <a href="#"
+                                               wire:key="activate-{{ $division->id }}"
                                                @click.prevent="
                                                    divisionId = {{ $division->id }};
                                                    textConfirmation = @js(__('divisions.modals.activate.confirmation_text'));
@@ -205,6 +197,24 @@
                                             >
                                                 @icon('check-circle', 'w-5 h-5 text-green-600')
                                                 {{ __('forms.activate') }}
+                                            </a>
+                                        @endcan
+
+                                        @can('deactivate', $division)
+                                            <a href="#"
+                                               wire:key="deactivate-{{ $division->id }}"
+                                               @click.prevent="
+                                                   divisionId= {{ $division->id }};
+                                                   textConfirmation = @js(__('divisions.modals.deactivate.confirmation_text'));
+                                                   actionType = 'deactivate';
+                                                   actionTitle = @js(__('divisions.modals.deactivate.title'));
+                                                   actionButtonText = @js(__('forms.deactivate'));
+                                                   open = !open;
+                                               "
+                                               class="flex items-center gap-2 w-full last-of-type:rounded-b-md px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50"
+                                            >
+                                                @icon('delete', 'w-5 h-5 text-red-600')
+                                                {{ __('forms.deactivate') }}
                                             </a>
                                         @endcan
 

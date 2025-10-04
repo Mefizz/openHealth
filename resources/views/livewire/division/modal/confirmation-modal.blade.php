@@ -41,7 +41,7 @@
                         <button
                             type="button"
                             @click="divisionId = 0"
-                            class="button-secondary"
+                            class="button-minor"
                         >
                             {{ __('forms.cancel') }}
                         </button>
@@ -50,7 +50,7 @@
                             type="button"
                             @click.prevent="$wire.$call(actionType, divisionId); divisionId = 0;"
                             wire:loading.attr="disabled"
-                            class="inline-flex justify-center rounded-lg border border-transparent bg-green-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                            class="button-danger"
                             x-text="actionButtonText"
                         ></button>
                     </div>

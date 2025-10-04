@@ -10,11 +10,11 @@
 @endsection
 
 @section('additional-buttons')
-    <div>
+    <div class="flex items-center gap-2 self-center">
     <button
             type="button"
             id="save_button"
-            class="button-primary-outline"
+            class="button-primary-outline !mb-0 leading-none inline-flex items-center"
             wire:click="store"
         >
             {{ __('forms.save') }}
@@ -23,7 +23,7 @@
         <button
             type="button"
             id="save_button"
-            class="button-primary cursor-pointer"
+            class="button-primary cursor-pointer !mb-0 leading-none inline-flex items-center"
             wire:click="create"
         >
             {{ __('forms.save_and_send') }}
