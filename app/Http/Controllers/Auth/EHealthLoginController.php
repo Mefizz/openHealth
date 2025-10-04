@@ -197,7 +197,7 @@ class EHealthLoginController extends Controller
          * Here concerns the case when HR create a new employee who is not yet in the system
          * In this case the email is verified by eHealth and party also has an email
          * but the user does not exist in our system
-        //  * Meanwhile the user considered as fully verified, and we create a local user account for him and send credentials by email
+         * Meanwhile the user considered as fully verified, and we create a local user account for him and send credentials by email
          */
         $party = Party::where('email', $ehealthEmail)->first();
 
@@ -225,7 +225,6 @@ class EHealthLoginController extends Controller
                     'error' => $e->getMessage(),
                 ]);
             }
-
         }
 
         // If we have party with such email, then the user is fully verified because the email is confirmed by eHealth (if we're here)

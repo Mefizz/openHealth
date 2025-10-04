@@ -102,7 +102,9 @@
                     {{ __('forms.select') }} {{ mb_strtolower(__('patients.the_doctor_who_interpreted_the_results')) }}
                 </option>
                 @foreach($employees as $key => $employee)
-                    <option value="{{ $employee['uuid'] }}">{{ $employee['name'] }}</option>
+                    <option value="{{ $employee['uuid'] }}">
+                        {{ $employee['name'] }} - {{ $dictionaries['POSITION'][$employee['position']] }}
+                    </option>
                 @endforeach
             </select>
         </div>

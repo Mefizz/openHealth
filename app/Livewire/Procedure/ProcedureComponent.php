@@ -87,6 +87,21 @@ class ProcedureComponent extends Component
         'eHealth/assistive_products'
     ];
 
+    public function boot(): void
+    {
+        $this->getDictionary();
+
+        try {
+            $this->dictionaries['custom/services'] = dictionary()->getServiceDictionary();
+            $this->dictionaries['eHealth/assistive_products'] = dictionary()
+                ->getLargeDictionary('eHealth/assistive_products', false)
+                ->getFlattenedChildValues();
+        } catch (eHealthApiException) {
+            Log::channel('e_health_errors')
+                ->error('Error while loading services and assistive products dictionaries in ProcedureComponent');
+        }
+    }
+
     public function mount(LegalEntity $legalEntity, int $patientId): void
     {
         $authUser = Auth::user();
@@ -100,18 +115,7 @@ class ProcedureComponent extends Component
 
         $this->setPatientData();
         $this->divisions = legalEntity()?->divisions()->select(['uuid', 'name'])->get()->toArray();
-        $this->getDictionary();
         $this->getEpisodes();
-
-        try {
-            $this->dictionaries['custom/services'] = dictionary()->getServiceDictionary();
-            $this->dictionaries['eHealth/assistive_products'] = dictionary()
-                ->getLargeDictionary('eHealth/assistive_products', false)
-                ->getFlattenedChildValues();
-        } catch (eHealthApiException) {
-            Log::channel('e_health_errors')
-                ->error('Error while loading services and assistive products dictionaries in ProcedureComponent');
-        }
 
         try {
             $this->setCertificateAuthority();

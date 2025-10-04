@@ -230,8 +230,38 @@ class EncounterComponent extends Component
         'eHealth/diagnostic_report_categories',
         'eHealth/procedure_categories',
         'eHealth/procedure_outcomes',
-        'eHealth/clinical_impression_patient_categories'
+        'eHealth/clinical_impression_patient_categories',
+        'POSITION'
     ];
+
+    public function boot(): void
+    {
+        $this->getDictionary();
+
+        $this->observationCodeMap = config('ehealth.observation_category_codes');
+        $this->observationValueMap = config('ehealth.observation_code_values');
+
+        try {
+            $this->dictionaries['eHealth/ICF/classifiers'] = dictionary()
+                ->getLargeDictionary('eHealth/ICF/classifiers', false)
+                ->getFlattenedChildValues();
+            $this->dictionaries['eHealth/assistive_products'] = dictionary()
+                ->getLargeDictionary('eHealth/assistive_products', false)
+                ->getFlattenedChildValues();
+        } catch (eHealthApiException) {
+            session()?->flash('error', 'Виникла помилка. Зверніться до адміністратора.');
+        }
+
+        $this->dictionaries['custom/services'] = dictionary()->getServiceDictionary();
+        $this->loadRuleEngineRules();
+
+        $this->codeableConceptValues = collect(config('ehealth.observation_code_values'))
+            ->filter(static fn (array $value) => $value[1] === 'valueCodeableConcept')
+            ->mapWithKeys(fn (array $value) => [
+                $value[0] => $this->dictionaries[$value[0]] ?? [],
+            ])
+            ->toArray();
+    }
 
     /**
      * Search for referral number.
@@ -294,14 +324,15 @@ class EncounterComponent extends Component
 
         $employees = $authUser->employees()
             ->whereEmployeeType('DOCTOR')
-            ->select(['uuid', 'party_id'])
+            ->select(['uuid', 'position', 'party_id'])
             ->with('party:id,last_name,first_name,second_name')
             ->whereLegalEntityId(legalEntity()->id)
             ->get();
         $this->employees = $employees->map(function (Employee $employee) {
             return [
                 'uuid' => $employee->uuid,
-                'name' => $employee->fullName
+                'name' => $employee->fullName,
+                'position' => $employee->position
             ];
         })->toArray();
 
@@ -311,32 +342,6 @@ class EncounterComponent extends Component
         $this->divisions = legalEntity()->divisions->toArray();
 
         $this->employeeFullName = $authUser->getEncounterWriterEmployee()->fullName;
-
-        $this->observationCodeMap = config('ehealth.observation_category_codes');
-        $this->observationValueMap = config('ehealth.observation_code_values');
-
-        $this->getDictionary();
-
-        try {
-            $this->dictionaries['eHealth/ICF/classifiers'] = dictionary()
-                ->getLargeDictionary('eHealth/ICF/classifiers', false)
-                ->getFlattenedChildValues();
-            $this->dictionaries['eHealth/assistive_products'] = dictionary()
-                ->getLargeDictionary('eHealth/assistive_products', false)
-                ->getFlattenedChildValues();
-        } catch (eHealthApiException) {
-            session()?->flash('error', 'Виникла помилка. Зверніться до адміністратора.');
-        }
-
-        $this->dictionaries['custom/services'] = dictionary()->getServiceDictionary();
-        $this->loadRuleEngineRules();
-
-        $this->codeableConceptValues = collect(config('ehealth.observation_code_values'))
-            ->filter(static fn (array $value) => $value[1] === 'valueCodeableConcept')
-            ->mapWithKeys(fn (array $value) => [
-                $value[0] => $this->dictionaries[$value[0]] ?? [],
-            ])
-            ->toArray();
 
         $this->adjustEpisodeTypes();
         $this->adjustEncounterClasses();

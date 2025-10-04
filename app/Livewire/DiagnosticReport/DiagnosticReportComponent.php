@@ -125,8 +125,22 @@ class DiagnosticReportComponent extends Component
         'eHealth/LOINC/LL2021-5',
         'eHealth/vaccination_covid_groups',
         'eHealth/LOINC/LL2451-4',
-        'eHealth/LOINC/LL3250-9'
+        'eHealth/LOINC/LL3250-9',
+        'POSITION'
     ];
+
+    public function boot(): void
+    {
+        $this->getDictionary();
+
+        try {
+            $this->dictionaries['custom/services'] = dictionary()->getServiceDictionary();
+            $this->loadObservationDictionaries();
+        } catch (RuntimeException) {
+            Log::channel('e_health_errors')
+                ->error('Error while loading observation dictionary in DiagnosticReportComponent');
+        }
+    }
 
     public function mount(LegalEntity $legalEntity, int $patientId): void
     {
@@ -140,30 +154,21 @@ class DiagnosticReportComponent extends Component
         $this->employeeFullName = $authUser->getDiagnosticReportWriterEmployee()->fullName;
 
         $employees = $authUser->employees()
-            ->where('employee_type', 'DOCTOR')
-            ->select(['uuid', 'party_id'])
+            ->whereEmployeeType('DOCTOR')
+            ->select(['uuid', 'party_id', 'position'])
             ->with('party:id,last_name,first_name,second_name')
-            ->where('legal_entity_id', legalEntity()->id)
+            ->whereLegalEntityId(legalEntity()->id)
             ->get();
         $this->employees = $employees->map(function (Employee $employee) {
             return [
                 'uuid' => $employee->uuid,
-                'name' => $employee->fullName
+                'name' => $employee->fullName,
+                'position' => $employee->position
             ];
         })->toArray();
 
         $this->setPatientData();
         $this->divisions = legalEntity()?->divisions()->select(['uuid', 'name'])->get()->toArray();
-
-        $this->getDictionary();
-
-        try {
-            $this->dictionaries['custom/services'] = dictionary()->getServiceDictionary();
-            $this->loadObservationDictionaries();
-        } catch (RuntimeException) {
-            Log::channel('e_health_errors')
-                ->error('Error while loading observation dictionary in DiagnosticReportComponent');
-        }
 
         try {
             $this->setCertificateAuthority();
