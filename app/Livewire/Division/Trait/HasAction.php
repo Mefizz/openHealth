@@ -54,6 +54,15 @@ trait HasAction
 
         try {
             Repository::division()->setAction($division, $responseData['status']);
+
+            // Refresh model and sync local state
+            $division->refresh();
+
+            // Keep a fresh instance on the component if it uses it
+            $this->divisionForm->division['status'] = $responseData['status'];
+
+            // Trigger a lightweight re-render
+            $this->dispatch('$refresh');
         } catch (Exception $err) {
             Log::channel('db_errors')->error(static::class . ':activateDivision:', ['message' => $err->getMessage()]);
 
@@ -100,6 +109,15 @@ trait HasAction
 
         try {
             Repository::division()->setAction($division, $responseData['status']);
+
+            // Refresh model and sync local state
+            $division->refresh();
+
+            // Keep a fresh instance on the component if it uses it
+            $this->divisionForm->division['status'] = $responseData['status'];
+
+            // Trigger a lightweight re-render
+            $this->dispatch('$refresh');
         } catch (Exception $err) {
             Log::channel('db_errors')->error(static::class . ':deactivateDivision:', ['message' => $err->getMessage()]);
 

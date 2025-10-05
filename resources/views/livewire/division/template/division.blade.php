@@ -570,8 +570,8 @@
                         </div>
                     </fieldset>
 
-                    <div class="flex gap-2">
-                    <a role="button" class="alternative-button cursor-pointer" href="javascript:history.back()">
+                    <div class="flex gap-2 items-center additional-actions">
+                    <a role="button" class="alternative-button cursor-pointer !mb-0 inline-flex items-center leading-none" href="javascript:history.back()">
                         {{ __('forms.back') }}
                     </a>
 
