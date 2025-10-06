@@ -7,11 +7,13 @@ namespace App\Listeners\eHealth;
 use App\Classes\eHealth\EHealth;
 use App\Core\Arr;
 use App\Enums\Employee\RequestStatus;
+use App\Enums\Employee\RevisionStatus;
 use App\Events\EHealthUserLogin;
 use App\Models\Employee\Employee;
 use App\Models\Employee\EmployeeRequest;
 use App\Repositories\Repository;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class EmployeeCreate
 {
@@ -36,8 +38,6 @@ class EmployeeCreate
             ->where('email', $user->email)
             ->orderBy('created_at', 'desc')
             ->get();
-
-        dd($employeeRequests);
 
         if ($employeeRequests->isEmpty()) {
             return;
@@ -64,46 +64,63 @@ class EmployeeCreate
             return;
         }
 
+        DB::transaction(function () use ($user, $employees, $employeeRequests, $event, &$newRoles) {
+            foreach ($employees as $employee) {
+
+                // Find correspondent employee request
+                $employeeRequest = $this->findEmployeeRequest($employeeRequests, $employee);
+
+                /**
+                 * Haven't found a matching request, skip this employee
+                 * TODO We might try to create an employee with partial data from E-Health
+                 */
+                if (!$employeeRequest) {
+                    continue;
+                }
+
+                $dataLocal = EHealth::employeeRequest()->mapCreate($employeeRequest->revision->data);
+                $employeeEhealth = Arr::only($employee, ['uuid', 'position', 'employee_type', 'start_date', 'end_date']);
+                $newEmployee = Employee::create(array_merge(
+                    $dataLocal['employee'],
+                    $employeeEhealth,
+                    [
+                        'legal_entity_id' => $event->legalEntity->id,
+                        'legal_entity_uuid' => $event->legalEntity->uuid,
+                        'user_id' => $user->id
+                    ]
+                ));
+
+                $newEmployee = Repository::employee()->updateDetails(
+                    $newEmployee,
+                    array_merge($dataLocal['party'], $employee['party'], ['user_id' => $user->id]),
+                    $dataLocal['documents'],
+                    $dataLocal['phones'],
+                    $dataLocal['educations'] ?? null,
+                    $dataLocal['specialities'] ?? null,
+                    $dataLocal['qualifications'] ?? null,
+                    $dataLocal['scienceDegree'] ?? null
+                );
+
+                $employeeRequest->update(['employee_id' => $newEmployee->id, 'status' => RequestStatus::APPROVED, 'applied_at' => now(), 'user_id' => $user->id, 'party_id' => $newEmployee->partyId]);
+                $employeeRequest->revision->update(['status' => RevisionStatus::APPLIED]);
+
+                if (!$user->hasRole($newEmployee->employeeType)) {
+                    $newRoles[] = $newEmployee->employeeType;
+                }
+            }
+        });
+
         // Synchronize all new employees
         setPermissionsTeamId($event->legalEntity->id);
         $user->unsetRelation('roles')->unsetRelation('permissions');
-        foreach ($employees as $employee) {
-
-            // Find correspondent employee request
-            $employeeRequest = $this->findEmployeeRequest($employeeRequests, $employee);
-
-            /**
-             * Haven't found a matching request, skip this employee
-             * TODO We might try to create an employee with partial data from E-Health
-             */
-            if (!$employeeRequest) {
-                continue;
-            }
-
-            $dataLocal = EHealth::employeeRequest()->mapCreate($employeeRequest->revision->data);
-            $employeeEhealth = Arr::only($employee, ['uuid', 'position', 'employee_type', 'start_date', 'end_date']);
-            $newEmployee = new Employee(array_merge($dataLocal['employee'], $employeeEhealth));
-            $newEmployee->save();
-
-            $newEmployee = Repository::employee()->updateDetails(
-                $newEmployee,
-                array_merge($dataLocal['party'], $employee['party'], ['user_id' => $user->id]),
-                $dataLocal['documents'],
-                $dataLocal['phones'],
-                $dataLocal['educations'] ?? null,
-                $dataLocal['specialities'] ?? null,
-                $dataLocal['qualifications'] ?? null,
-                $dataLocal['scienceDegree'] ?? null
-            );
-
-            $employeeRequest->save(['employee_id' => $newEmployee->id, 'status' => RequestStatus::APPROVED, 'applied_at' => now(), 'user_id' => $user->id]);
-
-            if (!$user->hasRole($newEmployee->employeeType)) {
-                $user->assignRole($newEmployee->employeeType);
-            }
-        }
+        $user->assignRole($newRoles);
     }
 
+    /**
+     * @param Collection<EmployeeRequest> $employeeRequests Collection of employee requests found by the current user email
+     * @param array $employee The employee data from E-Health get employees API endpoint https://uaehealthapi.docs.apiary.io/#reference/public.-medical-service-provider-integration-layer/employees/get-employees-list?console=1
+     * @return EmployeeRequest|null
+     */
     protected function findEmployeeRequest(Collection $employeeRequests, array $employee): ?EmployeeRequest
     {
         return $employeeRequests->where('position', $employee['position'])

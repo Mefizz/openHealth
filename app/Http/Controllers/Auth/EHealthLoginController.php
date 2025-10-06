@@ -124,6 +124,8 @@ class EHealthLoginController extends Controller
             trim(data_get($validatedEHealthTokenData, 'details.scope'))
         );
 
+        EHealthUserLogin::dispatch($user, $legalEntity, $authUserUUID, $this->isFirstLogin);
+
         if ($this->isPartiallyVerified) {
             Session::put('selected_legal_entity_uuid', $legalEntity->uuid);
             // Respect EHealth scopes
@@ -131,8 +133,6 @@ class EHealthLoginController extends Controller
 
             return Redirect::route('party.verify');
         }
-
-        EHealthUserLogin::dispatch($user, $legalEntity, $authUserUUID, $this->isFirstLogin);
 
         if ($legalEntity) {
             Log::info(__('auth.login.success.user_auth', [], 'en'), ['User ID' => $user->id]);
