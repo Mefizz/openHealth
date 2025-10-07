@@ -27,10 +27,6 @@ class EmployeeCreate
     {
         $user = $event->user;
 
-        if (!$user->can('employee:read')) {
-            return;
-        }
-
         $signedRequests = $this->getSignedEmployeeRequests($user);
         if ($signedRequests->isEmpty()) {
             return;
