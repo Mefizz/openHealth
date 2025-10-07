@@ -126,6 +126,7 @@ class EHealthLoginController extends Controller
         EHealthUserLogin::dispatch($user, $legalEntity, $authUserUUID, $this->isFirstLogin);
 
         // User without party isn't verified by our system yet. Redirect to the identity verification page
+        $user->refresh();
         if (!$user->party) {
             Session::put('selected_legal_entity_uuid', $legalEntity->uuid);
             // Respect EHealth scopes

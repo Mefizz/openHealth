@@ -196,16 +196,10 @@ trait ManagesEmployeeForm
      */
     protected function updateExistingDraft(array $preparedDataForDb): void
     {
-        // Step 1: Update the associated Party, but only if it's still editable.
-        $party = $this->employeeRequest->party;
-        if ($party && is_null($party->user_id) && is_null($party->uuid)) {
-            $partyData = $this->extractPartyData($preparedDataForDb);
-            $party->update($partyData);
-        }
-
+        $partyData = $this->extractPartyData($preparedDataForDb);
         // Step 2: Update the EmployeeRequest model itself.
         $requestAttributes = Arr::only($preparedDataForDb, ['position', 'employee_type', 'start_date', 'end_date', 'division_id']);
-        $requestAttributes['email'] = $party->email;
+        $requestAttributes['email'] = $partyData['email'];
         $this->employeeRequest->fill($requestAttributes)->save();
 
         // Step 3: Update the revision to reflect the latest state.
@@ -240,16 +234,14 @@ trait ManagesEmployeeForm
     protected function createNewDraft(array $preparedDataForDb): void
     {
         $partyData = $this->extractPartyData($preparedDataForDb);
-        $party = $this->findOrCreateParty($partyData);
 
         $employeeRequestData = Arr::only($preparedDataForDb, [
             'position', 'start_date', 'end_date', 'employee_type', 'division_id'
         ]);
-        $employeeRequestData['email'] = $party['email'];
+        $employeeRequestData['email'] = $partyData['email'];
 
         $newRequest = Repository::employee()->createEmployeeRequestDraft(
             $employeeRequestData,
-            $party,
             legalEntity()
         );
 
@@ -260,23 +252,6 @@ trait ManagesEmployeeForm
         if (property_exists($this, 'employeeRequestId')) {
             $this->employeeRequestId = $newRequest->id;
         }
-    }
-
-    /**
-     * Simplified logic moved from the repository.
-     * Finds an existing party or creates a new one. It does NOT update.
-     */
-    private function findOrCreateParty(array $partyData): Party
-    {
-        $party = null;
-        if (!empty($partyData['email'])) {
-            $party = Party::where('email', $partyData['email'])->first();
-        }
-        if ($party === null && !empty($partyData['tax_id'])) {
-            $party = Party::where('tax_id', $partyData['tax_id'])->first();
-        }
-
-        return $party ?? Party::create($partyData);
     }
 
     /**

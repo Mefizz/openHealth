@@ -55,6 +55,7 @@ class EmployeeCreate
             return;
         }
 
+        // This filters out only uuids associated with the cuurent user
         $existingUuids = $user->employees()->pluck('uuid')->all();
 
         // Filter out employees that already exist in the local database
@@ -80,7 +81,14 @@ class EmployeeCreate
 
                 $dataLocal = EHealth::employeeRequest()->mapCreate($employeeRequest->revision->data);
                 $employeeEhealth = Arr::only($employee, ['uuid', 'position', 'employee_type', 'start_date', 'end_date']);
-                $newEmployee = Employee::create(array_merge(
+
+                /**
+                 * If employees were synced before newly created user makes a first login attempt,
+                 * we already have such employee with the specified uuid, just update associated data in this case
+                 */
+                $newEmployee = Employee::updateOrCreate(
+                    ['uuid' => $employeeEhealth['uuid']],
+                    array_merge(
                     $dataLocal['employee'],
                     $employeeEhealth,
                     [

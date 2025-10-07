@@ -140,20 +140,16 @@ readonly class EmployeeRepository
      * This is a universal method that only handles database persistence.
      *
      * @param array       $employeeRequestData The prepared data for the request itself.
-     * @param Party       $party               The associated Party model.
      * @param LegalEntity $legalEntity         The associated LegalEntity model.
      *
      * @return EmployeeRequest
      */
-    public function createEmployeeRequestDraft(array $employeeRequestData, Party $party, LegalEntity $legalEntity): EmployeeRequest
+    public function createEmployeeRequestDraft(array $employeeRequestData, LegalEntity $legalEntity): EmployeeRequest
     {
         $employeeRequest = new EmployeeRequest();
         $employeeRequest->fill($employeeRequestData);
         $employeeRequest->status = 'NEW';
         $employeeRequest->legalEntity()->associate($legalEntity);
-        $employeeRequest->party()->associate($party);
-        $employeeRequest->user()->associate($party->user);
-
         $employeeRequest->save();
 
         return $employeeRequest;
