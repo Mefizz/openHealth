@@ -12,6 +12,7 @@ use App\Events\EHealthUserLogin;
 use App\Models\Employee\Employee;
 use App\Models\Employee\EmployeeRequest;
 use App\Repositories\Repository;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -42,12 +43,12 @@ class EmployeeCreate
             return;
         }
 
-        $taxId     = $employeeRequests->first()->revision->data['party']['tax_id'];
+        $taxId = $employeeRequests->first()->revision->data['party']['tax_id'];
         $employees = EHealth::employee()->getMany(
             [
                 'legal_entity_id' => $event->legalEntity->uuid,
-                'tax_id'          => $taxId,
-                'status'          => 'APPROVED',
+                'tax_id' => $taxId,
+                'status' => 'APPROVED',
             ]
         )->validate();
 
@@ -56,7 +57,7 @@ class EmployeeCreate
         }
 
         $existingUuids = $user->employees()->pluck('uuid')->all();
-        $employees = array_filter($employees, fn(array $employee) => !in_array($employee['uuid'], $existingUuids));
+        $employees = array_filter($employees, fn (array $employee) => !in_array($employee['uuid'], $existingUuids));
 
         if (empty($employees)) {
             return;
@@ -98,10 +99,10 @@ class EmployeeCreate
                 $employeeRequest->update(
                     [
                         'employee_id' => $newEmployee->id,
-                        'status'      => RequestStatus::APPROVED,
-                        'applied_at'  => now(),
-                        'user_id'     => $user->id,
-                        'party_id'    => $newEmployee->partyId,
+                        'status' => RequestStatus::APPROVED,
+                        'applied_at' => now(),
+                        'user_id' => $user->id,
+                        'party_id' => $newEmployee->partyId,
                     ]
                 );
                 $employeeRequest->revision->update(['status' => RevisionStatus::APPLIED]);
@@ -126,14 +127,24 @@ class EmployeeCreate
      */
     private function findMatchingLocalRequest(Collection $employeeRequests, array $employee): ?EmployeeRequest
     {
-        // Renamed from findEmployeeRequest to avoid conflict with potential parent methods
         return $employeeRequests->where('position', $employee['position'])
             ->where('employee_type', $employee['employee_type'])
             ->first(function (EmployeeRequest $employeeRequest) use ($employee) {
                 $party = $employeeRequest->revision->data['party'];
-                return $party['first_name'] === $employee['party']['first_name']
+                $namesMatch = $party['first_name'] === $employee['party']['first_name']
                     && $party['last_name'] === $employee['party']['last_name']
                     && $party['second_name'] === $employee['party']['second_name'];
+
+                $eHealthDateString = $employee['start_date'] ?? null;
+
+                if (is_null($eHealthDateString) || is_null($employeeRequest->start_date)) {
+                    return false;
+                }
+
+                $datesMatch = Carbon::parse($employeeRequest->start_date)
+                    ->isSameDay(Carbon::parse($eHealthDateString));
+
+                return $namesMatch && $datesMatch;
             });
     }
 }
