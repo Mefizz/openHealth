@@ -57,7 +57,7 @@ class EmployeeDetailsUpsert extends EHealthJob
      */
     protected function processResponse(?EHealthResponse $response): void
     {
-        $validatedData = $response?->validate();
+        $validatedData = $response->validate();
 
         echo 'Processing EmployeeDetailsUpsert for employee:' . $this->employee->id . ', LE:' . ($this->legalEntity->id ?? 'N/A') . PHP_EOL;
 
