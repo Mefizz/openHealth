@@ -209,6 +209,7 @@ abstract class LegalEntity extends Component
             ->getNormalizedData();
 
         $employeeResponse['user_id'] = $userId;
+        $employeeResponse['email'] = $response['email'];
 
         $partyID = $legalEntity->getOwner()?->partyId;
 
@@ -495,8 +496,9 @@ abstract class LegalEntity extends Component
             'legal_entity_id' => $legalEntityId,
             'position' => $requestData['owner']['position'],
             'start_date' => Carbon::now()->format('Y-m-d'),
-            'status' => 'NEW',
+            'status' => 'SIGNED',
             'employee_type' => "OWNER",
+            'email' => $requestData['owner']['email'],
             'party' => [
                 'first_name' => $requestData['owner']['first_name'],
                 'last_name' => $requestData['owner']['last_name'],
@@ -610,6 +612,7 @@ abstract class LegalEntity extends Component
               "start_date" => $employeeData['start_date'],
               "status" => $employeeData['status'],
               "employee_type" => $employeeData['employee_type'],
+              'email' => $employeeData['email'],
               "party" => [
                 "first_name" => $party['first_name'],
                 "last_name" => $party['last_name'],

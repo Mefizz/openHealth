@@ -31,7 +31,10 @@ class FirstLoginOwnerSyncronization implements ShouldQueue
      */
     public function handle(EHealthUserLogin $event): void
     {
-        if (!$event->isFirstLogin) {
+        // This need to be user with roles and permissions loaded
+        setPermissionsTeamId($event->legalEntity->id);
+
+        if (!$event->isFirstLogin || !$event->user->hasRole('OWNER')) {
             return;
         }
 
