@@ -72,7 +72,7 @@ class EmployeeRequest extends EHealthRequest
      * @param array $nestedData Data from the Revision model.
      * @return array The structured payload ready for signing and sending to eHealth.
      */
-    public function buildPayload(array $nestedData): array
+    public function schemaCreate(array $nestedData): array
     {
         $localDivisionId = Arr::get($nestedData, 'employee_request_data.division_id');
         $divisionUuid = $localDivisionId ? Division::find($localDivisionId)?->uuid : null;
@@ -127,6 +127,7 @@ class EmployeeRequest extends EHealthRequest
             return !is_null($value) && $value !== '' && $value !== [];
         });
     }
+
 
     public function schemaRequest(): array
     {

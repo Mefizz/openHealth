@@ -223,7 +223,7 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
     {
         $requestToSign->loadMissing('revision');
         $nestedDataForRevision = $requestToSign->revision->data;
-        $payloadToSign = EHealth::employeeRequest()->buildPayload($nestedDataForRevision);
+        $payloadToSign = EHealth::employeeRequest()->schemaCreate($nestedDataForRevision);
 
         return signatureService()->signData(
             $payloadToSign,
