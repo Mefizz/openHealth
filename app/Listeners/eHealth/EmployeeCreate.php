@@ -120,6 +120,8 @@ class EmployeeCreate
 
     /**
      * Creates or updates a local Employee and associated Party record.
+     *
+     * @throws Throwable
      */
     private function createOrUpdateEmployee(User $user, array $eHealthEmployee, EmployeeRequest $request, LegalEntity $legalEntity): Employee
     {

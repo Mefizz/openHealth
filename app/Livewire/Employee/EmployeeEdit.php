@@ -70,7 +70,7 @@ class EmployeeEdit extends AbstractEmployeeFormManager
         // This logic is very similar to EmployeePositionAdd
         $party = $this->employee->party;
         $preparedData = $this->form->getPreparedData();
-        $employeeRequestData = Arr::only($preparedData, ['position', 'start_date', 'end_date', 'employee_type', 'division_id']);
+        $employeeRequestData = Arr::only($preparedData, ['position', 'start_date', 'end_date', 'employee_type', 'division_id', 'email']);
 
         $employeeRequestData['user_id'] = $party->user_id;
         $employeeRequestData['party_id'] = $party->id;

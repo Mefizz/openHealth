@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Livewire\Employee;
 
 use App\Classes\eHealth\Api\EmployeeRequest as EHealthEmployeeRequest;
+use App\Classes\eHealth\EHealth;
 use App\Core\Arr;
 use App\Enums\Employee\RequestStatus;
 use App\Enums\Employee\RevisionStatus;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
-use App\Models\Division;
 use App\Models\Employee\BaseEmployee;
 use App\Models\Employee\EmployeeRequest;
 use App\Models\Revision;
@@ -50,6 +50,7 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
         }
     }
 
+    // Used by resources/views/livewire/employee/employee.blade.php
     public function prepareForSigning(): void
     {
         try {
@@ -147,46 +148,6 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
         );
     }
 
-    private function preparePayloadForEHealth(array $nestedData): array
-    {
-        $localDivisionId = Arr::get($nestedData, 'employee_request_data.division_id');
-        $divisionUuid = $localDivisionId ? Division::find($localDivisionId)?->uuid : null;
-
-        $partyPayload = Arr::only($nestedData['party'] ?? [], [
-            'first_name', 'last_name', 'second_name', 'birth_date', 'gender',
-            'tax_id', 'email', 'about_myself'
-        ]);
-
-        $partyPayload['no_tax_id'] = (bool) Arr::get($nestedData, 'party.no_tax_id');
-        $partyPayload['working_experience'] = (int) Arr::get($nestedData, 'party.working_experience');
-        $partyPayload['documents'] = $nestedData['documents'] ?? [];
-        $partyPayload['phones'] = $nestedData['phones'] ?? [];
-
-        $payload = [
-            'position' => Arr::get($nestedData, 'employee_request_data.position'),
-            'start_date' => Arr::get($nestedData, 'employee_request_data.start_date'),
-            'end_date' => Arr::get($nestedData, 'employee_request_data.end_date'),
-            'employee_type' => Arr::get($nestedData, 'employee_request_data.employee_type'),
-            'division_id' => $divisionUuid,
-            'legal_entity_id' => legalEntity()->uuid,
-            'status' => 'NEW',
-            'party' => $partyPayload,
-        ];
-
-        $doctorTypes = config('ehealth.doctors_type', []);
-        $employeeType = Arr::get($nestedData, 'employee_request_data.employee_type');
-
-        if (in_array($employeeType, $doctorTypes, true)) {
-            $doctorData = Arr::get($nestedData, 'doctor');
-            if (!empty($doctorData)) {
-                $payloadKey = strtolower($employeeType);
-                $payload[$payloadKey] = $doctorData;
-            }
-        }
-
-        return ['employee_request' => $this->removeEmptyValuesRecursively($payload)];
-    }
-
     /**
      * Prepares the nested data structure for a Revision from flat form data.
      */
@@ -241,7 +202,7 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
     /**
      * Gets the draft and validates it, including KEP-specific validation.
      */
-    private function validateAndGetDraft(): EmployeeRequest
+    protected function validateAndGetDraft(): EmployeeRequest
     {
         // We use the property on the class, which was set by handleDraftPersistence()
         $requestToSign = $this->employeeRequest;
@@ -262,7 +223,7 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
     {
         $requestToSign->loadMissing('revision');
         $nestedDataForRevision = $requestToSign->revision->data;
-        $payloadToSign = $this->preparePayloadForEHealth($nestedDataForRevision);
+        $payloadToSign = EHealth::employeeRequest()->buildPayload($nestedDataForRevision);
 
         return signatureService()->signData(
             $payloadToSign,
@@ -453,7 +414,7 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
     /**
      * A centralized exception handler for generic, non-validation errors.
      */
-    private function handleException(Exception $e): void
+    protected function handleException(Exception $e): void
     {
         Log::error('Process failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
         $this->dispatch('flashMessage', ['message' => $e->getMessage(), 'type' => 'error', 'persistent' => true]);
