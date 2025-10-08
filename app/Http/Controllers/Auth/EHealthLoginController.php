@@ -127,6 +127,7 @@ class EHealthLoginController extends Controller
 
         // User without party isn't verified by our system yet. Redirect to the identity verification page
         $user->refresh();
+
         if (!$user->party) {
             Session::put('selected_legal_entity_uuid', $legalEntity->uuid);
             // Respect EHealth scopes
@@ -218,6 +219,11 @@ class EHealthLoginController extends Controller
         }
 
         $this->isFirstLogin = true;
+
+        // User can be created before first ehealth login (e.g. OWNER or any local admin)
+        if (!$user->uuid) {
+            $user->update(['uuid' => $ehealthUserId]);
+        }
 
         setPermissionsTeamId($legalEntity->id);
         $user->unsetRelation('roles')->unsetRelation('permissions');

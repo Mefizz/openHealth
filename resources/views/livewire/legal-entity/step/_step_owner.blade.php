@@ -244,11 +244,11 @@
 
     {{-- Owner Phones --}}
     <div
-        class='form-row mt-4'
+        class="space-y-2"
         x-data="{ phones: $wire.entangle('legalEntityForm.owner.phones') }"
-        x-init="phones = phones.length > 0 ? phones : [{ type: '', number: '' }]"
+        x-init="if (!Array.isArray(phones) || phones.length === 0) { phones = [{ type: '', number: '' }] }"
         x-id="['phone']"
-     >
+    >
         <h3 class="font-bold text-sm text-gray-600 mb-6">{{ __('forms.phones_owner') }} *</h3>
 
         <template x-for="(phone, index) in phones" :key="index">
@@ -258,71 +258,79 @@
                 x-init="errors =@js($errors->getMessages())"
                 :class="{ 'mb-2': index == phones.length - 1 }"
             >
-                <div class="form-group group">
+                {{-- Phone Type Select --}}
+                <div class="form-group">
                     <select
                         required
                         x-model="phones[index].type"
-                        class="input-select peer"
-                        :id="$id('phone', '_type' + index)"
-                        :class="{ 'input-error border-red-500': errors[`legalEntityForm.owner.phones.${index}.type`] }"
+                        class="input-select"
+                        :class="{ 'input-error': errors[`legalEntityForm.owner.phones.${index}.type`] }"
+                        :disabled="isDisabled"
+                        :id="$id('phone', '_type_' + index)"
                     >
                         <option value="_placeholder_" selected hidden>-- {{ __('forms.type_mobile') }} --</option>
-
-                        @foreach($dictionaries['PHONE_TYPE'] as $k => $phoneType)
-                            <option value="{{ $k }}">{{ $phoneType }}</option>
-                        @endforeach
+                        <template x-for="(phoneType, key) in $wire.dictionaries.PHONE_TYPE" :key="key">
+                            <option
+                                x-text="phoneType"
+                                :value="key"
+                                :disabled="phones.some((p) => p.type === key)"
+                                :selected="phone.type === key"
+                            ></option>
+                        </template>
                     </select>
 
                     <template x-if="errors[`legalEntityForm.owner.phones.${index}.type`]">
                         <p class="text-error" x-text="errors[`legalEntityForm.owner.phones.${index}.type`]"></p>
                     </template>
 
-                    <label :for="$id('phone', '_type' + index)" class="label z-10">
-                        {{ __('forms.phone_type') }}
-                    </label>
+                    <label :for="$id('phone', '_type_' + index)" class="label">{{ __('forms.phone_type') }}</label>
                 </div>
 
-                <div class="form-group group">
-                    <svg class="svg-input w-5 top-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M7.978 4a2.553 2.553 0 0 0-1.926.877C4.233 6.7 3.699 8.751 4.153 10.814c.44 1.995 1.778 3.893 3.456 5.572 1.68 1.679 3.577 3.018 5.57 3.459 2.062.456 4.115-.073 5.94-1.885a2.556 2.556 0 0 0 .001-3.861l-1.21-1.21a2.689 2.689 0 0 0-3.802 0l-.617.618a.806.806 0 0 1-1.14 0l-1.854-1.855a.807.807 0 0 1 0-1.14l.618-.62a2.692 2.692 0 0 0 0-3.803l-1.21-1.211A2.555 2.555 0 0 0 7.978 4Z"/>
-                    </svg>
-
+                {{-- Phone Number Input --}}
+                <div class="form-group phone-wrapper">
                     <input
                         required
                         type="tel"
                         placeholder=" "
-                        class="input peer"
+                        class="peer input pl-10 with-leading-icon text-gray-500 "
                         x-model="phones[index].number"
                         x-mask="+380999999999"
                         :id="$id('phone', '_number' + index)"
                         :class="{ 'input-error border-red-500': errors[`legalEntityForm.owner.phones.${index}.number`] }"
+                        :disabled="isDisabled"
                     />
 
                     <template x-if="errors[`legalEntityForm.owner.phones.${index}.number`]">
                         <p class="text-error" x-text="errors[`legalEntityForm.owner.phones.${index}.number`]"></p>
                     </template>
 
-                    <label :for="$id('phone', '_number' + index)" class="label z-10">
+                    <label :for="$id('phone', '_number' + index)" class="wrapped-label">
                         {{ __('forms.phone') }}
                     </label>
                 </div>
 
-                <template x-if="phones.length > 1 && index > 0">
-                    <button x-on:click.prevent="phones.splice(index, 1)" {{-- Remove a phone if button is clicked --}}
-                        class="item-remove justify-self-start text-xs"
-                    >
-                        {{__('forms.remove_phone')}}
-                    </button>
-                </template>
+                <!-- Action Phone Buttons -->
+                <div
+                    x-cloak
+                    x-show="!isDisabled"
+                    class="flex items-center space-x-4 justify-start"
+                >
+                    <!-- Add phone -->
+                    <template x-if="phones.length > 1">
+                        <button type="button" @click.prevent="phones.splice(index, 1)" class="item-remove text-red-600 hover:text-red-800 justify-self-start">
+                            <span>{{__('forms.remove_phone')}}</span>
+                        </button>
+                    </template>
+
+                    <!-- Remove Phone -->
+                    <template x-if="index === phones.length - 1 && phones.length < 2">
+                        <button type="button" @click.prevent="phones.push({ type: '', number: '' })" class="item-add">
+                            <span>{{__('forms.add_phone')}}</span>
+                        </button>
+                    </template>
+                </div>
             </div>
         </template>
-
-        <button x-on:click.prevent="phones.push({ type: '', number: '' })" {{-- Add new phone if button is clicked --}}
-                class="item-add mb-4"
-                :class="{ 'lg:justify-self-start': index > 0 }" {{-- Apply this style only if it's not a first phone group --}}
-        >
-            {{__('forms.add_phone')}}
-        </button>
     </div>
 
     {{-- Owner IPN --}}
