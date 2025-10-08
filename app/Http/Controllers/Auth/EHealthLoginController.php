@@ -129,12 +129,16 @@ class EHealthLoginController extends Controller
 
         if (!$user->party) {
             Session::put('selected_legal_entity_uuid', $legalEntity->uuid);
+            $user->syncPermissions($ehealthScopes);
 
             return Redirect::route('party.verify');
         }
 
         if ($legalEntity) {
             Log::info(__('auth.login.success.user_auth', [], 'en'), ['User ID' => $user->id]);
+
+            // Respect EHealth scopes
+            $user->syncPermissions($ehealthScopes);
 
             return Redirect::route('dashboard', [$legalEntity])->with(
                 'success',
