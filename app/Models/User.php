@@ -282,6 +282,35 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Override the default Spatie permission check to enforce session-based scopes.
+     *
+     * When a user logs in via eHealth, their scopes for that session are "locked".
+     * This method ensures that even if a background job grants new roles/permissions
+     * to the user in the database, their current session's capabilities do not exceed
+     * what was originally granted by the eHealth API.
+     *
+     * @param string|Permission $permission
+     * @param string|null $guardName
+     * @return bool
+     */
+    public function hasPermissionTo($permission, $guardName = null): bool
+    {
+        // Check if session-locked scopes exist.
+        if (session()?->has('session_scopes')) {
+            $sessionScopes = session('session_scopes');
+
+            // Get the permission name whether it's an object or a string.
+            $permissionName = is_string($permission) ? $permission : $permission->name;
+
+            // Check permission only against the session-locked list.
+            return in_array($permissionName, $sessionScopes, true);
+        }
+
+        // If no session lock, fall back to the default Spatie behavior.
+        return parent::hasPermissionTo($permission, $guardName);
+    }
+
+    /**
      * Get employee by priority with specific write permission. Example: procedure:write.
      *
      * @param  array  $priorityRoles  Ordered role from most valuable to least

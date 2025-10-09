@@ -12,6 +12,7 @@ use App\Classes\eHealth\Api\License;
 use App\Classes\eHealth\Api\Job;
 use App\Classes\eHealth\Api\Division;
 use App\Classes\eHealth\Api\HealthcareService;
+use App\Classes\eHealth\Api\Party;
 use App\Classes\eHealth\Api\Patient;
 use App\Classes\eHealth\Api\Person;
 use App\Classes\eHealth\Api\PersonRequest;
@@ -77,5 +78,10 @@ final class EHealth
     public static function employeeRequest(): EmployeeRequest
     {
         return app(EmployeeRequest::class);
+    }
+
+    public static function party(): Party
+    {
+        return app(Party::class);
     }
 }

@@ -30,6 +30,7 @@ class EHealthUserLogin
         public User $user,
         public LegalEntity $legalEntity,
         public string $authUserUUID,
+        public ?array $ehealthScopes = null,
         public bool $isFirstLogin = false
     ) {
         $this->token = Crypt::encryptString(app(TokenStorage::class)->getBearerToken());

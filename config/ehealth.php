@@ -633,6 +633,7 @@ return [
             'rule_engine_rule:read',
             'party_verification:details',
             'party_verification:write',
+            'party_verification:read',
         ],
         'ADMIN' => [
             'declaration:read',
@@ -803,7 +804,8 @@ return [
             'employee_role:read',
             'employee_role:write',
             'party_verification:details',
-            'party_verification:write'
+            'party_verification:write',
+            'party_verification:read'
         ],
         'SPECIALIST' => [
             'division:read',

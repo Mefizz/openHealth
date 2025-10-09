@@ -228,13 +228,28 @@
                                     </span>
                                     @endif
                                     @if($party->email)
-                                        <span class="flex items-center gap-1.5">
-                                        <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                           <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m3.5 5.5 7.893 6.036a1 1 0 0 0 1.214 0L20.5 5.5M4 19h16a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Z"/>
-                                        </svg>
-                                        <a href="mailto:{{$party->email}}" class="hover:underline">{{ $party->email }}</a>
+                                            <span class="flex items-center gap-1.5">
+                                            <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
+                                                 xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                                 viewBox="0 0 24 24">
+                                               <path stroke="currentColor" stroke-linecap="round" stroke-width="2"
+                                                     d="m3.5 5.5 7.893 6.036a1 1 0 0 0 1.214 0L20.5 5.5M4 19h16a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Z"/>
+                                            </svg>
+                                        <a href="mailto:{{$party->email}}"
+                                           class="hover:underline">{{ $party->email }}</a>
+                                        </span>
+                                        @endif
+                                        @if ($party->verification_status)
+                                            <span class="flex items-center gap-1.5">
+                                    <span class="font-semibold">{{ __('general.verification') }}:</span>
+
+                                    @if ($party->verification_status === 'VERIFIED')
+                                                                            <span class="badge-green">{{ __('general.verified') }}</span>
+                                                                        @else
+                                                                            <span class="badge-red">{{ __('general.not_verified') }}</span>
+                                                                        @endif
                                     </span>
-                                    @endif
+                                        @endif
                                 </div>
                             </div>
                             @can('create', \App\Models\Employee\EmployeeRequest::class)

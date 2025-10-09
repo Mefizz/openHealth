@@ -22,4 +22,11 @@ return [
     'to' => '–',
     'of' => 'із',
     'results' => 'результатів',
+
+    //Verification
+    'not_verified' => 'Не верифіковано',
+    'verification_needed' => 'Потребує верифікації',
+    'verification_not_needed' => 'Не потребує верифікації',
+    'verified' => 'Верифіковано',
+    'verification' => 'Верифікація',
 ];
