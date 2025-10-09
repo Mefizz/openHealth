@@ -72,12 +72,17 @@
                                     </p>
                                 </td>
 
-                                <td class="p-4 text-sm font-normal text-center text-gray-500 whitespace-nowrap dark:text-gray-400">
-                                    @if ($service->status === Status::INACTIVE)
-                                        <span class="badge-red text-meta-1">{{ Status::INACTIVE->label() }}</span>
-                                    @else
-                                        <span class="badge-green text-meta-3">{{ Status::ACTIVE->label() }}</span>
-                                    @endif
+                                <td class="td-input">
+                                    <span class="{{
+                                        match($service->status) {
+                                            Status::DRAFT => 'badge-dark',
+                                            Status::ACTIVE => 'badge-green',
+                                            Status::INACTIVE => 'badge-red',
+                                            default => ''
+                                        }
+                                    }}">
+                                    {{ $service->status->label() }}
+                                </span>
                                 </td>
 
                                 <td class="border-b border-[#eee] py-5 px-4 ">

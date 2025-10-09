@@ -27,6 +27,7 @@ use App\Livewire\Division\DivisionEdit;
 use App\Livewire\Division\DivisionIndex;
 use App\Livewire\Division\DivisionView;
 use App\Livewire\Division\HealthcareService\HealthcareServiceCreate;
+use App\Livewire\Division\HealthcareService\HealthcareServiceEdit;
 use App\Livewire\Division\HealthcareService\HealthcareServiceIndex;
 use App\Livewire\Employee\EmployeeCreate;
 use App\Livewire\Employee\EmployeeEdit;
@@ -140,6 +141,9 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                 Route::get('/{division}/edit', DivisionEdit::class)->name('division.edit')->can('update', 'division');
                 Route::get('/{division}/healthcare-service/create', HealthcareServiceCreate::class)
                     ->name('healthcare-service.create')
+                    ->can('create', HealthcareService::class);
+                Route::get('/{division}/healthcare-service/{healthcareService}', HealthcareServiceEdit::class)
+                    ->name('healthcare-service.edit')
                     ->can('create', HealthcareService::class);
             });
 

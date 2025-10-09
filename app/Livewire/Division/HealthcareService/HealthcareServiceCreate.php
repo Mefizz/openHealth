@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace App\Livewire\Division\HealthcareService;
 
-use App\Classes\eHealth\EHealth;
 use App\Core\Arr;
-use App\Exceptions\EHealth\EHealthResponseException;
-use App\Exceptions\EHealth\EHealthValidationException;
+use App\Enums\Status;
+use App\Models\Division;
 use App\Models\HealthcareService;
+use App\Models\LegalEntity;
 use App\Repositories\Repository;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\ValidationException;
@@ -19,7 +18,12 @@ use Throwable;
 
 class HealthcareServiceCreate extends HealthcareServiceComponent
 {
-    public function create(): void
+    public function mount(LegalEntity $legalEntity, Division $division): void
+    {
+        $this->baseMount($legalEntity, $division);
+    }
+
+    public function createLocally(): void
     {
         if (Auth::user()?->cannot('create', HealthcareService::class)) {
             Session::flash('error', 'У вас немає дозволу на створення послуги');
@@ -36,33 +40,20 @@ class HealthcareServiceCreate extends HealthcareServiceComponent
             return;
         }
 
-        // Create in eHealth
-        try {
-            $response = EHealth::healthcareService()->create(removeEmptyKeys(Arr::toSnakeCase($validated)));
-        } catch (ConnectionException $exception) {
-            $this->logConnectionError($exception, 'Error connecting when creating a healthcare service');
-            Session::flash('error', "Виникла помилка. Відсутній зв'язок із ЕСОЗ");
-
-            return;
-        } catch (EHealthValidationException|EHealthResponseException $exception) {
-            $this->logEHealthException($exception, 'Error when creating a healthcare service');
-
-            if ($exception instanceof EHealthValidationException) {
-                Session::flash('error', $exception->getFormattedMessage());
-            } else {
-                Session::flash('error', 'Помилка від ЕСОЗ: ' . $exception->getMessage());
-            }
-
-            return;
-        }
-
         // Store in local database
         try {
-            $validated = $response->validate();
-            Repository::healthcareService()->store($response->map($validated));
+            $validated['divisionId'] = $this->divisionId;
+            $validated['legalEntityId'] = legalEntity()->id;
+            $validated['status'] = Status::DRAFT;
+
+            Repository::healthcareService()->store(Arr::toSnakeCase($validated));
 
             Session::flash('success', 'Послугу успішно створено');
-            $this->redirectRoute('division.healthcare-service.index', [legalEntity(), $this->divisionId], navigate: true);
+            $this->redirectRoute(
+                'division.healthcare-service.index',
+                [legalEntity(), $this->divisionId],
+                navigate: true
+            );
         } catch (Throwable $exception) {
             $this->logDatabaseErrors($exception, 'Failed to store healthcare service');
             Session::flash('error', 'Виникла помилка. Зверніться до адміністратора.');

@@ -19,9 +19,6 @@ class DeclarationCreate extends DeclarationComponent
         $this->baseMount($patientId);
     }
 
-    /**
-     * @return void
-     */
     public function createLocally(): void
     {
         if (!$this->ensureAbility('create', 'У вас немає дозволу на створення заявки на подання декларації')) {

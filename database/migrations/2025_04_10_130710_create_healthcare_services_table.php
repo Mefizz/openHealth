@@ -16,13 +16,13 @@ return new class extends Migration
     {
         Schema::create('healthcare_services', static function (Blueprint $table) {
             $table->id();
-            $table->uuid()->unique();
+            $table->uuid()->unique()->nullable();
             $table->foreignId('division_id')->constrained()->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignId('legal_entity_id')->constrained();
             $table->string('speciality_type')->nullable();
             $table->string('providing_condition')->nullable();
             $table->string('license_id')->nullable();
-            $table->enum('status', Status::only(['ACTIVE', 'INACTIVE']))->nullable();
+            $table->enum('status', Status::only(['DRAFT', 'ACTIVE', 'INACTIVE']));
             $table->foreignId('category_id')->constrained('codeable_concepts');
             $table->foreignId('type_id')->nullable()->constrained('codeable_concepts');
             $table->text('comment')->nullable();

@@ -84,17 +84,17 @@
                             <td class="td-input">{{ CarbonImmutable::parse($declaration->person->birth_date)->format('d.m.Y') }}</td>
                             <td class="td-input">{{ $declaration->employee->fullName }}</td>
                             <td class="td-input">
-                        <span class="{{
-                            match($declaration->status) {
-                                Status::DRAFT => 'badge-dark',
-                                Status::NEW, Status::APPROVED => 'badge-yellow',
-                                Status::ACTIVE => 'badge-green',
-                                Status::REJECTED, Status::CANCELLED, Status::TERMINATED => 'badge-red',
-                                default => ''
-                            }
-                        }}">
-                            {{ $declaration->status->label() }}
-                        </span>
+                                <span class="{{
+                                    match($declaration->status) {
+                                        Status::DRAFT => 'badge-dark',
+                                        Status::NEW, Status::APPROVED => 'badge-yellow',
+                                        Status::ACTIVE => 'badge-green',
+                                        Status::REJECTED, Status::CANCELLED, Status::TERMINATED => 'badge-red',
+                                        default => ''
+                                    }
+                                }}">
+                                    {{ $declaration->status->label() }}
+                                </span>
                             </td>
                             <td x-data="{ openDropdown: false }" class="relative td-input text-center overflow-visible">
                                 <button @click.stop="openDropdown = !openDropdown" type="button" class="cursor-pointer">

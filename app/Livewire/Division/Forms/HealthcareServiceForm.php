@@ -37,7 +37,7 @@ class HealthcareServiceForm extends Form
         'coding' => [['system' => 'HEALTHCARE_SERVICE_PHARMACY_DRUGS_TYPES']]
     ];
 
-    public string $licenseId;
+    public ?string $licenseId = null;
 
     public string $comment;
 
