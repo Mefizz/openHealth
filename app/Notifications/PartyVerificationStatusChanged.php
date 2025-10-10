@@ -43,14 +43,14 @@ class PartyVerificationStatusChanged extends Notification
      */
     public function toArray(mixed $notifiable): array
     {
-//        $legalEntity = $this->party->employees->first()->legalEntity ?? null;
+        $legalEntity = $this->party->employees->first()->legalEntity ?? null;
 
         return [
             'message' => 'Статус вашої верифікації було змінено на: ' . $this->newStatus,
-//            'link' => $legalEntity ? route('party.verification.show', [
-//                'legalEntity' => $legalEntity->id,
-//                'party' => $this->party->id
-//            ]) : null,
+            'link' => $legalEntity ? route('party.verification.show', [
+                'legalEntity' => $legalEntity->id,
+                'party' => $this->party->id
+            ]) : null,
         ];
     }
 }

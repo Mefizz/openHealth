@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Log;
  * the latest verification statuses from the eHealth API for all parties associated
  * with the logged-in legal entity and updates the local database.
  */
-class SyncPartyVerificationStatusOnLogin implements ShouldQueue
+class PartyVerificationSyncStatusOnLogin implements ShouldQueue
 {
     /**
      * Handle the event.

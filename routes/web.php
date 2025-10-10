@@ -174,6 +174,9 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                     ->name('edit')->middleware('can:update,employee_request');
             });
 
+            Route::get('/party/{party}/verification', \App\Livewire\Party\PartyVerify::class)
+                ->name('party.verification.show');
+
             Route::prefix('contract')->group(function () {
                 Route::get('/', ContractIndex::class)->name('contract.index');
                 Route::get('/form/{id?}', ContractForm::class)->name('contract.form');

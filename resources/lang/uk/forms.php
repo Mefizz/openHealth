@@ -413,4 +413,12 @@ return [
 
     // Declarations
     'declarations' => 'Декларації',
+
+    'reason_code' => 'Причина / Код',
+    'ehealth_comment_recommendation' => 'Коментар від ЕСОЗ / Рекомендації',
+    'code' => 'Код',
+    'verification_details_not_loaded' => 'Не вдалося завантажити деталі верифікації.',
+    'update_death_data' => 'Оновити дані про смерть',
+    'edit_personal_data' => 'Редагувати персональні дані',
+    'select_statuses' => 'Оберіть статуси',
 ];

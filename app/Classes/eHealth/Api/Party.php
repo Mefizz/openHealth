@@ -54,6 +54,7 @@ class Party extends EHealthRequest
 
     /**
      * Sends a request to update a party's verification status.
+     * The API currently supports updating 'dracs_death' and 'dracs_name_change'.
      *
      * @param string $uuid The UUID of the party to update.
      * @param array $data The data for the update request.
@@ -62,7 +63,6 @@ class Party extends EHealthRequest
      */
     public function update(string $uuid, array $data = []): PromiseInterface|EHealthResponse
     {
-        // Note: Corrected the URL to include a slash before the UUID.
         return $this->patch(self::URL . '/' . $uuid . '/verification', $data);
     }
 
