@@ -5,11 +5,8 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Repositories\MedicalEvents\Repository;
-use Exception;
-use App\Models\Division;
 use App\Models\HealthcareService;
 use Illuminate\Support\Facades\DB;
-use App\Classes\eHealth\Api\HealthcareService as HealthcareServiceApi;
 use Throwable;
 
 class HealthcareServiceRepository
@@ -66,38 +63,6 @@ class HealthcareServiceRepository
     public function updateStatus(string $uuid, string $status): void
     {
         HealthcareService::whereUuid($uuid)->update(['status' => $status]);
-    }
-
-    public function getAssociatedDivisions(array $healthcareServicesList): array
-    {
-        // Get all unique division UUIDs for batch lookup
-        $divisionUuids = array_unique(array_column($healthcareServicesList, 'division_id'));
-
-        // Batch lookup: get division IDs mapped by their UUIDs to avoid redundant queries
-        return Division::whereIn('uuid', $divisionUuids)->pluck('id', 'uuid')->toArray();
-    }
-
-    /**
-     * Saves all healthcare services from API response using batch upsert operation.
-     *
-     * @param  array  $healthcareServicesList  Raw healthcare services data from eHealth API
-     * @param  array  $divisions
-     * @return void
-     * @throws Exception|Throwable If database transaction fails
-     */
-    public function saveHealthcareServiceAll(array $healthcareServicesList, array $divisions): void
-    {
-        DB::transaction(static function () use ($healthcareServicesList, $divisions) {
-            $upsertData = collect(
-                app(HealthcareServiceApi::class)->normalizeResponseDataForUpsert($healthcareServicesList, $divisions)
-            )->map(function (array $item) {
-                // Save category and type to separate table
-                return $this->storeCategoryAndType($item);
-            })->all();
-
-            // At first save all the Divisions to the DB
-            HealthcareService::upsert($upsertData, uniqueBy: ['uuid'], update: new HealthcareService()->getFillable());
-        });
     }
 
     /**

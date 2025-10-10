@@ -1,12 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Core\EHealthJob;
-use App\Notifications\SyncNotification;
 use GuzzleHttp\Promise\PromiseInterface;
 use App\Classes\eHealth\EHealthResponse;
-use App\Notifications\CustomMessage;
 
 /**
  * This job is responsible for finalizing a full synchronization operation between different data sources

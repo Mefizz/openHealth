@@ -1,14 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Core\EHealthJob;
+use App\Exceptions\EHealth\EHealthResponseException;
+use App\Exceptions\EHealth\EHealthValidationException;
 use App\Models\LegalEntity;
 use App\Repositories\Repository;
 use App\Classes\eHealth\EHealth;
 use GuzzleHttp\Promise\PromiseInterface;
 use App\Classes\eHealth\EHealthResponse;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Queue\Middleware\RateLimited;
+use Throwable;
 
 class HealthcareServiceSync extends EHealthJob
 {
@@ -18,15 +24,27 @@ class HealthcareServiceSync extends EHealthJob
 
     public const string ENTITY = LegalEntity::ENTITY_HEALTHCARE_SERVICE;
 
-    // Get data from EHealth API
+    /**
+     * Get data from EHealth API.
+     *
+     * @param  string  $token
+     * @return PromiseInterface|EHealthResponse
+     * @throws ConnectionException|EHealthResponseException|EHealthValidationException
+     */
     protected function sendRequest(string $token): PromiseInterface|EHealthResponse
     {
         return EHealth::healthcareService()
-                ->withToken($token)
-                ->getMany(query: ['page' => $this->page], groupByEntities: true);
+            ->withToken($token)
+            ->getMany(query: ['page' => $this->page]);
     }
 
-    // Store or update data in the database
+    /**
+     * Store or update data in the database.
+     *
+     * @param  EHealthResponse|null  $response
+     * @return void
+     * @throws Throwable
+     */
     protected function processResponse(?EHealthResponse $response): void
     {
         $healthcareServicesData = $response?->validate();
@@ -35,7 +53,7 @@ class HealthcareServiceSync extends EHealthJob
             return;
         }
 
-        Repository::healthcareService()->saveHealthcareServiceAll($healthcareServicesData['healthcare_services'], $healthcareServicesData['divisions']);
+        Repository::healthcareService()->sync($response?->map($healthcareServicesData));
     }
 
     /**
@@ -50,7 +68,11 @@ class HealthcareServiceSync extends EHealthJob
         ];
     }
 
-    // Get next entity job if needed
+    /**
+     * Get next entity job if needed.
+     *
+     * @return EHealthJob|null
+     */
     protected function getNextEntityJob(): ?EHealthJob
     {
         return $this->standalone || !$this->nextEntity

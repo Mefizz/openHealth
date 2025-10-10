@@ -1,21 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Listeners;
 
 use App\Jobs\EmployeeSync;
 use Throwable;
 use App\Enums\JobStatus;
-use App\Jobs\CompleteSync;
 use App\Jobs\DivisionSync;
 use App\Events\EHealthUserLogin;
-use App\Jobs\HealthcareServiceSync;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Bus;
 use App\Notifications\SyncNotification;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
-class FirstLoginOwnerSyncronization implements ShouldQueue
+class FirstLoginOwnerSynchronization implements ShouldQueue
 {
     use InteractsWithQueue;
 

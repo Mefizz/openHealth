@@ -7,13 +7,11 @@ namespace App\Livewire\Division\HealthcareService;
 use App\Classes\eHealth\EHealth;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
-use App\Livewire\Division\Forms\HealthcareServiceForm as HealthCareFormRequest;
 use App\Models\Division;
 use App\Models\HealthcareService;
 use App\Models\LegalEntity;
 use App\Repositories\Repository;
 use App\Traits\FormTrait;
-use Exception;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Session;
@@ -21,15 +19,12 @@ use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Log;
 use Throwable;
 
 class HealthcareServiceIndex extends Component
 {
     use WithPagination;
     use FormTrait;
-
-    public HealthCareFormRequest $formService;
 
     public ?int $divisionId = null;
     public ?string $divisionUuid = null;
@@ -44,23 +39,6 @@ class HealthcareServiceIndex extends Component
         $this->divisionUuid = $division->uuid;
 
         $this->getDictionary();
-    }
-
-    private function updateHealthcareService(): array|null
-    {
-        $uuid = $this->formService->getHealthcareServiceParam('uuid');
-
-        $healthcareServiceRawData = $this->formService->getHealthcareService();
-
-        $requestParams = Repository::healthcareService()->prepareRequestUpdateData($healthcareServiceRawData);
-
-        try {
-            return EHealth::healthcareService()->update(uuid: $uuid, data: $requestParams)->validate();
-        } catch (Exception $err) {
-            Log::error(self::class . ':updateHealthcareService', ['error' => $err->getMessage()]);
-        }
-
-        return null;
     }
 
     public function activate(string $uuid): void
@@ -132,7 +110,7 @@ class HealthcareServiceIndex extends Component
     public function sync(): void
     {
         try {
-            $response = EHealth::healthcareService()->getSeveral(query: ['division_id' => $this->divisionUuid]);
+            $response = EHealth::healthcareService()->getMany(query: ['division_id' => $this->divisionUuid]);
         } catch (ConnectionException $exception) {
             $this->logConnectionError($exception, 'Error connecting when getting a healthcare service list');
             Session::flash('error', "Виникла помилка. Відсутній зв'язок із ЕСОЗ");

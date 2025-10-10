@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Core\EHealthJob;
@@ -22,8 +24,8 @@ class DivisionSync extends EHealthJob
     protected function sendRequest(string $token): PromiseInterface|EHealthResponse
     {
         return EHealth::division()
-                ->withToken($token)
-                ->getMany(query: ['page' => $this->page]);
+            ->withToken($token)
+            ->getMany(query: ['page' => $this->page]);
     }
 
     // Store or update data in the database
@@ -50,24 +52,23 @@ class DivisionSync extends EHealthJob
         ];
     }
 
-
     /**
      * Get the next entity job to be scheduled after DivisionSync completes.
      *
      * If the job is standalone, returns a CompleteSync job for the current legal entity.
      * Otherwise, returns a HealthcareServiceSync job, passing the current legal entity and nextEntity.
-     * If HealthcareServiceSync has started, the nextEntity as nbext incoming job will be started after it's chain.
+     * If HealthcareServiceSync has started, the nextEntity as next incoming job will be started after it's chain.
      *
      * @return EHealthJob|null
      */
     protected function getNextEntityJob(): ?EHealthJob
     {
         return $this->standalone
-                ? new CompleteSync($this->legalEntity, isFirstLogin: $this->isFirstLogin)
-                : new HealthcareServiceSync(
-                    legalEntity: $this->legalEntity,
-                    isFirstLogin: $this->isFirstLogin,
-                    nextEntity: $this->nextEntity
-                );
+            ? new CompleteSync($this->legalEntity, isFirstLogin: $this->isFirstLogin)
+            : new HealthcareServiceSync(
+                $this->legalEntity,
+                $this->nextEntity,
+                $this->isFirstLogin
+            );
     }
 }
