@@ -17,7 +17,7 @@
             </a>
             @can('create', DeclarationRequest::class)
                 <button wire:click.prevent="createLocally" type="submit" class="button-primary-outline">
-                    {{ __('declarations.create_locally') }}
+                    {{ __('forms.create_locally') }}
                 </button>
                 <button wire:click.prevent="create" type="submit" class="button-primary">
                     {{ __('declarations.create_an_application') }}
