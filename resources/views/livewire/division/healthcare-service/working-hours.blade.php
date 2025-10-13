@@ -1,9 +1,27 @@
 <fieldset class="fieldset shift-content"
           x-data="{
               working: false,
+              exceptions: [],
               localAvailableTime: [],
               isDisabled: false,
               weekdaysKeys: {{ json_encode(array_keys($weekdays)) }},
+
+              addException() {
+                const id = Date.now();
+                this.exceptions.push({
+                  id,
+                  dateFrom: null,
+                  timeFrom: null,
+                  dateTo: null,
+                  timeTo: null,
+                  comment: ''
+                });
+                this.$nextTick(() => {
+                  const el = document.getElementById('exception-'+id);
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+              },
+
               init() {
                   // Create default structure for all days
                   const defaultTimes = this.weekdaysKeys.map(key => ({
@@ -35,6 +53,22 @@
                       ).map(({ working, ...rest }) => rest);
 
                       $wire.form.availableTime = filtered;
+                  }, { deep: true });
+
+                  // Ініціалізація неробочих часів з Livewire (якщо є)
+                  const existingExceptions = $wire.form?.nonWorkingTimes || [];
+                  this.exceptions = existingExceptions.map((ex, idx) => ({
+                    id: Date.now() + idx,
+                    dateFrom: ex.dateFrom ?? null,
+                    timeFrom: ex.timeFrom ?? null,
+                    dateTo: ex.dateTo ?? null,
+                    timeTo: ex.timeTo ?? null,
+                    comment: ex.comment ?? ''
+                  }));
+
+                  // Синхронізація неробочих часів з Livewire
+                  this.$watch('exceptions', (value) => {
+                    $wire.form.nonWorkingTimes = value.map(({id, ...rest}) => rest);
                   }, { deep: true });
               }
           }"
@@ -191,5 +225,138 @@
                 </div>
             @endforeach
         </div>
+
+        <template x-if="working">
+            <div class="space-y-4 mt-4">
+                <template x-for="(ex, idx) in exceptions" :key="ex.id">
+                    <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4" :id="'exception-'+ex.id">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-sm font-semibold">
+                                {{__('forms.non_working_hours')}}
+                                <span x-text="idx + 1"></span>
+                            </h4>
+                            <button type="button" class="text-red-500 hover:text-red-700 text-sm font-medium"
+                                    @click="exceptions.splice(idx, 1)">
+                                @icon('delete', 'w-5 h-5 text-red-600')
+                            </button>
+                        </div>
+
+
+                            <div class="form-row-3 mt-5">
+                                <div class="form-group datepicker-wrapper relative w-full">
+                                    <input
+                                        type="text"
+                                        name="start"
+                                        id="start"
+                                        class="peer input pl-10 appearance-none datepicker-input dark:text-gray-400"
+                                        placeholder=" "
+                                        required
+                                        datepicker-autohide
+                                        datepicker-format="yyyy-mm-dd"
+                                        datepicker-button="false"/>
+                                    <label for="start" class="wrapped-label">{{__('forms.start_non_working_time')}}</label>
+                                </div>
+
+                                <div class="form-group w-full">
+                                    <label for="'timeFrom-'+ex.id"
+                                           class="label !text-xs !text-gray-500 dark:!text-gray-400">
+                                        <span>{{__('forms.choose_time')}}</span>
+                                    </label>
+                                    <div class="relative w-full">
+                                        <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none">
+                                            <svg class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                                                 aria-hidden="true"
+                                                 xmlns="http://www.w3.org/2000/svg"
+                                                 width="24"
+                                                 height="24"
+                                                 fill="none"
+                                                 viewBox="0 0 24 24"
+                                            >
+                                                <path stroke="currentColor"
+                                                      stroke-linecap="round"
+                                                      stroke-linejoin="round"
+                                                      stroke-width="2"
+                                                      d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                                                />
+                                            </svg>
+                                        </div>
+                                        <input type="text"
+                                               class="input timepicker-uk text-gray-900 dark:text-white border-t-0 border-r-0 border-l-0 border-b border-gray-300 focus:ring-0 px-0 ps-8"
+                                               placeholder="00:00"
+                                               :id="'timeFrom-'+ex.id"
+                                               x-model="ex.timeFrom"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="form-row-3">
+                                <div class="form-group datepicker-wrapper relative w-full">
+                                    <input
+                                        type="text"
+                                        name="end"
+                                        id="end"
+                                        class="peer input pl-10 appearance-none datepicker-input dark:text-gray-400"
+                                        placeholder=" "
+                                        required
+                                        datepicker-autohide
+                                        datepicker-format="yyyy-mm-dd"
+                                        datepicker-button="false"/>
+                                    <label for="end" class="wrapped-label">{{__('forms.end_non_working_time')}}</label>
+                                </div>
+
+                                <div class="form-group w-full">
+                                    <label for="'timeTo-'+ex.id"
+                                           class="label !text-xs !text-gray-500 dark:!text-gray-400">
+                                        <span>{{__('forms.choose_time')}}</span>
+                                    </label>
+                                    <div class="relative w-full">
+                                        <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none">
+                                            <svg class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                                                 aria-hidden="true"
+                                                 xmlns="http://www.w3.org/2000/svg"
+                                                 width="24"
+                                                 height="24"
+                                                 fill="none"
+                                                 viewBox="0 0 24 24"
+                                            >
+                                                <path stroke="currentColor"
+                                                      stroke-linecap="round"
+                                                      stroke-linejoin="round"
+                                                      stroke-width="2"
+                                                      d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                                                />
+                                            </svg>
+                                        </div>
+                                        <input type="text"
+                                               class="input timepicker-uk text-gray-900 dark:text-white border-t-0 border-r-0 border-l-0 border-b border-gray-300 focus:ring-0 px-0 ps-8"
+                                               placeholder="00:00"
+                                               :id="'timeTo-'+ex.id"
+                                               x-model="ex.timeTo"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                        <div class="form-group">
+                            <input
+                                type="text"
+                                name="comment"
+                                id="comment"
+                                class="peer input"
+                                placeholder=" "/>
+                            <label for="comment" class="label">{{__('forms.comment_non_working_hours')}}</label>
+                        </div>
+                    </div>
+                </template>
+
+                <div class="form-group mb-4 mt-2">
+                    <button @click.prevent="addException()" class="item-add">
+                        {{__('forms.add_non_working_hours')}}
+                    </button>
+                </div>
+            </div>
+        </template>
     </div>
 </fieldset>
