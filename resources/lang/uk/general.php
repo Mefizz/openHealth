@@ -49,4 +49,22 @@ return [
     'verification_status' => 'Статус верифікації',
     'home' => 'Головна',
     'verification_details' => 'Деталі верифікації',
+
+    'verification_statuses' => [
+        'VERIFIED' => 'Верифіковано',
+        'NOT_VERIFIED' => 'Не верифіковано',
+        'VERIFICATION_NEEDED' => 'Потребує верифікації',
+        'VERIFICATION_NOT_NEEDED' => 'Не потребує верифікації',
+    ],
+
+    'verification_reasons' => [
+        'ONLINE_TRIGGERED' => 'Ініційовано системою',
+        'AUTO_NOT_LOST' => 'Автоматично (паспорт не втрачено)',
+        'AUTO_VALID' => 'Автоматично (валідно)',
+        'INITIAL' => 'Початковий',
+        'AUTO_INCORRECT_DATA' => 'Автоматично (некоректні дані)',
+        'MANUAL' => 'Вручну',
+        'MANUAL_CONFIRMED' => 'Підтверджено вручну',
+        'MANUAL_NOT_CONFIRMED' => 'Не підтверджено вручну',
+    ],
 ];

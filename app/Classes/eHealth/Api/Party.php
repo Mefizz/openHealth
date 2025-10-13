@@ -80,8 +80,36 @@ class Party extends EHealthRequest
         $rules = [
             'verification_status' => 'required|string',
             'details' => 'required|array',
-            'details.drfo.verification_status' => 'required|string',
-            'details.dracs_death.verification_status' => 'required|string',
+
+            // DRFO block
+            'details.drfo' => 'present|array',
+            'details.drfo.verification_status' => 'string',
+            'details.drfo.verification_reason' => 'nullable|string',
+            'details.drfo.result' => 'nullable|numeric',
+
+            // DRACS Death block
+            'details.dracs_death' => 'present|array',
+            'details.dracs_death.verification_status' => 'string',
+            'details.dracs_death.verification_reason' => 'nullable|string',
+            'details.dracs_death.verification_comment' => 'nullable|string',
+
+            // MVS Passport block
+            'details.mvs_passport' => 'present|array',
+            'details.mvs_passport.verification_status' => 'string',
+            'details.mvs_passport.verification_reason' => 'nullable|string',
+            'details.mvs_passport.status' => 'nullable|numeric',
+
+            // DMS Passport block
+            'details.dms_passport' => 'present|array',
+            'details.dms_passport.verification_status' => 'string',
+            'details.dms_passport.verification_reason' => 'nullable|string',
+            'details.dms_passport.status' => 'nullable|numeric',
+
+            // DRACS Name Change block
+            'details.dracs_name_change' => 'present|array',
+            'details.dracs_name_change.verification_status' => 'string',
+            'details.dracs_name_change.verification_reason' => 'nullable|string',
+            'details.dracs_name_change.verification_comment' => 'nullable|string',
         ];
 
         return Validator::make($data, $rules)->validated();

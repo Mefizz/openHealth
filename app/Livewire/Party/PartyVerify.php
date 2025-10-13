@@ -23,7 +23,7 @@ class PartyVerify extends Component
     public string $reason = '';
     public string $comment = '';
 
-    public function mount(LegalEntity $legalEntity, Party $party)
+    public function mount(LegalEntity $legalEntity, Party $party): void
     {
         $this->legalEntity = $legalEntity;
         $this->party = $party;
@@ -35,6 +35,7 @@ class PartyVerify extends Component
         try {
             $response = EHealth::party()->getDetails($this->party->uuid);
             $this->verificationDetails = $response->validate();
+
         } catch (\Exception $e) {
             session()->flash('error', 'Не вдалося завантажити деталі верифікації.');
         }

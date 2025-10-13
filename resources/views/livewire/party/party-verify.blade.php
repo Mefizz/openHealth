@@ -41,16 +41,18 @@
 
     <x-section class="mt-8">
         <h2 class="text-xl font-bold mb-6 text-gray-800 dark:text-white">@lang('general.verification')</h2>
+        {{-- resources/views/livewire/party/party-verify.blade.php --}}
+
         <div class="overflow-x-auto">
             <div class="inline-block min-w-full align-middle">
                 <div class="overflow-hidden border border-gray-200 dark:border-gray-700 sm:rounded-lg">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                         <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 w-1/5">@lang('general.verification')</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">@lang('forms.status.label')</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">@lang('forms.reason_code')</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 w-2/5">@lang('forms.ehealth_comment_recommendation')</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 w-1/5">Верифікація</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">Статус</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">Причина</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 w-2/5">Коментар від ЕСОЗ / Рекомендації</th>
                         </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-600">
@@ -63,19 +65,29 @@
                             @endphp
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white align-top">
-                                    @lang('general.verification_types.' . $key)
+                                    {{-- Human-readable names for verification types --}}
+                                    @switch($key)
+                                        @case('drfo') ДРФО @break
+                                        @case('dracs_death') ДРАЦС (смерть) @break
+                                        @case('mvs_passport') МВС (паспорт) @break
+                                        @case('dms_passport') ДМС (паспорт) @break
+                                        @case('dracs_name_change') ДРАЦС (зміна ПІБ) @break
+                                        @default {{ $key }}
+                                    @endswitch
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm align-top">
+                                    {{-- ▼▼▼ ЗМІНА ТУТ ▼▼▼ --}}
                                     @if($status === 'VERIFIED')
-                                        <span class="badge-green">@lang('general.verified')</span>
+                                        <span class="badge-green">@lang('general.verification_statuses.' . $status)</span>
                                     @elseif($status)
-                                        <span class="badge-red">@lang('general.' . strtolower($status))</span>
+                                        <span class="badge-red">@lang('general.verification_statuses.' . $status)</span>
                                     @else
                                         <span>-</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 align-top">
-                                    <div>{{ $reason ?? '-' }}</div>
+                                    {{-- ▼▼▼ І ТУТ ▼▼▼ --}}
+                                    <div>@lang('general.verification_reasons.' . $reason)</div>
                                     @if($result)
                                         <div class="text-xs text-gray-400">(@lang('forms.code'): {{ $result }})</div>
                                     @endif
@@ -85,15 +97,15 @@
                                         <span class="font-semibold text-gray-700 dark:text-gray-300">{{ $comment }}</span>
                                     @elseif ($status !== 'VERIFIED')
                                         @lang('general.recommendations.' . $key, ['result' => $result])
-                                    @else
-                                        <span>-</span>
-                                    @endif
+                                            @else
+                                                <span>-</span>
+                                            @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
                                 <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
-                                    @lang('forms.verification_details_not_loaded')
+                                    Не вдалося завантажити деталі верифікації.
                                 </td>
                             </tr>
                         @endforelse
