@@ -143,7 +143,7 @@ class EmployeeIndex extends EmployeeComponent
                 }
 
                 // 2. Apply party-level filters (search, email, phone)
-                if (!empty($this->search) && !str_contains(strtolower($party->fullName), strtolower($this->search))) {
+                if (!empty($this->search) && !str_contains(mb_strtolower($party->fullName), mb_strtolower($this->search))) {
                     return false;
                 }
                 if (!empty($this->filter['email']) && stripos($party->email ?? '', $this->filter['email']) === false) {

@@ -43,7 +43,7 @@
                                                class="input peer"
                                                wire:model.defer="search"
                                                autocomplete="off" />
-                                        <label for="employee_search" class="label">ПІБ</label>
+                                        <label for="employee_search" class="label">{{ __('forms.full_name') }}</label>
                                     </div>
                                 </x-slot>
                             </x-forms.form-group>
