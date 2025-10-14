@@ -26,11 +26,26 @@ class RolesPermissionsSeeder extends Seeder
 
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        $permissions = collect(config('ehealth.roles'))->flatten()->unique()->toArray();
+        // Collect all unique permissions from the new structured config
+        $scopesByLglEntityType = config('ehealth.scopes_by_legal_entity_type', []);
+        $baseScopes = config('ehealth.base_scopes', []);
 
-        // Prepare Role's and Permission's data to insert into DB
+        $allPermissions = collect($baseScopes);
+
+        foreach ($scopesByLglEntityType as $type => $roles) {
+            foreach ($roles as $roleName => $scopes) {
+                $allPermissions = $allPermissions->merge($scopes);
+            }
+        }
+
+        $permissions = $allPermissions->unique()->values()->all();
+
+        // Prepare Role's and Permission's data to insert into DB.
+        // We still use the legacy 'roles' config key to know which roles to create.
+        $rolesToCreate = array_keys(config('ehealth.roles', []));
+
         foreach ($guards as $guard) {
-            foreach (array_keys(config('ehealth.roles')) as $roleName) {
+            foreach ($rolesToCreate as $roleName) {
                 $rolesToInsert[] = ['name' => $roleName, 'guard_name' => $guard];
             }
 
@@ -47,6 +62,8 @@ class RolesPermissionsSeeder extends Seeder
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // Assign permissions for specified roles depends on the guard
+        // This part continues to use the legacy 'roles' config which now contains the superset
+        // of all permissions for each role, ensuring backward compatibility.
         foreach ($guards as $guard) {
             $rolesByGuard = Role::with('permissions')
                 ->whereIn('name', array_keys(config('ehealth.roles')))

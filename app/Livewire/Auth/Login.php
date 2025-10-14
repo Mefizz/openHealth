@@ -31,6 +31,7 @@ class Login extends Component
 
     /**
      * List of ALL founded Legal Entities
+     *
      * @var array
      */
     public array $legalEntitiesList = [];
@@ -275,12 +276,6 @@ class Login extends Component
         cache()->forget("login_lockout:$key");
     }
 
-    /**
-     * Prepare login URL for eHealth depending on the user credentials and redirect URI
-     *
-     * @param  User  $user
-     * @return string
-     */
     protected function buildEHealthLoginUrl(User $user): string
     {
         // Base URL and client ID
@@ -289,7 +284,7 @@ class Login extends Component
 
         $selectedLegalEntityClientId = $this->getLegalEntityClientIdFromUuid($this->legalEntityUUID);
 
-        $legalEntityId = LegalEntity::whereUuid($this->legalEntityUUID)->first()->id;
+        $legalEntity = LegalEntity::whereUuid($this->legalEntityUUID)->first();
 
         // Base query parameters
         $queryParams = [
@@ -300,12 +295,15 @@ class Login extends Component
 
         // Set a temporary team/legalEntity ID, this should be overridden once a user actually logs in.
         // Spatie Permissions sets permissions globally, they can't be loaded by querying relations tables
-        setPermissionsTeamId($legalEntityId);
+        if ($legalEntity) {
+            setPermissionsTeamId($legalEntity->id);
+        }
         $user->unsetRelation('roles')->unsetRelation('permissions');
 
         // Additional query parameters if email is provided
         if (!empty($user->email)) {
             $queryParams['email'] = $user->email;
+            // The getScopes method in User model now handles the logic of selecting the correct scopes
             $queryParams['scope'] = $user->getScopes($selectedLegalEntityClientId);
         }
 
@@ -326,19 +324,15 @@ class Login extends Component
         $baseUrl = config('ehealth.api.auth_host');
         $redirectUri = config('ehealth.api.redirect_uri');
 
-        $selectedLegalEntityClientId = $this->getLegalEntityClientIdFromUuid($this->legalEntityUUID);
+        $legalEntity = LegalEntity::whereUuid($this->legalEntityUUID)->firstOrFail();
+        $selectedLegalEntityClientId = $legalEntity->clientId;
+        $legalEntityType = $legalEntity->type;
 
-        $permissions = Role::where('name', $this->role)
-            ->whereGuardName('ehealth')
-            ->firstOrFail()
-            ->permissions()
-            ->pluck('name')
-            ->toArray();
+        // Get scopes directly from the new config structure based on LE type and selected role
+        $roleScopes = config("ehealth.scopes_by_legal_entity_type.{$legalEntityType}.{$this->role}", []);
+        $baseScopes = config('ehealth.base_scopes', []);
 
-        $type = LegalEntity::whereUuid($this->legalEntityUUID)->value('type');
-        if ($type === LegalEntity::TYPE_PRIMARY_CARE) {
-            $permissions = $this->excludeContractPermissions($permissions);
-        }
+        $permissions = array_unique((array) array_merge($baseScopes, $roleScopes));
 
         $scope = implode(' ', $permissions);
 
@@ -355,19 +349,6 @@ class Login extends Component
 
         // Build the full URL with query parameters
         return $baseUrl . '?' . http_build_query($queryParams);
-    }
-
-    private function excludeContractPermissions(array $permissions): array
-    {
-        $contractPermissions = [
-            'contract:write',
-            'contract_request:approve',
-            'contract_request:create',
-            'contract_request:sign',
-            'contract_request:terminate',
-        ];
-
-        return array_diff($permissions, $contractPermissions);
     }
 
     /**

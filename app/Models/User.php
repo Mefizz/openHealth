@@ -7,7 +7,6 @@ namespace App\Models;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use App\Models\Person\Person;
 use App\Models\Relations\Party;
 use App\Models\Employee\Employee;
@@ -180,35 +179,42 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Overrides trait's method to exclude unused scopes
+     *
      * @return Collection<Permission> a list of scopes associated with the user and entity type
      */
     public function getAllPermissions(string $legalEntityClientId): Collection
     {
-        $scopes = $this->getAllPermissionsTrait();
+        // 1. Get all permissions assigned to the user via Spatie roles (without context)
+        $allPermissionsAssigned = $this->getAllPermissionsTrait();
 
+        // 2. Determine the context (Legal Entity type)
         $legalEntity = LegalEntity::where('client_id', $legalEntityClientId)->first();
+        if (!$legalEntity) {
+            // Return empty collection if legal entity not found
+            return collect();
+        }
+        $legalEntityType = $legalEntity->type;
 
-        $exclude = []; // exclude scopes not used by the entity
+        // 3. Get the roles the user has for this specific Legal Entity
+        $userRolesInContext = $this->roles()
+            ->where('model_has_roles.legal_entity_id', $legalEntity->id)
+            ->pluck('name')
+            ->all();
 
-        switch ($legalEntity->type) {
-            case LegalEntity::TYPE_PRIMARY_CARE:
-                $exclude = array_merge(
-                    $exclude,
-                    [
-                        'contract_request:sign',
-                        'contract_request:terminate',
-                        'contract:write',
-                        'contract_request:approve',
-                        'contract_request:create'
-                    ]
-                );
-                break;
+        // 4. Get the list of scopes ALLOWED by the config for those roles in this context
+        $allowedScopes = collect();
+        foreach ($userRolesInContext as $roleName) {
+            $scopesForRole = config("ehealth.scopes_by_legal_entity_type.{$legalEntityType}.{$roleName}", []);
+            $allowedScopes = $allowedScopes->merge($scopesForRole);
         }
 
-        return $scopes->filter(
-            fn (Permission $permission) => !collect($exclude)->some(
-                fn ($excluded) => Str::startsWith($permission->name, $excluded)
-            )
+        // 5. Add base scopes which are always allowed
+        $baseScopes = config('ehealth.base_scopes', []);
+        $allowedScopes = $allowedScopes->merge($baseScopes)->unique();
+
+        // 6. The final list of permissions is the INTERSECTION of what the user HAS and what is ALLOWED.
+        return $allPermissionsAssigned->filter(
+            fn (Permission $permission) => $allowedScopes->contains($permission->name)
         );
     }
 
