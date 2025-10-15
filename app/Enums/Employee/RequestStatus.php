@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Enums\Employee;
 
 enum RequestStatus: string
@@ -8,7 +10,7 @@ enum RequestStatus: string
     case APPROVED = 'APPROVED';
     case REJECTED = 'REJECTED';
     case SIGNED = 'SIGNED';
-    case DISMISSED = 'DISMISSED';
+    case EXPIRED = 'EXPIRED';
 
     public function label(): string
     {
@@ -17,7 +19,7 @@ enum RequestStatus: string
             self::APPROVED => 'Підтверджено',
             self::REJECTED => 'Відхилено',
             self::SIGNED => 'Підписано в ЕСОЗ',
-            self::DISMISSED => 'Звільнено',
+            self::EXPIRED => 'Протермінований',
         };
     }
 

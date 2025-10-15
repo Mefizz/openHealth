@@ -19,6 +19,7 @@ abstract class EmployeeComponent extends Component
 
     public Form $form;
     public bool $isPersonalDataLocked = false;
+    public bool $isPositionDataLocked = false;
     #[Locked]
     public ?int $employeeRequestId = null;
     public array $divisions = [];

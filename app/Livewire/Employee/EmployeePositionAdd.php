@@ -27,6 +27,7 @@ class EmployeePositionAdd extends AbstractEmployeeFormManager
         $this->partyId = $party->id;
         $this->form->hydrate($this->party);
         $this->form->resetPositionFields();
+        $this->isPersonalDataLocked = true;
     }
 
     public function boot(): void

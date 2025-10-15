@@ -1,4 +1,5 @@
 <fieldset class="fieldset"
+          :disabled="$wire.isPositionDataLocked ?? false"
           x-data="{
               employeeType: $wire.entangle('form.employeeType'),
               employeeTypePosition: @js($this->employeeTypePosition)

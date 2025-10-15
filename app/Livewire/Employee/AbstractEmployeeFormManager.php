@@ -32,7 +32,7 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
     protected ?BaseEmployee $employeeRequest;
     protected ?BaseEmployee $employee = null;
 
-    // === PUBLIC ACTIONS (Moved from Trait) ===
+    // === PUBLIC ACTIONS ===
     // These methods define the shared algorithm. They call the abstract method.
     public function save(): void
     {
@@ -77,7 +77,6 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
         Log::info('Attempting to sign.');
 
         try {
-            // Instead of the old processAndSave(), we now explicitly run the logic:
             // 1. Validate the form
             $this->form->validate($this->form->rulesForSave($this));
             // 2. Persist the draft using the component's specific logic

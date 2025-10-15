@@ -1,5 +1,6 @@
 <div class="overflow-x-auto relative">
     <fieldset class="fieldset" id="section-documents"
+              :disabled="$wire.isPersonalDataLocked ?? false"
               x-data="{
                   documents: $wire.entangle('form.documents'),
                   openModal: false,

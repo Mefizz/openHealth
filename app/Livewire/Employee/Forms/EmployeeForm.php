@@ -10,6 +10,7 @@ use App\Models\Employee\BaseEmployee;
 use App\Rules\Cyrillic;
 use App\Rules\DocumentNumber;
 use App\Rules\UniquePassportRule;
+use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\Form;
 use App\Rules\Name;
@@ -176,9 +177,6 @@ class EmployeeForm extends Form
             $educationRules[] = 'min:1';
         }
 
-        $scienceDegreeRules = ['nullable', 'array'];
-        $qualificationsRules = ['nullable', 'array'];
-
         return [
             'doctor.educations' => $educationRules,
             'doctor.educations.*.country' => ['required', 'string', 'max:255'],
@@ -194,23 +192,23 @@ class EmployeeForm extends Form
             'doctor.specialities.*.specialityOfficio' => ['required', 'boolean'],
             'doctor.specialities.*.level' => ['required', 'string', 'max:255'],
             'doctor.specialities.*.qualificationType' => ['required', 'string'],
-            'doctor.specialities.*.attestationName' => ['required', 'string', 'max:255', new Cyrillic()],
+            'doctor.specialities.*.attestationName' => ['required', 'string', 'max:255'],
             'doctor.specialities.*.attestationDate' => ['required', 'date'],
             'doctor.specialities.*.validToDate' => ['nullable', 'date'],
             'doctor.specialities.*.certificateNumber' => ['required', 'string', 'max:255'],
 
             'doctor.scienceDegree' => ['nullable', 'array'],
             'doctor.scienceDegree.country' => [Rule::requiredIf(fn () => !empty($this->doctor['scienceDegree'])), 'string', 'max:255'],
-            'doctor.scienceDegree.city' => [Rule::requiredIf(fn () => !empty($this->doctor['scienceDegree'])), 'string', 'max:255', new Cyrillic()],
+            'doctor.scienceDegree.city' => [Rule::requiredIf(fn () => !empty($this->doctor['scienceDegree'])), 'string', 'max:255'],
             'doctor.scienceDegree.degree' => [Rule::requiredIf(fn () => !empty($this->doctor['scienceDegree'])), 'string', 'max:255'],
-            'doctor.scienceDegree.institutionName' => [Rule::requiredIf(fn () => !empty($this->doctor['scienceDegree'])), 'string', 'max:255', new Cyrillic()],
+            'doctor.scienceDegree.institutionName' => [Rule::requiredIf(fn () => !empty($this->doctor['scienceDegree'])), 'string', 'max:255'],
             'doctor.scienceDegree.diplomaNumber' => [Rule::requiredIf(fn () => !empty($this->doctor['scienceDegree'])), 'string', 'max:255'],
             'doctor.scienceDegree.speciality' => [Rule::requiredIf(fn () => !empty($this->doctor['scienceDegree'])), 'string', 'max:255'],
             'doctor.scienceDegree.issuedDate' => ['nullable', 'date'],
 
             'doctor.qualifications' => ['nullable', 'array'],
             'doctor.qualifications.*.type' => ['required', 'string', 'max:255'],
-            'doctor.qualifications.*.institutionName' => ['required', 'string', 'max:255', new Cyrillic()],
+            'doctor.qualifications.*.institutionName' => ['required', 'string', 'max:255'],
             'doctor.qualifications.*.speciality' => ['required', 'string', 'max:255'],
             'doctor.qualifications.*.issuedDate' => ['required', 'date'],
             'doctor.qualifications.*.certificateNumber' => ['required', 'string', 'max:255'],
@@ -301,10 +299,36 @@ class EmployeeForm extends Form
         $this->endDate = $employee->end_date?->format('Y-m-d');
         $this->divisionId = $employee->division_id !== null ? (string) $employee->division_id : null;
 
-        $this->doctor['educations'] = $employee->educations->map(fn ($edu) => Arr::toCamelCase($edu->toArray()))->toArray();
-        $this->doctor['specialities'] = $employee->specialities->map(fn ($spec) => Arr::toCamelCase($spec->toArray()))->toArray();
-        $this->doctor['qualifications'] = $employee->qualifications->map(fn ($spec) => Arr::toCamelCase($spec->toArray()))->toArray();
-        $this->doctor['scienceDegree'] = Arr::toCamelCase($employee->scienceDegree?->toArray() ?? []);
+        $this->doctor['educations'] = $employee->educations->map(function ($edu) {
+            $data = Arr::toCamelCase($edu->toArray());
+            $data['issuedDate'] = $edu->issued_date ? Carbon::parse($edu->issued_date)->format('Y-m-d') : null;
+
+            return $data;
+        })->toArray();
+
+        $this->doctor['specialities'] = $employee->specialities->map(function ($spec) {
+            $data = Arr::toCamelCase($spec->toArray());
+            $data['attestationDate'] = $spec->attestation_date ? Carbon::parse($spec->attestation_date)->format('Y-m-d') : null;
+            $data['validToDate'] = $spec->valid_to_date ? Carbon::parse($spec->valid_to_date)->format('Y-m-d') : null;
+
+            return $data;
+        })->toArray();
+
+        $this->doctor['qualifications'] = $employee->qualifications->map(function ($qual) {
+            $data = Arr::toCamelCase($qual->toArray());
+            $data['issuedDate'] = $qual->issued_date ? Carbon::parse($qual->issued_date)->format('Y-m-d') : null;
+            $data['validTo'] = $qual->valid_to ? Carbon::parse($qual->valid_to)->format('Y-m-d') : null;
+
+            return $data;
+        })->toArray();
+
+        $scienceDegreeData = $employee->scienceDegree?->toArray() ?? [];
+        if (!empty($scienceDegreeData)) {
+            $this->doctor['scienceDegree'] = Arr::toCamelCase($scienceDegreeData);
+            if (isset($employee->scienceDegree->issued_date)) {
+                $this->doctor['scienceDegree']['issuedDate'] = Carbon::parse($employee->scienceDegree->issued_date)->format('Y-m-d');
+            }
+        }
     }
 
     /**
