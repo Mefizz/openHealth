@@ -12,17 +12,13 @@
             </li>
             <li>
                 <div class="flex items-center">
-                    <svg class="w-3 h-3 text-gray-400 mx-1 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
-                    </svg>
+                    <svg class="w-3 h-3 text-gray-400 mx-1 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/></svg>
                     <a href="{{ route('employee.index', ['legalEntity' => $legalEntity->id]) }}" class="ms-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ms-2 dark:text-gray-400 dark:hover:text-white">@lang('forms.employees')</a>
                 </div>
             </li>
             <li aria-current="page">
                 <div class="flex items-center">
-                    <svg class="w-3 h-3 text-gray-400 mx-1 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
-                    </svg>
+                    <svg class="w-3 h-3 text-gray-400 mx-1 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/></svg>
                     <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">@lang('general.verification')</span>
                 </div>
             </li>
@@ -41,7 +37,6 @@
 
     <x-section class="mt-8">
         <h2 class="text-xl font-bold mb-6 text-gray-800 dark:text-white">@lang('general.verification')</h2>
-        {{-- resources/views/livewire/party/party-verify.blade.php --}}
 
         <div class="overflow-x-auto">
             <div class="inline-block min-w-full align-middle">
@@ -49,10 +44,10 @@
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                         <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 w-1/5">Верифікація</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">Статус</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">Причина</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 w-2/5">Коментар від ЕСОЗ / Рекомендації</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 w-1/5">@lang('general.verification')</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">@lang('forms.status.label')</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">@lang('forms.reason_code')</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 w-2/5">@lang('forms.ehealth_comment_recommendation')</th>
                         </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-600">
@@ -65,29 +60,19 @@
                             @endphp
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white align-top">
-                                    {{-- Human-readable names for verification types --}}
-                                    @switch($key)
-                                        @case('drfo') ДРФО @break
-                                        @case('dracs_death') ДРАЦС (смерть) @break
-                                        @case('mvs_passport') МВС (паспорт) @break
-                                        @case('dms_passport') ДМС (паспорт) @break
-                                        @case('dracs_name_change') ДРАЦС (зміна ПІБ) @break
-                                        @default {{ $key }}
-                                    @endswitch
+                                    @lang('general.verification_types.' . $key)
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm align-top">
-                                    {{-- ▼▼▼ ЗМІНА ТУТ ▼▼▼ --}}
                                     @if($status === 'VERIFIED')
-                                        <span class="badge-green">@lang('general.verification_statuses.' . $status)</span>
+                                        <span class="badge-green">@lang('general.verified')</span>
                                     @elseif($status)
-                                        <span class="badge-red">@lang('general.verification_statuses.' . $status)</span>
+                                        <span class="badge-red">@lang('general.' . strtolower($status))</span>
                                     @else
                                         <span>-</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 align-top">
-                                    {{-- ▼▼▼ І ТУТ ▼▼▼ --}}
-                                    <div>@lang('general.verification_reasons.' . $reason)</div>
+                                    <div>{{ $reason ?? '-' }}</div>
                                     @if($result)
                                         <div class="text-xs text-gray-400">(@lang('forms.code'): {{ $result }})</div>
                                     @endif
@@ -97,15 +82,15 @@
                                         <span class="font-semibold text-gray-700 dark:text-gray-300">{{ $comment }}</span>
                                     @elseif ($status !== 'VERIFIED')
                                         @lang('general.recommendations.' . $key, ['result' => $result])
-                                            @else
-                                                <span>-</span>
-                                            @endif
+                                    @else
+                                        <span>-</span>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
                                 <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
-                                    Не вдалося завантажити деталі верифікації.
+                                    @lang('forms.verification_details_not_loaded')
                                 </td>
                             </tr>
                         @endforelse
@@ -122,42 +107,55 @@
         {{-- Action Buttons --}}
         <div class="flex items-center justify-start gap-4 mt-8">
             <a href="{{ route('employee.index', ['legalEntity' => $legalEntity->id]) }}" class="button-secondary">@lang('forms.back')</a>
+
             @php
                 $employeeToEdit = $party->employees->first();
             @endphp
+
             @if($employeeToEdit)
                 <a href="{{ route('employee.edit', ['legalEntity' => $legalEntity->id, 'employee' => $employeeToEdit->id]) }}" class="button-primary">
                     @lang('forms.edit_personal_data')
                 </a>
             @endif
-            @php
-                $dracsDeathStatus = data_get($verificationDetails, 'details.dracs_death.verification_status');
-            @endphp
-            @if($dracsDeathStatus === 'NOT_VERIFIED')
-                <button type="button" wire:click="openUpdateModal('dracs_death')" class="button-primary-outline">@lang('forms.update_death_data')</button>
-            @else
-                <div class="flex flex-col">
-                    <button type="button" class="button-disabled" disabled>@lang('forms.update_death_data')</button>
-                    <p class="text-xs text-gray-500 mt-1">@lang('general.update_unavailable_reason')</p>
-                </div>
-            @endif
+
+            {{-- Кнопка "Оновити дані про смерть" тепер завжди активна для демонстрації --}}
+            <button type="button" wire:click="openUpdateModal('dracs_death')" class="button-primary-outline">@lang('forms.update_death_data')</button>
         </div>
     </x-section>
 
     {{-- Update Status Modal --}}
     @if ($showUpdateModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 dark:bg-opacity-80" x-data @keydown.escape.window="$wire.closeModal()">
-            <div class="relative w-full max-w-2xl m-4 bg-white rounded-lg shadow dark:bg-gray-800" @click.away="$wire.closeModal()">
+        {{--
+            We use Alpine's x-data to create a local state 'show' and bind it
+            to Livewire's '$showUpdateModal' property using @entangle.
+            Closing the modal is now an instant frontend action handled by Alpine (@click="show = false"),
+            and the state is automatically synced back to the Livewire component.
+        --}}
+        <div
+            class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 dark:bg-opacity-80"
+            x-data="{ show: @entangle('showUpdateModal') }"
+            x-show="show"
+            x-transition:enter="ease-out duration-300"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="ease-in duration-200"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            @keydown.escape.window="show = false"
+            style="display: none;" {{-- Prevents flash of unstyled content --}}
+        >
+            <div class="relative w-full max-w-2xl m-4 bg-white rounded-lg shadow dark:bg-gray-800" @click.away="show = false">
                 <form wire:submit.prevent="updateStatus">
                     {{-- Modal header --}}
                     <div class="flex items-center justify-between p-4 border-b rounded-t dark:border-gray-600">
                         <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-                            Оновити статус верифікації співробітника в ДРАЦС
+                            @lang('forms.update_verification_status_dracs') {{-- New lang key --}}
                         </h3>
-                        <button type="button" @click="$wire.closeModal()" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                        <button type="button" @click="show = false" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                         </button>
                     </div>
+
                     {{-- Modal body (form) --}}
                     <div class="p-6 space-y-6">
                         <div class="form-group group">
@@ -169,6 +167,7 @@
                             <label for="status" class="label">Статус</label>
                             @error('status') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
                         </div>
+
                         <div class="form-group group">
                             <select wire:model.defer="reason" id="reason" class="input peer text-gray-500 dark:text-gray-400">
                                 <option value="">Оберіть причину</option>
@@ -178,12 +177,14 @@
                             <label for="reason" class="label">Причина верифікації</label>
                             @error('reason') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
                         </div>
+
                         <div class="form-group group">
                             <textarea wire:model.defer="comment" id="comment" rows="4" class="input peer" placeholder=" "></textarea>
                             <label for="comment" class="label">Коментар</label>
                             @error('comment') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
                         </div>
                     </div>
+
                     {{-- Modal footer (buttons) --}}
                     <div class="flex items-center justify-end p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600">
                         <button type="button" @click="$wire.closeModal()" class="button-secondary">Скасувати</button>
