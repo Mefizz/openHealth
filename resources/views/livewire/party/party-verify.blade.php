@@ -1,103 +1,78 @@
 <div>
     {{-- Breadcrumb Navigation --}}
-    <nav class="flex mb-4" aria-label="Breadcrumb">
-        <ol class="inline-flex items-center space-x-1 md:space-x-3 rtl:space-x-reverse">
-            <li class="inline-flex items-center">
-                <a href="{{ route('home.index') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
-                    <svg class="w-4 h-4 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z"/>
-                    </svg>
-                    @lang('general.home')
-                </a>
-            </li>
-            <li>
-                <div class="flex items-center">
-                    <svg class="w-3 h-3 text-gray-400 mx-1 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/></svg>
-                    <a href="{{ route('employee.index', ['legalEntity' => $legalEntity->id]) }}" class="ms-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ms-2 dark:text-gray-400 dark:hover:text-white">@lang('forms.employees')</a>
-                </div>
-            </li>
-            <li aria-current="page">
-                <div class="flex items-center">
-                    <svg class="w-3 h-3 text-gray-400 mx-1 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/></svg>
-                    <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">@lang('general.verification')</span>
-                </div>
-            </li>
-        </ol>
-    </nav>
+    <x-header-navigation x-data="{ showFilter: false }">
 
+        <x-slot name="title">
+            @lang('general.verification')
+        </x-slot>
+
+    </x-header-navigation>
     {{-- Page Title --}}
-    <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-            @lang('employees.verification_title')
-        </h1>
+
+    <div class="-mt-14 form shift-content">
         <p class="mt-1 text-lg text-gray-600 dark:text-gray-300">
             {{ $party->fullName }}
         </p>
     </div>
 
-    <x-section class="mt-8">
-        <h2 class="text-xl font-bold mb-6 text-gray-800 dark:text-white">@lang('general.verification')</h2>
-
-        <div class="overflow-x-auto">
-            <div class="inline-block min-w-full align-middle">
-                <div class="overflow-hidden border border-gray-200 dark:border-gray-700 sm:rounded-lg">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 w-1/5">@lang('general.verification')</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">@lang('forms.status.label')</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">@lang('forms.reason_code')</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 w-2/5">@lang('forms.ehealth_comment_recommendation')</th>
-                        </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-600">
-                        @forelse($verificationDetails['details'] ?? [] as $key => $details)
-                            @php
-                                $status = data_get($details, 'verification_status');
-                                $reason = data_get($details, 'verification_reason');
-                                $comment = data_get($details, 'verification_comment');
-                                $result = data_get($details, 'result');
-                            @endphp
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white align-top">
-                                    @lang('general.verification_types.' . $key)
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm align-top">
-                                    @if($status === 'VERIFIED')
-                                        <span class="badge-green">@lang('general.verified')</span>
-                                    @elseif($status)
-                                        <span class="badge-red">@lang('general.' . strtolower($status))</span>
-                                    @else
-                                        <span>-</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 align-top">
-                                    <div>{{ $reason ?? '-' }}</div>
-                                    @if($result)
-                                        <div class="text-xs text-gray-400">(@lang('forms.code'): {{ $result }})</div>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 align-top">
-                                    @if(!empty($comment))
-                                        <span class="font-semibold text-gray-700 dark:text-gray-300">{{ $comment }}</span>
-                                    @elseif ($status !== 'VERIFIED')
-                                        @lang('general.recommendations.' . $key, ['result' => $result])
-                                    @else
-                                        <span>-</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
-                                    @lang('forms.verification_details_not_loaded')
-                                </td>
-                            </tr>
-                        @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        {{-- Table Container --}}
+    <x-section class="-mt-8 form shift-content">
+        <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+            <table class="w-full min-w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                    <th scope="col" class="px-6 py-3 w-1/5">@lang('general.verification')</th>
+                    <th scope="col" class="px-6 py-3">@lang('forms.status.label')</th>
+                    <th scope="col" class="px-6 py-3">@lang('forms.reason_code')</th>
+                    <th scope="col" class="px-6 py-3 w-2/5">@lang('forms.ehealth_comment_recommendation')</th>
+                </tr>
+                </thead>
+                <tbody>
+                @forelse($verificationDetails['details'] ?? [] as $key => $details)
+                    @php
+                        $status = data_get($details, 'verification_status');
+                        $reason = data_get($details, 'verification_reason');
+                        $comment = data_get($details, 'verification_comment');
+                        $result = data_get($details, 'result');
+                    @endphp
+                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                        <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white align-top whitespace-normal">
+                            @lang('general.verification_types.' . $key)
+                        </td>
+                        <td class="px-6 py-4 text-sm align-top whitespace-normal">
+                            @if($status === 'VERIFIED')
+                                <span class="badge-green">@lang('general.verified')</span>
+                            @elseif($status)
+                                <span class="badge-red">@lang('general.' . strtolower($status))</span>
+                            @else
+                                <span>-</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 align-top whitespace-normal">
+                            <div>{{ $reason ?? '-' }}</div>
+                            @if($result)
+                                <div class="text-xs text-gray-400">(@lang('forms.code'): {{ $result }})</div>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 align-top whitespace-normal">
+                            @if(!empty($comment))
+                                <span class="font-semibold text-gray-700 dark:text-gray-300">{{ $comment }}</span>
+                            @elseif ($status !== 'VERIFIED')
+                                @lang('general.recommendations.' . $key, ['result' => $result])
+                            @else
+                                <span>-</span>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                        <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                            @lang('forms.verification_details_not_loaded')
+                        </td>
+                    </tr>
+                @endforelse
+                </tbody>
+            </table>
         </div>
 
         <div class="p-4 mt-6 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
@@ -106,7 +81,7 @@
 
         {{-- Action Buttons --}}
         <div class="flex items-center justify-start gap-4 mt-8">
-            <a href="{{ route('employee.index', ['legalEntity' => $legalEntity->id]) }}" class="button-secondary">@lang('forms.back')</a>
+            <a href="{{ route('employee.index', ['legalEntity' => $legalEntity->id]) }}" class="button-minor">@lang('forms.back')</a>
 
             @php
                 $employeeToEdit = $party->employees->first();
@@ -118,7 +93,6 @@
                 </a>
             @endif
 
-            {{-- Кнопка "Оновити дані про смерть" тепер завжди активна для демонстрації --}}
             <button type="button" wire:click="openUpdateModal('dracs_death')" class="button-primary-outline">@lang('forms.update_death_data')</button>
         </div>
     </x-section>
@@ -128,28 +102,33 @@
         {{--
             We use Alpine's x-data to create a local state 'show' and bind it
             to Livewire's '$showUpdateModal' property using @entangle.
-            Closing the modal is now an instant frontend action handled by Alpine (@click="show = false"),
-            and the state is automatically synced back to the Livewire component.
         --}}
         <div
-            class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 dark:bg-opacity-80"
+            class="fixed inset-0 z-50 flex items-center justify-center"
             x-data="{ show: @entangle('showUpdateModal') }"
             x-show="show"
-            x-transition:enter="ease-out duration-300"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="ease-in duration-200"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
             @keydown.escape.window="show = false"
-            style="display: none;" {{-- Prevents flash of unstyled content --}}
+            style="display: none;"
         >
-            <div class="relative w-full max-w-2xl m-4 bg-white rounded-lg shadow dark:bg-gray-800" @click.away="show = false">
+            <div x-show="show" x-transition.opacity class="fixed inset-0 bg-black/75"></div>
+
+            {{-- Modal Panel --}}
+            <div
+                x-show="show"
+                x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                @click.away="show = false"
+                class="relative w-full max-w-2xl m-4 bg-white rounded-lg shadow dark:bg-gray-800"
+            >
                 <form wire:submit.prevent="updateStatus">
-                    {{-- Modal header --}}
-                    <div class="flex items-center justify-between p-4 border-b rounded-t dark:border-gray-600">
+
+                    <div class="flex items-center justify-between p-4 border-b border-gray-200 rounded-t dark:border-gray-600">
                         <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-                            @lang('forms.update_verification_status_dracs') {{-- New lang key --}}
+                            @lang('forms.update_verification_status_dracs')
                         </h3>
                         <button type="button" @click="show = false" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
@@ -159,39 +138,46 @@
                     {{-- Modal body (form) --}}
                     <div class="p-6 space-y-6">
                         <div class="form-group group">
-                            <select wire:model.defer="status" id="status" class="input peer text-gray-500 dark:text-gray-400">
-                                <option value="">Оберіть статус</option>
-                                <option value="VERIFIED">Верифіковано</option>
-                                <option value="NOT_VERIFIED">Не верифіковано</option>
+                            <select wire:model.defer="status" id="status" class="input peer">
+                                <option value="">{{ __('forms.select_statuse') }}</option>
+                                <option value="VERIFIED">{{ __('forms.verified') }}</option>
+                                <option value="NOT_VERIFIED">{{ __('forms.not_verified') }}</option>
                             </select>
-                            <label for="status" class="label">Статус</label>
+                            <label for="status" class="label">{{ __('forms.status.label') }}</label>
                             @error('status') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="form-group group">
-                            <select wire:model.defer="reason" id="reason" class="input peer text-gray-500 dark:text-gray-400">
-                                <option value="">Оберіть причину</option>
-                                <option value="MANUAL_CONFIRMED">Підтверджено вручну</option>
-                                <option value="MANUAL_NOT_CONFIRMED">Не підтверджено вручну</option>
+                            <select wire:model.defer="reason" id="reason" class="input peer">
+                                <option value="">{{ __('forms.choose_reason') }}</option>
+                                <option value="MANUAL_CONFIRMED">{{ __('forms.manually_confirmed') }}</option>
+                                <option value="MANUAL_NOT_CONFIRMED">{{ __('forms.no_manually_confirmed') }}</option>
                             </select>
-                            <label for="reason" class="label">Причина верифікації</label>
+                            <label for="reason" class="label">{{ __('forms.reason_verification') }}</label>
                             @error('reason') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
                         </div>
 
-                        <div class="form-group group">
-                            <textarea wire:model.defer="comment" id="comment" rows="4" class="input peer" placeholder=" "></textarea>
-                            <label for="comment" class="label">Коментар</label>
+                        <div class="form-group">
+                            <label for="aboutMyself"
+                                   class="peer appearance-none bg-white">{{ __('forms.comment') }}</label>
+                            <textarea
+                                id="aboutMyself"
+                                wire:model.defer="comment"
+                                class="textarea !text-gray-500 dark:!text-gray-400 mt-1"
+                                placeholder=" ">
+                        </textarea>
                             @error('comment') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
                         </div>
                     </div>
 
-                    {{-- Modal footer (buttons) --}}
-                    <div class="flex items-center justify-end p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600">
-                        <button type="button" @click="$wire.closeModal()" class="button-secondary">Скасувати</button>
-                        <button type="submit" class="button-primary">Оновити дані в ЕСОЗ</button>
+                    {{-- Modal buttons --}}
+                    <div class="flex items-center justify-start gap-4 p-6 border-t border-gray-200">
+                        <button type="button" @click="$wire.closeModal()" class="button-minor">{{ __('forms.cancel') }}</button>
+                        <button type="submit" class="button-primary">{{ __('forms.update_data') }}</button>
                     </div>
                 </form>
             </div>
         </div>
     @endif
+
 </div>

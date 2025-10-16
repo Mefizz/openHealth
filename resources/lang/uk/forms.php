@@ -189,6 +189,7 @@ return [
     'complete_the_interaction_and_sign' => 'Завершити та підписати',
     'save_and_send' => 'Зберегти та надіслати',
     'cyrillic_with_spaces_and_dots' => ':Attribute має містити лише кириличні символи, пробіли та крапки.',
+    'update_verification_status_dracs' => 'Оновити статус верифікації співробітника в ДРАЦС',
 
     // Documents
     'documents' => 'Документи',
@@ -421,4 +422,10 @@ return [
     'update_death_data' => 'Оновити дані про смерть',
     'edit_personal_data' => 'Редагувати персональні дані',
     'select_statuses' => 'Оберіть статуси',
+    'update_data' => 'Оновити дані в ЕСОЗ',
+    'reason_verification' => 'Причина верифікації',
+    'no_manually_confirmed' => 'Не підтверджено вручну',
+    'manually_confirmed' => 'Підтверджено вручну',
+    'choose_reason' => 'Оберіть причину',
+    'select_statuse' => 'Оберіть статус',
 ];
