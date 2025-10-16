@@ -136,19 +136,23 @@
     </div>
 
     <div class="form-row-3">
-        <div class="form-group group">
+        <div class="form-group">
             <select wire:model="form.patient.gender"
-                    id="patientGender"
                     name="patientGender"
-                    class="input-select peer @error('form.patient.gender') input-error @enderror"
-                    required
+                    id="patientGender"
+                    class="input-select peer
+                    @error('form.patient.gender') input-error @enderror" required
             >
-                <option selected>{{ __('forms.select') }} *</option>
+                <option value="" disabled selected hidden>
+                    {{ __('forms.select') }} *</option>
                 @foreach($this->dictionaries['GENDER'] as $key => $gender)
                     <option value="{{ $key }}">{{ $gender }}</option>
                 @endforeach
             </select>
-
+            <label for="patientGender"
+                   class="label">
+                {{ __('forms.gender') }}
+            </label>
             @error('form.patient.gender')
             <p class="text-error">
                 {{ $message }}
