@@ -65,6 +65,7 @@ class PatientForm extends Form
         ]
     ])]
     public array $patient = [
+        'gender' => '',
         'phones' => [
             ['type' => null, 'number' => null]
         ],
