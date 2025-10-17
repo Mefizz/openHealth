@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Throwable;
@@ -41,15 +42,46 @@ class HealthcareServiceIndex extends Component
 
     public ?Status $divisionStatus;
 
+    #[Url(as: 'type')]
+    public ?string $typeFilter = null;
+
+    /**
+     * List of divisions in the current legal entity.
+     *
+     * @var array
+     */
+    public array $divisions;
+
+    #[Url(as: 'division')]
+    public ?int $divisionFilter = null;
+
+    public bool $isFiltersApplied = false;
+
     public array $dictionaryNames = ['DIVISION_TYPE', 'SPECIALITY_TYPE', 'PROVIDING_CONDITION'];
 
     public function mount(LegalEntity $legalEntity, Division $division): void
     {
-        $this->divisionId = $division->id;
+        if ($this->divisionFilter) {
+            $this->isFiltersApplied = true;
+        }
+
         $this->divisionUuid = $division->uuid;
-        $this->divisionStatus = $division->status;
+        $this->divisions = $legalEntity->divisions->select(['id', 'name', 'status'])->toArray();
 
         $this->getDictionary();
+    }
+
+    public function search(): void
+    {
+        $this->resetPage();
+        $this->isFiltersApplied = true;
+    }
+
+    public function resetFilters(): void
+    {
+        $this->divisionFilter = null;
+        $this->typeFilter = null;
+        $this->divisionId = null;
     }
 
     public function activate(string $uuid): void
@@ -206,25 +238,19 @@ class HealthcareServiceIndex extends Component
             ->orderByDesc('ehealth_inserted_at')
             ->orderByDesc('created_at');
 
-        // If divisionId is set, filter by division
-        if ($this->divisionId) {
-            $query->where('division_id', $this->divisionId);
+        // Filters
+        if ($this->isFiltersApplied) {
+            if ($this->divisionFilter) {
+                $this->divisionId = $this->divisionFilter;
+                $query->where('division_id', $this->divisionFilter);
+            }
+
+            if (!empty($this->typeFilter)) {
+                $query->where('speciality_type', $this->typeFilter);
+            }
         }
 
-        $allItems = $query->get();
-
-        // Pagination
-        $perPage = config('pagination.per_page');
-        $currentPage = LengthAwarePaginator::resolveCurrentPage();
-        $currentItems = $allItems->slice(($currentPage - 1) * $perPage, $perPage)->values();
-
-        return new LengthAwarePaginator(
-            $currentItems,
-            $allItems->count(),
-            $perPage,
-            $currentPage,
-            ['path' => request()->url()]
-        );
+        return $query->paginate(config('pagination.per_page'));
     }
 
     /**

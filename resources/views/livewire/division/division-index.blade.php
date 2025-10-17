@@ -162,7 +162,7 @@
                                             wire:key="menu-{{ $division->id }}-{{ is_string($division->status) ? $division->status : ($division->status?->value ?? 'unknown') }}"
                                         >
                                             @can('viewAny', HealthcareService::class)
-                                                <a href="{{ route('division.healthcare-service.index', [legalEntity(), $division]) }}"
+                                                <a href="{{ route('healthcare-service.index', [legalEntity(), 'division' => $division->id]) }}"
                                                    class="flex items-center gap-2 w-full first-of-type:rounded-t-md px-4 py-2.5 text-left text-sm text-gray-600 hover:bg-gray-50"
                                                 >
                                                     @icon('settings', 'w-5 h-5 text-gray-600')

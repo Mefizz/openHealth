@@ -49,11 +49,7 @@ class HealthcareServiceCreate extends HealthcareServiceComponent
             Repository::healthcareService()->store(Arr::toSnakeCase($validated));
 
             Session::flash('success', 'Чернетку послуги успішно створено.');
-            $this->redirectRoute(
-                'division.healthcare-service.index',
-                [legalEntity(), $this->divisionId],
-                navigate: true
-            );
+            $this->redirectRoute('healthcare-service.index', [legalEntity(), $this->divisionId], navigate: true);
         } catch (Throwable $exception) {
             $this->logDatabaseErrors($exception, 'Failed to store healthcare service');
             Session::flash('error', 'Виникла помилка. Зверніться до адміністратора.');
