@@ -189,20 +189,49 @@ class TestUserMigrate extends Seeder
 
                 $this->command->info("\tINFO: A new License entry has been successfully inserted into the database");
 
-                $partyId = DB::table('parties')->insertGetId(
-                    [
-                        'uuid' => '8656775d-9258-405c-8841-10769360ee1e',
-                        'last_name' => 'Безшейко',
-                        'first_name' => 'Віталій',
-                        'second_name' => 'Григорович',
-                        'birth_date' => new Carbon('1987-10-02'),
-                        'gender' => 'MALE',
-                        'tax_id' => '3139821559',
-                        'no_tax_id' => false,
-                        'about_myself' => null,
-                        'working_experience' => null,
-                    ]
-                );
+                $ownerUserId = User::insertGetId([
+                    'uuid' => '82d1f518-23c9-4c6c-868b-6f7ab26c6da8',
+                    'email' => 'vitaliybezsh@gmail.com',
+                    'password' => Hash::make(Str::random()),
+                    'email_verified_at' => new Carbon('2024-09-11T11:00:52.000000Z'),
+                    'current_team_id' => null,
+                    'profile_photo_path' => null,
+                    'settings' => null,
+                    'priv_settings' => null,
+                    'is_blocked' => null,
+                    'block_reason' => null,
+                    'person_id' => null,
+                    'created_at' => new Carbon('2024-09-11T10:00:52.000000Z'),
+                    'updated_at' => new Carbon('2024-09-11T10:03:10.000000Z'),
+                    'two_factor_confirmed_at' => null
+                ]);
+
+                $this->command->info("\tINFO: A new User entry has been successfully inserted into the database");
+
+                $ownerRoleIds = DB::table('roles')->where('name', 'OWNER')->pluck('id');
+                foreach ($ownerRoleIds as $ownerRoleId) {
+                    DB::table('model_has_roles')->insert([
+                        'role_id' => $ownerRoleId,
+                        'model_type' => 'App\Models\User',
+                        'model_id' => $ownerUserId,
+                        'legal_entity_id' => $legalEntityId,
+                    ]);
+                }
+
+                $partyId = DB::table('parties')->insertGetId([
+                    'uuid' => '8656775d-9258-405c-8841-10769360ee1e',
+                    'last_name' => 'Безшейко',
+                    'first_name' => 'Віталій',
+                    'second_name' => 'Григорович',
+                    'email' => 'vitaliybezsh@gmail.com',
+                    'birth_date' => new Carbon('1987-10-02'),
+                    'gender' => 'MALE',
+                    'user_id' => $ownerUserId,
+                    'tax_id' => '3139821559',
+                    'no_tax_id' => false,
+                    'about_myself' => null,
+                    'working_experience' => null
+                ]);
 
                 $this->command->info("\tINFO: A new Party entry has been successfully inserted into the database");
 
@@ -218,58 +247,21 @@ class TestUserMigrate extends Seeder
 
                 $this->command->info("\tINFO: A new Document entry has been successfully inserted into the database");
 
-                DB::table('phones')->insertGetId(
-                    [
-                        'type' => 'MOBILE',
-                        'number' => '+380506491244',
-                        'phoneable_type' => 'App\Models\LegalEntity',
-                        'phoneable_id' => $legalEntityId,
-                    ]
-                );
+                DB::table('phones')->insertGetId([
+                    'type' => 'MOBILE',
+                    'number' => '+380506491244',
+                    'phoneable_type' => 'App\Models\LegalEntity',
+                    'phoneable_id' => $legalEntityId
+                ]);
 
-                DB::table('phones')->insertGetId(
-                    [
-                        'type' => 'MOBILE',
-                        'number' => '+380506491244',
-                        'phoneable_type' => 'App\Models\Relations\Party',
-                        'phoneable_id' => $partyId,
-                    ]
-                );
+                DB::table('phones')->insertGetId([
+                    'type' => 'MOBILE',
+                    'number' => '+380506491244',
+                    'phoneable_type' => 'App\Models\Relations\Party',
+                    'phoneable_id' => $partyId
+                ]);
 
                 $this->command->info("\tINFO: A new Phone entries has been successfully inserted into the database");
-
-                $ownerUserId = User::insertGetId(
-                    [
-                        'uuid' => '82d1f518-23c9-4c6c-868b-6f7ab26c6da8',
-                        'email' => 'vitaliybezsh@gmail.com',
-                        'password' => Hash::make(Str::random()),
-                        'email_verified_at' => new Carbon('2024-09-11T11:00:52.000000Z'),
-                        'party_id' => $partyId,
-                        'current_team_id' => null,
-                        'profile_photo_path' => null,
-                        'settings' => null,
-                        'priv_settings' => null,
-                        'is_blocked' => null,
-                        'block_reason' => null,
-                        'person_id' => null,
-                        'created_at' => new Carbon('2024-09-11T10:00:52.000000Z'),
-                        'updated_at' => new Carbon('2024-09-11T10:03:10.000000Z'),
-                        'two_factor_confirmed_at' => null,
-                    ]
-                );
-                $this->command->info("\tINFO: A new User entry has been successfully inserted into the database");
-
-                $ownerRoleIds = DB::table('roles')->where('name', 'OWNER')->pluck('id');
-                foreach ($ownerRoleIds as $ownerRoleId) {
-                    DB::table('model_has_roles')->insert(
-                        [
-                            'role_id' => $ownerRoleId,
-                            'model_type' => 'App\Models\User',
-                            'model_id' => $ownerUserId,
-                            'legal_entity_id' => $legalEntityId,
-                        ]
-                    );
-                }
 
                 $employeeId = DB::table('employees')->insertGetId([
                     'uuid' => '85b30921-bcef-4a27-8997-5ef11290fbe6',

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Employee\EmployeeRequest;
 use Eloquence\Behaviours\HasCamelCasing;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
@@ -26,6 +27,7 @@ class Party extends Model
         'last_name',
         'first_name',
         'second_name',
+        'email',
         'birth_date',
         'gender',
         'user_id',
@@ -62,11 +64,11 @@ class Party extends Model
     }
 
     /**
-     * Get the users associated with the party.
+     * Get the user that owns the party.
      */
-    public function users(): HasMany
+    public function user(): BelongsTo
     {
-        return $this->hasMany(User::class);
+        return $this->belongsTo(User::class);
     }
 
     public function employees(): HasMany
