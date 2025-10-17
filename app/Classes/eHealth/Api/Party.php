@@ -24,17 +24,34 @@ class Party extends EHealthRequest
 
     /**
      * Fetches a paginated list of party verification statuses.
+     * Now accepts a token for authentication and attaches a data mapper.
      *
-     * @param array $filters An array of filters to apply to the query (e.g., ['status' => 'APPROVED']).
+     * @param string $token The decrypted bearer token for authentication.
+     * @param array $filters An array of filters to apply to the query.
      * @return PromiseInterface|EHealthResponse
      * @throws ConnectionException
      */
-    public function getMany(array $filters = []): PromiseInterface|EHealthResponse
+    public function getMany(string $token, array $filters = []): PromiseInterface|EHealthResponse
     {
         $this->setValidator($this->validateMany(...));
+        $this->setMapper($this->mapMany(...));
         $this->setDefaultPageSize();
 
-        return $this->get(self::URL . '/verifications', $filters);
+        return $this->withToken($token)->get(self::URL . '/verifications', $filters);
+    }
+
+    /**
+     * Maps (transforms) the validated data into a simple [party_uuid => verification_status] array.
+     * This method is called by the EHealthResponse's map() function.
+     *
+     * @param array $validatedData The data that has passed validation.
+     * @return array
+     */
+    protected function mapMany(array $validatedData): array
+    {
+        return collect($validatedData)->mapWithKeys(function ($verification) {
+            return [$verification['party_id'] => $verification['verification_status']];
+        })->filter()->all();
     }
 
     /**

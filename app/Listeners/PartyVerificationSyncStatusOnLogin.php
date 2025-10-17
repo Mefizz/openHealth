@@ -11,6 +11,7 @@ use App\Notifications\PartyVerificationStatusChanged;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Handles the EHealthUserLogin event to synchronize party verification statuses.
@@ -29,38 +30,22 @@ class PartyVerificationSyncStatusOnLogin implements ShouldQueue
      */
     public function handle(EHealthUserLogin $event): void
     {
-        Log::info('Listener ' . self::class . ' is executing sync for User ID: ' . $event->user->id);
+        Log::info('Listener ' . self::class . ' is executing for User ID: ' . $event->user->id);
 
         try {
             $token = Crypt::decryptString($event->token);
 
-            // Fetch the list of verification statuses from the eHealth API.
-            $verifications = EHealth::party()
-                ->withToken($token)
-                ->getMany()
-                ->validate();
+            $response = EHealth::party()->getMany($token);
+            $validatedData = $response->validate();
+            $updates = $response->map($validatedData);
 
-            if (empty($verifications)) {
+            if (empty($updates)) {
                 Log::info("eHealth API returned no verification data. Nothing to sync.");
-
-                return;
-            }
-
-            // Prepare a map of [party_uuid => verification_status] for efficient updates.
-            $updates = collect($verifications)->mapWithKeys(function ($verification) {
-                return [data_get($verification, 'party_id') => data_get($verification, 'verification_status')];
-            })->filter();
-
-            if ($updates->isEmpty()) {
-                Log::info("No valid party_id found in the API response. Nothing to update.");
-
                 return;
             }
 
             $successfullyUpdatedCount = 0;
-
             foreach ($updates as $uuid => $newStatus) {
-                // Find the local party record first to check its current status.
                 $party = Party::where('uuid', $uuid)->first();
 
                 if (!$party) {
@@ -70,33 +55,29 @@ class PartyVerificationSyncStatusOnLogin implements ShouldQueue
 
                 $oldStatus = $party->verification_status;
 
-                // Update the party record in the database.
+                if ($oldStatus === $newStatus) {
+                    continue;
+                }
+
                 $party->update(['verification_status' => $newStatus]);
                 $successfullyUpdatedCount++;
 
-                // Check if the status has changed FROM 'VERIFIED' to something else.
                 if ($oldStatus === 'VERIFIED' && $newStatus !== 'VERIFIED') {
-                    // Find the user associated with this party.
-                    $userToNotify = $party->user;
-
-                    // If a user is found, send them a notification.
-                    if ($userToNotify) {
+                    if ($userToNotify = $party->user) {
                         $userToNotify->notify(new PartyVerificationStatusChanged($party, $newStatus));
-
-                        Log::info("Sent 'VerificationStatusChanged' notification to User ID: {$userToNotify->id} for Party UUID: {$uuid}");
+                        Log::info("Sent 'VerificationStatusChanged' notification to User ID: {$userToNotify->id}");
                     }
                 }
             }
 
-            Log::info(
-                "Sync complete. Received {$updates->count()} parties from API, " .
-                "successfully updated {$successfullyUpdatedCount} local records."
-            );
+            Log::info("Sync complete. Updated {$successfullyUpdatedCount} local records.");
 
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             Log::error('Failed to sync party verification statuses on login.', [
                 'user_id' => $event->user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ]);
         }
     }
