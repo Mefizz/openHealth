@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 use App\Enums\JobStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -14,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('employees', static function (Blueprint $table) {
+        Schema::create('employees', function (Blueprint $table) {
             $table->id();
             $table->uuid()->unique();
             $table->uuid('division_uuid')->nullable();

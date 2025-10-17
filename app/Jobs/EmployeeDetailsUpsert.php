@@ -62,6 +62,7 @@ class EmployeeDetailsUpsert extends EHealthJob
         echo 'Processing EmployeeDetailsUpsert for employee:' . $this->employee->id . ', LE:' . ($this->legalEntity->id ?? 'N/A') . PHP_EOL;
 
         $this->employee->save();
+
         Repository::employee()->updateDetails(
             $this->employee,
             $validatedData['party'],
@@ -76,11 +77,11 @@ class EmployeeDetailsUpsert extends EHealthJob
         $this->employee->setSyncStatus(JobStatus::COMPLETED);
         $this->employee->refresh();
 
-        $user = $this->employee->user;
+        $user = $this->employee->party->user;
 
         if (!$user) {
-            Log::info('Employee sync: User is not associated with this employee record yet.', [
-                'employee_id' => $this->employee->id,
+            Log::info('Employee sync: User does not exist yet for party.', [
+                'party_id' => $this->employee->party_id,
                 'employee_uuid' => $this->employee->uuid,
             ]);
 
@@ -90,7 +91,7 @@ class EmployeeDetailsUpsert extends EHealthJob
         $roleName = $this->employee->employee_type;
         $legalEntityId = $this->employee->legal_entity_id;
 
-        echo "Employee UUID: {$this->employee->uuid}, Role: {$roleName}, UserID: {$user->id}" . PHP_EOL;
+        echo "Employee UUID: {$this->employee->uuid}, Role: {$roleName}" . PHP_EOL;
 
         setPermissionsTeamId($legalEntityId);
 
