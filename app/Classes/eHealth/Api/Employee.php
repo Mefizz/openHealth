@@ -9,6 +9,7 @@ use App\Classes\eHealth\EHealthResponse;
 use App\Core\Arr;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -54,6 +55,21 @@ class Employee extends EHealthRequest
         $this->groupByEntities = $groupByEntities;
 
         return $this->get(self::URL . '/' . $uuid, $query);
+    }
+
+    /**
+     * Deactivates an employee in E-Health.
+     *
+     * @param string $uuid The UUID of the employee to deactivate.
+     *
+     * @return Response|PromiseInterface The response from the E-Health API.
+     * @throws ConnectionException
+     */
+    public function deactivate(string $uuid): PromiseInterface|Response
+    {
+        $url = self::URL . '/' . $uuid . '/actions/deactivate';
+
+        return $this->patch($url);
     }
 
     /**

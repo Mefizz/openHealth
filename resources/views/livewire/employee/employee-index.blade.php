@@ -43,7 +43,7 @@
                                                class="input peer"
                                                wire:model.defer="search"
                                                autocomplete="off" />
-                                        <label for="employee_search" class="label">ПІБ</label>
+                                        <label for="employee_search" class="label">{{ __('forms.full_name') }}</label>
                                     </div>
                                 </x-slot>
                             </x-forms.form-group>
@@ -223,92 +223,65 @@
                                                   stroke-width="2"
                                                   d="M18.427 14.768 17.2 13.542a1.733 1.733 0 0 0-2.45 0l-.613.613a1.732 1.732 0 0 1-2.45 0l-1.838-1.84a1.735 1.735 0 0 1 0-2.452l.612-.613a1.735 1.735 0 0 0 0-2.452L9.237 5.572a1.6 1.6 0 0 0-2.45 0c-3.223 3.2-1.702 6.896 1.519 10.117 3.22 3.221 6.914 4.745 10.12 1.535a1.601 1.601 0 0 0 0-2.456Z"/>
                                          </svg>
-                                        <a href="tel:{{ $mobilePhone->number }}"
-                                           class="hover:underline">{{ $mobilePhone->number }}</a>
-                                    </span>
+                                            <a href="tel:{{ $mobilePhone->number }}" class="hover:underline">{{ $mobilePhone->number }}</a>
+                                        </span>
                                     @endif
                                     @if($party->email)
                                         <span class="flex items-center gap-1.5">
-                                        <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                            <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                            <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m3.5 5.5 7.893 6.036a1 1 0 0 0 1.214 0L20.5 5.5M4 19h16a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Z"/>
                                         </svg>
-                                        <a href="mailto:{{$party->email}}" class="hover:underline">{{ $party->email }}</a>
-                                    </span>
+                                            <a href="mailto:{{$party->email}}" class="hover:underline">{{ $party->email }}</a>
+                                        </span>
                                     @endif
                                 </div>
                             </div>
                             @can('create', \App\Models\Employee\EmployeeRequest::class)
-                                @if($party->employees->isNotEmpty())
+                                @if(!str_starts_with($party->id, 'draft_'))
                                     <div class="flex items-center space-x-3">
-                                        <a href="{{ route('employee-request.position-add', ['legalEntity' => legalEntity()->id, 'party' => $party->id]) }}"
+                                        <a href="{{ route('employee-request.position-add', ['legalEntity' => $legalEntityId, 'party' => $party->id]) }}"
                                            class="item-add text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                            <span
-                                class="text-xl leading-none">+</span><span>{{ __('forms.add_position') }}</span>
+                                            <span>{{ __('forms.add_position') }}</span>
                                         </a>
                                     </div>
                                 @endif
                             @endcan
                         </div>
                         <div class="flow-root mt-4">
-                            <div class="max-w-screen-xl">
-                                <table class="table-input w-full table-fixed min-w-[600px] text-sm">
-                                    <thead class="thead-input">
+                            <table class="table-input w-full table-fixed min-w-[600px] text-sm">
+                                <thead class="thead-input">
+                                <tr>
+                                    <th scope="col" class="th-input w-[28%]">{{ __('forms.position') }}</th>
+                                    <th scope="col" class="th-input w-[22%]">{{ __('forms.role') }}</th>
+                                    <th scope="col" class="th-input w-[20%]">{{ __('forms.division') }}</th>
+                                    <th scope="col" class="th-input w-[15%]">{{ __('forms.status.label') }}</th>
+                                    <th scope="col" class="th-input w-[15%] text-center"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @foreach($party->all_positions as $position)
                                     <tr>
-                                        <th scope="col" class="th-input w-[28%]">Посада</th>
-                                        <th scope="col" class="th-input w-[22%]">Роль</th>
-                                        <th scope="col" class="th-input w-[20%]">Підрозділ</th>
-                                        <th scope="col" class="th-input w-[15%]">Статус</th>
-                                        <th scope="col" class="th-input w-[15%] text-center"></th>
+                                        <td class="th-input w-[28%]">{{ $dictionaries['POSITION'][$position->position] ?? $position->position }}</td>
+                                        <td class="th-input w-[22%]">{{ $dictionaries['EMPLOYEE_TYPE'][$position->employee_type] ?? $position->employee_type }}</td>
+                                        <td class="th-input w-[15%]">{{ $position->division->name ?? 'N/A' }}</td>
+                                        <td class="th-input w-[15%] text-center">
+                                            @if($position->status?->value === 'APPROVED')
+                                                <span class="badge-green">{{__('forms.status.active')}}</span>
+                                            @elseif(in_array($position->status?->value, ['NEW', 'SIGNED']))
+                                                <span class="badge-red">{{__('forms.status.draft')}}</span>
+                                            @elseif($position->status?->value === 'DISMISSED')
+                                                <span class="badge-red">{{__('forms.status.dismissed')}}</span>
+                                            @else
+                                                <span class="badge-yellow">{{ $position->status?->value }}</span>
+                                            @endif
+                                        </td>
+                                        <td class="td-input text-center">
+                                            @include('livewire.employee.parts.actions-dropdown', ['position' => $position])
+                                        </td>
                                     </tr>
-                                    </thead>
-                                    <tbody>
-                                    @php
-                                        $positions = $party->employees->merge($party->employeeRequests);
-                                        $groupedPositions = $positions->groupBy('position');
-                                    @endphp
-                                    @foreach($groupedPositions as $positionCode => $items)
-                                        @php
-                                            $positionToShow = $items->firstWhere(fn($item) => $item instanceof \App\Models\Employee\Employee) ?? $items->first();
-                                        @endphp
-                                        <tr>
-                                            <td class="td-input break-words whitespace-normal align-top">{{ $dictionaries['POSITION'][$positionToShow->position] ?? $positionToShow->position }}</td>
-                                            <td class="td-input break-words whitespace-normal align-top">{{ $dictionaries['EMPLOYEE_TYPE'][$positionToShow->employee_type] ?? $positionToShow->employee_type }}</td>
-                                            <td class="td-input break-words whitespace-normal align-top">{{ $positionToShow->division->name ?? 'N/A' }}</td>
-
-                                            <td class="td-input break-words whitespace-nowrap align-top">
-                                                @php
-                                                    // First, check if the record is an Employee model. This is the highest priority.
-                                                    $isEmployee = $positionToShow instanceof \App\Models\Employee\Employee;
-                                                @endphp
-
-                                                @if($isEmployee)
-                                                    {{-- For a standard Employee record, show its actual status --}}
-                                                    @if($positionToShow->status?->value === 'APPROVED')
-                                                        <span class="badge-green">{{__('forms.status.active')}}</span>
-                                                    @else
-                                                        <span class="badge-red">{{__('forms.status.dismissed')}}</span>
-                                                    @endif
-                                                @else
-                                                    {{-- If it's not an Employee, it must be an EmployeeRequest. Now check if it's a draft. --}}
-                                                    @if(is_null($positionToShow->applied_at))
-                                                        {{-- applied_at is null, so it's a draft/new request. --}}
-                                                        <span class="badge-red">{{__('forms.status.draft')}}</span>
-                                                    @else
-                                                        {{-- applied_at has a value, meaning the request has been submitted and is active/processed. --}}
-                                                        <span class="badge-green">{{__('forms.status.active')}}</span>
-                                                    @endif
-                                                @endif
-                                            </td>
-                                            <td class="td-input text-center">
-                                                @include('livewire.employee.parts.actions-dropdown', [
-                                                    'position' => $positionToShow
-                                                ])
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
+                                @endforeach
+                                </tbody>
+                            </table>
                         </div>
                     </fieldset>
                 @empty
