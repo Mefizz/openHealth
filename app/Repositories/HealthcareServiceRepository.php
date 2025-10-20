@@ -29,22 +29,27 @@ class HealthcareServiceRepository
     }
 
     /**
-     * Update data for local created data with EHealth data.
+     * Update existed record with EHealth data.
      *
      * @param  array  $data
+     * @param  bool  $updateCategoryAndType
      * @return HealthcareService
      * @throws Throwable
      */
-    public function update(array $data): HealthcareService
+    public function update(array $data, bool $updateCategoryAndType = true): HealthcareService
     {
-        return DB::transaction(function () use ($data) {
+        return DB::transaction(function () use ($data, $updateCategoryAndType) {
             if (empty($data['id'])) {
                 throw new InvalidArgumentException('HealthcareService ID is required for update.');
             }
 
-            $service = HealthcareService::with(['category.coding', 'type.coding'])->findOrFail($data['id']);
+            if ($updateCategoryAndType) {
+                $service = HealthcareService::with(['category.coding', 'type.coding'])->findOrFail($data['id']);
 
-            $data = $this->updateCategoryAndType($service, $data);
+                $data = $this->updateCategoryAndType($service, $data);
+            } else {
+                $service = HealthcareService::findOrFail($data['id']);
+            }
 
             $service->update($data);
 
@@ -88,39 +93,6 @@ class HealthcareServiceRepository
     public function updateStatus(string $uuid, string $status): void
     {
         HealthcareService::whereUuid($uuid)->update(['status' => $status]);
-    }
-
-    /**
-     * Prepares the raw data for a healthcare service update request.
-     * For update, to modify only allowed 'comment', 'available_time' and 'not_available' fields.
-     *
-     * @param  array  $rawData  The raw data to be processed for the update request
-     * @return array The processed data ready for updating a healthcare service
-     */
-    public function prepareRequestUpdateData(array $rawData): array
-    {
-        $params = [];
-
-        if (!empty($rawData['comment'])) {
-            $params['comment'] = $rawData['comment'];
-        }
-
-        if (!empty($rawData['available_time'])) {
-            foreach ($rawData['available_time'] as $index => $dayTime) {
-                if (!empty($dayTime['all_day'])) {
-                    $rawData['available_time'][$index]['available_start_time'] = '';
-                    $rawData['available_time'][$index]['available_end_time'] = '';
-                }
-            }
-
-            $params['available_time'] = available_time($rawData['available_time']);
-        }
-
-        if (!empty($rawData['not_available'])) {
-            $params['not_available'] = not_available($rawData['not_available']);
-        }
-
-        return $params;
     }
 
     /**

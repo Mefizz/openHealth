@@ -188,7 +188,7 @@
         @endif
 
         @if(get_class($this) === HealthcareServiceEdit::class)
-            @can('update', $healthcareServiceModel)
+            @can('edit', $healthcareServiceModel)
                 <button wire:click="create" type="submit" class="button-primary">
                     {{ __('forms.save_and_send') }}
                 </button>

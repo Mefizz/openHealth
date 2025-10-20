@@ -190,6 +190,13 @@
                                                             {{ __('forms.view') }}
                                                         </a>
 
+                                                        <a href="{{ route('healthcare-service.update', [legalEntity(), $service->division, $service->id]) }}"
+                                                           class="flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm text-gray-600 hover:bg-gray-50"
+                                                        >
+                                                            @icon('edit', 'w-5 h-5 text-gray-600')
+                                                            {{ __('forms.update') }}
+                                                        </a>
+
                                                         <button
                                                             wire:click="deactivate('{{ $service->uuid }}'); toggle()"
                                                             class="cursor-pointer flex items-center gap-2 w-full last-of-type:rounded-b-md px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50"

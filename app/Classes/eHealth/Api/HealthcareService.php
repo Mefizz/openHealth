@@ -28,7 +28,7 @@ class HealthcareService extends Request
      * Get list of Healthcare Services.
      *
      * @param  string  $url
-     * @param $query
+     * @param  $query
      * @return PromiseInterface|EHealthResponse
      * @throws ConnectionException|EHealthValidationException|EHealthResponseException
      */
@@ -53,6 +53,8 @@ class HealthcareService extends Request
      */
     public function update(string $uuid, array $data = []): PromiseInterface|EHealthResponse
     {
+        $this->setValidator($this->validateResponse(...));
+
         return $this->patch(self::URL . '/' . $uuid, $data);
     }
 
