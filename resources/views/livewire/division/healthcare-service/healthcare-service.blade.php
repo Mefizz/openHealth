@@ -166,7 +166,7 @@
         </div>
     </fieldset>
 
-    @include('livewire.division.healthcare-service.working-hours')
+    @include('livewire.division.healthcare-service.parts.working-hours')
 
     <div class="flex justify-start gap-4 mt-10">
         <a href="{{ url()->previous() }}" type="button" class="button-minor">

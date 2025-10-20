@@ -133,9 +133,6 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
 
             Route::prefix('division')->middleware(['permission:division:read|division:details'])->group(function () {
                 Route::get('/', DivisionIndex::class)->name('division.index')->can('viewAny', Division::class);
-                Route::get('/{division}/healthcare-service', HealthcareServiceIndex::class)
-                    ->name('division.healthcare-service.index')
-                    ->can('viewAny', HealthcareService::class);
 
                 Route::get('/create', DivisionCreate::class)->name('division.create')->can('create', Division::class);
                 Route::get('/{division}', DivisionView::class)->name('division.view')->can('viewAny', Division::class);
