@@ -5,14 +5,10 @@ declare(strict_types=1);
 namespace App\Classes\eHealth\Api;
 
 use App\Classes\eHealth\EHealthRequest;
-use App\Classes\eHealth\EHealthResponse;
-use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Arr;
 use App\Models\Division;
-use Log;
 use RuntimeException;
-use Validator;
 
 class EmployeeRequest extends EHealthRequest
 {
@@ -25,7 +21,8 @@ class EmployeeRequest extends EHealthRequest
      * Creates a new Employee Request in eHealth using a signed data payload.
      * This is the primary action method for this class.
      *
-     * @param  string  $signedContent  The base64 encoded signed string.
+     * @param string $signedContent The base64 encoded signed string.
+     *
      * @return array The response data from eHealth on success.
      * @throws ConnectionException|RuntimeException
      */
@@ -48,7 +45,7 @@ class EmployeeRequest extends EHealthRequest
      * and reshapes it into a consistent structure with keys like 'employee',
      * 'party', 'documents', etc., making it ready for repository processing.
      *
-     * @param  array  $sourceData  The source data array containing all necessary information.
+     * @param array $sourceData The source data array containing all necessary information.
      * @return array A structured array partitioned into logical keys.
      */
     public function mapCreate(array $sourceData): array
@@ -70,90 +67,9 @@ class EmployeeRequest extends EHealthRequest
     }
 
     /**
-     * Gets a single page of employee requests from E-Health.
-     *
-     * @param  string  $token
-     * @param  array  $filters  An associative array of query parameters to filter the results.
-     * @param  int  $page  The page number to fetch.
-     * @return PromiseInterface|EHealthResponse
-     * @throws ConnectionException
-     */
-    public function getMany(string $token, array $filters, int $page = 1): PromiseInterface|EHealthResponse
-    {
-        $this->setValidator($this->validateMany(...));
-        $this->setDefaultPageSize();
-
-        $mergedQuery = array_merge(
-            $this->options['query'] ?? [],
-            $filters,
-            ['page' => $page]
-        );
-
-        $getEndpoint = '/api/employee_requests';
-
-        return $this->withToken($token)->get($getEndpoint, $mergedQuery);
-    }
-
-    /**
-     * Validates the response for a list of employee requests.
-     *
-     * @param  EHealthResponse  $response  The response from the eHealth API.
-     * @return array The validated data.
-     */
-    protected function validateMany(EHealthResponse $response): array
-    {
-        $transformedData = [];
-        foreach ($response->getData() as $item) {
-            $transformedData[] = self::replaceEHealthPropNames($item);
-        }
-
-        $validator = Validator::make($transformedData, [
-            '*' => 'required|array',
-            '*.uuid' => 'required|uuid',
-            '*.status' => 'required|string|in:NEW,REJECTED,APPROVED,EXPIRED',
-            '*.inserted_at' => 'required|date',
-            '*.edrpou' => 'required|string',
-            '*.legal_entity_name' => 'required|string',
-            '*.no_tax_id' => 'sometimes|boolean',
-            '*.first_name' => 'required|string',
-            '*.last_name' => 'required|string',
-            '*.second_name' => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            Log::channel('e_health_errors')->error(
-                'EHealth EmployeeRequest validation failed: ' . implode(', ', $validator->errors()->all())
-            );
-            $validator->validate();
-        }
-
-        return $validator->validated();
-    }
-
-    /**
-     * Replaces eHealth property names with the ones used in the application (e.g., id -> uuid).
-     *
-     * @param  array  $properties  Raw properties from a single API item.
-     * @return array Properties with application-friendly names.
-     */
-    protected static function replaceEHealthPropNames(array $properties): array
-    {
-        $replaced = [];
-        foreach ($properties as $name => $value) {
-            if ($name === 'id') {
-                $replaced['uuid'] = $value;
-            } else {
-                $replaced[$name] = $value;
-            }
-        }
-
-        return $replaced;
-    }
-
-    /**
      * Builds the eHealth-compliant payload from the application's internal data structure.
      *
-     * @param  array  $nestedData  Data from the Revision model.
+     * @param array $nestedData Data from the Revision model.
      * @return array The structured payload ready for signing and sending to eHealth.
      */
     public function schemaCreate(array $nestedData): array
@@ -193,10 +109,6 @@ class EmployeeRequest extends EHealthRequest
             }
         }
 
-        if ($employeeUuid = Arr::get($nestedData, 'employee_uuid')) {
-            $payload['employee_id'] = $employeeUuid;
-        }
-
         return ['employee_request' => $this->removeEmptyValuesRecursively($payload)];
     }
 
@@ -215,6 +127,7 @@ class EmployeeRequest extends EHealthRequest
             return !is_null($value) && $value !== '' && $value !== [];
         });
     }
+
 
     public function schemaRequest(): array
     {
