@@ -28,6 +28,7 @@ use App\Livewire\Division\DivisionIndex;
 use App\Livewire\Division\DivisionView;
 use App\Livewire\Division\HealthcareService\HealthcareServiceCreate;
 use App\Livewire\Division\HealthcareService\HealthcareServiceEdit;
+use App\Livewire\Division\HealthcareService\HealthcareServiceUpdate;
 use App\Livewire\Division\HealthcareService\HealthcareServiceIndex;
 use App\Livewire\Division\HealthcareService\HealthcareServiceView;
 use App\Livewire\Employee\EmployeeCreate;
@@ -146,6 +147,9 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                     ->can('view', 'healthcareService');
                 Route::get('/{division}/healthcare-service/{healthcareService}/edit', HealthcareServiceEdit::class)
                     ->name('healthcare-service.edit')
+                    ->can('edit', 'healthcareService');
+                Route::get('/{division}/healthcare-service/{healthcareService}/update', HealthcareServiceUpdate::class)
+                    ->name('healthcare-service.update')
                     ->can('update', 'healthcareService');
             });
 
@@ -183,8 +187,8 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                     Route::get('/', LicenseIndex::class)->name('index')->can('viewAny', License::class);
                     Route::get('/create', LicenseCreate::class)->name('create')->can('create', License::class);
 
-                    Route::middleware(['can:view,license'])->prefix('{license}')->whereNumber('license')->group(
-                        function () {
+                    Route::middleware(['can:view,license'])->prefix('{license}')
+                        ->whereNumber('license')->group(function () {
                             Route::get('/', static function (LegalEntity $legalEntity, License $license) {
                                 if (Gate::allows('update', [$license, $legalEntity]) &&
                                     !$license->isPrimary && $legalEntity->type === LegalEntity::TYPE_PHARMACY) {
@@ -196,8 +200,7 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                                 // If both check is false
                                 abort(404);
                             })->name('view');
-                        }
-                    );
+                        });
                 });
 
             Route::get('/declaration', DeclarationIndex::class)

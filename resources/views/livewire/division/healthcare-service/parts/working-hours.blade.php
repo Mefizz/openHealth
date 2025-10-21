@@ -386,6 +386,7 @@
                                class="peer input dark:text-white"
                                placeholder=" "
                                x-bind:disabled="isDisabled"
+                               required
                         />
                         <label :for="'description-'+idx" class="label">
                             {{ __('healthcare-services.comment_non_working_hours') }}

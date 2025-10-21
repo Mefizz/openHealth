@@ -8,16 +8,11 @@ use App\Enums\License\Type;
 use App\Enums\Status;
 use App\Models\Division;
 use App\Models\HealthcareService;
-use App\Rules\DivisionRules\HealthcareRules\CategoryRule;
-use App\Rules\DivisionRules\HealthcareRules\LicenseRule;
-use App\Rules\DivisionRules\HealthcareRules\NotAvailableTimeRule;
 use App\Rules\InDictionary;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
-use App\Rules\DivisionRules\HealthcareRules\AvailableTimeRule;
-use App\Rules\DivisionRules\HealthcareRules\ProvidingConditionRule;
 use Livewire\Form;
 
 class HealthcareServiceForm extends Form
@@ -53,7 +48,7 @@ class HealthcareServiceForm extends Form
         $categoriesConfigKey = 'healthcare_service_' . strtolower(legalEntity()->type) . '_categories';
         $providingConditionConfigKey = 'legal_entity_' . strtolower(legalEntity()->type) . '_providing_conditions';
 
-        return [
+        return array_merge([
             'divisionId' => ['required', 'uuid', Rule::exists('divisions', 'uuid')->where('status', Status::ACTIVE)],
             'category' => ['array', 'required'],
             'category.coding.*.system' => ['required', 'string', Rule::in('HEALTHCARE_SERVICE_CATEGORIES')],
@@ -93,7 +88,18 @@ class HealthcareServiceForm extends Form
                     }),
                 'required_if:category.coding.0.code,' . Type::PHARMACY->value . ',' . Type::PHARMACY_DRUGS->value,
                 'prohibited_if:category.coding.0.code,' . Type::MSP->value
-            ],
+            ]
+        ], $this->rulesForUpdating());
+    }
+
+    /**
+     * List of rules for update(times and comment).
+     *
+     * @return array[]
+     */
+    public function rulesForUpdating(): array
+    {
+        return [
             'comment' => ['nullable', 'string'],
             'availableTime' => ['array', 'nullable'],
             'availableTime.*.daysOfWeek' => ['required', 'array', 'min:1', 'max:7'],
@@ -195,49 +201,5 @@ class HealthcareServiceForm extends Form
                 'unique_combination' => __('validation.attributes.healthcareService.constraint.categoryPharmacy')
             ]);
         }
-    }
-
-    /**
-     * TODO: add rule for next cases:
-     *  - Check that division exists in PRM DB
-     *  - Validate category for HEALTHCARE_SERVICE_<$.category>_LICENSE_TYPE
-     *      - check that Healthcare service category must have linked license
-     *      - check that License must not be submitted for healthcare service category
-     *      - check that License type does not match healthcare service category
-     *  - Check that providing condition in request is allowed for legal entity type according to 'Configurations for Healthcare services' ??
-     */
-    protected function customRules(string $mode)
-    {
-        $division = $this->component->division;
-
-        $validationRules = [];
-
-        $timeValidationRules = [
-            // Check that end time should be greater then start
-            new AvailableTimeRule($division, $this->healthcare_service),
-            // Check that end time should be greater then start
-            new NotAvailableTimeRule($division, $this->healthcare_service)
-        ];
-
-        $storeValidationRules = [
-            // Check that there is any valid license for the healthcare service's category
-            new LicenseRule($division, $this->healthcare_service),
-            // Check that there is no another record with the same healthcare service, division_id, category and type
-            new CategoryRule($division, $this->healthcare_service),
-            // Check that there is no another record with the same healthcare service, division_id, speciality type and providing condition
-            new ProvidingConditionRule($division, $this->healthcare_service),
-        ];
-
-        if ($mode === 'edit') {
-            $validationRules = array_merge($validationRules, $timeValidationRules);
-        } else {
-            $validationRules = array_merge(
-                $validationRules,
-                $storeValidationRules,
-                $timeValidationRules
-            );
-        }
-
-        return $validationRules;
     }
 }

@@ -83,7 +83,7 @@ class HealthcareServiceComponent extends Component
         // Check permission for edit or create
         if (isset($this->healthcareServiceId)) {
             $healthcareService = HealthcareService::find($this->healthcareServiceId);
-            if (Auth::user()?->cannot('update', $healthcareService)) {
+            if (Auth::user()?->cannot('edit', $healthcareService)) {
                 Session::flash('error', 'У вас немає дозволу на редагування цієї послуги');
 
                 return;
