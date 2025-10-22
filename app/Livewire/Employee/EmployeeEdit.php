@@ -14,6 +14,10 @@ use Livewire\Attributes\Locked;
 
 class EmployeeEdit extends AbstractEmployeeFormManager
 {
+    /**
+     * We only expose the ID to the frontend.
+     * #[Locked] prevents the user from changing this ID from the browser.
+     */
     #[Locked]
     public ?int $employeeId = null;
     public bool $showSignatureModal = false;
@@ -35,6 +39,10 @@ class EmployeeEdit extends AbstractEmployeeFormManager
         }
     }
 
+    /**
+     * Implements the draft persistence logic for editing an active employee.
+     * This creates a NEW EmployeeRequest linked to the existing employee's party and user.
+     */
     protected function handleDraftPersistence(): EmployeeRequest
     {
         $preparedData = $this->form->getPreparedData();
@@ -44,6 +52,7 @@ class EmployeeEdit extends AbstractEmployeeFormManager
         $employeeRequestData = Arr::only($preparedData, ['position', 'start_date', 'end_date', 'employee_type', 'division_id', 'email']);
         $employeeRequestData['user_id'] = $this->employee->party->user_id;
         $employeeRequestData['party_id'] = $this->employee->party->id;
+        $employeeRequestData['employee_id'] = $this->employee->id;
 
         if ($this->employeeRequestId) {
             $existingRequest = EmployeeRequest::find($this->employeeRequestId);
@@ -67,6 +76,10 @@ class EmployeeEdit extends AbstractEmployeeFormManager
         return $newRequest;
     }
 
+    /**
+     * The render method. It doesn't need to pass any data, because the template
+     * is already bound to the component's public properties (like $this->form).
+     */
     public function render(): View
     {
         return view('livewire.employee.employee-edit');
