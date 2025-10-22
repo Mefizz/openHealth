@@ -93,7 +93,7 @@ class EmployeeIndex extends EmployeeComponent
         $realParties = Party::query()
             ->whereHas('employees', fn ($sub) => $sub->where('legal_entity_id', $this->legalEntity->id))
             ->orWhereHas('employeeRequests', fn ($sub) => $sub->where('legal_entity_id', $this->legalEntity->id))
-            ->with(['phones', 'employees.division', 'employeeRequests.division'])
+            ->with(['phones', 'users', 'employees.division', 'employeeRequests.division'])
             ->get();
 
         $unassignedRequests = EmployeeRequest::query()

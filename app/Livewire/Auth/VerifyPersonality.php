@@ -54,11 +54,9 @@ class VerifyPersonality extends Component
 
         $ownerFullName = $response?->getOwnerFullName();
         $taxId = $response?->getTaxId();
-
         [$lastName, $firstName, $secondName] = explode(' ', $ownerFullName);
 
-        // Search for party
-        $party = Party::whereNull('user_id')
+        $party = Party::query()
             ->where('tax_id', $taxId)
             ->whereRaw('LOWER(TRIM(last_name)) = ?', [mb_strtolower($lastName)])
             ->whereRaw('LOWER(TRIM(first_name)) = ?', [mb_strtolower($firstName)])
@@ -71,16 +69,34 @@ class VerifyPersonality extends Component
             return;
         }
 
-        // Associate current User with Party, also set email
-        $party->update(['user_id' => Auth::id(), 'email' => Auth::user()->email]);
-
-        // Link all employees of this Party to User
-        $party->employees()->update(['user_id' => Auth::id()]);
+        $user = Auth::user();
+        if (!$user->party_id) {
+            $user->party_id = $party->id;
+            $user->save();
+        }
 
         $legalEntityUuid = Session::pull('selected_legal_entity_uuid');
         $legalEntity = LegalEntity::whereUuid($legalEntityUuid)->firstOrFail();
 
-        EhealthUserVerified::dispatch(Auth::user(), $legalEntity->id);
+        $affectedRows = $party->employees()
+            ->where('legal_entity_id', $legalEntity->id)
+            ->whereNull('user_id')
+            ->update(['user_id' => $user->id]);
+
+        if ($affectedRows === 0) {
+            $isAlreadyVerified = $party->employees()
+                ->where('legal_entity_id', $legalEntity->id)
+                ->where('user_id', $user->id)
+                ->exists();
+
+            if (!$isAlreadyVerified) {
+                Session::flash('error', 'Для вашого профілю не знайдено активних посад у цьому закладі. Зверніться до адміністратора.');
+
+                return;
+            }
+        }
+
+        EhealthUserVerified::dispatch($user, $legalEntity->id);
 
         $this->redirectRoute('dashboard', ['legalEntity' => $legalEntity], navigate: true);
     }
