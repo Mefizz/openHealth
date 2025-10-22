@@ -1,0 +1,170 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Classes\eHealth\Api;
+
+use App\Classes\eHealth\EHealthRequest;
+use App\Classes\eHealth\EHealthResponse;
+use GuzzleHttp\Promise\PromiseInterface;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+
+/**
+ * Handles API requests related to the eHealth 'Party' and 'Party Verification' endpoints.
+ */
+class Party extends EHealthRequest
+{
+    /**
+     * The base URL for the party endpoints.
+     */
+    protected const string URL = '/api/parties';
+
+    /**
+     * Fetches a paginated list of party verification statuses.
+     * Now accepts a token for authentication and attaches a data mapper.
+     *
+     * @param string $token The decrypted bearer token for authentication.
+     * @param array $filters An array of filters to apply to the query.
+     * @return PromiseInterface|EHealthResponse
+     * @throws ConnectionException
+     */
+    public function getMany(string $token, array $filters = []): PromiseInterface|EHealthResponse
+    {
+        $this->setValidator($this->validateMany(...));
+        $this->setMapper($this->mapMany(...));
+        $this->setDefaultPageSize();
+
+        return $this->withToken($token)->get(self::URL . '/verifications', $filters);
+    }
+
+    /**
+     * Maps (transforms) the validated data into a simple [party_uuid => verification_status] array.
+     * This method is called by the EHealthResponse's map() function.
+     *
+     * @param array $validatedData The data that has passed validation.
+     * @return array
+     */
+    protected function mapMany(array $validatedData): array
+    {
+        return collect($validatedData)->mapWithKeys(function ($verification) {
+            return [$verification['party_id'] => $verification['verification_status']];
+        })->filter()->all();
+    }
+
+    /**
+     * Fetches the detailed verification status for a single party.
+     *
+     * @param string $uuid The UUID of the party.
+     * @param array|null $query Optional query parameters.
+     * @return PromiseInterface|EHealthResponse
+     * @throws ConnectionException
+     */
+    public function getDetails(string $uuid, array $query = null): PromiseInterface|EHealthResponse
+    {
+        $this->setValidator($this->validateDetails(...));
+
+        return $this->get(self::URL . '/' . $uuid . '/verification', $query);
+    }
+
+    /**
+     * Sends a request to update a party's verification status.
+     * The API currently supports updating 'dracs_death' and 'dracs_name_change'.
+     *
+     * @param string $uuid The UUID of the party to update.
+     * @param array $data The data for the update request.
+     * @return PromiseInterface|EHealthResponse
+     * @throws ConnectionException
+     */
+    public function update(string $uuid, array $data = []): PromiseInterface|EHealthResponse
+    {
+        return $this->patch(self::URL . '/' . $uuid . '/verification', $data);
+    }
+
+    /**
+     * Validates the response for a single party's verification details.
+     *
+     * @param EHealthResponse $response The response from the eHealth API.
+     * @return array
+     * @throws ValidationException
+     */
+    protected function validateDetails(EHealthResponse $response): array
+    {
+        $data = $response->getData();
+
+        $rules = [
+            'verification_status' => 'required|string',
+            'details' => 'required|array',
+
+            // DRFO block
+            'details.drfo' => 'present|array',
+            'details.drfo.verification_status' => 'string',
+            'details.drfo.verification_reason' => 'nullable|string',
+            'details.drfo.result' => 'nullable|numeric',
+
+            // DRACS Death block
+            'details.dracs_death' => 'present|array',
+            'details.dracs_death.verification_status' => 'string',
+            'details.dracs_death.verification_reason' => 'nullable|string',
+            'details.dracs_death.verification_comment' => 'nullable|string',
+
+            // MVS Passport block
+            'details.mvs_passport' => 'present|array',
+            'details.mvs_passport.verification_status' => 'string',
+            'details.mvs_passport.verification_reason' => 'nullable|string',
+            'details.mvs_passport.status' => 'nullable|numeric',
+
+            // DMS Passport block
+            'details.dms_passport' => 'present|array',
+            'details.dms_passport.verification_status' => 'string',
+            'details.dms_passport.verification_reason' => 'nullable|string',
+            'details.dms_passport.status' => 'nullable|numeric',
+
+            // DRACS Name Change block
+            'details.dracs_name_change' => 'present|array',
+            'details.dracs_name_change.verification_status' => 'string',
+            'details.dracs_name_change.verification_reason' => 'nullable|string',
+            'details.dracs_name_change.verification_comment' => 'nullable|string',
+        ];
+
+        return Validator::make($data, $rules)->validated();
+    }
+
+    /**
+     * Validates the response for a list of party verification statuses.
+     *
+     * @param EHealthResponse $response The response from the eHealth API.
+     * @return array The extracted 'data' array from the response.
+     * @throws ValidationException
+     */
+    protected function validateMany(EHealthResponse $response): array
+    {
+        // The full response body is validated as the list is not wrapped in a 'data' key by this specific endpoint.
+        $fullResponse = $response->json();
+
+        $rules = [
+            'data' => 'present|array',
+            'data.*.party_id' => 'required|uuid',
+            'data.*.verification_status' => 'required|string',
+        ];
+
+        $validator = Validator::make($fullResponse, $rules);
+
+        try {
+            $validatedData = $validator->validated();
+
+            // Return only the 'data' array, as the listener expects.
+            return $validatedData['data'];
+
+        } catch (ValidationException $e) {
+            Log::error('eHealth party list validation failed.', [
+                'errors' => $e->errors(),
+                'data_received' => $fullResponse
+            ]);
+
+            throw $e;
+        }
+    }
+}

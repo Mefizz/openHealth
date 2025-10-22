@@ -16,7 +16,6 @@
             </div>
         @endcan
 
-
         <x-slot name="navigation">
             <div class="flex flex-col -my-4">
                 <form wire:submit.prevent="applyFilters">
@@ -59,7 +58,6 @@
                             <span>{{ __('forms.additional_search_parameters') }}</span>
                         </button>
                     </div>
-
 
                     <div x-cloak x-show="showFilter" x-transition class="pt-0 mt-1">
                         <div class="form-row-4">
@@ -213,27 +211,37 @@
                         <legend class="legend">{{ $party->fullName }}</legend>
                         <div class="flex flex-wrap items-start justify-between gap-4 border-b border-gray-200 dark:border-gray-700 pb-4">
                             <div>
-                                <div class="flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 mt-2">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-2 text-sm text-gray-500 mt-2">
+                                    {{-- Phone --}}
                                     @if ($mobilePhone = $party->phones->firstWhere('type', 'MOBILE'))
-                                        <span class="flex items-center gap-1.5">
-                                       <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
-                                            xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-                                            viewBox="0 0 24 24">
-                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                                  stroke-width="2"
-                                                  d="M18.427 14.768 17.2 13.542a1.733 1.733 0 0 0-2.45 0l-.613.613a1.732 1.732 0 0 1-2.45 0l-1.838-1.84a1.735 1.735 0 0 1 0-2.452l.612-.613a1.735 1.735 0 0 0 0-2.452L9.237 5.572a1.6 1.6 0 0 0-2.45 0c-3.223 3.2-1.702 6.896 1.519 10.117 3.22 3.221 6.914 4.745 10.12 1.535a1.601 1.601 0 0 0 0-2.456Z"/>
-                                         </svg>
-                                        <a href="tel:{{ $mobilePhone->number }}"
-                                           class="hover:underline">{{ $mobilePhone->number }}</a>
-                                    </span>
+                                        <span class="flex items-center gap-1.5 min-w-0">
+                                            <svg class="w-5 h-5 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.427 14.768 17.2 13.542a1.733 1.733 0 0 0-2.45 0l-.613.613a1.732 1.732 0 0 1-2.45 0l-1.838-1.84a1.735 1.735 0 0 1 0-2.452l.612-.613a1.735 1.735 0 0 0 0-2.452L9.237 5.572a1.6 1.6 0 0 0-2.45 0c-3.223 3.2-1.702 6.896 1.519 10.117 3.22 3.221 6.914 4.745 10.12 1.535a1.601 1.601 0 0 0 0-2.456Z"/></svg>
+                                            <a href="tel:{{ $mobilePhone->number }}" class="truncate hover:underline" title="{{ $mobilePhone->number }}">{{ $mobilePhone->number }}</a>
+                                        </span>
+                                    @else
+                                        <span></span> {{-- Empty span to keep grid alignment --}}
                                     @endif
+
+                                    {{-- Email --}}
                                     @if($party->email)
-                                        <span class="flex items-center gap-1.5">
-                                        <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                           <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m3.5 5.5 7.893 6.036a1 1 0 0 0 1.214 0L20.5 5.5M4 19h16a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Z"/>
-                                        </svg>
-                                        <a href="mailto:{{$party->email}}" class="hover:underline">{{ $party->email }}</a>
-                                    </span>
+                                        <span class="flex items-center gap-1.5 min-w-0">
+                                            <svg class="w-5 h-5 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m3.5 5.5 7.893 6.036a1 1 0 0 0 1.214 0L20.5 5.5M4 19h16a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Z"/></svg>
+                                            <a href="mailto:{{$party->email}}" class="truncate hover:underline" title="{{ $party->email }}">{{ $party->email }}</a>
+                                        </span>
+                                    @else
+                                        <span></span> {{-- Empty span to keep grid alignment --}}
+                                    @endif
+
+                                    {{-- Verification Status --}}
+                                    @if ($party->verification_status)
+                                        <a href="{{ route('party.verification.show', ['legalEntity' => legalEntity()->id, 'party' => $party->id]) }}" class="flex items-center gap-1.5 group">
+                                            <span class="font-semibold text-gray-700 dark:text-gray-300 group-hover:underline">@lang('general.verification'):</span>
+                                            @if ($party->verification_status === 'VERIFIED')
+                                                <span class="badge-green">@lang('general.verified')</span>
+                                            @else
+                                                <span class="badge-red">@lang('general.' . strtolower($party->verification_status))</span>
+                                            @endif
+                                        </a>
                                     @endif
                                 </div>
                             </div>
