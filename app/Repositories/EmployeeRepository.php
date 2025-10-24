@@ -5,183 +5,50 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Core\Arr;
-use Exception;
-use App\Models\User;
 use App\Models\LegalEntity;
 use App\Models\Relations\Party;
 use App\Models\Employee\Employee;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use App\Models\Employee\BaseEmployee;
 use App\Enums\Employee\RequestStatus;
-use App\Enums\Employee\RevisionStatus;
 use App\Models\Employee\EmployeeRequest;
-use Illuminate\Database\Eloquent\Collection;
-use InvalidArgumentException;
 use Throwable;
 
 readonly class EmployeeRepository
 {
-    public function __construct(
-        private UserRepository     $userRepository,
-        private PartyRepository    $partyRepository,
-        private RevisionRepository $revisionRepository
-    ) {
-
-    }
-
-    /**
-     * Creates or updates an employee-related model based on UUID.
-     * This method is designed to be called ONLY when $employeeModel is NOT null.
-     *
-     * @param array                    $data          Data for the model.
-     * @param Employee|EmployeeRequest $employeeModel The model class to update/create.
-     * @param LegalEntity              $legalEntity   The legal entity to associate with.
-     *
-     * @return BaseEmployee The created or updated model.
-     * @throws InvalidArgumentException If $employeeModel is null (should not happen with correct usage).
-     */
-    public function createOrUpdate(array $data, Employee|EmployeeRequest $employeeModel, LegalEntity $legalEntity): BaseEmployee
-    {
-
-        $employee = $employeeModel->updateOrCreate(
-            [
-                'uuid' => $data['uuid'] ?? '',
-            ],
-            $data
-        );
-        $employee->legalEntity()->associate($legalEntity);
-
-        return $employee;
-    }
-
-    /**
-     * Saves or updates employee-related data, including EmployeeRequest, Party, and associated details.
-     *
-     * @param array                         $response
-     * @param LegalEntity                   $legalEntity
-     * @param Employee|EmployeeRequest|null $employeeModel The model class to create/update (can be null for a new request).
-     * @param string|null                   $employeeUUID  UUID of an existing Employee, if this is an EmployeeRequest that updates.
-     *
-     * @return BaseEmployee
-     * @throws Exception
-     */
-    public function store(
-        array $response,
-        LegalEntity $legalEntity,
-        Employee|EmployeeRequest|null $employeeModel,
-        ?string $employeeUUID = null
-    ): BaseEmployee {
-        try {
-            $partyData = $response['party'] ?? [];
-            $doctorData = $response['doctor'] ?? [];
-
-            $user = null;
-            if (!empty($partyData['email'])) {
-                $user = $this->userRepository->createIfNotExist($partyData, $response['employee_type']);
-            }
-
-            unset($response['party'], $response['doctor'], $response['updated_at']);
-
-            $employee = $this->createOrUpdate($response, $employeeModel, $legalEntity);
-            $isEmployeeRequest = $employee instanceof EmployeeRequest;
-            $employeeInstance = Employee::where('uuid', $employeeUUID)?->first();
-            $alreadyExistParty = $employeeInstance?->party;
-            $party = $alreadyExistParty ?? $this->partyRepository->createOrUpdate($partyData);
-
-            if ($isEmployeeRequest) {
-                optional($employeeInstance, fn ($instance) => $employee->employee()->associate($instance));
-            }
-
-            if (!$isEmployeeRequest || !$alreadyExistParty) {
-                $this->updateDetails(
-                    $employee,
-                    $partyData,
-                    $partyData['documents'] ?? [],
-                    $partyData['phones'] ?? [],
-                    $doctorData['educations'] ?? null,
-                    $doctorData['specialities'] ?? null,
-                    $doctorData['qualifications'] ?? null,
-                    $doctorData['science_degree'] ?? null
-                );
-            }
-
-            $party->employees()->save($employee);
-
-            if (!$alreadyExistParty && $user) {
-                $user->party()->save($party);
-            }
-
-            if ($isEmployeeRequest) {
-                $responseData = [
-                    'response' => $response,
-                    'party' => $partyData,
-                    'documents' => $partyData['documents'] ?? [],
-                    'phones' => $partyData['phones'] ?? [],
-                    'doctor' => $doctorData ?? []
-                ];
-
-                $this->revisionRepository->saveRevision($employee, [
-                    'data' => $responseData,
-                    'status' => RevisionStatus::PENDING,
-                ]);
-            }
-
-            return $employee;
-
-        } catch (Exception $err) {
-            Log::error('Create Employee Error: ' . $err->getMessage(), ['exception' => $err]);
-            throw new Exception(__('Create Employee Error') . ' : ' . $err->getMessage());
-        }
-    }
-
     /**
      * Creates a new EmployeeRequest draft from prepared data.
      * This is a universal method that only handles database persistence.
      *
-     * @param array       $employeeRequestData The prepared data for the request itself.
-     * @param LegalEntity $legalEntity         The associated LegalEntity model.
-     *
+     * @param  array  $employeeRequestData  The prepared data for the request itself.
+     * @param  LegalEntity  $legalEntity  The associated LegalEntity model.
+     * @param  Employee|null  $employee  (Optional) The existing employee being edited.
      * @return EmployeeRequest
      */
-    public function createEmployeeRequestDraft(array $employeeRequestData, LegalEntity $legalEntity): EmployeeRequest
+    public function createEmployeeRequestDraft(array $employeeRequestData, LegalEntity $legalEntity, ?Employee $employee = null): EmployeeRequest
     {
         $employeeRequest = new EmployeeRequest();
         $employeeRequest->fill($employeeRequestData);
         $employeeRequest->status = RequestStatus::NEW;
         $employeeRequest->legalEntity()->associate($legalEntity);
+
+        if ($employee) {
+            $employeeRequest->employee()->associate($employee);
+        }
+
         $employeeRequest->save();
 
         return $employeeRequest;
     }
 
     /**
-     * Finds all pending employee requests for a given user and legal entity.
-     * This encapsulates the database query, keeping the service layer clean.
-     */
-    public function findPendingRequestsForUser(User $user, LegalEntity $legalEntity): Collection
-    {
-        $user->loadMissing('party');
-
-        return EmployeeRequest::query()
-            ->with(['revision', 'party'])
-            ->where('legal_entity_id', $legalEntity->id)
-            ->whereIn('status', RequestStatus::getStatusesForSync())
-            ->whereNotNull('uuid')
-            ->where('party_id', $user->party->id)
-            ->get();
-    }
-
-    /**
-     * @param Employee|EmployeeRequest $employee the model or identifier (ID or UUID) of the employee to update
-     * @param array                    $party
-     * @param array                    $documents
-     * @param array                    $phones
-     * @param array|null               $educations
-     * @param array|null               $specialities
-     * @param array|null               $qualifications
-     * @param array|null               $scienceDegree
-     *
+     * @param  Employee|EmployeeRequest  $employee  the model or identifier (ID or UUID) of the employee to update
+     * @param  array  $party
+     * @param  array  $documents
+     * @param  array  $phones
+     * @param  array|null  $educations
+     * @param  array|null  $specialities
+     * @param  array|null  $qualifications
+     * @param  array|null  $scienceDegree
      * @return Employee|EmployeeRequest Updated employee
      * @throws Throwable
      */

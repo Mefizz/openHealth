@@ -38,6 +38,7 @@ use App\Livewire\Employee\EmployeePositionAdd;
 use App\Livewire\Employee\EmployeeRequestEdit;
 use App\Livewire\Employee\EmployeeRequestShow;
 use App\Livewire\Employee\EmployeeShow;
+use App\Livewire\Employee\PartyEdit;
 use App\Livewire\Encounter\EncounterCreate;
 use App\Livewire\Encounter\EncounterEdit;
 use App\Livewire\LegalEntity\CreateLegalEntity;
@@ -174,6 +175,8 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                 Route::get('/{employee_request}/edit', EmployeeRequestEdit::class)
                     ->name('edit')->middleware('can:update,employee_request');
             });
+
+            Route::get('/party/{party}/edit', PartyEdit::class)->name('party.edit');
 
             Route::prefix('contract')->group(function () {
                 Route::get('/', ContractIndex::class)->name('contract.index');

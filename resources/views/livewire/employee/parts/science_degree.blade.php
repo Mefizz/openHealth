@@ -1,5 +1,6 @@
 <div class="overflow-x-auto relative">
     <fieldset class="fieldset" id="section-doctor-science-degree"
+              :disabled="$wire.isPositionDataLocked ?? false"
               x-data="{
                   scienceDegree: $wire.entangle('form.doctor.scienceDegree').live,
                   employeeType: $wire.get('form.employeeType'),

@@ -30,7 +30,7 @@ class EmployeeCreate
         // This prevents a guaranteed '403 Forbidden' error from the API call
         // if a user with a limited role (e.g., "Assistant") logs in.
         // if (!$user->can('employee:read')) {
-            // return;
+        // return;
         // }
 
         $employeeRequests = EmployeeRequest::with('revision')
@@ -80,7 +80,7 @@ class EmployeeCreate
                 }
 
                 $dataFromRevision = EHealth::employeeRequest()->mapCreate($employeeRequest->revision->data);
-                $dataFromEHealth = Arr::only($eHealthEmployee, ['uuid', 'position', 'employee_type', 'start_date', 'end_date']);
+                $dataFromEHealth = Arr::only($eHealthEmployee, ['uuid', 'status', 'position', 'employee_type', 'start_date', 'end_date']);
 
                 $newEmployee = Employee::updateOrCreate(
                     ['uuid' => $dataFromEHealth['uuid']],
