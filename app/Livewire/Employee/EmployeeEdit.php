@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Employee;
 
+use AllowDynamicProperties;
 use App\Core\Arr;
 use App\Models\Employee\Employee;
 use App\Models\Employee\EmployeeRequest;
@@ -12,6 +13,7 @@ use App\Repositories\Repository;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 
+#[AllowDynamicProperties]
 class EmployeeEdit extends AbstractEmployeeFormManager
 {
     /**
@@ -29,6 +31,8 @@ class EmployeeEdit extends AbstractEmployeeFormManager
         $this->employeeId = $employee->id;
         $this->isPersonalDataLocked = true;
         $this->loadDivisions($legalEntity);
+        $this->pageTitle = __('forms.edit_employee') . ' ' . ($employee->party->fullName ?? '');
+
         $this->form->hydrate($this->employee);
     }
 
@@ -82,6 +86,6 @@ class EmployeeEdit extends AbstractEmployeeFormManager
      */
     public function render(): View
     {
-        return view('livewire.employee.employee-edit');
+        return view('livewire.employee.employee-edit')->with('pageTitle', $this->pageTitle);
     }
 }

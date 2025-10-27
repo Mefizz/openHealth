@@ -5,13 +5,7 @@
 >
     <x-header-navigation class="breadcrumb-form shift-content">
         <x-slot name="title">
-            @if($isPersonalDataLocked)
-                {{ __('forms.add_position') }}
-            @else
-                {{ __('forms.add_employee') }}
-            @endif
-
-            {{ $this->employeeFullName }}
+            {{ $pageTitle ?? __('forms.employee') }}
         </x-slot>
     </x-header-navigation>
 

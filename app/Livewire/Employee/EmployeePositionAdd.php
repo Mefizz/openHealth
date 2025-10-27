@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Employee;
 
+use AllowDynamicProperties;
 use App\Core\Arr;
 use App\Models\Employee\EmployeeRequest;
 use App\Models\LegalEntity;
@@ -12,6 +13,7 @@ use App\Repositories\Repository;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 
+#[AllowDynamicProperties]
 class EmployeePositionAdd extends AbstractEmployeeFormManager
 {
     #[Locked]
@@ -27,7 +29,7 @@ class EmployeePositionAdd extends AbstractEmployeeFormManager
         $this->partyId = $party->id;
         $this->form->hydrate($this->party);
         $this->form->resetPositionFields();
-        $this->isPersonalDataLocked = true;
+        $this->pageTitle = __('forms.add_position') . ' ' . ($party->fullName ?? '');
     }
 
     public function boot(): void
@@ -78,7 +80,7 @@ class EmployeePositionAdd extends AbstractEmployeeFormManager
 
     public function render(): View
     {
-        return view('livewire.employee.employee');
+        return view('livewire.employee.employee-position-add')->with('pageTitle', $this->pageTitle);
     }
 
     /**

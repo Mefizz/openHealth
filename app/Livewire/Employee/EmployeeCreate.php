@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Livewire\Employee;
 
+use AllowDynamicProperties;
 use App\Core\Arr;
 use App\Models\Employee\EmployeeRequest;
 use App\Models\LegalEntity;
 use App\Repositories\Repository;
 use Illuminate\View\View;
 
+#[AllowDynamicProperties]
 class EmployeeCreate extends AbstractEmployeeFormManager
 {
     public function mount(LegalEntity $legalEntity): void
@@ -17,6 +19,7 @@ class EmployeeCreate extends AbstractEmployeeFormManager
         $this->loadDictionaries();
         $this->loadDivisions($legalEntity);
         $this->isPersonalDataLocked = false;
+        $this->pageTitle = __('forms.add_employee');
     }
 
     protected function handleDraftPersistence(): EmployeeRequest
@@ -54,7 +57,7 @@ class EmployeeCreate extends AbstractEmployeeFormManager
 
     public function render(): View
     {
-        return view('livewire.employee.employee');
+        return view('livewire.employee.employee-create')->with('pageTitle', $this->pageTitle);
     }
 
     protected function getEmployeeRequestForSave(): ?EmployeeRequest

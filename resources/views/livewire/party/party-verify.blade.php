@@ -2,16 +2,9 @@
     {{-- Breadcrumb Navigation --}}
     <x-header-navigation>
         <x-slot name="title">
-            @lang('general.verification')
+            {{ __('general.verification') }} {{ $party->fullName ?? '' }}
         </x-slot>
     </x-header-navigation>
-
-    {{-- Page Title --}}
-    <div class="-mt-14 form shift-content">
-        <p class="mt-1 text-lg text-gray-600 dark:text-gray-300">
-            {{ $party->fullName }}
-        </p>
-    </div>
 
         {{-- Table Container --}}
     <x-section class="-mt-8 form shift-content">
@@ -73,24 +66,24 @@
             </table>
         </div>
 
-        <div class="p-4 mt-6 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
-            @lang('general.ehealth_fitness_warning', ['status' => '"Потрібна верифікація"'])
-        </div>
+        @php
+            $overallStatus = data_get($verificationDetails, 'verification_status');
+            $translatedStatus = $overallStatus ? __('general.' . strtolower($overallStatus)) : __('general.unknown');
+        @endphp
+
+        @if($overallStatus !== 'VERIFIED')
+            <div class="p-4 mt-6 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+                @lang('general.ehealth_fitness_warning', ['status' => $translatedStatus])
+            </div>
+        @endif
 
         {{-- Action Buttons --}}
         <div class="flex items-center justify-start gap-4 mt-8">
             <a href="{{ route('employee.index', ['legalEntity' => $legalEntity->id]) }}" class="button-minor">@lang('forms.back')</a>
 
-            @php
-                $employeeToEdit = $party->employees->first();
-            @endphp
-
-{{--  TODO redirect to party/edit from i492  --}}
-            @if($employeeToEdit)
-                <a href="{{ route('employee.edit', ['legalEntity' => $legalEntity->id, 'employee' => $employeeToEdit->id]) }}" class="button-primary">
-                    @lang('forms.edit_personal_data')
-                </a>
-            @endif
+            <a href="{{ route('party.edit', ['legalEntity' => $legalEntity->id, 'party' => $party->id]) }}" class="button-primary">
+                @lang('forms.edit_personal_data')
+            </a>
 
             <button type="button" @click="showUpdateModal = true" class="button-primary-outline">
                 @lang('forms.update_death_data')

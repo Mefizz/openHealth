@@ -22,6 +22,7 @@ return [
     'to' => '–',
     'of' => 'із',
     'results' => 'результатів',
+    'unknown' => 'Невідомий',
 
     //Verification
     'not_verified' => 'Не верифіковано',
