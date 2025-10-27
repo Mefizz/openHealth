@@ -28,8 +28,8 @@ use App\Livewire\Division\DivisionIndex;
 use App\Livewire\Division\DivisionView;
 use App\Livewire\Division\HealthcareService\HealthcareServiceCreate;
 use App\Livewire\Division\HealthcareService\HealthcareServiceEdit;
-use App\Livewire\Division\HealthcareService\HealthcareServiceUpdate;
 use App\Livewire\Division\HealthcareService\HealthcareServiceIndex;
+use App\Livewire\Division\HealthcareService\HealthcareServiceUpdate;
 use App\Livewire\Division\HealthcareService\HealthcareServiceView;
 use App\Livewire\Employee\EmployeeCreate;
 use App\Livewire\Employee\EmployeeEdit;
@@ -38,7 +38,6 @@ use App\Livewire\Employee\EmployeePositionAdd;
 use App\Livewire\Employee\EmployeeRequestEdit;
 use App\Livewire\Employee\EmployeeRequestShow;
 use App\Livewire\Employee\EmployeeShow;
-use App\Livewire\Employee\PartyEdit;
 use App\Livewire\Encounter\EncounterCreate;
 use App\Livewire\Encounter\EncounterEdit;
 use App\Livewire\LegalEntity\CreateLegalEntity;
@@ -47,6 +46,8 @@ use App\Livewire\License\LicenseCreate;
 use App\Livewire\License\LicenseEdit;
 use App\Livewire\License\LicenseIndex;
 use App\Livewire\License\LicenseView;
+use App\Livewire\Party\PartyEdit;
+use App\Livewire\Party\PartyVerify;
 use App\Livewire\Patient\PatientCreate;
 use App\Livewire\Patient\PatientEdit;
 use App\Livewire\Patient\PatientIndex;
@@ -175,6 +176,9 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                 Route::get('/{employee_request}/edit', EmployeeRequestEdit::class)
                     ->name('edit')->middleware('can:update,employee_request');
             });
+
+            Route::get('/party/{party}/verification', PartyVerify::class)
+                ->name('party.verification.show');
 
             Route::get('/party/{party}/edit', PartyEdit::class)->name('party.edit');
 

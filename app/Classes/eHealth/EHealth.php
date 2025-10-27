@@ -4,23 +4,24 @@ declare(strict_types=1);
 
 namespace App\Classes\eHealth;
 
-use App\Classes\eHealth\Api\Condition;
 use App\Classes\eHealth\Api\Declaration;
 use App\Classes\eHealth\Api\DeclarationRequest;
-use App\Classes\eHealth\Api\DiagnosticReport;
 use App\Classes\eHealth\Api\Employee;
 use App\Classes\eHealth\Api\EmployeeRequest;
-use App\Classes\eHealth\Api\Episode;
 use App\Classes\eHealth\Api\License;
 use App\Classes\eHealth\Api\Job;
 use App\Classes\eHealth\Api\Division;
 use App\Classes\eHealth\Api\HealthcareService;
-use App\Classes\eHealth\Api\Observation;
+use App\Classes\eHealth\Api\Party;
 use App\Classes\eHealth\Api\Patient;
 use App\Classes\eHealth\Api\Person;
 use App\Classes\eHealth\Api\PersonRequest;
-use App\Classes\eHealth\Api\Procedure;
 use App\Classes\eHealth\Api\RuleEngineRules;
+use App\Models\MedicalEvents\Sql\Condition;
+use App\Models\MedicalEvents\Sql\DiagnosticReport;
+use App\Models\MedicalEvents\Sql\Episode;
+use App\Models\MedicalEvents\Sql\Observation;
+use App\Models\MedicalEvents\Sql\Procedure;
 
 final class EHealth
 {
@@ -107,5 +108,10 @@ final class EHealth
     public static function diagnosticReport(): DiagnosticReport
     {
         return app(DiagnosticReport::class);
+    }
+
+    public static function party(): Party
+    {
+        return app(Party::class);
     }
 }

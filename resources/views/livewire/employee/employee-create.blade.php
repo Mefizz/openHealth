@@ -1,9 +1,7 @@
 <div>
-    <x-header-navigation class="breadcrumb-form">
-        <x-slot name="title">
-            {{ __('forms.add_employee') }} {{ $employee->party->fullName ?? '' }}
-        </x-slot>
-    </x-header-navigation>
+    <div>
+        @include('livewire.employee.employee')
+    </div>
     @php
         $pageTitle = __('forms.add_employee');
     @endphp

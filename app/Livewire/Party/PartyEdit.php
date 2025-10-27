@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Livewire\Employee;
+namespace App\Livewire\Party;
 
 use AllowDynamicProperties;
 use App\Core\Arr;
+use App\Livewire\Employee\AbstractEmployeeFormManager;
 use App\Models\LegalEntity;
 use App\Models\Relations\Party;
 use App\Repositories\Repository;
@@ -22,12 +23,11 @@ class PartyEdit extends AbstractEmployeeFormManager
     {
         $this->loadDictionaries();
         $this->loadDivisions($legalEntity);
-
         $this->party = $party;
         $this->partyId = $party->id;
+        $this->pageTitle = __('forms.edit_personal_data') . ' ' . ($party->fullName ?? '');
 
         $employee = $party->employees()->latest('start_date')->first();
-
         if ($employee) {
             $this->form->hydrate($employee);
         } else {
@@ -66,6 +66,6 @@ class PartyEdit extends AbstractEmployeeFormManager
 
     public function render(): View
     {
-        return view('livewire.employee.employee-edit');
+        return view('livewire.party.party-edit')->with('pageTitle', $this->pageTitle);
     }
 }
