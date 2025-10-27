@@ -14,26 +14,26 @@
                 <div class="form">
                     <div class="form-row-3">
                             <div class="form-group">
-                                <input value="{{ $legalEntity['edr']['public_name'] ?? '' }}"  type="text" name="legal_entity_name" id="legal_entity_name" class="peer input text-gray-500" placeholder=" " required />
+                                <input value="{{ $legalEntity['edr']['public_name'] ?? '' }}"  type="text" name="legal_entity_name" id="legal_entity_name" class="peer input" placeholder=" " required />
                                 <label for="legal_entity_name" class="label">{{ __('forms.legal_entity_name') }}</label>
                                 @error('form.party.firstName') <p class="text-error">{{$message}}</p> @enderror
                             </div>
                             <div class="form-group">
-                                <input value="{{ $legalEntity['edr']['name'] ?? '' }}"  type="text" name="legal_entity_owner" id="legal_entity_owner" class="peer input text-gray-500" placeholder=" " required />
+                                <input value="{{ $legalEntity['edr']['name'] ?? '' }}"  type="text" name="legal_entity_owner" id="legal_entity_owner" class="peer input" placeholder=" " required />
                                 <label for="legal_entity_name" class="label">{{ __('forms.legal_entity_owner')}}</label>
                                 @error('form.party.legal_entity_name') <p class="text-error">{{$message}}</p> @enderror
                             </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <input value="{{ $legalEntity['edr']['name'] ?? '' }}" wire:model="form.contractor_base"  type="text" name="contractor_base" id="contractor_base" class="peer input text-gray-500" placeholder=" " required />
+                            <input value="{{ $legalEntity['edr']['name'] ?? '' }}" wire:model="form.contractor_base"  type="text" name="contractor_base" id="contractor_base" class="peer input" placeholder=" " required />
                             <label for="contractor_base" class="label">{{ __('forms.contract.contractorBase') }}</label>
                             @error('form.party.contractor_base') <p class="text-error">{{$message}}</p> @enderror
                         </div>
                     </div>
                     <div class="form-row-3">
                         <div class="form-group">
-                            <input {{--value="{{ $legalEntity['edr']['name'] ?? '' }}"--}} wire:model="form.number_of_people" type="number" name="numberOfPeople" id="numberOfPeople" class="peer input text-gray-500" placeholder=" " required />
+                            <input {{--value="{{ $legalEntity['edr']['name'] ?? '' }}"--}} wire:model="form.number_of_people" type="number" name="numberOfPeople" id="numberOfPeople" class="peer input" placeholder=" " required />
                             <label for="numberOfPeople" class="label">{{ __('forms.contract.numberOfPeople') }}</label>
                             @error('form.party.numberOfPeople') <p class="text-error">{{$message}}</p> @enderror
                         </div>
@@ -41,47 +41,6 @@
 
             </div>
             </fieldset>
-        {{-- Block 2: Legal Entity Documents --}}
-        {{-- This section handles the file uploads for the contract. --}}
-        <fieldset class="fieldset" x-data="{ party: $wire.entangle('form.party') }">
-            <legend class="legend">
-                <h2>{{ __('forms.documentsMedicalOrganization') }}</h2>
-            </legend>
-            <div class='grid grid-cols-1 gap-9 sm:grid-cols-2'>
-                <div class='flex flex-col gap-5.5'>
-                    <x-forms.form-group>
-                        <x-slot name='label'>
-                            <x-forms.label for='statute_md5' class='default-label'>{{ __('forms.statuteMd5') }} *</x-forms.label>
-                        </x-slot>
-                        <x-slot name='input'>
-                            {{--
-                                FIX: The 'Undefined variable $file' error is solved here.
-                                By passing ':file="null"', we explicitly initialize the $file variable
-                                within the component's scope, preventing the error without modifying the component file itself.
-                            --}}
-                            <x-forms.file :file="null" wire:model='form.statute_md5' type='file' id='statute_md5' />
-                        </x-slot>
-                        @error('form.statute_md5')
-                        <x-forms.error>{{ $message }}</x-forms.error>
-                        @enderror
-                    </x-forms.form-group>
-                </div>
-                <div class='flex flex-col gap-5.5'>
-                    <x-forms.form-group>
-                        <x-slot name='label'>
-                            <x-forms.label for='additional_document_md5' class='default-label'>{{ __('forms.additionalDocumentMd5') }} *</x-forms.label>
-                        </x-slot>
-                        <x-slot name='input'>
-                            {{-- The same fix is applied here for the second file input. --}}
-                            <x-forms.file :file="null" wire:model='form.additional_document_md5' type='file' id='additional_document_md5' />
-                        </x-slot>
-                        @error('form.additional_document_md5')
-                        <x-forms.error>{{ $message }}</x-forms.error>
-                        @enderror
-                    </x-forms.form-group>
-                </div>
-            </div>
-        </fieldset>
 
         {{-- LegalEntity Contract Terms --}}
         <fieldset class="fieldset" x-data="{ party: $wire.entangle('form.party') }">
@@ -90,7 +49,7 @@
             </legend>
             <div class="form-row">
             <div class="form-group">
-                <select wire:model="form.id_form" name="id_form" id="id_form" class="peer input appearance-none bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400" required>
+                <select wire:model="form.id_form" name="id_form" id="id_form" class="peer input appearance-none bg-white dark:bg-gray-800 dark:text-gray-400" required>
                     <option value="" disabled selected hidden>{{ __('forms.select') }} {{ __('forms.contract.contractType') }}</option>
                     @foreach($this->dictionaries['CONTRACT_TYPE'] as $key => $contract_type)
                         <option value="{{ $key }}">{{ $contract_type }}</option>
@@ -104,12 +63,12 @@
             </div>
                         <div class="form-row-2 items-start">
                         <div class="form-group datepicker-wrapper relative w-full">
-                            <input wire:model="form.start_date" type="text" name="start_date" id="start_date" class="peer input pl-10 appearance-none datepicker-input text-gray-500 dark:text-gray-400" placeholder=" " required datepicker-autohide datepicker-format="yyyy-mm-dd" datepicker-button="false"/>
+                            <input wire:model="form.start_date" type="text" name="start_date" id="start_date" class="peer input pl-10 appearance-none datepicker-input dark:text-gray-400" placeholder=" " required datepicker-autohide datepicker-format="yyyy-mm-dd" datepicker-button="false"/>
                             <label for="start_date" class="wrapped-label">{{ __('forms.contract.startDateContract') }}</label>
                             @error('form.party.start_date') <p class="text-error">{{$message}}</p> @enderror
                         </div>
                         <div class="form-group datepicker-wrapper relative w-full">
-                            <input wire:model="form.end_date" type="text" name="end_date" id="end_date" class="peer input pl-10 appearance-none datepicker-input text-gray-500 dark:text-gray-400" placeholder=" " required datepicker-autohide datepicker-format="yyyy-mm-dd" datepicker-button="false"/>
+                            <input wire:model="form.end_date" type="text" name="end_date" id="end_date" class="peer input pl-10 appearance-none datepicker-input dark:text-gray-400" placeholder=" " required datepicker-autohide datepicker-format="yyyy-mm-dd" datepicker-button="false"/>
                             <label for="end_date" class="wrapped-label">{{ __('forms.contract.endDateContract') }}</label>
                             @error('form.party.end_date') <p class="text-error">{{$message}}</p> @enderror
                         </div>
@@ -121,14 +80,15 @@
             <legend class="legend">
                 <h2>{{ __('forms.paymentDetails') }}</h2>
             </legend>
+            <p class="text-sm text-black mb-4">{{ __('forms.contract.nszu_payment_account') }}</p>
             <div class="form-row-3">
                 <div class="form-group">
-                    <input wire:model="form.contractor_payment_details.bank_name"  type="text" name="bank_name" id="bank_name" class="peer input text-gray-500" placeholder=" " required />
+                    <input wire:model="form.contractor_payment_details.bank_name"  type="text" name="bank_name" id="bank_name" class="peer input" placeholder=" " required />
                     <label for="bank_name" class="label">{{ __('forms.bankName') }}</label>
                     @error('form.party.bank_name') <p class="text-error">{{$message}}</p> @enderror
                 </div>
                 <div class="form-group">
-                    <input wire:model="form.contractor_payment_details.bank_name"  type="text" name="MFO" id="MFO" class="peer input text-gray-500" placeholder=" " required />
+                    <input wire:model="form.contractor_payment_details.bank_name"  type="text" name="MFO" id="MFO" class="peer input" placeholder=" " required />
                     <label for="MFO" class="label">{{ __('forms.mfo') }}</label>
                     @error('form.party.MFO') <p class="text-error">{{$message}}</p> @enderror
                 </div>
@@ -157,126 +117,259 @@
             <legend class="legend">
                 <h2> {{ __('forms.placesOfService') }}</h2>
             </legend>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                {{ __('Мiсце надання медичних послуг - фактична адреса провадження надавачем господарської дiяльностi з медичної практики, де особам, на яких розповсюджуються державнi гарантiї медичного обслуговування населення вiдно до Закону України "Про державнi фiнансовi гарантiї медичного обслуговування населення", надаватимуться медичнi послуги. У разi наявностi декiлькох мiсць надання медичних послуг, iнформацiя про такi мiсця зазначається окремо щодо кожного мiсця.') }}
+            </p>
+
             <div class="form-row-3">
-                <div class="form-group">
-                    <label class="label" for="contractor_divisions">{{ __('forms.contract.chooseLocation') }}</label>
-                    <select id="contractor_divisions"
-                            class="input-select @error('form.contractor_divisions') input-error @enderror"
-                            wire:model="form.contractor_divisions"
-                            multiple
-                            size="5"
+                <div class="form-group group">
+                    <select wire:model="divisionFilter"
+                            type="text"
+                            name="divisionName"
+                            id="divisionName"
+                            class="input-select"
                     >
-                        @if($divisions)
-                            @foreach($divisions as $division)
-                                <option value="{{$division->uuid}}">{{$division->name}}</option>
-                            @endforeach
-                        @endif
+                        <option value="" selected>{{ __('forms.select') }}</option>
+                        @foreach($divisions as $division)
+                            <option value="{{ $division['id'] }}"> {{ $division['name'] }}</option>
+                        @endforeach
                     </select>
-                    @error('form.contractor_divisions')
-                    <p class="text-error">{{ $message }}</p>
-                    @enderror
+
+                    <label for="divisionName" class="label">{{ __('forms.division_name') }}</label>
+                </div>
+
+            </div>
+
+            <div class="form-group mt-4">
+                <button
+                    type="button"
+                    class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium transition duration-150 ease-in-out"
+                    wire:click.prevent="addPlaceOfService"
+                >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    {{ __('Додати місце надання медичних послуг') }}
+                </button>
+            </div>
+        </fieldset>
+
+        <div class="overflow-x-auto relative">
+            <fieldset class="fieldset" id="section-external-contractors"
+                      x-data="{
+            openModal: false,
+            modalParty: { legalEntity: '', contractNumber: '', issuedAt: '', expiresAt: '' },
+        }"
+            >
+                <legend class="legend">
+                    <h2>{{ __('forms.involvedPersons') }}</h2>
+                </legend>
+
+                <table class="table-input w-inherit">
+                    <thead class="thead-input">
+                    <tr>
+                        <th scope="col" class="td-input">{{ __('forms.legalEntity') }}</th>
+                        <th scope="col" class="td-input">{{ __('forms.externalContractorNumber') }}</th>
+                        <th scope="col" class="td-input">{{ __('forms.externalContractorIssuedAt') }}</th>
+                        <th scope="col" class="td-input">{{ __('forms.externalContractorExpiresAt') }}</th>
+                        <th scope="col" class="td-input">{{ __('forms.actions') }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @if(isset($external_contractors) && is_array($external_contractors))
+                        @foreach($external_contractors as $key => $external_contractor)
+                            <tr>
+                                <td class="td-input">
+                                    {{ $external_contractor['legal_entity']['name'] ?? '' }}
+                                </td>
+                                <td class="td-input">
+                                    {{ $external_contractor['contract']['number'] ?? '' }}
+                                </td>
+                                <td class="td-input">
+                                    {{ $external_contractor['contract']['issued_at'] ?? '' }}
+                                </td>
+                                <td class="td-input">
+                                    {{ $external_contractor['contract']['expires_at'] ?? '' }}
+                                </td>
+                                <td class="td-input flex flex-row gap-2">
+                                    <button wire:click.prevent="editExternalContractors({{$key}})" class="svg-hover-action">
+                                        <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                            <path stroke="currentColor" stroke-linecap="square" stroke-linejoin="round" stroke-width="2" d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"></path>
+                                        </svg>
+                                    </button>
+
+                                    <button wire:click.prevent="deleteExternalContractors({{$key}})" class="svg-hover-action">
+                                        <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m-4-8v8m-4-8v8h14m-12 4h10m-10 0a1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1h-10Zm3-11V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2m-4-2h4"></path>
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    @endif
+                    </tbody>
+                </table>
+
+                <button
+                    type="button"
+                    class="item-add my-5"
+                    @click="openModal = true; modalParty = { legalEntity: '', contractNumber: '', issuedAt: '', expiresAt: '' }"
+                >
+                    <span>{{ __('forms.addInvolvedPerson') }}</span>
+                </button>
+
+                <template x-teleport="body">
+                    <div x-show="openModal"
+                         style="display: none"
+                         @keydown.escape.prevent.stop="openModal = false"
+                         role="dialog"
+                         aria-modal="true"
+                         x-id="['modal-title']"
+                         :aria-labelledby="$id('modal-title')"
+                         class="modal"
+                    >
+                        <div x-show="openModal" x-transition.opacity class="fixed inset-0 bg-black/25"></div>
+                        <div x-show="openModal"
+                             x-transition
+                             @click="openModal = false"
+                             class="relative flex min-h-screen items-center justify-center p-4"
+                        >
+                            <div @click.stop
+                                 x-trap.noscroll.inert="openModal"
+                                 class="modal-content h-fit w-full max-w-6xl rounded-2xl shadow-lg bg-white"
+                            >
+                                <h3 class="modal-header" :id="$id('modal-title')">
+                                    {{ __('forms.addInvolvedPerson') }}
+                                </h3>
+
+                                <form>
+                                    <div class="form-row-modal">
+                                        <div>
+                                            <label for="legalEntity" class="label-modal">{{__('forms.legalEntity')}}<span class="text-red-600"> *</span></label>
+                                            <input
+                                                x-model="modalParty.legalEntity"
+                                                type="text"
+                                                id="legalEntity"
+                                                class="input-modal"
+                                                required
+                                            >
+                                        </div>
+
+                                        <div>
+                                            <label for="contractNumber" class="label-modal">{{__('forms.externalContractorNumber')}}<span class="text-red-600"> *</span></label>
+                                            <input
+                                                x-model="modalParty.contractNumber"
+                                                type="text"
+                                                id="contractNumber"
+                                                class="input-modal"
+                                                required
+                                            >
+                                        </div>
+
+                                        <div class="relative">
+                                            <svg class="svg-input absolute left-1 !top-2/3 transform -translate-y-1/2 pointer-events-none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M6 5V4a1 1 0 1 1 2 0v1h3V4a1 1 0 1 1 2 0v1h3V4a1 1 0 1 1 2 0v1h1a2 2 0 0 1 2 2v2H3V7a2 2 0 0 1 2-2h1ZM3 19v-8h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm5-6a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2H8Z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <label for="issuedAt" class="label-modal">{{__('forms.externalContractorIssuedAt')}}<span class="text-red-600"> *</span></label>
+                                            <input
+                                                x-model="modalParty.issuedAt"
+                                                type="text"
+                                                id="issuedAt"
+                                                class="input-modal datepicker-input"
+                                                autocomplete="off"
+                                                required
+                                            >
+                                        </div>
+
+                                        <div class="relative">
+                                            <svg class="svg-input absolute left-1 !top-2/3 transform -translate-y-1/2 pointer-events-none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M6 5V4a1 1 0 1 1 2 0v1h3V4a1 1 0 1 1 2 0v1h3V4a1 1 0 1 1 2 0v1h1a2 2 0 0 1 2 2v2H3V7a2 2 0 0 1 2-2h1ZM3 19v-8h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Zm5-6a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2H8Z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <label for="expiresAt" class="label-modal">{{__('forms.externalContractorExpiresAt')}}</label>
+                                            <input
+                                                x-model="modalParty.expiresAt"
+                                                type="text"
+                                                id="expiresAt"
+                                                class="input-modal datepicker-input"
+                                                autocomplete="off"
+                                            >
+                                        </div>
+                                    </div>
+
+                                    <p class="text-sm text-gray-400 mb-2">{{ __('forms.form_required_note') }}</p>
+
+                                    <div class="mt-6 flex flex-row items-center gap-4 border-t border-gray-200 pt-6">
+                                        <button type="button"
+                                                @click="openModal = false"
+                                                class="button-minor"
+                                        >
+                                            {{__('forms.cancel')}}
+                                        </button>
+
+                                        <button type="submit"
+                                                @click.prevent="$wire.addExternalContractor(modalParty); openModal = false"
+                                                :class="{ 'opacity-50 cursor-not-allowed': !(modalParty.legalEntity && modalParty.contractNumber && modalParty.issuedAt) }"
+                                                :disabled="!(modalParty.legalEntity && modalParty.contractNumber && modalParty.issuedAt)"
+                                                class="button-primary"
+                                        >
+                                            {{__('forms.save')}}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+            </fieldset>
+        </div>
+
+        {{-- Block 2: Legal Entity Documents --}}
+        {{-- This section handles the file uploads for the contract. --}}
+        <fieldset class="fieldset" x-data="{ party: $wire.entangle('form.party') }">
+            <legend class="legend">
+                <h2>{{ __('forms.documentsMedicalOrganization') }}</h2>
+            </legend>
+            <div class='grid grid-cols-1 gap-9 sm:grid-cols-2'>
+                <div class='flex flex-col gap-5.5'>
+                    <x-forms.form-group>
+                        <x-slot name='label'>
+                            <label for='statute_md5' class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ __('forms.statuteMd5') }} *</label>
+                        </x-slot>
+                        <x-slot name='input'>
+                            <input
+                                class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                                id="statute_md5"
+                                type="file"
+                                wire:model='form.statute_md5'
+                            >
+                        </x-slot>
+                        @error('form.statute_md5')
+                        <x-forms.error>{{ $message }}</x-forms.error>
+                        @enderror
+                    </x-forms.form-group>
+                </div>
+                <div class='flex flex-col gap-5.5'>
+                    <x-forms.form-group>
+                        <x-slot name='label'>
+                            <label for='additional_document_md5' class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ __('forms.additionalDocumentMd5') }} *</label>
+                        </x-slot>
+                        <x-slot name='input'>
+                            <input
+                                class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                                id="additional_document_md5"
+                                type="file"
+                                wire:model='form.additional_document_md5'
+                            >
+                        </x-slot>
+                        @error('form.additional_document_md5')
+                        <x-forms.error>{{ $message }}</x-forms.error>
+                        @enderror
+                    </x-forms.form-group>
                 </div>
             </div>
         </fieldset>
 
-        {{-- Involved Person --}}
-        <fieldset class="fieldset" x-data="{ party: $wire.entangle('form.party') }">
-            <legend class="legend">
-                <h2>{{ __('forms.involvedPersons') }}</h2>
-            </legend>
-                    <div class='flex flex-col gap-5.5 p-6.5'>
-                        @if($external_contractors)
-
-                            <table class='w-full table-auto'>
-                                <thead>
-                                    <tr class='bg-gray-2 text-left dark:bg-meta-4'>
-                                        <th class='px-4 py-4 font-medium text-black dark:text-white'>
-                                            {{ __('forms.legalEntity') }}
-                                        </th>
-
-                                        <th class='min-w-[220px] px-4 py-4 font-medium text-black dark:text-white xl:pl-11'>
-                                            {{ __('forms.externalContractorNumber') }}
-                                        </th>
-
-                                        <th class='min-w-[150px] px-4 py-4 font-medium text-black dark:text-white'>
-                                            {{ __('forms.externalContractorIssuedAt') }}
-                                        </th>
-
-                                        <th class="px-4 py-4 font-medium text-black dark:text-white">
-                                            {{ __('forms.externalContractorExpiresAt') }}
-                                        </th>
-
-                                        <th class='px-4 py-4 font-medium text-black dark:text-white'>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                @foreach($external_contractors as $key => $external_contractor)
-                                    <tr>
-                                        <td class='border-b border-[#eee] px-4 py-5 pl-9 dark:border-strokedark xl:pl-11'>
-                                            {{ $external_contractor['legal_entity']['name'] ?? '' }}
-                                        </td>
-
-                                        <td class='border-b border-[#eee] px-4 py-5 dark:border-strokedark'>
-                                            {{ $external_contractor['contract']['number'] ?? '' }}
-                                        </td>
-
-                                        <td class='border-b border-[#eee] px-4 py-5 dark:border-strokedark'>
-                                            {{ $external_contractor['contract']['issued_at'] ?? '' }}
-
-                                        </td>
-
-                                        <td class='border-b border-[#eee] px-4 py-5 dark:border-strokedark'>
-                                            {{ $external_contractor['contract']['expires_at'] ?? '' }}
-                                        </td>
-
-                                        <td class='border-b border-[#eee] flex px-4 py-5 dark:border-strokedark'>
-                                            <a wire:click.prevent="editExternalContractors({{$key}})" href=''>
-                                                <svg
-                                                    xmlns='http://www.w3.org/2000/svg'
-                                                    fill='none'
-                                                    viewBox='0 0 24 24'
-                                                    stroke-width='1.5'
-                                                    stroke='currentColor'
-                                                    class='w-6 h-6'
-                                                >
-                                                    <path
-                                                        stroke-linecap='round'
-                                                        stroke-linejoin='round'
-                                                        d='m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10'/>
-                                                </svg>
-                                            </a>
-                                            <a wire:click.prevent="deleteExternalContractors({{$key}})" href=''>
-                                                <svg
-                                                    xmlns='http://www.w3.org/2000/svg'
-                                                    fill='none'
-                                                    viewBox='0 0 24 24'
-                                                    stroke-width='1.5'
-                                                    stroke='currentColor'
-                                                    class='w-6 h-6'
-                                                >
-                                                    <path
-                                                        stroke-linecap='round'
-                                                        stroke-linejoin='round'
-                                                        d='m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0'
-                                                    />
-                                                </svg>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                                </tbody>
-                            </table>
-                        @endif
-                            <button
-                                type="button"
-                                class="item-add"
-                                wire:click.prevent="openModal('addExternalContractors')"
-                            >
-                                <span>{{ __('forms.addInvolvedPerson') }}</span>
-                            </button>
-                    </div>
-        </fieldset>
         {{-- Agreement --}}
         <div class='w-full mt-4 bg-white border-t border-gray-200 dark:border-gray-700'>
             <div class='flex flex-col gap-9'>

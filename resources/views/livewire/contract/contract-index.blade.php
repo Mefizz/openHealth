@@ -1,10 +1,10 @@
-<div class="min-h-screen dark:bg-gray-800">
+<div>
     <x-section-navigation x-data="{ showFilter: false }">
         <x-slot name="title">
             {{ __('forms.contract.contracts') }}
         </x-slot>
     </x-section-navigation>
-    <div class="flex flex-wrap items-start justify-between gap-4 mb-18">
+    <div class="flex flex-wrap items-start justify-between gap-4 mb-18 shift-content pl-3.5">
         <div class="w-96">
             <x-forms.form-group>
                 <x-slot name="label">
@@ -13,13 +13,13 @@
                     </label>
                 </x-slot>
                 <x-slot name="input">
-                    <div class="form-group group w-full relative" x-data="{ open: false, selectedTypes: @entangle('contractType').live }">
+                    <div class="form-group group w-full relative" x-data="{ open: false, selectedType: @entangle('contractType').live }">
                         <input type="text"
                                id="contract_type_filter"
                                class="input peer w-full cursor-pointer text-gray-500 dark:text-gray-400"
                                placeholder="Оберіть тип"
                                x-on:click="open = !open"
-                               :value="selectedTypes.map(type => type === 'CONTRACTS' ? 'Договори' : 'Заявки на договір').join(', ')"
+                               :value="selectedType === 'CONTRACTS' ? 'Договори' : (selectedType === 'APPLICATIONS' ? 'Заявки на договір' : 'Оберіть тип')"
                                readonly
                                autocomplete="off"
                         />
@@ -39,14 +39,22 @@
                             <ul class="py-2 px-3 space-y-2 text-sm text-gray-700 dark:text-gray-200">
                                 <li>
                                     <label class="flex items-center space-x-2 cursor-pointer">
-                                        <input type="checkbox" value="APPLICATIONS" wire:model.live="contractType" class="..." />
-                                        <span>Заявки на договір</span>
+                                        <input type="checkbox"
+                                               value="APPLICATIONS"
+                                               name="contract_type_select"
+                                               class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                        />
+                                        <span class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Заявки на договір</span>
                                     </label>
                                 </li>
                                 <li>
                                     <label class="flex items-center space-x-2 cursor-pointer">
-                                        <input type="checkbox" value="CONTRACTS" wire:model.live="contractType" class="..." />
-                                        <span>Договори</span>
+                                        <input type="checkbox"
+                                               value="CONTRACTS"
+                                               name="contract_type_select"
+                                               class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                        />
+                                        <span class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Договори</span>
                                     </label>
                                 </li>
                             </ul>
@@ -63,54 +71,69 @@
                 {{ __('forms.contract.new_contract') }}
             </a>
             <button {{--wire:click="sync"--}} type="button" class="button-sync">
-                {{ __('forms.synchronise_with_eHealth') }}
+                {{ __('forms.synchronise_with-eHealth') }}
             </button>
         </div>
     </div>
-    <div class="mt-6">
-        <table class="table-input w-full table-fixed">
-            <thead class="thead-input">
-            <tr>
-                <th scope="col" class="th-input w-[28%]">{{ __('forms.contract.number') }}</th>
-                <th scope="col" class="th-input w-[22%]">{{ __('forms.contract.startDateContract') }}</th>
-                <th scope="col" class="th-input w-[20%]">{{ __('forms.contract.endDateContract') }}</th>
-                <th scope="col" class="th-input w-[15%]">{{ __('forms.contract.status') }}</th>
-                <th scope="col" class="th-input w-[15%] text-center"></th>
-            </tr>
-            </thead>
-            <tbody>
-            @forelse ($contracts as $contract)
-                <tr class="tr-input">
-                    <td class="td-input">
-                        <p class='text-black dark:text-white'>{{ $contract->contract_number ?? '' }}</p>
-                    </td>
-                    <td class="td-input">
-                        <p class='text-black dark:text-white'>{{ $contract->start_date ?? '' }}</p>
-                    </td>
-                    <td class="td-input">
-                        <p class='text-black dark:text-white'>{{ $contract->end_date ?? '' }}</p>
-                    </td>
-                    <td class="td-input">
-                        <p class='text-black dark:text-white'>{{ $contract->status ?? '' }}</p>
-                    </td>
-                    <td class="td-input flex justify-center items-center">
-                        @include('livewire.contract.actions', ['contract' => $contract])
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td class="text-center p-4" colspan="5">
-                        {{ __('Нічого не знайдено') }}
-                    </td>
-                </tr>
-            @endforelse
-            </tbody>
-        </table>
-        {{-- Pagination --}}
-        @if ($contracts->hasPages())
-            <div class="mt-4">
-                {{ $contracts->links() }}
+    <div class="flow-root mt-8 pl-3.5 shift-content">
+        <div class="max-w-screen-xl">
+            <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                <table
+                    class="w-full min-w-[900px] table-fixed text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 w-[28%]">{{ __('forms.contract.number') }}</th>
+                        <th scope="col" class="px-6 py-3 w-[22%]">{{ __('forms.contract.startDateContract') }}</th>
+                        <th scope="col" class="px-6 py-3 w-[20%]">{{ __('forms.contract.endDateContract') }}</th>
+                        <th scope="col" class="px-6 py-3 w-[15%]">{{ __('forms.contract.status') }}</th>
+                        <th scope="col" class="px-6 py-3 w-[15%] text-center">{{ __('forms.action') }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @forelse ($contracts as $contract)
+                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                            <td class="px-6 py-4 break-words whitespace-normal align-top font-medium text-gray-900 dark:text-white">
+                                <p>{{ $contract->contract_number ?? '' }}</p>
+                            </td>
+                            <td class="px-6 py-4 break-words whitespace-normal align-top text-gray-900 dark:text-white">
+                                <p>{{ $contract->start_date ?? '' }}</p>
+                            </td>
+                            <td class="px-6 py-4 break-words whitespace-normal align-top text-gray-900 dark:text-white">
+                                <p>{{ $contract->end_date ?? '' }}</p>
+                            </td>
+                            <td class="px-6 py-4 break-words whitespace-normal align-top">
+                                @if ($contract->status === 'DRAFT')
+                                    <span class="badge-red">{{ $contract->status }}</span>
+                                @elseif ($contract->status === 'TERMINATED')
+                                    <span class="badge-red">{{ $contract->status }}</span>
+                                @elseif ($contract->status === 'PENDING_APPROVAL' || $contract->status === 'UNSIGNED' || $contract->status === 'UNSYNCED')
+                                    <span class="badge-yellow">{{ $contract->status }}</span>
+                                @else
+                                    <span class="badge-green">{{ $contract->status }}</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                @include('livewire.contract.actions', ['contract' => $contract])
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td class="text-black w-full p-4 border-gray-200 text-center dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                                colspan="5"
+                            >
+                                <p>{{ __('Нічого не знайдено') }}</p>
+                            </td>
+                        </tr>
+                    @endforelse
+                    </tbody>
+                </table>
             </div>
-        @endif
+
+            @if ($contracts->hasPages())
+                <div class="mt-8 pl-3.5 pb-8 lg:pl-8 2xl:pl-5">
+                    {{ $contracts->links() }}
+                </div>
+            @endif
+        </div>
     </div>
 </div>
