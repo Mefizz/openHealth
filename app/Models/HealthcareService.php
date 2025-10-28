@@ -18,7 +18,6 @@ class HealthcareService extends Model
     use HasCamelCasing;
 
     protected $fillable = [
-        'id',
         'uuid',
         'speciality_type',
         'providing_condition',

@@ -38,6 +38,8 @@ use App\Livewire\Employee\EmployeePositionAdd;
 use App\Livewire\Employee\EmployeeRequestEdit;
 use App\Livewire\Employee\EmployeeRequestShow;
 use App\Livewire\Employee\EmployeeShow;
+use App\Livewire\EmployeeRole\EmployeeRoleCreate;
+use App\Livewire\EmployeeRole\EmployeeRoleIndex;
 use App\Livewire\Encounter\EncounterCreate;
 use App\Livewire\Encounter\EncounterEdit;
 use App\Livewire\LegalEntity\CreateLegalEntity;
@@ -58,6 +60,7 @@ use App\Livewire\Procedure\ProcedureCreate;
 use App\Models\Declaration;
 use App\Models\DeclarationRequest;
 use App\Models\Division;
+use App\Models\EmployeeRole;
 use App\Models\HealthcareService;
 use App\Models\LegalEntity;
 use App\Models\License;
@@ -182,7 +185,11 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
 
             Route::get('/party/{party}/edit', PartyEdit::class)->name('party.edit');
 
-            Route::get('/employee-role', \App\Livewire\EmployeeRole\EmployeeRoleIndex::class)->name('employee-role.index');
+            Route::get('/employee-role', EmployeeRoleIndex::class)
+                ->name('employee-role.index');
+            Route::get('/employee-role/create', EmployeeRoleCreate::class)
+                ->name('employee-role.create')
+                ->can('create', EmployeeRole::class);
 
             Route::prefix('contract')->group(function () {
                 Route::get('/', ContractIndex::class)->name('contract.index');

@@ -36,6 +36,11 @@ final class Repository
         return app(EmployeeRepository::class);
     }
 
+    public static function employeeRole(): EmployeeRoleRepository
+    {
+        return app(EmployeeRoleRepository::class);
+    }
+
     public static function education(): EducationRepository
     {
         return app(EducationRepository::class);
