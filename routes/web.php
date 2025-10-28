@@ -182,6 +182,8 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
 
             Route::get('/party/{party}/edit', PartyEdit::class)->name('party.edit');
 
+            Route::get('/employee-role', \App\Livewire\EmployeeRole\EmployeeRoleIndex::class)->name('employee-role.index');
+
             Route::prefix('contract')->group(function () {
                 Route::get('/', ContractIndex::class)->name('contract.index');
                 Route::get('/form/{id?}', ContractForm::class)->name('contract.form');
