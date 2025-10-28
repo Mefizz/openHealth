@@ -20,7 +20,6 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -91,13 +90,13 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get the party associated with the user.
+     * Get the party that owns the user.
      *
-     * @return HasOne
+     * @return BelongsTo
      */
-    public function party(): HasOne
+    public function party(): BelongsTo
     {
-        return $this->hasOne(Party::class);
+        return $this->belongsTo(Party::class);
     }
 
     // TODO: Check why need it for??????
@@ -177,6 +176,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Overrides trait's method to exclude unused scopes
+     *
      * @return Collection<Permission> a list of scopes associated with the user and entity type
      */
     public function getAllPermissions(string $legalEntityClientId): Collection

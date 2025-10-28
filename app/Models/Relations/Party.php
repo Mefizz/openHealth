@@ -24,10 +24,8 @@ class Party extends Model
         'last_name',
         'first_name',
         'second_name',
-        'email',
         'birth_date',
         'gender',
-        'user_id',
         'tax_id',
         'no_tax_id',
         'about_myself',
@@ -61,11 +59,11 @@ class Party extends Model
     }
 
     /**
-     * Get the user that owns the party.
+     * Get the users associated with the party.
      */
-    public function user(): BelongsTo
+    public function users(): HasMany
     {
-        return $this->belongsTo(User::class);
+        return $this->hasMany(User::class);
     }
 
     public function employees(): HasMany
