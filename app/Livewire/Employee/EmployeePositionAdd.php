@@ -25,6 +25,7 @@ class EmployeePositionAdd extends AbstractEmployeeFormManager
         $this->loadDictionaries();
         $this->loadDivisions($legalEntity);
         $this->isPersonalDataLocked = true;
+        $party->loadMissing('users');
         $this->party = $party;
         $this->partyId = $party->id;
         $this->form->hydrate($this->party);
@@ -55,7 +56,7 @@ class EmployeePositionAdd extends AbstractEmployeeFormManager
         ]);
 
         // Add user and party IDs once, as they are constant for this component
-        $employeeRequestData['user_id'] = $this->party->user_id;
+        $employeeRequestData['user_id'] = $this->party->users->first()?->id;
         $employeeRequestData['party_id'] = $this->party->id;
 
         // Check if a draft already exists for this form session

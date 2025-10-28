@@ -146,9 +146,26 @@ class EmployeeIndex extends EmployeeComponent
                 if (!empty($this->search) && !str_contains(strtolower($party->fullName), strtolower($this->search))) {
                     return false;
                 }
-                if (!empty($this->filter['email']) && stripos($party->email ?? '', $this->filter['email']) === false) {
-                    return false;
+
+                if (!empty($this->filter['email'])) {
+                    $emailToSearch = $this->filter['email'];
+                    $emailMatches = false;
+
+                    if ($party->relationLoaded('users') && $party->users->isNotEmpty()) {
+                        $emailMatches = $party->users->contains(
+                            fn ($user) => stripos($user->email, $emailToSearch) !== false
+                        );
+                    }
+
+                    if (!$emailMatches && isset($party->email)) {
+                        $emailMatches = stripos($party->email, $emailToSearch) !== false;
+                    }
+
+                    if (!$emailMatches) {
+                        return false;
+                    }
                 }
+
                 if (!empty($this->filter['phone'])) {
                     $phoneMatches = $party->phones->contains(fn ($phone) => str_contains($phone->number, $this->filter['phone']));
                     if (!$phoneMatches) {

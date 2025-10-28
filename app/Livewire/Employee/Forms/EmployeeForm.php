@@ -263,7 +263,8 @@ class EmployeeForm extends Form
         $this->party['birthDate'] = $party->birth_date?->format('Y-m-d');
         $this->party['taxId'] = $party->tax_id;
         $this->party['noTaxId'] = (bool)$party->no_tax_id;
-        $this->party['email'] = $party->email;
+        $user = $party->users->first();
+        $this->party['email'] = $user ? $user->email : null;
         $this->party['workingExperience'] = $party->working_experience;
         $this->party['aboutMyself'] = $party->about_myself;
 

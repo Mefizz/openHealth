@@ -53,7 +53,7 @@ class PartyEdit extends AbstractEmployeeFormManager
         $preparedData = $this->form->getPreparedData();
         $employeeRequestData = Arr::only($preparedData, ['position', 'start_date', 'end_date', 'employee_type', 'division_id', 'email']);
 
-        $employeeRequestData['user_id'] = $this->party->user_id;
+        $employeeRequestData['user_id'] = $employee->user_id;
         $employeeRequestData['party_id'] = $this->party->id;
 
         $newRequest = Repository::employee()->createEmployeeRequestDraft($employeeRequestData, legalEntity());

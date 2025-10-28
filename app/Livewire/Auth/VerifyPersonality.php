@@ -56,6 +56,11 @@ class VerifyPersonality extends Component
         $taxId = $response?->getTaxId();
         [$lastName, $firstName, $secondName] = explode(' ', $ownerFullName);
 
+        /*
+         * Search for the Party (person) based on the e-signature data.
+         * We no longer check for `whereNull('user_id')` as this column
+         * was removed from the 'parties' table during refactoring.
+         */
         $party = Party::query()
             ->where('tax_id', $taxId)
             ->whereRaw('LOWER(TRIM(last_name)) = ?', [mb_strtolower($lastName)])
@@ -70,8 +75,23 @@ class VerifyPersonality extends Component
         }
 
         $user = Auth::user();
-        if (!$user->party_id) {
-            $user->party_id = $party->id;
+
+        /*
+         * This check (`!$user->partyId`) is crucial for idempotency.
+         * It handles scenarios where a user might land on this verification
+         * page even after they are already linked to a Party.
+         *
+         * How can this happen?
+         * 1. User verifies successfully, `$user->partyId` is set.
+         * 2. They are redirected to the dashboard.
+         * 3. They use the browser's "Back" button, which re-loads this page.
+         * 4. They (mistakenly) try to submit the form a second time.
+         *
+         * This `if` block prevents our code from trying to re-link an
+         * already-linked user.
+         */
+        if (!$user->partyId) {
+            $user->partyId = $party->id;
             $user->save();
         }
 

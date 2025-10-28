@@ -54,7 +54,7 @@ class EmployeeEdit extends AbstractEmployeeFormManager
         $nestedDataForRevision['employee_uuid'] = $this->employee->uuid;
 
         $employeeRequestData = Arr::only($preparedData, ['position', 'start_date', 'end_date', 'employee_type', 'division_id', 'email']);
-        $employeeRequestData['user_id'] = $this->employee->party->user_id;
+        $employeeRequestData['user_id'] = $this->employee->user_id;
         $employeeRequestData['party_id'] = $this->employee->party->id;
         $employeeRequestData['employee_id'] = $this->employee->id;
 
