@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Auth;
 
 use App\Models\User;
@@ -43,7 +45,7 @@ class SelectLegalEntity extends Component
 
             if (!empty($edr['name'])) {
                 $arr['name'] = $edr['name'];
-            } else if(!empty($arr['public_name'])) {
+            } elseif (!empty($arr['public_name'])) {
                 $arr['name'] = $edr['public_name'];
             }
 
@@ -84,7 +86,7 @@ class SelectLegalEntity extends Component
         if (empty($this->accessibleLegalEntities)) {
             Log::error(__("Cannot find any suitable LegalEntities for user {$this->user->id} for 'select-legal-entity' page"));
 
-            return redirect( route('create.legalEntities'));
+            return redirect(route('create.legalEntities'));
         }
 
         // If user has access to only one Legal Entity
@@ -95,10 +97,9 @@ class SelectLegalEntity extends Component
             $legalEntity = LegalEntity::find($this->selectedLegalEntityId);
 
             return Redirect::route('dashboard', [$legalEntity]);
-        } else {
-            // Get array with the id and names of the all LegalEntittes available to the User
-            $this->accessibleLegalEntities = $this->getLegalEntitesList($this->accessibleLegalEntities);
         }
+        // Get array with the id and names of the all LegalEntittes available to the User
+        $this->accessibleLegalEntities = $this->getLegalEntitesList($this->accessibleLegalEntities);
 
         return null;
     }
@@ -118,14 +119,14 @@ class SelectLegalEntity extends Component
 
     protected function rules(): array
     {
-        $uuids = array_map(fn($arr) => $arr['id'], $this->accessibleLegalEntities);
+        $uuids = array_map(fn ($arr) => $arr['id'], $this->accessibleLegalEntities);
 
         return[
             'selectedLegalEntityId' => ['required', Rule::in($uuids)]
         ];
     }
 
-    public function messages()
+    public function messages(): array
     {
         return [
             'selectedLegalEntityId.required' => __('forms.choose_legal_entity'),

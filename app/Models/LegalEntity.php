@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\Status;
-use App\Models\License;
-use App\Models\Revision;
-use App\Models\Division;
 use App\Enums\JobStatus;
-use App\Models\Contract;
 use App\Models\Relations\Phone;
 use App\Models\Relations\Address;
 use App\Models\Employee\Employee;
@@ -141,12 +137,12 @@ class LegalEntity extends Model
 
     public function getActiveDivisions(): Collection
     {
-        return $this->divisions()->has('healthcareService')->where('status', Status::ACTIVE)->get();
+        return $this->divisions()->has('healthcareServices')->where('status', Status::ACTIVE)->get();
     }
 
-    public function getEdr(): array
+    public function healthcareServices(): HasMany
     {
-        return $this->edr;
+        return $this->hasMany(HealthcareService::class);
     }
 
     public function addresses(): MorphMany
@@ -180,9 +176,8 @@ class LegalEntity extends Model
     /**
      * Updates the status of a legal entity's (whole or partial) sync process.
      *
-     * @param JobStatus $status     The new status to set for the legal entity's sync entity
-     * @param string $entityType    Optional entity type specification, defaults to empty string
-     *
+     * @param  JobStatus  $status  The new status to set for the legal entity's sync entity
+     * @param  string  $entityType  Optional entity type specification, defaults to empty string
      * @return void
      */
     public function setEntityStatus(JobStatus $status, string $entityType = ''): void
@@ -195,13 +190,11 @@ class LegalEntity extends Model
     /**
      * Get the status of a legal entity's sync process based on entity type.
      *
-     * @param string $entityType The type of legal entity's entity sync process to check
-     *
+     * @param  string  $entityType  The type of legal entity's entity sync process to check
      * @return string|null The status of the sync process of entity or null if not found
      */
     public function getEntityStatus(?string $entityType = ''): ?string
     {
         return $this->{$entityType . 'sync_status'};
     }
-
 }

@@ -36,7 +36,10 @@ class HealthcareService extends Request
     {
         $this->setValidator($this->validateMany(...));
         $this->setMapper($this->mapMany(...));
-        $this->setDefaultPageSize();
+
+        $query = array_merge([
+            self::QUERY_PARAM_PAGE_SIZE => config('ehealth.api.page_size')
+        ], $query ?? []);
 
         return $this->get($url, $query);
     }

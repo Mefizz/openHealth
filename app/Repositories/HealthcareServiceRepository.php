@@ -43,12 +43,15 @@ class HealthcareServiceRepository
                 throw new InvalidArgumentException('HealthcareService ID is required for update.');
             }
 
+            $id = $data['id'];
+            unset($data['id']); // remove, to avoid updating it
+
             if ($updateCategoryAndType) {
-                $service = HealthcareService::with(['category.coding', 'type.coding'])->findOrFail($data['id']);
+                $service = HealthcareService::with(['category.coding', 'type.coding'])->findOrFail($id);
 
                 $data = $this->updateCategoryAndType($service, $data);
             } else {
-                $service = HealthcareService::findOrFail($data['id']);
+                $service = HealthcareService::findOrFail($id);
             }
 
             $service->update($data);

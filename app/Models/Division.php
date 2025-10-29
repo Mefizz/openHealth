@@ -148,7 +148,7 @@ class Division extends Model
         return $this->hasMany(EmployeeRequest::class);
     }
 
-    public function healthcareService(): HasMany
+    public function healthcareServices(): HasMany
     {
         return $this->hasMany(HealthcareService::class);
     }
