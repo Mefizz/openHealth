@@ -96,8 +96,9 @@ return [
     'no_tax_id_document_required' => 'Будь ласка, заповніть номер одного з документів: Паспорт, ID-картка або Посвідчення біженця.',
 
     // Legal Entity
-    'create_legal_entity' => 'Зареєструвати заклад',
-    'edit_legal_entity' => 'Редагувати заклад',
+    'institution' => 'Заклад',
+    'create_legal_entity' => 'Новий заклад',
+    'edit_legal_entity' => 'Редагувати',
     'legal_entity_name' => 'Медична організація',
     'legal_entity_owner' => 'Представник організації',
     'legal_entity_info' => 'Інформація про заклад',
