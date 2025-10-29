@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models\Employee;
 
-use App\Classes\eHealth\Api\Job;
 use App\Enums\JobStatus;
 use App\Enums\Status;
 use App\Models\Declaration;
@@ -12,14 +11,12 @@ use App\Models\Relations\Education;
 use App\Models\Relations\Qualification;
 use App\Models\Relations\ScienceDegree;
 use App\Models\Relations\Speciality;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
-/**
- * @mixin IdeHelperEmployee
- */
 class Employee extends BaseEmployee
 {
     protected $table = 'employees';

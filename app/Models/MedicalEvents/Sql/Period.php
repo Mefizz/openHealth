@@ -7,9 +7,6 @@ namespace App\Models\MedicalEvents\Sql;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-/**
- * @mixin IdeHelperPeriod
- */
 class Period extends Model
 {
     protected $guarded = [];

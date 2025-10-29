@@ -5,9 +5,6 @@ namespace App\Models\Relations;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-/**
- * @mixin IdeHelperAuthenticationMethod
- */
 class AuthenticationMethod extends Model
 {
     protected $hidden = [

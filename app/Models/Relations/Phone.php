@@ -8,9 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 use Eloquence\Behaviours\HasCamelCasing;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-/**
- * @mixin IdeHelperPhone
- */
 class Phone extends Model
 {
     use HasCamelCasing;

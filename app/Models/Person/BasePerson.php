@@ -15,9 +15,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
-/**
- * @mixin IdeHelperBasePerson
- */
 class BasePerson extends Model
 {
     protected $hidden = [

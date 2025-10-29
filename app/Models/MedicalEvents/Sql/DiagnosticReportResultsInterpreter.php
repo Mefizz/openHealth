@@ -7,9 +7,6 @@ namespace App\Models\MedicalEvents\Sql;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * @mixin IdeHelperDiagnosticReportResultsInterpreter
- */
 class DiagnosticReportResultsInterpreter extends Model
 {
     protected $table = 'diagnostic_report_results_interpreter';

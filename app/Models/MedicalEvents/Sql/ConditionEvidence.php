@@ -7,9 +7,6 @@ namespace App\Models\MedicalEvents\Sql;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * @mixin IdeHelperConditionEvidence
- */
 class ConditionEvidence extends Model
 {
     protected $guarded = [];

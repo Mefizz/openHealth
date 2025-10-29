@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\Status;
 use App\Models\Employee\Employee;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * @mixin IdeHelperEmployeeRole
- */
 class EmployeeRole extends Model
 {
     protected $fillable = [
@@ -27,9 +25,9 @@ class EmployeeRole extends Model
         'ehealth_updated_by'
     ];
 
-    protected $hidden = [
-        'id'
-    ];
+    protected $hidden = ['id'];
+
+    protected $casts = ['status' => Status::class];
 
     public function employee(): BelongsTo
     {

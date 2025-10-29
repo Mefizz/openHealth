@@ -10,9 +10,6 @@ use Eloquence\Behaviours\HasCamelCasing;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
 
-/**
- * @mixin IdeHelperLicense
- */
 class License extends Model
 {
     use HasCamelCasing;

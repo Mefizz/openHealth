@@ -6,9 +6,6 @@ namespace App\Models\MedicalEvents\Sql;
 
 use Illuminate\Database\Eloquent\Model;
 
-/**
- * @mixin IdeHelperProcedureReasonReference
- */
 class ProcedureReasonReference extends Model
 {
     protected $guarded = [];

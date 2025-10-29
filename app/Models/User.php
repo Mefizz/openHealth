@@ -23,9 +23,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
-/**
- * @mixin IdeHelperUser
- */
 class User extends Authenticatable implements MustVerifyEmail
 {
     use Notifiable;

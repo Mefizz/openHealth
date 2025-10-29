@@ -10,9 +10,6 @@ use Eloquence\Behaviours\HasCamelCasing;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * @mixin IdeHelperHealthcareService
- */
 class HealthcareService extends Model
 {
     use HasCamelCasing;
@@ -50,6 +47,11 @@ class HealthcareService extends Model
     public function division(): BelongsTo
     {
         return $this->belongsTo(Division::class);
+    }
+
+    public function legalEntity(): BelongsTo
+    {
+        return $this->belongsTo(LegalEntity::class);
     }
 
     public function category(): BelongsTo

@@ -7,9 +7,6 @@ namespace App\Models\MedicalEvents\Sql;
 use Eloquence\Behaviours\HasCamelCasing;
 use Illuminate\Database\Eloquent\Model;
 
-/**
- * @mixin IdeHelperPaperReferral
- */
 class PaperReferral extends Model
 {
     use HasCamelCasing;
