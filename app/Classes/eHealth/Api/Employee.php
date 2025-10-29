@@ -83,7 +83,6 @@ class Employee extends EHealthRequest
             '*.party.first_name' => 'required|string',
             '*.party.last_name' => 'required|string',
             '*.party.second_name' => 'nullable|string',
-            'party.email' => 'nullable|email',
             '*.doctor' => 'sometimes|array',
             '*.doctor.specialities' => 'required_with:*.doctor|array',
             '*.doctor.specialities.*.speciality' => 'required_with:*.doctor|string',
@@ -134,6 +133,7 @@ class Employee extends EHealthRequest
             'party.second_name' => 'nullable|string',
             'party.about_myself' => 'sometimes|nullable|string',
             'party.birth_date' => 'required|date_format:Y-m-d',
+            'party.email' => 'nullable|email',
             'party.declaration_count' => 'required|integer',
             'party.declaration_limit' => 'required|integer',
 
