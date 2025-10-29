@@ -8,9 +8,6 @@ use Eloquence\Behaviours\HasCamelCasing;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * @mixin IdeHelperImmunizationExplanation
- */
 class ImmunizationExplanation extends Model
 {
     use HasCamelCasing;

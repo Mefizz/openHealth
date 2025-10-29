@@ -9,9 +9,6 @@ use App\Models\MedicalEvents\Sql\Encounter;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-/**
- * @mixin IdeHelperPerson
- */
 class Person extends BasePerson
 {
     public function __construct()

@@ -11,9 +11,6 @@ use Eloquence\Behaviours\HasCamelCasing;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * @mixin IdeHelperDeclarationRequest
- */
 class DeclarationRequest extends Model
 {
     use HasCamelCasing;

@@ -9,9 +9,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
-/**
- * @mixin IdeHelperEpisode
- */
 class Episode extends Model
 {
     use HasCamelCasing;

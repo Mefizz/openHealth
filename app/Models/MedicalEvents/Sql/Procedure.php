@@ -12,9 +12,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
-/**
- * @mixin IdeHelperProcedure
- */
 class Procedure extends Model
 {
     use HasCamelCasing;

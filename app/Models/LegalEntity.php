@@ -19,9 +19,6 @@ use App\Casts\LegalEntityAccreditationCast;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
-/**
- * @mixin IdeHelperLegalEntity
- */
 class LegalEntity extends Model
 {
     use HasCamelCasing;

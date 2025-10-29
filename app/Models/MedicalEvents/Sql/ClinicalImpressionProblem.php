@@ -6,9 +6,6 @@ namespace App\Models\MedicalEvents\Sql;
 
 use Illuminate\Database\Eloquent\Model;
 
-/**
- * @mixin IdeHelperClinicalImpressionProblem
- */
 class ClinicalImpressionProblem extends Model
 {
     protected $guarded = [];

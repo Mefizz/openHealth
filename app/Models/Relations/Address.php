@@ -8,9 +8,6 @@ use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-/**
- * @mixin IdeHelperAddress
- */
 class Address extends Model
 {
     public const string DEFAULT_TYPE='RESIDENCE';

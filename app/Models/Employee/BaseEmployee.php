@@ -17,7 +17,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * An abstract base class for Employee and EmployeeRequest models.
  * It contains only the common logic, properties, and relationships.
  *
- * @mixin IdeHelperBaseEmployee
  * @mixin SyncsMorphManyRelations
  */
 abstract class BaseEmployee extends Model

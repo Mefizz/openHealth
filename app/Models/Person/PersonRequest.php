@@ -8,9 +8,6 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * @mixin IdeHelperPersonRequest
- */
 class PersonRequest extends BasePerson
 {
     public function __construct()

@@ -10,9 +10,6 @@ use Eloquence\Behaviours\HasCamelCasing;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-/**
- * @mixin IdeHelperRevision
- */
 class Revision extends Model
 {
     use HasCamelCasing;
