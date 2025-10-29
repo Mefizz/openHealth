@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Eloquence\Behaviours\HasCamelCasing;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
@@ -29,6 +30,7 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasRoles {
         getAllPermissions as getAllPermissionsTrait;
     }
+    use HasCamelCasing;
 
     /**
      * Track if email verification was already sent
@@ -45,6 +47,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'secret_key',
+        'party_id'
     ];
 
     /**
