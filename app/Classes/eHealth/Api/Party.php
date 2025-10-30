@@ -26,18 +26,25 @@ class Party extends EHealthRequest
      * Fetches a paginated list of party verification statuses.
      * Now accepts a token for authentication and attaches a data mapper.
      *
-     * @param string $token The decrypted bearer token for authentication.
      * @param array $filters An array of filters to apply to the query.
+     * @param int   $page
+     *
      * @return PromiseInterface|EHealthResponse
      * @throws ConnectionException
      */
-    public function getMany(string $token, array $filters = []): PromiseInterface|EHealthResponse
+    public function getMany(array $filters = [], int $page = 1): PromiseInterface|EHealthResponse
     {
         $this->setValidator($this->validateMany(...));
         $this->setMapper($this->mapMany(...));
         $this->setDefaultPageSize();
 
-        return $this->withToken($token)->get(self::URL . '/verifications', $filters);
+        $mergedQuery = array_merge(
+            $this->options['query'] ?? [],
+            $filters,
+            ['page' => $page]
+        );
+
+        return $this->get(self::URL . '/verifications', $mergedQuery);
     }
 
     /**

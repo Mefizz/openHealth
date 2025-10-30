@@ -81,7 +81,7 @@ class EmployeePositionAdd extends AbstractEmployeeFormManager
 
     public function render(): View
     {
-        return view('livewire.employee.employee-position-add')->with('pageTitle', $this->pageTitle);
+        return view('livewire.employee.employee-position-add');
     }
 
     /**

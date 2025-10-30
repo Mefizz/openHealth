@@ -22,6 +22,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\WithFileUploads;
 use RuntimeException;
 use Throwable;
@@ -29,6 +30,9 @@ use Throwable;
 abstract class AbstractEmployeeFormManager extends EmployeeComponent
 {
     use WithFileUploads;
+
+    #[Locked]
+    public ?int $employeeRequestId = null;
     protected ?BaseEmployee $employeeRequest;
     protected ?BaseEmployee $employee = null;
 
@@ -409,7 +413,7 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
 
     private function handleConnectionException(ConnectionException $e): void
     {
-        $this->dispatch('flashMessage', ['message' => __('forms.ehealth_connection_error'), 'type' => 'error', 'persistent' => true]);
+        $this->dispatch('flashMessage', ['message' => __('errors.ehealth_connection_error'), 'type' => 'error', 'persistent' => true]);
         Log::error('EHealth connection error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
     }
 

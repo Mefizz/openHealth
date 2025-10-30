@@ -32,7 +32,7 @@ class PartyVerificationSyncStatusOnLogin
         try {
             $token = Crypt::decryptString($event->token);
 
-            $response = EHealth::party()->getMany($token);
+            $response = EHealth::party()->withToken($token)->getMany();
 
             $this->processPartyVerificationResponse($response, $legalEntity);
 

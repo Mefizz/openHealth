@@ -14,9 +14,6 @@ use Livewire\Attributes\Locked;
 #[AllowDynamicProperties]
 class EmployeeRequestEdit extends AbstractEmployeeFormManager
 {
-    #[Locked]
-    public ?int $employeeRequestId = null;
-
     public function mount(LegalEntity $legalEntity, EmployeeRequest $employee_request): void
     {
         $this->loadDictionaries();
