@@ -6,6 +6,7 @@ namespace App\Livewire\Employee;
 
 use AllowDynamicProperties;
 use App\Classes\eHealth\EHealth;
+use App\Core\Arr;
 use App\Enums\JobStatus;
 use App\Enums\Status;
 use App\Exceptions\EHealth\EHealthResponseException;
@@ -93,7 +94,7 @@ class EmployeeIndex extends EmployeeComponent
         $realParties = Party::query()
             ->whereHas('employees', fn ($sub) => $sub->where('legal_entity_id', $this->legalEntity->id))
             ->orWhereHas('employeeRequests', fn ($sub) => $sub->where('legal_entity_id', $this->legalEntity->id))
-            ->with(['phones', 'employees.division', 'employeeRequests.division'])
+            ->with(['phones', 'employees.division',  'employeeRequests.division', 'users'])
             ->get();
 
         $unassignedRequests = EmployeeRequest::query()
@@ -106,8 +107,15 @@ class EmployeeIndex extends EmployeeComponent
         // === Step 2: Transform drafts into the same "Party" structure ===
         $draftParties = $unassignedRequests->map(function (EmployeeRequest $request) {
             $partyData = $request->revision->data['party'] ?? [];
+
+            $cleanPartyData = Arr::except($partyData, ['email']);
             $fakeParty = new Party();
-            $fakeParty->fill($partyData);
+            $fakeParty->fill($cleanPartyData);
+
+            if (isset($partyData['email'])) {
+                $fakeParty->email = $partyData['email'];
+            }
+
             $fakeParty->id = 'draft_' . $request->id;
             $fakeParty->setRelation('employeeRequests', collect([$request]));
             $fakeParty->setRelation('employees', collect());
@@ -146,9 +154,26 @@ class EmployeeIndex extends EmployeeComponent
                 if (!empty($this->search) && !str_contains(strtolower($party->fullName), strtolower($this->search))) {
                     return false;
                 }
-                if (!empty($this->filter['email']) && stripos($party->email ?? '', $this->filter['email']) === false) {
-                    return false;
+
+                if (!empty($this->filter['email'])) {
+                    $emailToSearch = $this->filter['email'];
+                    $emailMatches = false;
+
+                    if ($party->relationLoaded('users') && $party->users->isNotEmpty()) {
+                        $emailMatches = $party->users->contains(
+                            fn ($user) => stripos($user->email, $emailToSearch) !== false
+                        );
+                    }
+
+                    if (!$emailMatches && isset($party->email)) {
+                        $emailMatches = stripos($party->email, $emailToSearch) !== false;
+                    }
+
+                    if (!$emailMatches) {
+                        return false;
+                    }
                 }
+
                 if (!empty($this->filter['phone'])) {
                     $phoneMatches = $party->phones->contains(fn ($phone) => str_contains($phone->number, $this->filter['phone']));
                     if (!$phoneMatches) {

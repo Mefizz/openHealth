@@ -54,11 +54,14 @@ class VerifyPersonality extends Component
 
         $ownerFullName = $response?->getOwnerFullName();
         $taxId = $response?->getTaxId();
-
         [$lastName, $firstName, $secondName] = explode(' ', $ownerFullName);
 
-        // Search for party
-        $party = Party::whereNull('user_id')
+        /*
+         * Search for the Party (person) based on the e-signature data.
+         * We no longer check for `whereNull('user_id')` as this column
+         * was removed from the 'parties' table during refactoring.
+         */
+        $party = Party::query()
             ->where('tax_id', $taxId)
             ->whereRaw('LOWER(TRIM(last_name)) = ?', [mb_strtolower($lastName)])
             ->whereRaw('LOWER(TRIM(first_name)) = ?', [mb_strtolower($firstName)])
@@ -71,16 +74,49 @@ class VerifyPersonality extends Component
             return;
         }
 
-        // Associate current User with Party, also set email
-        $party->update(['user_id' => Auth::id(), 'email' => Auth::user()->email]);
+        $user = Auth::user();
 
-        // Link all employees of this Party to User
-        $party->employees()->update(['user_id' => Auth::id()]);
+        /*
+         * This check (`!$user->partyId`) is crucial for idempotency.
+         * It handles scenarios where a user might land on this verification
+         * page even after they are already linked to a Party.
+         *
+         * How can this happen?
+         * 1. User verifies successfully, `$user->partyId` is set.
+         * 2. They are redirected to the dashboard.
+         * 3. They use the browser's "Back" button, which re-loads this page.
+         * 4. They (mistakenly) try to submit the form a second time.
+         *
+         * This `if` block prevents our code from trying to re-link an
+         * already-linked user.
+         */
+        if (!$user->partyId) {
+            $user->partyId = $party->id;
+            $user->save();
+        }
 
         $legalEntityUuid = Session::pull('selected_legal_entity_uuid');
         $legalEntity = LegalEntity::whereUuid($legalEntityUuid)->firstOrFail();
 
-        EhealthUserVerified::dispatch(Auth::user(), $legalEntity->id);
+        $affectedRows = $party->employees()
+            ->where('legal_entity_id', $legalEntity->id)
+            ->whereNull('user_id')
+            ->update(['user_id' => $user->id]);
+
+        if ($affectedRows === 0) {
+            $isAlreadyVerified = $party->employees()
+                ->where('legal_entity_id', $legalEntity->id)
+                ->where('user_id', $user->id)
+                ->exists();
+
+            if (!$isAlreadyVerified) {
+                Session::flash('error', 'Для вашого профілю не знайдено активних посад у цьому закладі. Зверніться до адміністратора.');
+
+                return;
+            }
+        }
+
+        EhealthUserVerified::dispatch($user, $legalEntity->id);
 
         $this->redirectRoute('dashboard', ['legalEntity' => $legalEntity], navigate: true);
     }

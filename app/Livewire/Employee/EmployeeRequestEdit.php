@@ -14,9 +14,6 @@ use Livewire\Attributes\Locked;
 #[AllowDynamicProperties]
 class EmployeeRequestEdit extends AbstractEmployeeFormManager
 {
-    #[Locked]
-    public ?int $employeeRequestId = null;
-
     public function mount(LegalEntity $legalEntity, EmployeeRequest $employee_request): void
     {
         $this->loadDictionaries();
@@ -63,6 +60,6 @@ class EmployeeRequestEdit extends AbstractEmployeeFormManager
 
     public function render(): View
     {
-        return view('livewire.employee.employee-edit')->with('pageTitle', $this->pageTitle);
+        return view('livewire.employee.employee-edit');
     }
 }

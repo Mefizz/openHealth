@@ -57,7 +57,7 @@ class EmployeeCreate extends AbstractEmployeeFormManager
 
     public function render(): View
     {
-        return view('livewire.employee.employee-create')->with('pageTitle', $this->pageTitle);
+        return view('livewire.employee.employee-create');
     }
 
     protected function getEmployeeRequestForSave(): ?EmployeeRequest

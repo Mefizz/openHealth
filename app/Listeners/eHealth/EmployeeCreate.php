@@ -91,9 +91,13 @@ class EmployeeCreate
                     ])
                 );
 
+                $cleanPartyFromRevision = $dataFromRevision['party'];
+                $cleanPartyFromEHealth = Arr::except($eHealthEmployee['party'] ?? [], ['email']);
+                $mergedCleanPartyData = array_merge($cleanPartyFromRevision, $cleanPartyFromEHealth);
+
                 $newEmployee = Repository::employee()->updateDetails(
                     $newEmployee,
-                    array_merge($dataFromRevision['party'], $eHealthEmployee['party'], ['user_id' => $user->id]),
+                    $mergedCleanPartyData,
                     $dataFromRevision['documents'],
                     $dataFromRevision['phones'],
                     $dataFromRevision['educations'] ?? null,

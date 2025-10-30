@@ -16,6 +16,7 @@ return [
     'home' => 'На головну',
     'oops' => 'Ой, щось пішло не так',
     'pageNotFound' => 'Сторінку не знайдено',
+    'ehealth_connection_error' => 'Помилка підключення до ЕСОЗ',
     'policy' => [
         'licence' => [
             'primary_not_editable'

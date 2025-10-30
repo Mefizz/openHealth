@@ -53,13 +53,12 @@ class EmployeeRequest extends EHealthRequest
      */
     public function mapCreate(array $sourceData): array
     {
-
         $partyData = $sourceData['party'] ?? [];
         $doctorData = $sourceData['doctor'] ?? [];
 
         return [
             'employee' => Arr::get($sourceData, 'employee_request_data', []),
-            'party' => Arr::except($partyData, ['documents', 'phones']),
+            'party' => Arr::except($partyData, ['documents', 'phones', 'email']),
             'documents' => $sourceData['documents'] ?? [],
             'phones' => $sourceData['phones'] ?? [],
             'educations' => $doctorData['educations'] ?? [],
