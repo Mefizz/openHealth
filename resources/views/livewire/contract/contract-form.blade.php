@@ -47,6 +47,7 @@
             <legend class="legend">
                 <h2>{{ __('forms.contract.contracts') }}</h2>
             </legend>
+            <p class="text-sm text-black mb-6">{{ __('contract.specify_type_of_contract') }}</p>
             <div class="form-row">
             <div class="form-group">
                 <select wire:model="form.id_form" name="id_form" id="id_form" class="peer input appearance-none bg-white dark:bg-gray-800 dark:text-gray-400" required>
@@ -80,7 +81,7 @@
             <legend class="legend">
                 <h2>{{ __('forms.paymentDetails') }}</h2>
             </legend>
-            <p class="text-sm text-black mb-4">{{ __('forms.contract.nszu_payment_account') }}</p>
+            <p class="text-sm text-black mb-6">{{ __('contract.nszu_payment_account') }}</p>
             <div class="form-row-3">
                 <div class="form-group">
                     <input wire:model="form.contractor_payment_details.bank_name"  type="text" name="bank_name" id="bank_name" class="peer input" placeholder=" " required />
@@ -117,10 +118,7 @@
             <legend class="legend">
                 <h2> {{ __('forms.placesOfService') }}</h2>
             </legend>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                {{ __('Мiсце надання медичних послуг - фактична адреса провадження надавачем господарської дiяльностi з медичної практики, де особам, на яких розповсюджуються державнi гарантiї медичного обслуговування населення вiдно до Закону України "Про державнi фiнансовi гарантiї медичного обслуговування населення", надаватимуться медичнi послуги. У разi наявностi декiлькох мiсць надання медичних послуг, iнформацiя про такi мiсця зазначається окремо щодо кожного мiсця.') }}
-            </p>
-
+            <p class="text-sm text-black mb-6"> {{ __('contract.place_of_medical_service_provision') }}</p>
             <div class="form-row-3">
                 <div class="form-group group">
                     <select wire:model="divisionFilter"
@@ -135,7 +133,7 @@
                         @endforeach
                     </select>
 
-                    <label for="divisionName" class="label">{{ __('forms.division_name') }}</label>
+                    <label for="divisionName" class="label">{{ __('contract.division_name') }}</label>
                 </div>
 
             </div>
@@ -149,11 +147,12 @@
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
-                    {{ __('Додати місце надання медичних послуг') }}
+                    {{ __('contract.add_places_of_service') }}
                 </button>
             </div>
         </fieldset>
 
+        {{-- Involvement of a person --}}
         <div class="overflow-x-auto relative">
             <fieldset class="fieldset" id="section-external-contractors"
                       x-data="{
@@ -165,13 +164,15 @@
                     <h2>{{ __('forms.involvedPersons') }}</h2>
                 </legend>
 
+                <p class="text-sm text-black mb-6"> {{ __('contract.person_involved') }}</p>
+
                 <table class="table-input w-inherit">
                     <thead class="thead-input">
                     <tr>
-                        <th scope="col" class="td-input">{{ __('forms.legalEntity') }}</th>
-                        <th scope="col" class="td-input">{{ __('forms.externalContractorNumber') }}</th>
-                        <th scope="col" class="td-input">{{ __('forms.externalContractorIssuedAt') }}</th>
-                        <th scope="col" class="td-input">{{ __('forms.externalContractorExpiresAt') }}</th>
+                        <th scope="col" class="td-input">{{ __('contract.name_of_the_person') }}</th>
+                        <th scope="col" class="td-input">{{ __('contract.contract_number') }}</th>
+                        <th scope="col" class="td-input">{{ __('contract.start_of_contract') }}</th>
+                        <th scope="col" class="td-input">{{ __('contract.end_of_contract') }}</th>
                         <th scope="col" class="td-input">{{ __('forms.actions') }}</th>
                     </tr>
                     </thead>
@@ -326,52 +327,67 @@
 
         {{-- Block 2: Legal Entity Documents --}}
         {{-- This section handles the file uploads for the contract. --}}
-        <fieldset class="fieldset" x-data="{ party: $wire.entangle('form.party') }">
+        <fieldset class="fieldset">
             <legend class="legend">
-                <h2>{{ __('forms.documentsMedicalOrganization') }}</h2>
+                <h2>
+                    {{ __('contract.uploading_documents') }}
+                </h2>
             </legend>
-            <div class='grid grid-cols-1 gap-9 sm:grid-cols-2'>
-                <div class='flex flex-col gap-5.5'>
-                    <x-forms.form-group>
-                        <x-slot name='label'>
-                            <label for='statute_md5' class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ __('forms.statuteMd5') }} *</label>
-                        </x-slot>
-                        <x-slot name='input'>
-                            <input
-                                class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-                                id="statute_md5"
-                                type="file"
-                                wire:model='form.statute_md5'
-                            >
-                        </x-slot>
-                        @error('form.statute_md5')
-                        <x-forms.error>{{ $message }}</x-forms.error>
-                        @enderror
-                    </x-forms.form-group>
+            <div>
+                <p class="text-sm text-gray-900 mb-4 leading-relaxed">
+                    {{ __('contract.declaration_of_conformity') }}
+                </p>
+
+                <div class="flex flex-col gap-3">
+                    <label for="statute_md5" class="block text-sm font-medium text-gray-900">
+                        {{ __('forms.statuteMd5') }} *
+                    </label>
+                    <input
+                        id="statute_md5"
+                        type="file"
+                        wire:model="form.statute_md5"
+                        class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                    <p class="text-xs text-gray-500">
+                        {{ __('contract.file_limit') }}
+                    </p>
+                    @error('form.statute_md5')
+                    <x-forms.error>{{ $message }}</x-forms.error>
+                    @enderror
                 </div>
-                <div class='flex flex-col gap-5.5'>
-                    <x-forms.form-group>
-                        <x-slot name='label'>
-                            <label for='additional_document_md5' class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ __('forms.additionalDocumentMd5') }} *</label>
-                        </x-slot>
-                        <x-slot name='input'>
-                            <input
-                                class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-                                id="additional_document_md5"
-                                type="file"
-                                wire:model='form.additional_document_md5'
-                            >
-                        </x-slot>
-                        @error('form.additional_document_md5')
-                        <x-forms.error>{{ $message }}</x-forms.error>
-                        @enderror
-                    </x-forms.form-group>
+            </div>
+            <div>
+                <p class="text-sm text-gray-900 mb-4 leading-relaxed">
+                    {{ __('contract.scanned_copy_of_the_document') }}
+                </p>
+
+                <div class="flex flex-col gap-3">
+                    <label for="additional_document_md5" class="block text-sm font-medium text-gray-900">
+                        {{ __('forms.additionalDocumentMd5') }} *
+                    </label>
+                    <input
+                        id="additional_document_md5"
+                        type="file"
+                        wire:model="form.additional_document_md5"
+                        class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                    <p class="text-xs text-gray-500">
+                        {{ __('contract.file_limit') }}
+                    </p>
+                    @error('form.additional_document_md5')
+                    <x-forms.error>{{ $message }}</x-forms.error>
+                    @enderror
                 </div>
             </div>
         </fieldset>
 
         {{-- Agreement --}}
-        <div class='w-full mt-4 bg-white border-t border-gray-200 dark:border-gray-700'>
+        <fieldset class="fieldset">
+            <legend class="legend">
+                <h2>{{ __('contract.text_agreement') }}</h2>
+            </legend>
             <div class='flex flex-col gap-9'>
                 <div class='dark:bg-boxdark'>
                     <div class='border-stroke px-6.5 py-1 dark:border-strokedark'>
@@ -386,14 +402,19 @@
 
                         <x-forms.form-group class='mt-4 pl-2'>
                             <x-slot name='input'>
-                                <x-forms.checkbox
-                                    wire:model='form.consent_text'
-                                    id='consent_text'
-                                    type='checkbox'
-                                />
-                                <label for='consent_text' class='ms-2 text-sm font-medium text-gray-900 dark:text-gray-300'>
-                                    {{ __('forms.agree') }}
-                                </label>
+
+                                <div class="flex items-center">
+                                    <x-forms.checkbox
+                                        wire:model='form.consent_text'
+                                        id='consent_text'
+                                        type='checkbox'
+                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                    />
+
+                                    <label for='consent_text' class='ml-2 text-sm font-medium text-gray-900 dark:text-gray-300 cursor-pointer'>
+                                        {{ __('forms.agree') }}
+                                    </label>
+                                </div>
                             </x-slot>
                             @error('form.consent_text')
                             <x-slot name='error'>
@@ -406,7 +427,27 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </fieldset>
+
+        <fieldset class="fieldset">
+            <legend class="legend">
+                <h2>{{ __('contract.cep') }}</h2>
+            </legend>
+            <p class="text-sm text-black mb-6"> {{ __('contract.author_identification') }}</p>
+            <div class="flex items-center mb-6">
+                <x-forms.checkbox
+                    id='consent_text'
+                    type='checkbox'
+                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                />
+
+                <label for='consent_text' class='ml-2 text-sm font-medium text-gray-900 dark:text-gray-300 cursor-pointer '>
+                    {{ __('contract.signing_cep') }}
+                </label>
+            </div>
+            <p class="text-sm text-black mb-6"> {{ __('contract.signing_cep_agree') }}</p>
+        </fieldset>
+
 
         <div class='mb-4.5 pt-10 flex flex-col gap-6 xl:flex-row justify-between items-center'>
             <x-secondary-button>
