@@ -6,10 +6,12 @@ namespace App\Models;
 
 use App\Enums\Equipment\AvailabilityStatus;
 use App\Enums\Equipment\Status;
+use App\Models\Employee\Employee;
 use Eloquence\Behaviours\HasCamelCasing;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Equipment extends Model
@@ -24,7 +26,7 @@ class Equipment extends Model
         'division_id',
         'parent_id',
         'recorder',
-//        'device_definition_id',
+        'device_definition_id',
         'type',
         'serial_number',
         'status',
@@ -43,12 +45,22 @@ class Equipment extends Model
         'ehealth_updated_by'
     ];
 
-    protected $hidden = ['id'];
+    protected $hidden = ['id', 'created_at', 'updated_at'];
 
     protected $casts = [
         'status' => Status::class,
-        'availability_status' => AvailabilityStatus::class,
+        'availability_status' => AvailabilityStatus::class
     ];
+
+    public function recorder(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'recorder');
+    }
+
+    public function division(): BelongsTo
+    {
+        return $this->belongsTo(Division::class);
+    }
 
     public function names(): HasMany
     {

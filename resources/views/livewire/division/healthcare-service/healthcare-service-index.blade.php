@@ -103,7 +103,7 @@
                             <th class="px-6 py-3 w-[24%]">{{ __('healthcare-services.specialisation') }}</th>
                             <th class="px-6 py-3 w-[24%]">{{ __('forms.division_name') }}</th>
                             <th class="px-6 py-3 w-[18%]">{{ __('healthcare-services.providing_condition') }}</th>
-                            <th class="px-6 py-3 w-[14%] whitespace-nowrap">{{ __('healthcare-services.created_at') }}</th>
+                            <th class="px-6 py-3 w-[14%] whitespace-nowrap">{{ __('forms.created_at') }}</th>
                             <th class="px-6 py-3 w-[14%]">{{ __('healthcare-services.status') }}</th>
                             <th class="px-6 py-3 w-[6%] whitespace-nowrap">{{ __('forms.action') }}</th>
                         </tr>

@@ -19,7 +19,6 @@ return [
     'search_by_employee' => 'Пошук за ПІБ працівника',
     'speciality_type' => 'Вид послуги',
     'providing_condition' => 'Умови надання послуг',
-    'start_date' => 'Дата створення',
     'end_date' => 'Дата деактивації',
     'status' => 'Статус ролі',
     'employeeId' => 'Працівник, що виконує роль',

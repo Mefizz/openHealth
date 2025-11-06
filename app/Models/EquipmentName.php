@@ -15,7 +15,7 @@ class EquipmentName extends Model
         'type'
     ];
 
-    protected $hidden = ['id'];
+    protected $hidden = ['id', 'equipment_id', 'created_at', 'updated_at'];
 
     protected $casts = ['type' => Type::class];
 }
