@@ -40,11 +40,8 @@ class EmployeeCreate
             return;
         }
 
-        Log::info('[EmployeeCreate] Знайдено EmployeeRequests. Спроба прив\'язати User до існуючої Party.', ['user_id' => $user->id, 'email' => $user->email]);
-
         $revisionData = $employeeRequests->first()->revision->data['party'] ?? null;
         if (!$revisionData) {
-            Log::error('[EmployeeCreate] EmployeeRequest не має revision data. Неможливо прив\'язати party.', ['request_id' => $employeeRequests->first()->id]);
 
             return;
         }
@@ -55,7 +52,6 @@ class EmployeeCreate
         $secondName = $revisionData['second_name'] ?? null;
 
         if (!$taxId || !$firstName || !$lastName) {
-            Log::error('[EmployeeCreate] Revision data не містить taxId, firstName або lastName. Неможливо прив\'язати party.', ['request_id' => $employeeRequests->first()->id]);
 
             return;
         }
@@ -68,10 +64,8 @@ class EmployeeCreate
             $user->party()->associate($party);
             $user->save();
             $user->refresh(); // User update
-            Log::info('[EmployeeCreate] УСПІШНО прив\'язано нового User до існуючої Party. Верифікацію КЕП буде пропущено.', ['user_id' => $user->id, 'party_id' => $party->id]);
-        } else {
+           } else {
             // employee_request doesn`t match any party datea
-            Log::warning('[EmployeeCreate] Дані з EmployeeRequest не збіглися з існуючою Party. Користувач буде відправлений на верифікацію КЕП.', ['user_id' => $user->id, 'tax_id' => $taxId]);
 
             return;
         }
@@ -106,12 +100,6 @@ class EmployeeCreate
 
         DB::transaction(function () use ($user, $employees, $employeeRequests, $event, &$newRoles) {
             foreach ($employees as $eHealthEmployee) {
-
-                Log::info('[EmployeeCreate] Обробляємо eHealthEmployee:', [
-                    'ehealth_uuid' => $eHealthEmployee['uuid'] ?? 'N/A',
-                    'position' => $eHealthEmployee['position'] ?? 'N/A',
-                    'employee_type' => $eHealthEmployee['employee_type'] ?? 'N/A', // <-- ДИВИМОСЬ СЮДИ
-                ]);
 
                 $employeeRequest = $this->findMatchingLocalRequest($employeeRequests, $eHealthEmployee);
 
@@ -165,9 +153,6 @@ class EmployeeCreate
                 $employeeRequest->revision->update(['status' => RevisionStatus::APPLIED]);
 
                 if (!$user->hasRole($newEmployee->employeeType)) {
-                    Log::info('[EmployeeCreate] Знайдена нова роль для додавання:', [
-                        'employeeType' => $newEmployee->employeeType,
-                    ]);
                     $newRoles[] = $newEmployee->employeeType;
                 }
             }
@@ -176,7 +161,6 @@ class EmployeeCreate
         if (!empty($newRoles)) {
             $cleanRoles = array_filter($newRoles, function ($roleName) {
                 if (empty($roleName) || !is_string($roleName) || strtolower($roleName) === 'ehealth') {
-                    Log::error('[EmployeeCreate] Спроба призначити некоректну або пусту роль.', ['roleName' => $roleName]);
 
                     return false;
                 }
@@ -185,7 +169,6 @@ class EmployeeCreate
             });
 
             if (empty($cleanRoles)) {
-                Log::warning('[EmployeeCreate] Немає валідних ролей для призначення.', ['original_roles_list' => $newRoles]);
 
                 return;
             }
