@@ -8,7 +8,6 @@ use App\Classes\Cipher\Api\CipherRequest;
 use App\Classes\Cipher\Exceptions\CipherApiException;
 use App\Events\EhealthUserVerified;
 use App\Models\LegalEntity;
-use App\Models\Relations\Party;
 use App\Traits\FindsAndVerifiesPartyTrait;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Auth;
@@ -98,10 +97,7 @@ class VerifyPersonality extends Component
          * already-linked user.
          */
         if (!$user->partyId) {
-            Log::info('[VerifyPersonality] Успішна верифікація КЕП. Прив\'язуємо User до Party.', [
-                'user_id' => $user->id,
-                'party_id_to_link' => $party->id,
-            ]);
+
             $user->partyId = $party->id;
             $user->save();
         }

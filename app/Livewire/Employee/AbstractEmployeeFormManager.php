@@ -290,14 +290,6 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
             $birthDateMatch = $partyByTaxId->birth_date?->format('Y-m-d') === $partyData['birthDate'];
             $dataMatches = $lastNameMatch && $firstNameMatch && $birthDateMatch;
 
-            Log::debug('Результати порівняння:', [
-                'LastName збігається' => $lastNameMatch,
-                'FirstName збігається' => $firstNameMatch,
-                'BirthDate збігається' => $birthDateMatch,
-                'ЗАГАЛЬНИЙ РЕЗУЛЬТАТ (dataMatches)' => $dataMatches,
-            ]);
-            Log::debug('============================================');
-            // --- КІНЕЦЬ ДЕБАГУ --- else {
             // no tax_id, Means - new party
             if ($userByEmail && $userByEmail->partyId) {
                 // email is already existing but input new tax_id
