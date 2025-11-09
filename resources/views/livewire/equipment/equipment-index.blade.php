@@ -2,7 +2,7 @@
     <x-header-navigation class="items-start">
 
         <x-slot name="title">
-            {{ __('equipment.equipment') }}
+            {{ __('equipments.label') }}
         </x-slot>
 
         <div class="mt-3 ml-0 flex flex-col sm:flex-row sm:flex-wrap gap-2 self-start">
@@ -10,7 +10,7 @@
                class="button-primary flex items-center gap-2"
             >
                 @icon('plus', 'w-4 h-4')
-                {{ __('equipment.new_equipment') }}
+                {{ __('equipments.new') }}
             </a>
 
             <button wire:click="sync" type="button" class="button-sync flex items-center gap-2 whitespace-nowrap">
@@ -23,12 +23,12 @@
             <div class="flex flex-col -my-4">
                 <form wire:submit.prevent="applyFilters" x-data="{ showFilter: true }">
                     <div class="flex mb-4 flex-col lg:flex-row items-stretch lg:items-end gap-2 lg:gap-4 w-full">
-
                         <div class="w-full lg:w-96">
                             <label for="search_equipment"
-                                   class="text-sm font-medium text-gray-900 dark:text-white block mb-2 flex items-center gap-1">
+                                   class="text-sm font-medium text-gray-900 dark:text-white block mb-2 flex items-center gap-1"
+                            >
                                 @icon('search-outline', 'w-4.5 h-4.5')
-                                <span>{{ __('equipment.search_equipment') }}</span>
+                                <span>{{ __('equipments.search') }}</span>
                             </label>
 
                             <div class="form-group group w-full">
@@ -37,8 +37,9 @@
                                        placeholder=" "
                                        class="input peer"
                                        wire:model.defer="search"
-                                       autocomplete="off" />
-                                <label for="search_equipment" class="label">{{ __('equipment.name_inventory_number') }}</label>
+                                       autocomplete="off"
+                                />
+                                <label for="search_equipment" class="label">{{ __('equipments.name_or_inventory_number') }}</label>
                             </div>
                         </div>
 
@@ -60,7 +61,7 @@
                                     <option value="">{{ __('forms.select') }}</option>
                                 </select>
                                 <label for="typeMedicalDevice" class="label peer-focus:text-blue-600 peer-valid:text-blue-600">
-                                    {{ __('equipment.type_medical_device') }}
+                                    {{ __('equipments.type_medical_device') }}
                                 </label>
                                 {{-- @error('form.typeMedicalDevice')
                                 <p class="text-error">{{ $message }}</p>
@@ -75,28 +76,29 @@
                                     <option value="">{{ __('forms.select') }}</option>
                                 </select>
                                 <label for="medicalFacility" class="label peer-focus:text-blue-600 peer-valid:text-blue-600">
-                                    {{ __('equipment.medical_facility') }}
+                                    {{ __('forms.division_name') }}
                                 </label>
                                 {{-- @error('form.medicalFacility')
                                 <p class="text-error">{{ $message }}</p>
                                 @enderror --}}
                             </div>
                         </div>
+
                         <div class="form-row-4">
                             <div class="form-group group" x-data="{ open: false, selectedStatuses: $wire.entangle('form.category').defer }">
-                                <label for="categoryFilter" class="label">{{ __('forms.statuteMd5') }}</label>
+                                <label for="categoryFilter" class="label">{{ __('forms.status.label') }}</label>
                                 <div class="relative">
 
                                     <input type="text"
                                            id="categoryFilter"
                                            class="input peer w-full cursor-pointer text-gray-500 dark:text-gray-400"
                                            placeholder="{{ __('forms.select') }}"
-                                           x-on:click="open = !open"
+                                           @click="open = !open"
                                            :value="selectedStatuses.length ? selectedStatuses.map(s => {
                                                     if (s === 'APPROVED') return '{{ __('forms.active') }}';
-                                                    if (s === 'NEW') return '{{ __('equipment.non_active') }}';
+                                                    if (s === 'NEW') return '{{ __('equipments.non_active') }}';
                                                     if (s === 'DISMISSED') return '{{ __('forms.draft') }}';
-                                                    if (s === 'VERIFIED') return '{{ __('equipment.marked_as_incorrect') }}';
+                                                    if (s === 'VERIFIED') return '{{ __('equipments.marked_as_incorrect') }}';
                                                     return s;
                                                 }).join(', ') : ''"
                                            readonly
@@ -105,7 +107,7 @@
                                         <path d="M19 9l-7 7-7-7"></path>
                                     </svg>
                                     <div x-show="open"
-                                         x-on:click.away="open = false"
+                                         @click.away="open = false"
                                          x-transition:enter="transition ease-out duration-100"
                                          x-transition:enter-start="transform opacity-0 scale-95"
                                          x-transition:enter-end="transform opacity-100 scale-100"
@@ -125,7 +127,7 @@
                                                 <label class="flex items-center space-x-2 cursor-pointer">
                                                     <input type="checkbox" value="NEW" wire:model.defer="form.category"
                                                            class="rounded-sm text-blue-600 focus:ring-blue-500 border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:checked:bg-blue-600 dark:checked:border-transparent" />
-                                                    <span>{{ __('equipment.non_active') }}</span>
+                                                    <span>{{ __('equipments.non_active') }}</span>
                                                 </label>
                                             </li>
                                             <li>
@@ -139,7 +141,7 @@
                                                 <label class="flex items-center space-x-2 cursor-pointer">
                                                     <input type="checkbox" value="VERIFIED" wire:model.defer="form.category"
                                                            class="rounded-sm text-blue-600 focus:ring-blue-500 border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:checked:bg-blue-600 dark:checked:border-transparent">
-                                                    <span>{{ __('equipment.marked_as_incorrect') }}</span>
+                                                    <span>{{ __('equipments.marked_as_incorrect') }}</span>
                                                 </label>
                                             </li>
                                         </ul>
@@ -148,19 +150,19 @@
                             </div>
 
                             <div class="form-group group" x-data="{ open: false, selectedStatuses: $wire.entangle('form.availability').defer }">
-                                <label for="availabilityFilter" class="label">{{ __('equipment.accessibility') }}</label>
+                                <label for="availabilityFilter" class="label">{{ __('equipments.availability_status.label') }}</label>
                                 <div class="relative">
 
                                     <input type="text"
                                            id="availabilityFilter"
                                            class="input peer w-full cursor-pointer text-gray-500 dark:text-gray-400"
                                            placeholder="{{ __('forms.select') }}"
-                                           x-on:click="open = !open"
+                                           @click="open = !open"
                                            :value="selectedStatuses.length ? selectedStatuses.map(s => {
-                                                    if (s === 'AVAILABLE') return '{{ __('equipment.available') }}';
-                                                    if (s === 'DAMAGED') return '{{ __('equipment.damaged') }}';
-                                                    if (s === 'DESTROYED') return '{{ __('equipment.destroyed') }}';
-                                                    if (s === 'LOST') return '{{ __('equipment.lost') }}';
+                                                    if (s === 'AVAILABLE') return '{{ __('equipments.available') }}';
+                                                    if (s === 'DAMAGED') return '{{ __('equipments.damaged') }}';
+                                                    if (s === 'DESTROYED') return '{{ __('equipments.destroyed') }}';
+                                                    if (s === 'LOST') return '{{ __('equipments.lost') }}';
                                                     return s;
                                                 }).join(', ') : ''"
                                            readonly
@@ -169,7 +171,7 @@
                                         <path d="M19 9l-7 7-7-7"></path>
                                     </svg>
                                     <div x-show="open"
-                                         x-on:click.away="open = false"
+                                         @click.away="open = false"
                                          x-transition:enter="transition ease-out duration-100"
                                          x-transition:enter-start="transform opacity-0 scale-95"
                                          x-transition:enter-end="transform opacity-100 scale-100"
@@ -182,28 +184,28 @@
                                                 <label class="flex items-center space-x-2 cursor-pointer">
                                                     <input type="checkbox" value="AVAILABLE" wire:model.defer="form.availability"
                                                            class="rounded-sm text-blue-600 focus:ring-blue-500 border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:checked:bg-blue-600 dark:checked:border-transparent" />
-                                                    <span>{{ __('equipment.available') }}</span>
+                                                    <span>{{ __('equipments.available') }}</span>
                                                 </label>
                                             </li>
                                             <li>
                                                 <label class="flex items-center space-x-2 cursor-pointer">
                                                     <input type="checkbox" value="DAMAGED" wire:model.defer="form.availability"
                                                            class="rounded-sm text-blue-600 focus:ring-blue-500 border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:checked:bg-blue-600 dark:checked:border-transparent" />
-                                                    <span>{{ __('equipment.damaged') }}</span>
+                                                    <span>{{ __('equipments.damaged') }}</span>
                                                 </label>
                                             </li>
                                             <li>
                                                 <label class="flex items-center space-x-2 cursor-pointer">
                                                     <input type="checkbox" value="DESTROYED" wire:model.defer="form.availability"
                                                            class="rounded-sm text-blue-600 focus:ring-blue-500 border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:checked:bg-blue-600 dark:checked:border-transparent" />
-                                                    <span>{{ __('equipment.destroyed') }}</span>
+                                                    <span>{{ __('equipments.destroyed') }}</span>
                                                 </label>
                                             </li>
                                             <li>
                                                 <label class="flex items-center space-x-2 cursor-pointer">
                                                     <input type="checkbox" value="LOST" wire:model.defer="form.availability"
                                                            class="rounded-sm text-blue-600 focus:ring-blue-500 border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:checked:bg-blue-600 dark:checked:border-transparent">
-                                                    <span>{{ __('equipment.lost') }}</span>
+                                                    <span>{{ __('equipments.lost') }}</span>
                                                 </label>
                                             </li>
                                         </ul>
@@ -212,6 +214,7 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="mb-9 mt-6 flex flex-col sm:flex-row gap-2 w-full">
                         <button type="submit" class="flex items-center gap-2 button-primary">
                             @icon('search', 'w-4 h-4')
@@ -234,12 +237,12 @@
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
                         <th class="px-6 py-3 w-[25%] text-left">{{ __('forms.name') }}</th>
-                        <th class="px-6 py-3 w-[10%] text-left">{{ __('equipment.inventory_number') }}</th>
+                        <th class="px-6 py-3 w-[10%] text-left">{{ __('equipments.inventory_number') }}</th>
                         <th class="px-6 py-3 w-[15%] text-left">{{ __('forms.type') }}</th>
-                        <th class="px-6 py-3 w-[15%] text-left">{{ __('equipment.legal_entity') }}</th>
-                        <th class="px-6 py-3 w-[10%] text-left">{{ __('equipment.date_creation') }}</th>
-                        <th class="px-6 py-3 w-[10%] text-left">{{ __('equipment.status') }}</th>
-                        <th class="px-6 py-3 w-[10%] text-left">{{ __('equipment.accessibility') }}</th>
+                        <th class="px-6 py-3 w-[15%] text-left">{{ __('forms.institution') }}</th>
+                        <th class="px-6 py-3 w-[10%] text-left">{{ __('forms.created_at') }}</th>
+                        <th class="px-6 py-3 w-[10%] text-left">{{ __('forms.status.label') }}</th>
+                        <th class="px-6 py-3 w-[10%] text-left">{{ __('equipments.availability_status.label') }}</th>
                         <th class="px-6 py-3 w-[6%] text-center">{{ __('forms.action') }}</th>
                     </tr>
                     </thead>
@@ -268,22 +271,22 @@
                             {{-- @if (($item['status'] ?? '') === 'APPROVED')
                                 <span class="badge-green">{{ __('forms.active') }}</span>
                             @elseif (($item['status'] ?? '') === 'NEW')
-                                <span class="badge-red">{{ __('equipment.non_active') }}</span>
+                                <span class="badge-red">{{ __('equipments.non_active') }}</span>
                             @elseif (($item['status'] ?? '') === 'DISMISSED')
                                 <span class="badge-yellow">{{ __('forms.draft') }}</span>
                             @elseif (($item['status'] ?? '') === 'VERIFIED')
-                                <span class="badge-red">{{ __('equipment.marked_as_incorrect') }}</span>
+                                <span class="badge-red">{{ __('equipments.marked_as_incorrect') }}</span>
                             @endif --}}
                         </td>
                         <td class="px-6 py-4 align-top text-left">
                             {{-- @if (($item['availability'] ?? '') === 'AVAILABLE')
-                                <span class="badge-green">{{ __('equipment.available') }}</span>
+                                <span class="badge-green">{{ __('equipments.available') }}</span>
                             @elseif (($item['availability'] ?? '') === 'DAMAGED')
-                                <span class="badge-red">{{ __('equipment.damaged') }}</span>
+                                <span class="badge-red">{{ __('equipments.damaged') }}</span>
                             @elseif (($item['availability'] ?? '') === 'DESTROYED')
-                                <span class="badge-red">{{ __('equipment.destroyed') }}</span>
+                                <span class="badge-red">{{ __('equipments.destroyed') }}</span>
                             @elseif (($item['availability'] ?? '') === 'LOST')
-                                <span class="badge-red">{{ __('equipment.lost') }}</span>
+                                <span class="badge-red">{{ __('equipments.lost') }}</span>
                             @endif --}}
                         </td>
                         <td class="px-6 py-4 text-center align-top">
@@ -308,5 +311,4 @@
             </div>
         </div>
     </div>
-
 </div>

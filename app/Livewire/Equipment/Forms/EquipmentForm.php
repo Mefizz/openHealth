@@ -7,29 +7,30 @@ namespace App\Livewire\Equipment\Forms;
 use App\Enums\Equipment\AvailabilityStatus;
 use App\Enums\Equipment\Status;
 use App\Rules\InDictionary;
+use Illuminate\Support\Fluent;
 use Illuminate\Validation\Rule;
 use Livewire\Form;
 
 class EquipmentForm extends Form
 {
     public array $names = [['name' => '', 'type' => '']];
-    public ?string $type = null;
-    public string $serialNumber;
+    public string|int|null $type = null;
+    public ?string $serialNumber;
     public string $status;
     public string $recorder;
-    public string $divisionId;
+    public ?string $divisionId;
     public string $availabilityStatus;
-    public string $inventoryNumber;
-    public string $manufacturer;
-    public string $manufactureDate;
-    public string $expirationDate;
-    public string $modelNumber;
-    public string $lotNumber;
-    public string $note;
+    public ?string $inventoryNumber;
+    public ?string $manufacturer;
+    public ?string $manufactureDate;
+    public ?string $expirationDate;
+    public ?string $modelNumber;
+    public ?string $lotNumber;
+    public ?string $note;
 
-    public string $parentId;
-    public string $deviceDefinitionId;
-    public array $properties;
+    public ?string $parentId;
+    public ?string $deviceDefinitionId;
+    public ?array $properties;
 
     /**
      * Rules based on: https://e-health-ua.atlassian.net/wiki/spaces/ESOZ/pages/17571807355/REST+API+Create+equipment+API-007-028-0001#Request-data-validation
@@ -44,7 +45,15 @@ class EquipmentForm extends Form
             'names' => ['required', 'array', 'min:1'],
             'names.*.name' => ['required', 'string', 'max:255'],
             'names.*.type' => ['required', 'string', 'max:255', new InDictionary('device_name_type'), 'distinct'],
-            'type' => ['required', 'string', 'max:255', new InDictionary('device_definition_classification_type')],
+            'type' => [
+                'required',
+                Rule::when(
+                    static fn (Fluent $value) => is_int($value->type),
+                    ['integer'],
+                    ['string', 'max:255']
+                ),
+                new InDictionary('device_definition_classification_type')
+            ],
             'serialNumber' => [
                 'nullable',
                 'string',
@@ -63,7 +72,7 @@ class EquipmentForm extends Form
                 'nullable',
                 'string',
                 'max:255',
-                Rule::unique('equipments')->where('legal_entity_id', legalEntity()->id)
+                Rule::unique('equipments', 'inventory_number')->where('legal_entity_id', legalEntity()->id)
             ],
             'manufacturer' => ['nullable', 'string', 'max:255'],
             'manufactureDate' => ['nullable', Rule::date()->beforeOrEqual(today())],
@@ -106,6 +115,19 @@ class EquipmentForm extends Form
             ],
             'deviceDefinitionId' => ['nullable', 'uuid'],
             // add exists: https://uaehealthapi.docs.apiary.io/#reference/public.-devices/get-device-definitions/get-device-definitions-v2
+        ];
+    }
+
+    /**
+     * Redefine field names for error messages.
+     *
+     * @return array
+     */
+    protected function validationAttributes(): array
+    {
+        return [
+            'type' => __('equipments.type_medical_device'),
+            'divisionId' => __('forms.division_name'),
         ];
     }
 }

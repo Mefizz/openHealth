@@ -639,6 +639,19 @@ return [
 
         // Declaration
         'authorizeWith' => 'метод автентифікації',
-        'employeeId' => 'ПІБ лікаря'
+        'employeeId' => 'ПІБ лікаря',
+
+        // Equipment
+        'names.*.name' => 'назва медичного виробу',
+        'names.*.type' => 'тип назви',
+        'serialNumber' => 'серійний №',
+        'recorder' => 'співробітник, що вносить дані',
+        'inventoryNumber' => 'інвентарний №',
+        'manufacturer' => 'виробник',
+        'manufactureDate' => 'дата виробництва',
+        'expirationDate' => 'термін придатності',
+        'modelNumber' => '№ моделі',
+        'lotNumber' => '№ закупівлі',
+        'note' => 'коментар'
     ]
 ];

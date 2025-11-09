@@ -114,8 +114,8 @@
                                 </select>
                                 <label for="filter_division" class="label">Медичний заклад</label>
                             </div>
-                            <div class="form-group group" x-data="{ open: false, selectedStatuses: @entangle('status') }">
-                                <label for="statusFilter" class="label">Статус</label>
+                            <div class="form-group group" x-data="{ open: false, selectedStatuses: $wire.entangle('status') }">
+                                <label for="statusFilter" class="label">{{ __('forms.status.label') }}</label>
                                 <div class="relative">
 
                                     <input type="text"

@@ -1,5 +1,5 @@
 @php
-    use App\Models\{Contract, Declaration, DeclarationRequest, HealthcareService, LegalEntity, Division, License, EmployeeRole};
+    use App\Models\{Contract, Declaration, DeclarationRequest, HealthcareService, LegalEntity, Division, License, EmployeeRole, Equipment};
     use App\Models\Employee\{Employee, EmployeeRequest};
     use App\Models\Person\{Person, PersonRequest};
 @endphp
@@ -176,16 +176,16 @@
                     </li>
                 @endif
 
-                    @can('viewAny', Equipment::class)
-                        <li>
-                            <a href="{{ route('equipment.index', [legalEntity()]) }}"
-                               class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
-                            >
-                                @icon('equipment', 'w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white')
-                                <span class="ml-3">{{ __('equipment.equipment') }}</span>
-                            </a>
-                        </li>
-                    @endcan
+                @can('viewAny', Equipment::class)
+                    <li>
+                        <a href="{{ route('equipment.index', [legalEntity()]) }}"
+                           class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                        >
+                            @icon('equipment', 'w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white')
+                            <span class="ml-3">{{ __('equipments.label') }}</span>
+                        </a>
+                    </li>
+                @endcan
             @endif
         </ul>
     </div>

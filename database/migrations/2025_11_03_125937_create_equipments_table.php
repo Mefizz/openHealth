@@ -21,7 +21,7 @@ return new class extends Migration
             $table->foreignId('division_id')->nullable()->constrained();
             $table->foreignId('parent_id')->nullable()->constrained('equipments');
             $table->foreignId('recorder')->nullable()->constrained('employees');
-            //            $table->uuid('device_definition_id')->comment('Reference to device definition')->nullable(); // separate table
+            $table->uuid('device_definition_id')->comment('Reference to device definition')->nullable(); // separate table
             $table->string('type');
             $table->string('serial_number')->nullable();
             $table->enum('status', Status::values());
@@ -33,6 +33,7 @@ return new class extends Migration
             $table->string('lot_number')->nullable();
             $table->date('expiration_date')->nullable();
             $table->text('note')->nullable();
+            $table->jsonb('properties')->nullable();
             $table->string('error_reason')->nullable();
             $table->date('ehealth_inserted_at')->nullable();
             $table->uuid('ehealth_inserted_by')->nullable();
@@ -43,19 +44,6 @@ return new class extends Migration
             $table->unique(['legal_entity_id', 'inventory_number']);
             $table->timestamps();
         });
-
-        /*
-        Schema::create('equipment_properties', static function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('equipment_id')->constrained('equipments');
-            $table->string('type');
-            $table->integer('value_integer')->nullable();
-            $table->decimal('value_decimal')->nullable();
-            $table->boolean('value_boolean')->nullable();
-            $table->string('value_string')->nullable();
-            $table->timestamps();
-        });
-         */
 
         Schema::create('equipment_names', static function (Blueprint $table) {
             $table->id();
@@ -72,7 +60,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('equipment_names');
-        //        Schema::dropIfExists('equipment_properties');
         Schema::dropIfExists('equipments');
     }
 };
