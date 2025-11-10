@@ -125,7 +125,7 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
         ->group(function () {
             Route::get('/', Dashboard::class)->name('dashboard');
 
-            Route::get('/legal-entity/view', \App\Livewire\LegalEntity\LegalEntityView::class)->name('equipment.index');
+            Route::get('/legal-entity/details', \App\Livewire\LegalEntity\LegalEntityDetails::class)->name('equipment.index');
 
             Route::get('/edit', EditLegalEntity::class)
                 ->can('edit', LegalEntity::class)
