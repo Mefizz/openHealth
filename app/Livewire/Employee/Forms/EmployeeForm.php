@@ -8,6 +8,7 @@ use App\Core\Arr;
 use App\Models\Employee\BaseEmployee;
 use App\Rules\Cyrillic;
 use App\Rules\DocumentNumber;
+use App\Rules\HasIdentityDocumentRule;
 use App\Rules\UniquePassportRule;
 use Carbon\Carbon;
 use Livewire\Component;
@@ -122,8 +123,25 @@ class EmployeeForm extends Form
 
     protected function documentsRules(): array
     {
+        $identityDocTypes = [
+            'COMPLEMENTARY_PROTECTION_CERTIFICATE',
+            'NATIONAL_ID',
+            'PASSPORT',
+            'PERMANENT_RESIDENCE_PERMIT',
+            'REFUGEE_CERTIFICATE',
+            'TEMPORARY_CERTIFICATE',
+            'TEMPORARY_PASSPORT'
+        ];
+
         return [
-            'documents' => ['required', 'array', 'min:1', new UniquePassportRule()],
+            'documents' => [
+                'required',
+                'array',
+                'min:1',
+                new UniquePassportRule(),
+                new HasIdentityDocumentRule($identityDocTypes),
+            ],
+
             'documents.*.type' => ['required', 'string', Rule::in(array_keys($this->component->dictionaries['DOCUMENT_TYPE'] ?? []))],
             'documents.*.number' => [
                 'required',
@@ -133,12 +151,8 @@ class EmployeeForm extends Form
                     $documentType = $this->documents[$index]['type'] ?? null;
                     if ($documentType) {
                         $validator = validator(
-                            [
-                                'number' => $value,
-                            ],
-                            [
-                                'number' => [new DocumentNumber($documentType)],
-                            ]
+                            ['number' => $value],
+                            ['number' => [new DocumentNumber($documentType)]]
                         );
                         if ($validator->fails()) {
                             foreach ($validator->errors()->all() as $error) {

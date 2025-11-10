@@ -255,54 +255,45 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
 
     /**
      * party-user data consistency check
-     *
-     * @throws ValidationException
+     * Finds an existing Party associated with the user's email, if one exists.
+     * This method sets the $this->matchedParty property if found.
      */
     protected function validatePartyDataConsistency(): void
     {
         $this->matchedParty = null;
         $partyData = $this->form->party;
-        $taxId = $partyData['taxId'] ?? null;
+
+        // 1. Get the email from the form
         $email = $this->formEmail ?? $partyData['email'] ?? null;
 
-        if (!$taxId || $partyData['noTaxId']) {
+        if (!$email) {
+            // If there is no email, there's nothing to search for
             return;
         }
 
-        $partyByTaxId = Party::where('tax_id', $taxId)->first();
-        $userByEmail = $email ? User::where('email', $email)->first() : null;
+        // 2. FIND THE USER BY EMAIL
+        //    This is where we "find users by email"
+        //    ->with('party') tells Eloquent: "when you find the User,
+        //    please also eager-load their related Party model,
+        //    using the 'party()' relationship from the User model"
+        $userByEmail = User::where('email', $email)->with('party')->first();
 
-        if ($partyByTaxId) {
-            $lastNameMatch = strcasecmp(trim($partyByTaxId->last_name), trim($partyData['lastName'])) === 0;
-            $firstNameMatch = strcasecmp(trim($partyByTaxId->first_name), trim($partyData['firstName'])) === 0;
-            $birthDateMatch = $partyByTaxId->birth_date?->format('Y-m-d') === $partyData['birthDate'];
-            $dataMatches = $lastNameMatch && $firstNameMatch && $birthDateMatch;
+        // 3. CHECK IF THE USER EXISTS AND HAS AN ASSOCIATED PARTY
+        //    This is your condition: "if a user already exists and has a party associated with them"
+        //
+        //    - `$userByEmail`            -> checks that the user was found (is not null)
+        //    - `$userByEmail->party`     -> checks that this user has
+        //                                 an associated 'party' (i.e., party_id
+        //                                 in the users table is not null and the
+        //                                 Party model was loaded)
+        //
+        if ($userByEmail && $userByEmail->party) {
 
-            if (!$dataMatches) {
-                throw ValidationException::withMessages(
-                    [
-                        'form.party.taxId' => __('validation.party_data_mismatch'),
-                    ]
-                );
-            }
-
-            $this->matchedParty = $partyByTaxId;
-
-            if ($userByEmail && $userByEmail->partyId && $userByEmail->partyId !== $partyByTaxId->id) {
-                throw ValidationException::withMessages([
-                                                            'form.party.email' => __('validation.party.email_linked_to_other_party'),
-                                                        ]);
-            }
-
-            return;
-        }
-
-        if ($userByEmail && $userByEmail->partyId) {
-            throw ValidationException::withMessages(
-                [
-                    'form.party.email' => __('validation.party.email_linked_to_existing_party'),
-                ]
-            );
+            // 4. If both conditions are met – we found the Party
+            //    through the relationship with User.
+            //    We take this 'party' from the 'user' and
+            //    assign it to $this->matchedParty.
+            $this->matchedParty = $userByEmail->party;
         }
     }
 
@@ -403,13 +394,6 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
             return;
         }
 
-        $specificTaxIdError = __('validation.party_data_mismatch');
-        if (in_array($specificTaxIdError, $allMessages, true)) {
-            $this->dispatch('flashMessage', ['message' => $specificTaxIdError, 'type' => 'error', 'persistent' => true]);
-            $this->dispatch('validation-failed-scroll', firstErrorKey: 'form.party.taxId');
-
-            return;
-        }
         $allErrorKeys = collect($validator->errors()->keys())->unique();
 
         // A map of translatable field sections.
