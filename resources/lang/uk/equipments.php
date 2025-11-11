@@ -23,6 +23,7 @@ return [
     'add_name' => 'Додати назву',
     'reason_for_status_change' => 'Причина зміни статусу',
     'update_equipment_status' => 'Оновити статус обладнання ',
+    'update_equipment_availability' => 'Оновити доступність обладнання',
 
     'status' => [
         'active' => 'Активний',
