@@ -1,4 +1,4 @@
-<div x-data="{ show: $wire.entangle('showUpdateAvailabilityModal') }">
+<div x-data="{ show: $wire.entangle('show-update-availability-modal') }">
     <template x-teleport="body">
         <div x-show="show"
              style="display: none"
