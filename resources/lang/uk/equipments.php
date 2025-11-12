@@ -20,6 +20,10 @@ return [
     'label' => 'Обладнання',
     'search' => 'Пошук обладнання',
     'name_or_inventory_number' => 'Назва або інвентарний №',
+    'add_name' => 'Додати назву',
+    'reason_for_status_change' => 'Причина зміни статусу',
+    'update_equipment_status' => 'Оновити статус обладнання ',
+    'update_equipment_availability' => 'Оновити доступність обладнання',
 
     'status' => [
         'active' => 'Активний',
