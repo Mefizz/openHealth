@@ -20,7 +20,11 @@ return [
     'label' => 'Обладнання',
     'search' => 'Пошук обладнання',
     'name_or_inventory_number' => 'Назва або інвентарний №',
+    'inserted_at' => 'Дата внесення даних',
+    'parent_id' => "Пов'язане обладнання",
     'add_name' => 'Додати назву',
+    'update_status' => 'Змінити статус',
+    'update_availability_status' => 'Змінити доступність',
     'reason_for_status_change' => 'Причина зміни статусу',
     'update_equipment_status' => 'Оновити статус обладнання ',
     'update_equipment_availability' => 'Оновити доступність обладнання',
@@ -43,6 +47,6 @@ return [
     'type' => [
         'patient_reported' => 'Вказана пацієнтом',
         'registered' => 'Зареєстрована',
-        'user_friendly' => 'Користувацька',
+        'user_friendly' => 'Користувацька'
     ]
 ];

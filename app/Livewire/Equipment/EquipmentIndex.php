@@ -10,11 +10,11 @@ use App\Enums\Equipment\Status;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
 use App\Jobs\EquipmentSync;
+use App\Livewire\Equipment\Traits\StatusTrait;
 use App\Models\Equipment;
 use App\Models\LegalEntity;
 use App\Notifications\SyncNotification;
 use App\Repositories\Repository;
-use App\Traits\FormTrait;
 use Illuminate\Bus\Batch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Client\ConnectionException;
@@ -33,7 +33,7 @@ use Throwable;
 class EquipmentIndex extends Component
 {
     use WithPagination;
-    use FormTrait;
+    use StatusTrait;
 
     /**
      * Search by equipment name and inventory number.

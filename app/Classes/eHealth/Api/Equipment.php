@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Classes\eHealth\Api;
 
-use App\Enums\Equipment\Status;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
 use App\Models\LegalEntity as LegalEntityModel;
@@ -24,8 +23,33 @@ class Equipment extends Request
 {
     protected const string URL = '/api/equipment';
 
+    private array $divisionMap = [];
+    private array $legalEntityMap = [];
+    private array $parentMap = [];
+    private array $recorderMap = [];
+
     /**
-     * Create the Healthcare Service.
+     * Get list of equipments.
+     *
+     * @param  string  $url
+     * @param  $query
+     * @return PromiseInterface|EHealthResponse
+     * @throws ConnectionException|EHealthValidationException|EHealthResponseException
+     */
+    public function getMany(string $url = self::URL, $query = null): PromiseInterface|EHealthResponse
+    {
+        $this->setValidator($this->validateMany(...));
+        $this->setMapper($this->mapMany(...));
+
+        $query = array_merge([
+            self::QUERY_PARAM_PAGE_SIZE => config('ehealth.api.page_size')
+        ], $query ?? []);
+
+        return $this->get($url, $query);
+    }
+
+    /**
+     * Register equipment and bind it with division of legal entity.
      *
      * @param  array  $data  // Data for API request
      * @return EHealthResponse|PromiseInterface
@@ -40,6 +64,36 @@ class Equipment extends Request
     }
 
     /**
+     * Method to changes equipment status to inactive or entered_in_error.
+     *
+     * @param  string  $uuid
+     * @param  array  $data
+     * @return EHealthResponse|PromiseInterface
+     * @throws ConnectionException|EHealthValidationException|EHealthResponseException
+     */
+    public function changeStatus(string $uuid, array $data): PromiseInterface|EHealthResponse
+    {
+        $this->setValidator($this->validateResponse(...));
+
+        return $this->patch(self::URL . "/$uuid" . '/actions/change_status', $data);
+    }
+
+    /**
+     * Method to change equipment availability status.
+     *
+     * @param  string  $uuid
+     * @param  array  $data
+     * @return EHealthResponse|PromiseInterface
+     * @throws ConnectionException|EHealthValidationException|EHealthResponseException
+     */
+    public function changeAvailabilityStatus(string $uuid, array $data): PromiseInterface|EHealthResponse
+    {
+        $this->setValidator($this->validateResponse(...));
+
+        return $this->patch(self::URL . "/$uuid" . '/actions/change_availability_status', $data);
+    }
+
+    /**
      * Validate healthcare service response (create, activate, deactivate),
      * see: https://uaehealthapi.docs.apiary.io/#reference/public.-medical-service-provider-integration-layer/healthcare-services/create-healthcare-service
      */
@@ -50,6 +104,59 @@ class Equipment extends Request
         $replaced = self::replaceEHealthPropNames($data);
 
         $validator = Validator::make($replaced, $this->validationRules());
+
+        if ($validator->fails()) {
+            Log::channel('e_health_errors')->error('Validation failed: ' . implode(', ', $validator->errors()->all()));
+        }
+
+        return $validator->validate();
+    }
+
+    /**
+     * Validate list of equipments.
+     *
+     * @param  EHealthResponse  $response
+     * @return array
+     */
+    protected function validateMany(EHealthResponse $response): array
+    {
+        $replaced = [];
+        foreach ($response->getData() as $data) {
+            $replaced[] = self::replaceEHealthPropNames($data);
+        }
+
+        // Get unique UUIDs from response.
+        $uuids = [
+            'division' => collect($replaced)->pluck('division_id')->filter()->unique()->values(),
+            'legal_entity' => collect($replaced)->pluck('legal_entity_id')->filter()->unique()->values(),
+            'parent' => collect($replaced)->pluck('parent_id')->filter()->unique()->values(),
+            'recorder' => collect($replaced)->pluck('recorder')->filter()->unique()->values(),
+        ];
+
+        // Set IDs and UUID for validation and map
+        $this->divisionMap = DivisionModel::whereIn('uuid', $uuids['division'])->pluck('id', 'uuid')->toArray();
+        $this->legalEntityMap = LegalEntityModel::whereIn('uuid', $uuids['legal_entity'])->pluck('id', 'uuid')->toArray();
+        $this->parentMap = EquipmentModel::whereIn('uuid', $uuids['parent'])->pluck('id', 'uuid')->toArray();
+        $this->recorderMap = EmployeeModel::whereIn('uuid', $uuids['recorder'])->pluck('id', 'uuid')->toArray();
+
+        // Get unique UUIDs for validations.
+        $divisionUuids = array_keys($this->divisionMap);
+        $legalEntityUuids = array_keys($this->legalEntityMap);
+        $parentUuids = array_keys($this->parentMap);
+        $employeeUuids = array_keys($this->recorderMap);
+
+        // Get basic rules
+        $rules = collect($this->validationRules())
+            ->mapWithKeys(static fn ($rule, $key) => ["*.$key" => $rule])
+            ->toArray();
+
+        // Add rule 'in' to avoid N+1 queries
+        $rules['*.division_id'] = ['nullable', 'uuid', Rule::in($divisionUuids)];
+        $rules['*.legal_entity_id'] = ['required', 'uuid', Rule::in($legalEntityUuids)];
+        $rules['*.recorder'] = ['required', 'uuid', Rule::in($employeeUuids)];
+        $rules['*.parent_id'] = ['nullable', 'uuid', Rule::in($parentUuids)];
+
+        $validator = Validator::make($replaced, $rules);
 
         if ($validator->fails()) {
             Log::channel('e_health_errors')->error('Validation failed: ' . implode(', ', $validator->errors()->all()));
@@ -78,6 +185,33 @@ class Equipment extends Request
         $validated['recorder'] = EmployeeModel::where('uuid', $validated['recorder'])->value('id');
 
         return $validated;
+    }
+
+    /**
+     * Map UUID values to ID for multiple records.
+     *
+     * @param  array  $validated
+     * @return array
+     */
+    protected function mapMany(array $validated): array
+    {
+        return collect($validated)->map(
+            function (array $item) {
+                if (!empty($item['division_id'])) {
+                    $item['division_id'] = $this->divisionMap[$item['division_id']] ?? null;
+                }
+
+                $item['legal_entity_id'] = $this->legalEntityMap[$item['legal_entity_id']] ?? null;
+
+                if (!empty($item['parent_id'])) {
+                    $item['parent_id'] = $this->parentMap[$item['parent_id']] ?? null;
+                }
+
+                $item['recorder'] = $this->recorderMap[$item['recorder']] ?? null;
+
+                return $item;
+            }
+        )->toArray();
     }
 
     /**
@@ -115,7 +249,7 @@ class Equipment extends Request
             'properties.*.valueString' => ['nullable', 'string', 'max:255'],
             'recorder' => ['required', 'uuid', 'exists:employees,uuid'],
             'serial_number' => ['nullable', 'string', 'max:255'],
-            'status' => ['required', 'string', Rule::in(Status::ACTIVE)],
+            'status' => ['required', 'string', new InDictionary('equipment_statuses')],
             'type' => ['required', 'string', 'max:255', new InDictionary('device_definition_classification_type')],
             'ehealth_updated_at' => ['required', 'date'],
             'ehealth_updated_by' => ['required', 'uuid']
