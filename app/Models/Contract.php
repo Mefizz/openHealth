@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Contracts\CapitationContract;
+use App\Models\Contracts\ReimbursementContract;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -49,7 +52,6 @@ class Contract extends Model
         'statute_md5',
         'additional_document_md5',
         'legal_entity_id',
-
     ];
 
     protected $casts = [
@@ -62,6 +64,47 @@ class Contract extends Model
         'end_date',
         'inserted_at',
     ];
+
+    /**
+     * The column name to store the class name.
+     */
+    protected string $discriminator = 'type';
+
+    /**
+     * Map for STI
+     */
+    protected array $discriminatorMap = [
+        'capitation'    => CapitationContract::class,
+        'reimbursement' => ReimbursementContract::class,
+    ];
+
+    public function newModelQuery(): Builder
+    {
+        $query = parent::newModelQuery();
+
+        if ($this->discriminator && $this->discriminatorMap) {
+            $query->where(function ($query) {
+                foreach (array_keys($this->discriminatorMap) as $type) {
+                    $query->orWhere($this->discriminator, $type);
+                }
+            });
+        }
+
+        return $query;
+    }
+
+    public function newInstance($attributes = [], $exists = false)
+    {
+        if (isset($attributes[$this->discriminator])) {
+            $type = $attributes[$this->discriminator];
+            if (isset($this->discriminatorMap[$type])) {
+                $class = $this->discriminatorMap[$type];
+                return new $class($attributes);
+            }
+        }
+
+        return parent::newInstance($attributes, $exists);
+    }
 
     public function legalEntity(): BelongsTo
     {

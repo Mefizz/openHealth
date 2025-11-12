@@ -5,11 +5,12 @@ namespace App\Livewire\Contract\Forms;
 use App\Rules\ContractRules\ValidEndDate;
 use App\Rules\ContractRules\ValidStartDate;
 use App\Rules\ValidIBAN;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
-class ContractFormRequest extends Form
+class BaseContractFormRequest extends Form
 {
 
     #[Validate([
@@ -77,6 +78,22 @@ class ContractFormRequest extends Form
             'start_date' => ['required', 'string', new ValidStartDate()],
             'end_date'   => ['required', 'string', new ValidEndDate($this->start_date)],
         ];
+    }
+
+    public function buildPayload(array $context): array
+    {
+        $data = $this->toArray();
+
+        // Загальна логіка
+        $data['additional_document_md5'] = md5_file($context['additional_document_md5_path']);
+        $data['statute_md5'] = md5_file($context['statute_md5_path']);
+        $data['end_date'] = Carbon::parse($this->end_date)->format('Y-m-d');
+        $data['start_date'] = Carbon::parse($this->start_date)->format('Y-m-d');
+        $data['contractor_owner_id'] = $context['legalEntity']->getOwner()->uuid;
+        $data['contractor_payment_details']['payer_account'] = str_replace(' ', '', $data['contractor_payment_details']['payer_account']);
+
+        unset($data['knedp'], $data['keyContainerUpload'], $data['password']); //
+        return $data;
     }
 
 }
