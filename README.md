@@ -104,7 +104,7 @@ MAIL_FROM_NAME="${APP_NAME}"
 ```
 Also, for local usage, [Sendria](https://pypi.org/project/sendria/) could be a great option for the mailer.
 
-After following a link specified on the email, the user should be redirected to the login page (and the record in the column `email_verified_at` in the user table should change accordingly). The login page ahs the following URL:
+After following a link specified in the email, the user should be redirected to the login page (and the record in the column `email_verified_at` in the user table should change accordingly). The login page has the following URL:
 ```
 http://localhost:8000/login
 ```
@@ -115,9 +115,9 @@ Then, enter credentials. If all is configured properly, after login, the user sh
 
 ![screenshot](docs/register_legal_entity.png)
 
-There are several steps to register a legal entity, after filling all the data, the last step is to user Qualified Digital Signature (QDS) to sign the data for eHealth.
+There are several steps to register a legal entity, after filling all the data, the last step is to use a Qualified Digital Signature (QDS) to sign the data for eHealth.
 Please use the valid QDS certificate of the legal entity or private entrepreneur, otherwise, the application and eHealth will reject the request.
-When the registration is successful, which should be visible by the message on the screen, the user should log out. Before moving further, we recommend to configure queues for synchronization of data with eHealth.
+When the registration is successful, which should be visible by the message on the screen, the user should log out. Before moving further, we recommend to configure asynchronous queues for synchronization of data with eHealth.
 
 ## Queues
 ### Command line
