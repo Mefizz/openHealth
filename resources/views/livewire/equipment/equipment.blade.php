@@ -8,7 +8,7 @@
     <div class="form" wire:key="{{ random_bytes(5) }}">
 
         @include('livewire.equipment.parts.main-data')
-        @include('livewire.equipment.parts.additional-data')
+        @include('livewire.equipment.parts.additional-data', ['context' => 'create'])
 
         <div class="mt-6 flex flex-row items-center gap-4 pt-6">
             <div class="flex items-center space-x-3">

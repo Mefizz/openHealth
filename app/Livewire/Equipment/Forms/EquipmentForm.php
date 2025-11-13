@@ -6,6 +6,7 @@ namespace App\Livewire\Equipment\Forms;
 
 use App\Enums\Equipment\AvailabilityStatus;
 use App\Enums\Equipment\Status;
+use App\Models\Equipment;
 use App\Rules\InDictionary;
 use Illuminate\Support\Fluent;
 use Illuminate\Validation\Rule;
@@ -31,6 +32,8 @@ class EquipmentForm extends Form
     public ?string $parentId;
     public ?string $deviceDefinitionId;
     public ?array $properties;
+    public ?string $uuid;
+    public ?string $errorReason = null;
 
     /**
      * Rules based on: https://e-health-ua.atlassian.net/wiki/spaces/ESOZ/pages/17571807355/REST+API+Create+equipment+API-007-028-0001#Request-data-validation

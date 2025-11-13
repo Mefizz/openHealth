@@ -45,14 +45,14 @@
                                    wire:model="searchByName"
                                    autocomplete="off"
                             />
-                            <label for="searchByName"
-                                   class="label">{{ __('equipments.name_or_inventory_number') }}</label>
+                            <label for="searchByName" class="label">
+                                {{ __('equipments.name_or_inventory_number') }}
+                            </label>
                         </div>
                     </div>
 
-                    <button
-                        class="button-minor flex items-center justify-center gap-2 w-full lg:w-auto self-stretch lg:self-auto lg:-translate-y-[9px]"
-                        @click="showFilter = !showFilter"
+                    <button @click="showFilter = !showFilter"
+                            class="button-minor flex items-center justify-center gap-2 w-full lg:w-auto self-stretch lg:self-auto lg:-translate-y-[9px]"
                     >
                         @icon('adjustments', 'w-4 h-4')
                         <span>{{ __('forms.additional_search_parameters') }}</span>
@@ -94,7 +94,8 @@
                                 @endforeach
                             </select>
                             <label for="divisionFilter"
-                                   class="label peer-focus:text-blue-600 peer-valid:text-blue-600">
+                                   class="label peer-focus:text-blue-600 peer-valid:text-blue-600"
+                            >
                                 {{ __('forms.division_name') }}
                             </label>
 
@@ -327,19 +328,23 @@
                                                         {{ __('forms.view') }}
                                                     </a>
 
-                                                    <a href=""
+                                                    <a href="#"
+                                                       @click.prevent="$dispatch('open-update-status-modal', { uuid: '{{ $equipment->uuid }}', name: '{{ $equipment->names->first()->name }}', status: '{{ $equipment->status }}' })"
                                                        class="flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm text-gray-600 hover:bg-gray-50"
                                                     >
                                                         @icon('edit', 'w-5 h-5 text-gray-600')
-                                                        {{ __('equipments.status.update') }}
+                                                        {{ __('equipments.update_status') }}
                                                     </a>
 
-                                                    <a href=""
-                                                       class="flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm text-gray-600 hover:bg-gray-50"
-                                                    >
-                                                        @icon('edit', 'w-5 h-5 text-gray-600')
-                                                        {{ __('equipments.availability_status.update') }}
-                                                    </a>
+                                                    @if ($equipment->status === Status::ACTIVE)
+                                                        <a href="#"
+                                                           @click.prevent="$dispatch('open-update-availability-status-modal', { uuid: '{{ $equipment->uuid }}', name: '{{ $equipment->names->first()->name }}' })"
+                                                           class="flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm text-gray-600 hover:bg-gray-50"
+                                                        >
+                                                            @icon('edit', 'w-5 h-5 text-gray-600')
+                                                            {{ __('equipments.update_availability_status') }}
+                                                        </a>
+                                                    @endif
                                                 @else
                                                     <a href="{{ route('equipment.view', [legalEntity(), $equipment->id]) }}"
                                                        class="flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm text-gray-600 hover:bg-gray-50"
@@ -376,4 +381,7 @@
             </div>
         </div>
     </div>
+
+    @include('livewire.equipment.modals.update-status-modal')
+    @include('livewire.equipment.modals.update-availability-modal')
 </div>

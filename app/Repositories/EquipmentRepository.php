@@ -53,6 +53,22 @@ class EquipmentRepository
     }
 
     /**
+     * Update equipment data after updating status.
+     *
+     * @param  string  $uuid
+     * @param  array  $data
+     * @return void
+     */
+    public function updateStatus(string $uuid, array $data): void
+    {
+        $forUpdate = Arr::only(
+            $data,
+            ['status', 'availability_status', 'error_reason', 'ehealth_updated_at', 'ehealth_updated_by']
+        );
+        Equipment::whereUuid($uuid)->update($forUpdate);
+    }
+
+    /**
      * Sync equipment and related names.
      *
      * @param  array  $items

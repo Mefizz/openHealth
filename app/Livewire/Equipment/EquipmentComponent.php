@@ -69,10 +69,13 @@ class EquipmentComponent extends Component
         $this->equipments = $legalEntity->equipments()
             ->active()
             ->with('names:equipment_id,name,type')
-            ->get(['id', 'uuid'])
+            ->get(['id', 'uuid', 'status', 'availability_status'])
             ->map(static fn (Equipment $equipment) => [
                 'uuid' => $equipment->uuid,
-                'name' => $equipment->names->first()->name
+                'name' => $equipment->names->first()->name,
+                'type' => $equipment->names->first()->type,
+                'status' => $equipment->status,
+                'availabilityStatus' => $equipment->availabilityStatus
             ])
             ->toArray();
 

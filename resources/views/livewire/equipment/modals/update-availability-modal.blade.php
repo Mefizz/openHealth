@@ -1,4 +1,13 @@
-<div x-data="{ show: $wire.entangle('show-update-availability-modal') }">
+@use('App\Enums\Equipment\AvailabilityStatus')
+
+<div x-data="{ show: false, equipmentUuid: null, equipmentName: '' }"
+     @open-update-availability-status-modal.window="
+         equipmentUuid = $event.detail.uuid;
+         equipmentName = $event.detail.name;
+         show = true;
+    "
+     @close-update-availability-status-modal.window="show = false"
+>
     <template x-teleport="body">
         <div x-show="show"
              style="display: none"
@@ -18,38 +27,49 @@
                      class="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white p-6 text-center shadow-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800"
                 >
 
-                    @if($showUpdateAvailabilityModal)
-                        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6 text-left">
-                            {{ __('equipments.update_equipment_availability', ['name' => $equipmentName]) }}
-                        </h2>
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6 text-left">
+                        {{ __('equipments.update_equipment_availability') }} "<span x-text="equipmentName"></span>"
+                    </h2>
 
-                        <form wire:submit.prevent="updateAvailability">
-                            <div class="mb-6 text-left">
-                                <label for="availability" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {{ __('equipments.availability_status.available') }}
-                                </label>
-                                <select id="availability"
-                                        wire:model.defer="newAvailability"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
-                                >
-                                    <option value="">{{ __('forms.select') }}</option>
-                                </select>
-                                @error('newAvailability') <span class="text-sm text-red-500">{{ $message }}</span> @enderror
-                            </div>
+                    <form @submit.prevent="$wire.updateAvailabilityStatus(equipmentUuid)"
+                          wire:key="{{ random_bytes(5) }}"
+                    >
+                        <div class="mb-6 text-left">
+                            <label for="availabilityStatus"
+                                   class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                            >
+                                {{ __('equipments.availability_status.label') }}
+                            </label>
 
-                            <div class="mt-6 flex justify-end gap-3">
-                                <button type="button" @click="show = false" class="button-minor">
-                                    {{ __('forms.cancel') }}
-                                </button>
-                                <button type="submit"
-                                        wire:loading.attr="disabled"
-                                        class="inline-flex justify-center rounded-lg border border-transparent bg-blue-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-75"
-                                >
-                                    {{ __('forms.update_data') }}
-                                </button>
-                            </div>
-                        </form>
-                    @endif
+                            <select id="availabilityStatus"
+                                    wire:model="availabilityStatus"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                                    required
+                            >
+                                <option value="" selected>{{ __('forms.select') }}</option>
+                                @foreach(AvailabilityStatus::options() as $key => $status)
+                                    <option value="{{ $key }}">{{ $status }}</option>
+                                @endforeach
+                            </select>
+
+                            @error('availabilityStatus') <p class="text-error">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div class="mt-6 flex justify-end gap-3">
+                            <button type="button"
+                                    @click="show = false"
+                                    class="button-minor"
+                            >
+                                {{ __('forms.cancel') }}
+                            </button>
+                            <button type="submit"
+                                    wire:loading.attr="disabled"
+                                    class="button-primary"
+                            >
+                                {{ __('forms.update_data') }}
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
