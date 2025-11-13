@@ -46,7 +46,7 @@
                         x-transition:leave-end="transform opacity-0 scale-95"
                     >
                         @if(legalEntity())
-                            @can('viewAny', legalEntity())
+                            @can('access', legalEntity())
                                 <li>
                                     <a href="{{ route('legal-entity.details', [legalEntity()]) }}"
                                        class="flex items-center p-2 pl-11 w-full text-base font-medium text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
