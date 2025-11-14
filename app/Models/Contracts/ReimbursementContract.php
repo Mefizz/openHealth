@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models\Contracts;
 
 use App\Models\Contract;
+use Illuminate\Database\Eloquent\Builder;
 
 class ReimbursementContract extends Contract
 {
@@ -10,12 +13,12 @@ class ReimbursementContract extends Contract
     {
         parent::boot();
 
-        static::addGlobalScope('type', static function ($builder) {
-            $builder->where('type', 'reimbursement');
+        static::creating(static function (self $model) {
+            $model->type = 'reimbursement';
         });
 
-        static::creating(static function ($model) {
-            $model->type = 'reimbursement';
+        static::addGlobalScope('reimbursement', static function (Builder $builder) {
+            $builder->where('type', 'reimbursement');
         });
     }
 }

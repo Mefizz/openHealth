@@ -14,9 +14,7 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\SelectLegalEntity;
 use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Auth\VerifyPersonality;
-use App\Livewire\Contract\ContractCreate;
 use App\Livewire\Contract\ContractEdit;
-use App\Livewire\Contract\ContractForm;
 use App\Livewire\Contract\ContractIndex;
 use App\Livewire\Contract\ContractShow;
 use App\Livewire\Dashboard;
@@ -202,20 +200,14 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                 ->name('employee-role.create')
                 ->can('create', EmployeeRole::class);
 
-        Route::prefix('contract')->group(function () {
             Route::get('contracts', ContractIndex::class)
                 ->name('contracts.index');
 
-            Route::get('contracts/create', ContractCreate::class)
-                ->name('contracts.create');
-
-            Route::get('contracts/{contract}', ContractShow::class)
+            Route::get('contracts/{contract:uuid}', ContractShow::class)
                 ->name('contracts.show');
 
-            Route::get('contracts/{contract}/edit', ContractEdit::class)
+            Route::get('contracts/{contract:uuid}/edit', ContractEdit::class)
                 ->name('contracts.edit');
-        });
-
             // Routes related to legal entity licenses; primary license can't be edited
             Route::prefix('license')->middleware(['permission:license:read|license:write'])
                 ->name('license.')

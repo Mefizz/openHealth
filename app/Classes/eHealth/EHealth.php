@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Classes\eHealth;
 
+use App\Classes\eHealth\Api\Contract;
 use App\Classes\eHealth\Api\Declaration;
 use App\Classes\eHealth\Api\DeclarationRequest;
 use App\Classes\eHealth\Api\DeviceDefinition;
@@ -131,5 +132,9 @@ final class EHealth
     public static function party(): Party
     {
         return app(Party::class);
+    }
+    public static function contract(): Contract
+    {
+        return app(Contract::class);
     }
 }

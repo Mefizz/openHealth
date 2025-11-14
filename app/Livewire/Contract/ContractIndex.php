@@ -1,141 +1,77 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Contract;
 
+use App\Enums\Contract\ContractStatus; // Assuming you have/create this Enum
 use App\Models\Contract;
 use App\Models\LegalEntity;
-use App\Services\DictionaryService;
-use App\Traits\FormTrait;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Locked;
 use Livewire\Attributes\Validate;
-use Livewire\Component;
-use Illuminate\Support\Facades\Cache;
-class ContractIndex extends Component
+use Livewire\WithPagination;
+
+class ContractIndex extends ContractComponent
 {
-    use FormTrait;
+    use WithPagination;
 
-    const string CACHE_PREFIX = 'register_contract_form';
+    public LegalEntity $legalEntity;
 
-    public ?array $tableHeaders;
+    #[Validate('required|string|in:capitation,reimbursement')]
+    public string $contractType = '';
 
-    public ?array $dictionaryNames = [
-        'CONTRACT_TYPE',
-    ];
-
-    #[Validate('required')]
-    public string $contractType;
-
-    protected string $contractCacheKey;
-    /**
-     * @var true
-     */
-    public bool $hasInitContract = true;
-
-    public ?LegalEntity $legalEntity;
-
-    #[Locked]
-    public int $legalEntityId;
-
-    public?int $selectedContractId = null;
-
-    public ?Contract $contract;
-
-    public function getLegalEntity(): void
-    {
-        $this->legalEntity = legalEntity();
-    }
-
-    public function boot(): void
-    {
-        $this->contractCacheKey = self::CACHE_PREFIX . '-'. legalEntity()->uuid;
-    }
-
+    public ?array $tableHeaders = ['UUID', 'Number', 'Type', 'Status', 'Dates', 'Actions']; // Simplified
 
     public function mount(LegalEntity $legalEntity): void
     {
-        $this->tableHeaders();
-        $this->getDictionary();
-        $this->hasInitContract();
-        $this->getLegalEntity();
+        $this->legalEntity = $legalEntity;
+        $this->loadDictionaries();
+    }
 
-//        dd(Cache::get($this->contractCacheKey));
+    /**
+     * Creates a new local contract draft and redirects to the edit page.
+     * This is the "Create Local First" pattern.
+     */
+    public function createContract(): void
+    {
+        $this->validate();
+
+        $contract = new Contract();
+        $contract->uuid = (string) Str::uuid(); // Use a temp UUID
+        $contract->type = $this->contractType;
+        $contract->status = ContractStatus::NEW; // Use an Enum: 'NEW'
+        $contract->legal_entity_id = $this->legalEntity->id;
+
+        $contract->start_date = now()->format('Y-m-d');
+        $contract->end_date = now()->addYear()->format('Y-m-d');
+        $contract->contractor_payment_details = ['bank_name' => '', 'payer_account' => '', 'mfo' => ''];
+
+        $contract->save();
+
+        $this->dispatch('flashMessage', ['message' => 'Created local draft.', 'type' => 'success']);
+
+        // Redirect to the edit page to fill out the form
+        $this->redirect(route('contracts.edit', [
+            'legalEntity' => $this->legalEntity->uuid,
+            'contract' => $contract->uuid, // Use our local UUID for the route
+        ]));
     }
 
     #[Computed]
-    public function tableHeaders(): void
+    public function contracts(): LengthAwarePaginator
     {
-        $this->tableHeaders = [
-            __('ID'),
-            __('forms.number_contract'),
-            __('forms.start_date'),
-            __('forms.end_date'),
-            __('forms.status.label'),
-            __('forms.action'),
-        ];
-    }
-
-    #[Computed]
-    public function contractTypes(): array
-    {
-        // Assuming getDictionary() fetches this data
-        // This logic should be moved to a dedicated service and called here
-        return DictionaryService::get('CONTRACT_TYPE');
+        // This will now correctly fetch CapitationContract or ReimbursementContract models
+        return $this->legalEntity
+            ->contracts()
+            ->paginate(config('pagination.per_page', 10));
     }
 
     public function render()
     {
-        $perPage = config('pagination.per_page');
-
-        $query = $this->legalEntity->contracts();
-
-        if (!empty($this->contractType)) {
-        }
-
-        $contracts = $query->paginate($perPage);
-
-        return view('livewire.contract.contract-index', compact('contracts'));
-    }
-
-    public function createRequest()
-    {
-        // This part handles resuming a form from cache
-        if (Cache::has($this->contractCacheKey)){
-            return redirect()->route('contract.form', [
-                'legalEntity' => legalEntity()
-            ]);
-        }
-
-        $this->validate();
-
-        $initContractRequestApi = ContractRequestApi::initContractRequestApi($this->contractType);
-        if (!empty($initContractRequestApi)) {
-            Cache::tags(['legal-entity:'. $this->legalEntity->uuid])
-                ->put($this->contractCacheKey, $initContractRequestApi, now()->addHours(24));
-        }
-
-        return redirect()->route('contract.form', [
-            'legalEntity' => legalEntity()
+        return view('livewire.contract.contract-index', [
+            'contracts' => $this->contracts,
         ]);
     }
-
-    public function hasInitContract(): void
-    {
-        if (Cache::has($this->contractCacheKey)){
-            $this->hasInitContract = false;
-        }
-    }
-
-    #[Computed]
-    public function hasExistingFormCache(): bool
-    {
-        return Cache::has($this->contractCacheKey);
-    }
-
-    public function showContract($id):void
-    {
-        $this->contract = Contract::find($id);
-        $this->openModal('show_contract');
-    }
-
 }

@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Contract;
 
 use App\Classes\Cipher\Api\CipherApi;
-use App\Livewire\Contract\Forms\Api\ContractRequestApi;
-use App\Livewire\Contract\Forms\ContractFormRequest;
+use App\Classes\eHealth\EHealth;
+use App\Livewire\Contract\Forms\BaseContractFormRequest;
 use App\Livewire\LegalEntity\Forms\LegalEntitiesRequestApi;
 use App\Models\Contract;
 use App\Models\Division;
@@ -14,15 +16,16 @@ use App\Traits\FormTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
 class ContractForm extends Component
 {
-    use FormTrait, WithFileUploads, Cipher;
+    use FormTrait;
+    use WithFileUploads;
+    use Cipher;
 
-    const CACHE_PREFIX = 'register_contract_form';
+    public const string CACHE_PREFIX = 'register_contract_form';
 
     public ?array $dictionaryNames = [
         'CONTRACT_TYPE',
@@ -35,7 +38,7 @@ class ContractForm extends Component
     public ?Collection $divisions;
     public ?Collection $healthcareServices;
 
-    public ContractFormRequest $contract_request;
+    public BaseContractFormRequest $contract_request;
 
     public array $legalEntityApi = [];
 
@@ -60,21 +63,19 @@ class ContractForm extends Component
         $this->getLegalEntity();
     }
 
-    public function getLegalEntity()
+    public function getLegalEntity(): void
     {
         $this->legalEntity = legalEntity();
 
         $this->divisions = $this->legalEntity->getActiveDivisions();
     }
 
-
     public function contractType()
     {
         return $this->legalEntity->contract_type;
     }
 
-
-    public function getLegalEntityApi()
+    public function getLegalEntityApi(): void
     {
         if (strlen($this->contract_request->external_contractors['name']) >= 3) {
             $this->legalEntityApi = LegalEntitiesRequestApi::getLegalEntities($this->contract_request->external_contractors['name']);
@@ -96,6 +97,7 @@ class ContractForm extends Component
         // 3. CORRECTED CHECK: Check if the 'data' array inside the response is empty
         if (empty($foundEntity['data'])) {
             $this->addError('contract_request.external_contractors.edrpou', 'Організацію з таким ЄДРПОУ не знайдено.');
+
             return;
         }
 
@@ -149,12 +151,10 @@ class ContractForm extends Component
         $this->openModal('signed_content');
     }
 
-
     public function deleteExternalContractors($key): void
     {
         unset($this->external_contractors[$key]);
     }
-
 
     public function getHealthcareServices($id): object|array
     {
@@ -175,6 +175,7 @@ class ContractForm extends Component
 
     /**
      * Try to get tax ID from legal entity owner depends on authorized user
+     *
      * @return string
      */
     protected function getTaxIdFromOwner(): string
@@ -182,14 +183,14 @@ class ContractForm extends Component
         return $this->legalEntity->employees()->where('employee_type', 'OWNER')->first()->party['tax_id'] ?? '';
     }
 
-    public function sendApiRequest()
+    public function sendApiRequest(): \Illuminate\Http\RedirectResponse
     {
         $this->contract_request->rulesForModelValidate();
         $removeKeyEmpty = removeEmptyKeys($this->requestBuilder());
         $taxId = $this->getTaxIdFromOwner();
 
-        $base64Data = (new CipherApi())->sendSession(
-            json_encode($removeKeyEmpty),
+        $base64Data = new CipherApi()->sendSession(
+            json_encode($removeKeyEmpty, JSON_THROW_ON_ERROR),
             $this->password,
             $this->keyContainerUpload,
             $this->knedp,
@@ -199,37 +200,40 @@ class ContractForm extends Component
         if (isset($base64Data['errors'])) {
             $this->dispatch('flashMessage', [
                 'message' => $base64Data['errors'],
-                'type'    => 'error'
+                'type' => 'error'
             ]);
+
             return;
         }
 
         $data = [
-            'signed_content'          => $base64Data,
+            'signed_content' => $base64Data,
             'signed_content_encoding' => 'base64',
         ];
 
-        $contract_response = ContractRequestApi::contractRequestApi($data, Cache::get($this->contractCacheKey));
+        //todo add request
+        $contract_response = EHealth::contract();
         $contract = new Contract($contract_response);
         $contract->uuid = $contract_response['id'];
         $contract->contractor_legal_entity_id = $contract_response['contractor_legal_entity']['id'];
         $contract->contractor_owner_id = $contract_response['contractor_owner']['id'];
         $this->legalEntity->contracts()->save($contract);
         Cache::forget($this->contractCacheKey);
+
         return redirect()->route('contract.index', [legalEntity()]);
     }
 
-
-    public function requestBuilder()
+    public function requestBuilder(): array
     {
         $data = $this->contract_request->toArray();
 
         if (!empty($this->external_contractors)) {
             $data['external_contractors'] = array_map(function ($contractor) {
                 unset($contractor['name']);
-                if (isset($contractor['divisions']) ) {
+                if (isset($contractor['divisions'])) {
                     $contractor['divisions'] = [$contractor['divisions']];
                 }
+
                 return $contractor;
             }, $this->external_contractors);
 
@@ -247,11 +251,9 @@ class ContractForm extends Component
         return $data;
     }
 
-
     public function render()
     {
         return view('livewire.contract.contract-form');
     }
-
 
 }
