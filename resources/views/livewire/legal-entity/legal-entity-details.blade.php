@@ -24,6 +24,8 @@
 
 <div x-data="{ isDisabled: true, isEdit: @json($isEdit), activeStep: 0}">
 
+    <livewire:components.x-message :key="now()->timestamp"/>
+
     <x-header-navigation class="items-start" x-data="{ showFilter: false }">
 
         <x-slot name="title">

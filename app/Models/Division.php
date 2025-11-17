@@ -10,11 +10,12 @@ use App\Casts\Division\Location;
 use App\Models\Employee\Employee;
 use App\Models\Relations\Address;
 use App\Casts\Division\WorkingHours;
-use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Employee\EmployeeRequest;
 use Eloquence\Behaviours\HasCamelCasing;
 use Illuminate\Database\Eloquent\Builder;
+use App\Enums\Division\Type as DivisionType;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -23,9 +24,6 @@ class Division extends Model
 {
     use HasCamelCasing;
 
-    public const string TYPE_FAP = 'FAP';
-    public const string TYPE_CLINIC = 'CLINIC';
-    public const string TYPE_AMBULANT_CLINIC = 'AMBULANT_CLINIC';
     public const float LOCATION_DEFAULT_LATITUDE = 0.0;
     public const float LOCATION_DEFAULT_LONGITUDE = 0.0;
     public const string WORKING_TIME_DEFAULT_START = '00:00';
@@ -60,16 +58,35 @@ class Division extends Model
 
     /**
      * Returns an array of available division types.
+     * Depends on the type of the associated LegalEntity.
      *
      * @return array
      */
     public static function getValidDivisionTypes(): array
     {
-        return [
-            self::TYPE_CLINIC,
-            self::TYPE_AMBULANT_CLINIC,
-            self::TYPE_FAP
-        ];
+        $legalEntityType = legalEntity()?->type->name;
+
+        if (! $legalEntityType) {
+            return [];
+        }
+
+        return match ($legalEntityType) {
+            LegalEntity::TYPE_EMERGENCY,
+            LegalEntity::TYPE_OUTPATIENT => [
+                DivisionType::TYPE_LICENSED_UNIT->value
+            ],
+
+            LegalEntity::TYPE_PHARMACY => [
+                DivisionType::TYPE_DRUGSTORE->value,
+                DivisionType::TYPE_DRUGSTORE_POINT->value
+            ],
+
+            default => [
+                DivisionType::TYPE_FAP->value,
+                DivisionType::TYPE_CLINIC->value,
+                DivisionType::TYPE_AMBULANT_CLINIC->value
+            ],
+        };
     }
 
     /**
@@ -125,8 +142,9 @@ class Division extends Model
     {
         return [
             LegalEntity::TYPE_PRIMARY_CARE,
-            LegalEntity::TYPE_MSP,
-            LegalEntity::TYPE_MSP_PHARMACY
+            LegalEntity::TYPE_OUTPATIENT,
+            LegalEntity::TYPE_PHARMACY,
+            LegalEntity::TYPE_EMERGENCY
         ];
     }
 

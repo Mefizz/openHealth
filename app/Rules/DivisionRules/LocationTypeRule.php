@@ -33,6 +33,6 @@ class LocationTypeRule implements ValidationRule
 
     protected function message(): string
     {
-        return __('validation.attributes.healthcareService.error.division.location.required_type');
+        return __('divisions.errors.location.required_type');
     }
 }

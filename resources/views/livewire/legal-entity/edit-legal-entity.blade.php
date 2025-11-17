@@ -3,6 +3,8 @@
         <x-slot name="title">{{ __('forms.edit') }}</x-slot>
     </x-header-navigation>
 
+    <livewire:components.x-message :key="now()->timestamp"/>
+
     <section class="section-form shift-content"
         x-data="{
             activeStep: 0,

@@ -38,7 +38,7 @@ class AddressRule implements ValidationRule
     public function __construct(array $division)
     {
         $this->division = $division;
-        $this->message = __('validation.attributes.healthcareService.error.division.address.commonError');
+        $this->message = __('divisions.errors.address.commonError');
         $this->dictionaries = dictionary()->getDictionaries(['ADDRESS_TYPE', 'SETTLEMENT_TYPE', 'STREET_TYPE']);
     }
 
@@ -105,7 +105,7 @@ class AddressRule implements ValidationRule
             $addressType = $address['type'] ?? '';
 
             if (!in_array($addressType, array_keys($this->dictionaries['ADDRESS_TYPE']))) {
-                $this->setMessage(__('validation.attributes.healthcareService.error.division.address.type'));
+                $this->setMessage(__('divisions.errors.address.type'));
 
                 return false;
             }
@@ -125,7 +125,7 @@ class AddressRule implements ValidationRule
                 $settlementType = $address['settlementType'] ?? '';
 
                 if (!in_array($settlementType, array_keys($this->dictionaries['SETTLEMENT_TYPE']))) {
-                    $this->setMessage(__('validation.attributes.healthcareService.error.division.address.settlementType'));
+                    $this->setMessage(__('divisions.errors.address.settlementType'));
 
                     return false;
                 }
@@ -145,7 +145,7 @@ class AddressRule implements ValidationRule
             $streetType = $address['streetType'] ?? '';
 
             if (!in_array($streetType , array_keys($this->dictionaries['STREET_TYPE']))) {
-                $this->setMessage(__('validation.attributes.healthcareService.error.division.address.streetType'));
+                $this->setMessage(__('divisions.errors.address.streetType'));
 
                 return false;
             }
@@ -165,7 +165,7 @@ class AddressRule implements ValidationRule
             $zipCode = $address['zip'] ?? '';
 
             if (!empty($zipCode) && !preg_match('/^[0-9]{5}$/', $zipCode)) {
-                $this->setMessage(__('validation.attributes.healthcareService.error.division.address.zip'));
+                $this->setMessage(__('divisions.errors.address.zip'));
 
                 return false;
             }
@@ -189,14 +189,35 @@ class AddressRule implements ValidationRule
 
             if (! in_array($divisionType, Division::getValidDivisionTypes()) ||
                 ! in_array($legalEntityType, Division::getValidLegalEntityTypes()) ||
-                $addressType !== Address::DEFAULT_TYPE
+                !$this->checkAddressObligation($addressType, $legalEntityType)
             ) {
-                $this->setMessage(__('validation.attributes.healthcareService.error.address.mapping'));
+                $this->setMessage(__('divisions.errors.address.mapping'));
 
                 return false;
             }
         }
 
         return true;
+    }
+
+    /**
+     * Check if an address is obligatory for a given address type and legal entity type.
+     *
+     * @param string $addressType The type of address (e.g., 'RESIDENCE', 'RECEPTION')
+     * @param string $legalEntityType The type of legal entity (e.g., 'PRIMARY_CARE', 'OUTPATIENT')
+     *
+     * @return bool Returns true if the address is mandatory for the specified combination, false otherwise
+     */
+    protected function checkAddressObligation(string $addressType, string $legalEntityType): bool
+    {
+        if ($addressType === Address::RECEPTION_TYPE && $legalEntityType === LegalEntity::TYPE_OUTPATIENT) {
+            return true;
+        }
+
+        if (Address::DEFAULT_TYPE === $addressType) {
+            return true;
+        }
+
+        return false;
     }
 }

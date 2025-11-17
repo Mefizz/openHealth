@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Division;
 
+use Arr;
 use Exception;
 use Throwable;
 use App\Models\Division;
@@ -18,7 +19,6 @@ use Illuminate\Support\Facades\Auth;
 use App\Livewire\Division\Trait\HasAction;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
-use Arr;
 
 class DivisionEdit extends DivisionComponent
 {
@@ -194,7 +194,6 @@ class DivisionEdit extends DivisionComponent
             session()->flash('success', __('forms.success_response'));
 
             return;
-            // return redirect()->route('division.index', [legalEntity()])->with('success', __('forms.success_response'));
         } catch (EHealthResponseException $err) {
             Log::channel('e_health_errors')->error(self::class . ':divisionUpdate', ['error' => $err->getMessage()]);
         } catch (EHealthValidationException $err) {

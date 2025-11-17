@@ -9,7 +9,7 @@
          actionButtonText: ''
      }"
 >
-    <x-messages/>
+    <livewire:components.x-message :key="now()->timestamp"/>
 
     <x-header-navigation x-data="{ showFilter: false }">
         <x-slot name="title">{{ __('forms.divisions') }}</x-slot>
@@ -161,14 +161,16 @@
                                             class="absolute right-0 mt-2 w-40 rounded-md bg-white shadow-md z-50"
                                             wire:key="menu-{{ $division->id }}-{{ is_string($division->status) ? $division->status : ($division->status?->value ?? 'unknown') }}"
                                         >
-                                            @can('viewAny', HealthcareService::class)
-                                                <a href="{{ route('healthcare-service.index', [legalEntity(), 'division' => $division->id]) }}"
-                                                   class="flex items-center gap-2 w-full first-of-type:rounded-t-md px-4 py-2.5 text-left text-sm text-gray-600 hover:bg-gray-50"
-                                                >
-                                                    @icon('settings', 'w-5 h-5 text-gray-600')
-                                                    {{ __('forms.services') }}
-                                                </a>
-                                            @endcan
+                                            @if($division->status !== Status::DRAFT)
+                                                @can('viewAny', HealthcareService::class)
+                                                    <a href="{{ route('healthcare-service.index', [legalEntity(), 'division' => $division->id]) }}"
+                                                    class="flex items-center gap-2 w-full first-of-type:rounded-t-md px-4 py-2.5 text-left text-sm text-gray-600 hover:bg-gray-50"
+                                                    >
+                                                        @icon('settings', 'w-5 h-5 text-gray-600')
+                                                        {{ __('forms.services') }}
+                                                    </a>
+                                                @endcan
+                                            @endif
 
                                             <a href="{{ route('division.view', [legalEntity(), $division]) }}"
                                                class="flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm text-gray-600 hover:bg-gray-50"
