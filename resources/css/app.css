@@ -529,7 +529,7 @@ input:-webkit-autofill {
 @layer components {
     /* Section Navigation Component */
     .section-card {
-        @apply p-4 bg-white block border-gray-200 lg:mt-1.5 dark:bg-gray-800 dark:border-gray-700
+        @apply p-0 pl-4 bg-white block border-gray-200 lg:mt-1.5 dark:bg-gray-800 dark:border-gray-700
     }
 
     .page-header {
