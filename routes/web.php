@@ -14,8 +14,9 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\SelectLegalEntity;
 use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Auth\VerifyPersonality;
-use App\Livewire\Contract\ContractForm;
+use App\Livewire\Contract\CapitationContractCreate;
 use App\Livewire\Contract\ContractIndex;
+use App\Livewire\Contract\ReimbursementContractCreate;
 use App\Livewire\Dashboard;
 use App\Livewire\Declaration\DeclarationCreate;
 use App\Livewire\Declaration\DeclarationEdit;
@@ -132,7 +133,7 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
             Route::get('/', Dashboard::class)->name('dashboard');
 
             Route::get('/edit', EditLegalEntity::class)
-                ->can('edit','legalEntity')
+                ->can('edit', 'legalEntity')
                 ->name('legal-entity.edit');
 
             Route::get('/create', CreateLegalEntity::class)
@@ -203,10 +204,12 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                 ->name('employee-role.create')
                 ->can('create', EmployeeRole::class);
 
-            Route::prefix('contract')->group(function () {
-                Route::get('/', ContractIndex::class)->name('contract.index');
-                Route::get('/form/{id?}', ContractForm::class)->name('contract.form');
-            });
+            Route::get('contracts', ContractIndex::class)
+                ->name('contracts.index');
+            Route::get('capitation-contract/create', CapitationContractCreate::class)
+                ->name('capitation-contract.create');
+            Route::get('reimbursement-contract/create', ReimbursementContractCreate::class)
+                ->name('reimbursement-contract.create');
 
             // Routes related to legal entity licenses; primary license can't be edited
             Route::prefix('license')->middleware(['permission:license:read|license:write'])
