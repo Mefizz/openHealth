@@ -130,6 +130,7 @@ class EquipmentForm extends Form
     {
         collect($data)
             ->only(['manufactureDate', 'expirationDate'])
+            ->filter()
             ->each(static function (string $value, string $key) use (&$data) {
                 $data[$key] = convertToISO8601($value);
             });

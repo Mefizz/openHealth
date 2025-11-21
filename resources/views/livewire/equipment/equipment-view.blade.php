@@ -98,8 +98,8 @@
             </div>
 
             <div class="form-group group">
-                <input value="{{ $form?->errorReason }}"
-                       type="text"
+                <input type="text"
+                       value="{{ $form->errorReason ? dictionary()->getDictionary('equipment_status_reasons')[$form->errorReason] : '' }}"
                        name="errorReason"
                        id="errorReason"
                        placeholder=" "
