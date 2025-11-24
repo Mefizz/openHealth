@@ -33,19 +33,19 @@ class LocationRule implements ValidationRule
         }
 
         if (! preg_match('/^-?([1-8]?[1-9]|[1-9]0|0)\\.\\d{1,6}/', number_format($value, 6, '.', ''))) {
-            $fail(__('validation.attributes.healthcareService.error.division.location.loсation_misformat'));
+            $fail(__('divisions.errors.location.loсation_misformat'));
 
             return;
         }
 
         if ($field === 'longitude' && $emptyLongitude && !$emptyLatitude) {
-            $fail(__('validation.attributes.healthcareService.error.division.location.longitude_required'));
+            $fail(__('divisions.errors.location.longitude_required'));
 
             return;
         }
 
         if ($field === 'latitude' && !$emptyLongitude && $emptyLatitude) {
-            $fail(__('validation.attributes.healthcareService.error.division.location.latitude_required'));
+            $fail(__('divisions.errors.location.latitude_required'));
         }
     }
 }

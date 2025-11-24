@@ -8,9 +8,6 @@ use App\Models\LegalEntity;
 use App\Classes\eHealth\EHealth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Redirect;
-use Livewire\Features\SupportRedirects\Redirector;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
 use App\Livewire\LegalEntity\LegalEntity as LegalEntityComponent;
@@ -194,9 +191,9 @@ class LegalEntityDetails extends LegalEntityComponent
     /**
      * Synchronizes the legal entity data.
      *
-     * @return Redirector|RedirectResponse|null
+     * @return void
      */
-    public function sync(): Redirector|RedirectResponse|null
+    public function sync(): void
     {
         /*
          * This is need by Livewire behavior.
@@ -208,9 +205,9 @@ class LegalEntityDetails extends LegalEntityComponent
         $this->legalEntity ??= $this->getLegalEntity();
 
         if (Auth::user()->cannot('sync', $this->legalEntity)) {
-            $this->dispatchErrorMessage(__('legal-entity.policy.deny.sync'));
+            session()->flash('error', __('legal-entity.policy.deny.sync'));
 
-            return null;
+            return;
         }
 
         try {
@@ -225,24 +222,28 @@ class LegalEntityDetails extends LegalEntityComponent
         } catch (EHealthResponseException $err) {
             Log::channel('e_health_errors')->error(self::class . ':syncLegalEntity', ['error' => $err->getMessage()]);
 
-            $this->dispatchErrorMessage(__('errors.ehealth.messages.server_error'));
+            session()->flash('error', __('errors.ehealth.messages.server_error'));
 
-            return null;
+            return;
         } catch (EHealthValidationException $err) {
             Log::channel('e_health_errors')->error(self::class . ':syncLegalEntity', ['error' => $err->getDetails()]);
 
-            $this->dispatchErrorMessage(__('errors.ehealth.messages.server_error'));
+            session()->flash('error', __('errors.ehealth.messages.server_error'));
 
-            return null;
+            return;
         } catch (Throwable $err) {
             Log::channel('db_errors')->error(static::class . ': [syncLegalEntity]: ', ['error' => $err->getMessage()]);
 
-            $this->dispatchErrorMessage(__('legal_entity.request.sync.errors.fail'));
+            session()->flash('error', __('legal-entity.request.sync.errors.fail'));
 
-            return null;
+            return;
         }
 
-        return Redirect::route('legal-entity.details', [legalEntity()])->with('success', __('forms.update_successfull')) ?? null;
+        $this->redirect(route('legal-entity.details', [legalEntity()]), navigate: true);
+
+        session()->flash('success', __('forms.update_successfull'));
+
+        return;
     }
 
     public function render()

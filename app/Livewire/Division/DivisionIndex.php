@@ -74,7 +74,7 @@ class DivisionIndex extends DivisionComponent
 
             Repository::division()->saveDivisionsList($divisions);
         } catch (EHealthResponseException $err) {
-            Log::channel('e_health_errors')->error(self::class . ':createDivision', ['error' => $err->getMessage()]);
+            Log::channel('e_health_errors')->error(self::class . ':createDivision', ['error' => $err->getDetails()]);
             session()->flash('error', __('errors.ehealth.messages.server_error'));
 
             return;

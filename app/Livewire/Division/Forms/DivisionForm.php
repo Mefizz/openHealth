@@ -134,11 +134,11 @@ class DivisionForm extends Form
     public function messages(): array
     {
         return [
-            'division.externalId.integer' => __('validation.attributes.healthcareService.error.division.external_id'),
-            'division.email.required' => __('validation.attributes.healthcareService.error.division.email.required'),
-            'division.email.email' => __('validation.attributes.healthcareService.error.division.email.wrong'),
-            'division.phones.*.type' => __('validation.attributes.healthcareService.error.division.phone.type_required'),
-            'division.phones.*.number' => __('validation.attributes.healthcareService.error.division.phone.number_required')
+            'division.externalId.integer' => __('divisions.errors.external_id'),
+            'division.email.required' => __('divisions.errors.email.required'),
+            'division.email.email' => __('divisions.errors.email.wrong'),
+            'division.phones.*.type' => __('divisions.errors.phone.type_required'),
+            'division.phones.*.number' => __('divisions.errors.phone.number_required')
         ];
     }
 
