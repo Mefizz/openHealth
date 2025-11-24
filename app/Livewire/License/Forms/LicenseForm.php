@@ -64,6 +64,7 @@ class LicenseForm extends Form
     {
         collect($data)
             ->only(['issuedDate', 'expiryDate', 'activeFromDate'])
+            ->filter()
             ->each(static function (string $value, string $key) use (&$data) {
                 $data[$key] = convertToISO8601($value);
             });
