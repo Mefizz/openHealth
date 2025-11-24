@@ -180,7 +180,6 @@ return [
     'verified' => 'Верифікований',
     'not_verified' => 'Не верифікований',
     'employee_request_saved_successfully' => 'Успішно збережено запит на створення співробітника',
-    'delete_draft_for' => 'Видалення чернетки для',
     'personal_data' => 'Особисті дані',
     'full_name' => 'ПІБ',
     'first_name' => 'Ім’я',
@@ -326,7 +325,6 @@ return [
     'nameOfInstitution' => 'Назва закладу',
     'serialAndNumber' => 'Серія та номер',
     'contractType' => 'Тип договору',
-    'contract' => 'Договір',
     'contracts' => 'Договори',
     'initializationContract' => 'Ініціалізація договору',
     'addContract' => 'Додати договір',
@@ -413,6 +411,7 @@ return [
         'non_active' => 'Не активний',
         'suspended' => 'Призупинено',
         'draft' => 'Чернетка',
+        'drafts' => 'Чернетки',
         'unsynced' => 'Не синхронізовано',
         'unknown' => 'Невідомо'
     ],

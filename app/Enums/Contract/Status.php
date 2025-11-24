@@ -7,18 +7,20 @@ namespace App\Enums\Contract;
 use App\Traits\EnumUtils;
 
 /**
- * Enum for eHealth Contract Request statuses.
- * Based on the provided documentation.
+ * Enum for eHealth Contract Request statuses,
+ * see: https://e-health-ua.atlassian.net/wiki/spaces/ESOZ/pages/17569185823/REST+API+Public.+Get+Contract+Requests+List+API-005-012-0007
  */
 enum Status: string
 {
     use EnumUtils;
 
+    case DRAFT = 'DRAFT';
     case NEW = 'NEW';
+    case IN_PROCESS = 'IN_PROCESS';
     case APPROVED = 'APPROVED';
-    case PENDING_NHS_SIGN = 'PENDING_NHS_SIGN';
-    case TERMINATED = 'TERMINATED';
     case DECLINED = 'DECLINED';
+    case TERMINATED = 'TERMINATED';
+    case PENDING_NHS_SIGN = 'PENDING_NHS_SIGN';
     case NHS_SIGNED = 'NHS_SIGNED';
     case SIGNED = 'SIGNED';
 
@@ -28,13 +30,15 @@ enum Status: string
     public function getLabel(): string
     {
         return match ($this) {
-            self::NEW => __('statuses.contract.new'),
-            self::APPROVED => __('statuses.contract.approved'),
-            self::PENDING_NHS_SIGN => __('statuses.contract.pending_nhs_sign'),
-            self::TERMINATED => __('statuses.contract.terminated'),
-            self::DECLINED => __('statuses.contract.declined'),
-            self::NHS_SIGNED => __('statuses.contract.nhs_signed'),
-            self::SIGNED => __('statuses.contract.signed'),
+            self::DRAFT => __('contracts.status.draft'),
+            self::NEW => __('contracts.status.new'),
+            self::IN_PROCESS => __('contracts.status.in_process'),
+            self::APPROVED => __('contracts.status.approved'),
+            self::DECLINED => __('contracts.status.declined'),
+            self::TERMINATED => __('contracts.status.terminated'),
+            self::PENDING_NHS_SIGN => __('contracts.status.pending_nhs_sign'),
+            self::NHS_SIGNED => __('contracts.status.nhs_signed'),
+            self::SIGNED => __('contracts.status.signed')
         };
     }
 
@@ -45,31 +49,11 @@ enum Status: string
     public function getColor(): string
     {
         return match ($this) {
-            self::NEW => 'gray',
-            self::APPROVED, self::PENDING_NHS_SIGN => 'yellow',
-            self::NHS_SIGNED => 'blue',
-            self::SIGNED => 'green',
-            self::DECLINED => 'red',
-            self::TERMINATED => 'dark',
-        };
-    }
-
-    /**
-     * Gets the list of associated document links for this status,
-     * based on the provided documentation image.
-     */
-    public function getDocumentLinks(): array
-    {
-        return match ($this) {
-            self::NEW, self::APPROVED, self::PENDING_NHS_SIGN, self::TERMINATED, self::DECLINED => [
-                'contract_request_statute.pdf/media',
-                'additional_document.pdf/media',
-            ],
-            self::NHS_SIGNED, self::SIGNED => [
-                'contract_request_statute.pdf/media',
-                'contract_request_additional_document.pdf/media',
-                'signed_content/signed_content',
-            ],
+            self::DRAFT => 'badge-gray',
+            self::NEW, self::SIGNED => 'badge-green',
+            self::IN_PROCESS, self::PENDING_NHS_SIGN => 'badge-yellow',
+            self::APPROVED, self::NHS_SIGNED => 'badge-blue',
+            self::TERMINATED, self::DECLINED => 'badge-red'
         };
     }
 }

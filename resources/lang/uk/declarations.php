@@ -13,6 +13,7 @@ return [
     | e.g., declaration search, declaration-related API request messages, etc.,
     |
     */
+
     'search' => 'Пошук декларації',
     'count_active' => 'Кількість активних декларацій',
     'show' => 'Показувати',

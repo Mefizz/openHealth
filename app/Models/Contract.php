@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\Contract\Status;
+use Eloquence\Behaviours\HasCamelCasing;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Contract extends Model
 {
+    use HasCamelCasing;
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -49,22 +53,18 @@ class Contract extends Model
         'statute_md5',
         'additional_document_md5',
         'legal_entity_id',
-
     ];
 
     protected $casts = [
         'contractor_payment_details' => 'array',
         'external_contractors' => 'array',
-    ];
-
-    protected $date = [
-        'start_date',
-        'end_date',
-        'inserted_at',
+        'start_date' => 'date:d.m.Y',
+        'end_date' => 'date:d.m.Y',
+        'status' => Status::class
     ];
 
     public function legalEntity(): BelongsTo
     {
-        return $this->belongsTo(LegalEntity::class, 'legal_entity_id', 'id');
+        return $this->belongsTo(LegalEntity::class);
     }
 }

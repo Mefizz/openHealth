@@ -1,108 +1,58 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Contract;
 
-use App\Livewire\Contract\Forms\Api\ContractRequestApi;
+use App\Enums\Contract\Type;
 use App\Models\Contract;
-use App\Models\Employee;
 use App\Models\LegalEntity;
 use App\Traits\FormTrait;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
-use Livewire\Attributes\Validate;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\View\View;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
-use Illuminate\Support\Facades\Cache;
+use Livewire\WithPagination;
+
 class ContractIndex extends Component
 {
     use FormTrait;
+    use WithPagination;
 
-    const CACHE_PREFIX = 'register_contract_form';
+    public array $typeFilter = [];
 
-    public ?array $tableHeaders;
-
-    public ?array $dictionaryNames = [
-        'CONTRACT_TYPE',
-    ];
-
-    #[Validate('required')]
-    public string $contract_type;
-
-    protected string $contractCacheKey;
-    /**
-     * @var true
-     */
-    public bool $hasInitContract = true;
-
-    public ?LegalEntity $legalEntity;
-
-    public ?Contract $contract;
-    public function getLegalEntity(): void
-    {
-        $this->legalEntity = legalEntity();
-    }
-
-    public function boot(): void
-    {
-        $this->contractCacheKey = self::CACHE_PREFIX . '-'. legalEntity()->uuid;
-    }
-
+    public bool $isFiltersApplied = false;
 
     public function mount(LegalEntity $legalEntity): void
     {
-        $this->tableHeaders();
-        $this->getDictionary();
-        $this->hasInitContract();
-        $this->getLegalEntity();
-
-//        dd(Cache::get($this->contractCacheKey));
+        $this->typeFilter = Type::values();
     }
 
-    public function tableHeaders(): void
+    public function search(): void
     {
-        $this->tableHeaders = [
-            __('ID'),
-            __('forms.number_contract'),
-            __('forms.start_date'),
-            __('forms.end_date'),
-            __('forms.status.label'),
-            __('forms.action'),
-        ];
+        $this->resetPage();
+        $this->isFiltersApplied = true;
     }
 
-    public function render()
+    public function resetFilters(): void
     {
-        $perPage = config('pagination.per_page');
-        $contracts = $this->legalEntity->contract()->paginate($perPage);
-
-        return view('livewire.contract.contract-index', compact('contracts'));
+        $this->reset();
     }
 
-    public function createRequest()
+    #[Computed]
+    public function contracts(): LengthAwarePaginator
     {
-        if (Cache::has($this->contractCacheKey)){
-            return redirect()->route('contract.form', legalEntity());
+        $query = Contract::whereLegalEntityId(legalEntity()->id);
+
+        if ($this->isFiltersApplied) {
+            //
         }
-        $this->validate();
 
-        $initContractRequestApi = ContractRequestApi::initContractRequestApi($this->contract_type);
-        if (!empty($initContractRequestApi)){
-           Cache::put($this->contractCacheKey, $initContractRequestApi);
-        }
-        return redirect()->route('contract.form', legalEntity());
-
+        return $query->paginate(config('pagination.per_page'));
     }
 
-    public function hasInitContract(): void
+    public function render(): View
     {
-        if (Cache::has($this->contractCacheKey)){
-            $this->hasInitContract = false;
-        }
+        return view('livewire.contract.contract-index', ['contracts' => $this->contracts]);
     }
-
-    public function showContract($id):void
-    {
-        $this->contract = Contract::find($id);
-        $this->openModal('show_contract');
-    }
-
 }
