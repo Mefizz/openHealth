@@ -7,7 +7,7 @@ namespace App\Livewire\Contract\Forms;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\Form;
 
-abstract class BaseContractFormRequest extends Form
+abstract class BaseContractRequestForm extends Form
 {
     public string $idForm;
 

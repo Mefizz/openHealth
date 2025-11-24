@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Contract\Forms;
 
-class CapitationContractFormRequest extends BaseContractFormRequest
+class CapitationContractRequestForm extends BaseContractRequestForm
 {
     public function rules(): array
     {

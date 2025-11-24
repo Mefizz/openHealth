@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Contract\Forms;
 
-class ReimbursementContractFormRequest extends BaseContractFormRequest
+class ReimbursementContractRequestForm extends BaseContractRequestForm
 {
     public string $contractorOwnerId;
 

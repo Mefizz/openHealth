@@ -204,12 +204,12 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                 ->name('employee-role.create')
                 ->can('create', EmployeeRole::class);
 
-            Route::get('contracts', ContractIndex::class)
-                ->name('contracts.index');
-            Route::get('capitation-contract/create', CapitationContractCreate::class)
-                ->name('capitation-contract.create');
-            Route::get('reimbursement-contract/create', ReimbursementContractCreate::class)
-                ->name('reimbursement-contract.create');
+            Route::get('contract', ContractIndex::class)
+                ->name('contract.index');
+            Route::get('contract/capitation/create', CapitationContractCreate::class)
+                ->name('contract-capitation.create');
+            Route::get('contract/reimbursement/create', ReimbursementContractCreate::class)
+                ->name('contract-reimbursement.create');
 
             // Routes related to legal entity licenses; primary license can't be edited
             Route::prefix('license')->middleware(['permission:license:read|license:write'])

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Contract;
 
-use App\Livewire\Contract\Forms\ReimbursementContractFormRequest as Form;
+use App\Livewire\Contract\Forms\ReimbursementContractRequestForm as Form;
 use App\Models\LegalEntity;
 use Illuminate\View\View;
 

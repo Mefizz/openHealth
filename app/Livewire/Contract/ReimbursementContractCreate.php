@@ -7,7 +7,7 @@ namespace App\Livewire\Contract;
 use App\Classes\eHealth\EHealth;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
-use App\Livewire\Contract\Forms\ReimbursementContractFormRequest as Form;
+use App\Livewire\Contract\Forms\ReimbursementContractRequestForm as Form;
 use App\Models\ContractRequest;
 use App\Models\LegalEntity;
 use Illuminate\Http\Client\ConnectionException;
