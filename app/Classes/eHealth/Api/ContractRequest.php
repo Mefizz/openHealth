@@ -33,12 +33,11 @@ class ContractRequest extends EHealthRequest
     public function getMany(string $contractType, $query = null): PromiseInterface|EHealthResponse
     {
         $this->setValidator($this->validateMany(...));
+        $this->setDefaultPageSize();
 
-        $query = array_merge([
-            self::QUERY_PARAM_PAGE_SIZE => config('ehealth.api.page_size')
-        ], $query ?? []);
+        $mergedQuery = array_merge($this->options['query'], $query ?? []);
 
-        return $this->get(self::URL . '/' . $contractType, $query);
+        return $this->get(self::URL . '/' . $contractType, $mergedQuery);
     }
 
     /**

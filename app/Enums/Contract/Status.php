@@ -27,7 +27,7 @@ enum Status: string
     /**
      * Gets the translatable label for the status.
      */
-    public function getLabel(): string
+    public function label(): string
     {
         return match ($this) {
             self::DRAFT => __('contracts.status.draft'),
@@ -46,7 +46,7 @@ enum Status: string
      * Gets the color class for UI badges.
      * (e.g., 'blue', 'green', 'red', 'yellow', 'gray')
      */
-    public function getColor(): string
+    public function color(): string
     {
         return match ($this) {
             self::DRAFT => 'badge-gray',

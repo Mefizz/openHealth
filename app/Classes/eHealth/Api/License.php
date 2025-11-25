@@ -34,7 +34,9 @@ class License extends Request
         $this->setMapper($this->mapMany(...));
         $this->setDefaultPageSize();
 
-        return $this->get($url, $query);
+        $mergedQuery = array_merge($this->options['query'], $query ?? []);
+
+        return $this->get($url, $mergedQuery);
     }
 
     /**

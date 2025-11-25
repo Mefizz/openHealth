@@ -133,8 +133,8 @@
                                     {{ $contract->endDate->format('d.m.Y') }}
                                 </td>
                                 <td class="td-input">
-                                    <span class="{{ $contract->status->getColor() }}">
-                                        {{ $contract->status->getLabel() }}
+                                    <span class="{{ $contract->status->color() }}">
+                                        {{ $contract->status->label() }}
                                     </span>
                                 </td>
                                 <td class="td-input">
