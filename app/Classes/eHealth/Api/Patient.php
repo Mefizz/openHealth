@@ -27,7 +27,9 @@ class Patient extends Request
     {
         $this->setDefaultPageSize();
 
-        return $this->get(self::URL . "/$id/summary/episodes", $query);
+        $mergedQuery = array_merge($this->options['query'], $query ?? []);
+
+        return $this->get(self::URL . "/$id/summary/episodes", $mergedQuery);
     }
 
     /**
@@ -42,7 +44,9 @@ class Patient extends Request
     {
         $this->setDefaultPageSize();
 
-        return $this->get(self::URL . "/$id/summary/diagnoses", $query);
+        $mergedQuery = array_merge($this->options['query'], $query ?? []);
+
+        return $this->get(self::URL . "/$id/summary/diagnoses", $mergedQuery);
     }
 
     /**
@@ -57,6 +61,8 @@ class Patient extends Request
     {
         $this->setDefaultPageSize();
 
-        return $this->get(self::URL . "/$id/summary/observations", $query);
+        $mergedQuery = array_merge($this->options['query'], $query ?? []);
+
+        return $this->get(self::URL . "/$id/summary/observations", $mergedQuery);
     }
 }

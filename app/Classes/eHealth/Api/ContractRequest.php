@@ -19,28 +19,23 @@ class ContractRequest extends EHealthRequest
     /**
      * The main endpoint for Contract Requests.
      */
-    public const string URL = '/api/contract_requests';
+    protected const string URL = '/api/contract_requests';
 
     /**
      * Gets a list of contract requests from E-Health.
      * Corresponds to: GET /api/contract_requests/{contract_type}/?{filters...}
      *
      * @param  string  $contractType  'capitation' or 'reimbursement'.
-     * @param  array  $filters  Associative array of filter parameters.
-     * @param  int  $page  Page number.
+     * @param  null  $query
      * @return PromiseInterface|EHealthResponse
-     * @throws ConnectionException
+     * @throws ConnectionException|EHealthValidationException|EHealthResponseException
      */
-    public function getMany(string $contractType, array $filters, int $page = 1): PromiseInterface|EHealthResponse
+    public function getMany(string $contractType, $query = null): PromiseInterface|EHealthResponse
     {
         $this->setValidator($this->validateMany(...));
         $this->setDefaultPageSize();
 
-        $mergedQuery = array_merge(
-            $this->options['query'] ?? [],
-            $filters,
-            ['page' => $page]
-        );
+        $mergedQuery = array_merge($this->options['query'], $query ?? []);
 
         return $this->get(self::URL . '/' . $contractType, $mergedQuery);
     }
@@ -72,7 +67,7 @@ class ContractRequest extends EHealthRequest
     {
         $this->setValidator($this->validateInitialize(...));
 
-        return $this->post(self::URL . '/' . $contractType, []);
+        return $this->post(self::URL . '/' . $contractType);
     }
 
     /**
@@ -223,10 +218,6 @@ class ContractRequest extends EHealthRequest
         return $this->patch(self::URL . '/' . $contractType . '/' . $uuid . '/actions/sign_msp', $payload);
     }
 
-    // =================================================================
-    // RESPONSE VALIDATORS
-    // =================================================================
-
     /**
      * Validates the response for getMany().
      */
@@ -295,7 +286,7 @@ class ContractRequest extends EHealthRequest
         $validator = Validator::make($transformedData, [
             'additional_document_url' => ['required', 'url'],
             'id' => ['required', 'uuid'],
-            'statute_url' => ['required','url']
+            'statute_url' => ['required', 'url']
         ]);
 
         if ($validator->fails()) {

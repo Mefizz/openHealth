@@ -40,12 +40,11 @@ class Equipment extends Request
     {
         $this->setValidator($this->validateMany(...));
         $this->setMapper($this->mapMany(...));
+        $this->setDefaultPageSize();
 
-        $query = array_merge([
-            self::QUERY_PARAM_PAGE_SIZE => config('ehealth.api.page_size')
-        ], $query ?? []);
+        $mergedQuery = array_merge($this->options['query'], $query ?? []);
 
-        return $this->get($url, $query);
+        return $this->get($url, $mergedQuery);
     }
 
     /**

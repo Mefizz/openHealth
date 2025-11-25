@@ -1,140 +1,192 @@
-@use('App\Models\Contract')
+@use('App\Enums\Contract\Type')
+@use('App\Models\ContractRequest')
 
 <div>
-    <x-section-navigation x-data="{ showFilter: false }" class="">
-        <x-slot name='title'>{{ __('forms.contract') }}</x-slot>
+    <x-messages/>
+    <x-forms.loading/>
 
-        {{-- <x-slot name='description'>{{ __('forms.contract') }}</x-slot> --}}
+    <x-header-navigation class="items-start">
+        <x-slot name="title">
+            {{ __('forms.contracts') }}
+        </x-slot>
 
-        <x-slot name='navigation'>
-            <div class='rounded-sm border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark'>
-                <div class='items-center flex justify-end border-stroke px-7 py-4 dark:border-strokedark'>
-                    @can('create', Contract::class)
-                        <a wire:click.prevent="openModal('intialization_contract')"
-                           type="button"
-                           class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+        <div class="mt-3 ml-0 flex flex-col sm:flex-row sm:flex-wrap gap-2 self-start">
+            @can('create', ContractRequest::class)
+                <a href="#" class="button-primary flex items-center gap-2">
+                    @icon('plus', 'w-4 h-4')
+                    {{ __('contracts.new') }}
+                </a>
+            @endcan
+
+            @can('sync', ContractRequest::class)
+                <button wire:click="sync" type="button" class="button-sync flex items-center gap-2 whitespace-nowrap">
+                    @icon('refresh', 'w-4 h-4')
+                    {{ __('forms.synchronise_with_eHealth') }}
+                </button>
+            @endcan
+        </div>
+
+        <x-slot name="navigation">
+            <div class="flex flex-col -my-4" x-data="{ showFilter: false }">
+                <div class="flex mb-4 flex-col lg:flex-row items-stretch lg:items-end gap-2 lg:gap-4 w-full">
+                    <div class="w-full lg:w-96">
+
+                        {{-- Filters --}}
+                        <div class="form-group group"
+                             x-data="{ open: false, selectedTypes: $wire.entangle('typeFilter') }"
                         >
-                            {{ __('forms.addContract') }}
-                        </a>
-                    @endcan
+                            <label for="typeFilter" class="label">{{ __('forms.type') }}</label>
+                            <div class="relative">
+                                <input type="text"
+                                       id="typeFilter"
+                                       class="input peer w-full cursor-pointer text-gray-500 dark:text-gray-400"
+                                       placeholder="{{ __('forms.select') }}"
+                                       @click="open = !open"
+                                       :value="selectedTypes.length ? selectedTypes.map(status => {
+                                           if (status === 'DRAFT') return '{{ __('forms.status.drafts') }}';
+                                           if (status === 'CONTRACT_REQUESTS') return '{{ __('contracts.status.requests') }}';
+                                           if (status === 'CONTRACTS') return '{{ __('forms.contracts') }}';
+
+                                           return status;
+                                       }).join(', ') : ''"
+                                       readonly
+                                />
+                                @icon('chevron-down', 'w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none')
+
+                                <div x-show="open"
+                                     @click.away="open = false"
+                                     x-transition:enter="transition ease-out duration-100"
+                                     x-transition:enter-start="transform opacity-0 scale-95"
+                                     x-transition:enter-end="transform opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-75"
+                                     x-transition:leave-start="transform opacity-100 scale-100"
+                                     x-transition:leave-end="transform opacity-0 scale-95"
+                                     class="absolute z-10 mt-2 w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg"
+                                >
+                                    <ul class="py-2 px-3 space-y-2 text-sm text-gray-700 dark:text-gray-200">
+                                        @foreach(Type::options() as $value => $label)
+                                            <li>
+                                                <label class="flex items-center space-x-2 cursor-pointer">
+                                                    <input type="checkbox"
+                                                           value="{{ $value }}"
+                                                           wire:model="typeFilter"
+                                                           class="rounded-sm text-blue-600 focus:ring-blue-500 border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:checked:bg-blue-600 dark:checked:border-transparent"
+                                                    />
+                                                    <span>{{ $label }}</span>
+                                                </label>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-9 mt-6 flex flex-col sm:flex-row gap-2 w-full">
+                    <button wire:click="search" type="submit" class="flex items-center gap-2 button-primary">
+                        @icon('search', 'w-4 h-4')
+                        <span>{{ __('forms.search') }}</span>
+                    </button>
+                    <button type="button" wire:click="resetFilters" class="button-primary-outline-red">
+                        {{ __('forms.reset_all_filters') }}
+                    </button>
                 </div>
             </div>
         </x-slot>
-    </x-section-navigation>
+    </x-header-navigation>
 
-    {{-- <div class='flex flex-col h-screen -mt-4 border-t'> --}}
-    <div class='overflow-x-auto'>
-        <div class='inline-block min-w-full align-middle'>
-            <div class='shadow'>
-                <x-tables.table class="mb-20">
-                    <x-slot name='headers' :list="$tableHeaders"></x-slot>
+    <div class="flow-root mt-8 shift-content pl-3.5"
+         wire:key="contracts-table-page-{{ $contracts->total() }}-{{ $contracts->currentPage() }}"
+    >
+        <div class="max-w-screen-xl">
+            <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                @if($contracts->isNotEmpty())
+                    <table
+                        class="w-full table-fixed text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            <th class="px-6 py-3 w-[10%] text-left">{{ __('forms.type') }}</th>
+                            <th class="px-6 py-3 w-[20%] text-left">№</th>
+                            <th class="px-6 py-3 w-[15%] text-left">{{ __('contracts.start_date') }}</th>
+                            <th class="px-6 py-3 w-[15%] text-left">{{ __('contracts.end_date') }}</th>
+                            <th class="px-6 py-3 w-[20%] text-left">{{ __('forms.status.label') }}</th>
+                            <th class="px-6 py-3 w-[6%] text-center">{{ __('forms.action') }}</th>
+                        </tr>
+                        </thead>
 
-                    <x-slot name='tbody'>
-                        @nonempty($contracts->items())
+                        <tbody>
                         @foreach ($contracts as $contract)
-                            <tr>
-                                <td class='border-b border-[#eee] py-5 px-4'>
-                                    <p class='text-black dark:text-white'>
-                                        {{ $contract->uuid ?? '' }}
-                                    </p>
+                            <tr wire:key=contract-{{ $contract->id }}"
+                                class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200"
+                            >
+                                <td class="td-input">
+                                    {{ __('Заявка') }}
                                 </td>
-
-                                <td class='border-b border-[#eee] py-5 px-4'>
-                                    <p class='text-black dark:text-white'>
-                                        {{ $contract->contract_number ?? '' }}
-                                    </p>
+                                <td class="td-input">
+                                    {{ $contract->contractNumber }}
                                 </td>
-
-                                <td class='border-b border-[#eee] py-5 px-4'>
-                                    <p class='text-black dark:text-white'>
-                                        {{ $contract->start_date ?? '' }}
-                                    </p>
+                                <td class="td-input">
+                                    {{ $contract->startDate->format('d.m.Y') }}
                                 </td>
-
-                                <td class='border-b border-[#eee] py-5 px-4'>
-                                    <p class='text-black dark:text-white'>
-                                        {{ $contract->end_date ?? '' }}
-                                    </p>
+                                <td class="td-input">
+                                    {{ $contract->endDate->format('d.m.Y') }}
                                 </td>
-
-                                <td class='border-b border-[#eee] py-5 px-4'>
-                                    <p class='text-black dark:text-white'>
-                                        {{ $contract->status ?? '' }}
-                                    </p>
+                                <td class="td-input">
+                                    <span class="{{ $contract->status->color() }}">
+                                        {{ $contract->status->label() }}
+                                    </span>
                                 </td>
-
-                                <td class='border-b border-[#eee] py-5 px-4'>
-                                    <div class='flex justify-center'>
+                                <td class="td-input">
+                                    <div class="flex justify-center relative">
                                         <div x-data="{
-                                                        open: false,
-                                                        toggle() {
-                                                            if (this.open) {
-                                                                return this.close()
-                                                            }
-
-                                                            this.$refs.button.focus()
-
-                                                            this.open = true
-                                                        },
-                                                        close(focusAfter) {
-                                                            if (!this.open) return
-
-                                                            this.open = false
-
-                                                            focusAfter && focusAfter.focus()
-                                                        }
-                                                    }"
-                                             x-on:keydown.escape.prevent.stop="close($refs.button)"
-                                             x-on:focusin.window="! $refs.panel.contains($event.target) && close()"
+                                                 open: false,
+                                                 toggle() { this.open ? this.close() : (this.$refs.button.focus(), this.open = true) },
+                                                 close(focusAfter) { if (!this.open) return; this.open = false; focusAfter && focusAfter.focus() }
+                                             }"
+                                             @keydown.escape.prevent.stop="close($refs.button)"
+                                             @focusin.window="!$refs.panel.contains($event.target) && close()"
                                              x-id="['dropdown-button']"
-                                             class='relative'
+                                             class="relative"
                                         >
-                                            <button
-                                                x-ref='button'
-                                                x-on:click="toggle()"
-                                                :aria-expanded="open"
-                                                :aria-controls="$id('dropdown-button')"
-                                                type='button'
-                                                class='hover:text-primary'
+                                            <button @click="toggle()"
+                                                    x-ref="button"
+                                                    :aria-expanded="open"
+                                                    :aria-controls="$id('dropdown-button')"
+                                                    type="button"
+                                                    class="hover:text-primary cursor-pointer"
                                             >
-                                                <svg
-                                                    class='fill-current'
-                                                    width='18'
-                                                    height='18'
-                                                    xmlns='http://www.w3.org/2000/svg'
-                                                    fill='none'
-                                                    viewBox='0 0 24 24'
-                                                    stroke-width='1.5'
-                                                >
-                                                    <path
-                                                        stroke-linecap='round'
-                                                        stroke-linejoin='round'
-                                                        d='m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125'
-                                                    />
-                                                </svg>
+                                                @icon('edit-user-outline', 'svg-hover-action w-6 h-6 text-gray-800 dark:text-white')
                                             </button>
-                                            <div
-                                                x-ref='panel'
-                                                x-show='open'
-                                                x-transition.origin.top.left
-                                                x-on:click.outside="close($refs.button)"
-                                                :id="$id('dropdown-button')"
-                                                style='display: none;'
-                                                class='absolute right-0 mt-2 w-40 rounded-md bg-white shadow-md z-50'
+
+                                            <div x-show="open"
+                                                 wire:key="dropdown-{{ $contract->id }}-{{ $contract->status->value }}"
+                                                 x-cloak
+                                                 x-ref="panel"
+                                                 x-transition.origin.top.left
+                                                 @click.outside="close($refs.button)"
+                                                 :id="$id('dropdown-button')"
+                                                 class="absolute right-0 mt-2 w-auto min-w-[10rem] max-w-[20rem] rounded-md bg-white shadow-md z-50"
                                             >
-                                                <a
-                                                    href="{{ route('contract.form', [legalEntity(), $contract->uuid]) }}"
-                                                    class='flex items-center gap-2 w-full first-of-type:rounded-t-md last-of-type:rounded-b-md px-4 py-2.5 text-left text-sm hover:bg-gray-50 disabled:text-gray-500'
+                                                <a href="#"
+                                                   class="flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm text-gray-600 hover:bg-gray-50"
                                                 >
+                                                    @icon('eye', 'w-5 h-5 text-gray-600')
+                                                    {{ __('forms.view') }}
+                                                </a>
+
+                                                <a href="#"
+                                                   class="flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm text-gray-600 hover:bg-gray-50"
+                                                >
+                                                    @icon('edit', 'w-5 h-5 text-gray-600')
                                                     {{ __('forms.edit') }}
                                                 </a>
 
-                                                <a
-                                                    href=''
-                                                    wire:click.prevent="showContract({{ $contract->id }})"
-                                                    class='flex items-center gap-2 w-full first-of-type:rounded-t-md last-of-type:rounded-b-md px-4 py-2.5 text-left text-sm hover:bg-gray-50 disabled:text-gray-500'
+                                                <a href="#"
+                                                   class="flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm text-gray-600 hover:bg-gray-50"
                                                 >
-                                                    {{ __('Деталі') }}
+                                                    @icon('eye', 'w-5 h-5 text-gray-600')
+                                                    {{ __('forms.delete') }}
                                                 </a>
                                             </div>
                                         </div>
@@ -142,143 +194,19 @@
                                 </td>
                             </tr>
                         @endforeach
-                        @elsenonempty
-                        <tr>
-                            <td class="text-black w-full p-4 border-gray-200 text-center dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                                colspan="6">
-                                <p>
-                                    {{ __('Нічого не знайдено') }}
-                                </p>
-                            </td>
-                        </tr>
-                        @endnonempty
-                    </x-slot>
-                </x-tables.table>
-                <x-pagination :pagination="$contracts" class="pagination" style="margin-block-start: -80px;"/>
+                        </tbody>
+                    </table>
+
+                @else
+                    <div class="text-center py-16">
+                        <p class="text-gray-500 dark:text-gray-400 text-lg">{{ __('forms.nothing_found') }}</p>
+                    </div>
+                @endif
+            </div>
+
+            <div class="mt-8 pl-3.5 pb-8 lg:pl-8 2xl:pl-5">
+                {{ $contracts->links() }}
             </div>
         </div>
     </div>
-    {{-- </div> --}}
-
-    @if ($showModal == 'intialization_contract')
-        <x-alert-modal
-            name='title'
-            id='info-popup'
-            wire:model.live='showModal'
-            maxWidth='3xl'
-            class='w-2 h-full'
-        >
-            <x-slot name='title'>
-                {{ __('forms.initializationContract') }}
-            </x-slot>
-
-            <x-slot name='text'>
-                @if ($hasInitContract)
-                    <x-forms.select wire:model='contract_type' class='default-select'>
-                        <x-slot name='option'>
-                            <option value=''>{{ __('forms.contractType') }}</option>
-                            <option value='capitation'>CAPITATION</option>
-
-                            {{--                                @foreach ($this->dictionaries['CONTRACT_TYPE'] as $k => $contract_type) --}}
-                            {{--                                    <option value="{{$k}}">{{$contract_type}}</option> --}}
-                            {{--                                @endforeach --}}
-                        </x-slot>
-                    </x-forms.select>
-                    @error('contract_type')
-                    <x-forms.error>
-                        {{ $message }}
-                    </x-forms.error>
-                    @enderror
-                @else
-                    <p> {{ __('forms.alertInitializationContract') }} </p>
-                @endif
-            </x-slot>
-
-            <x-slot name='button'>
-                <div class='justify-between items-center pt-0 space-y-4 sm:flex sm:space-y-0'>
-                    <x-secondary-button wire:click="closeModal()">
-                        {{ __('forms.cancel') }}
-                    </x-secondary-button>
-
-                    <button
-                        type='button'
-                        wire:click='createRequest'
-                        class='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'
-                    >
-                        {{ $hasInitContract ? __('forms.confirm') : __('forms.continue') }}
-                    </button>
-                </div>
-            </x-slot>
-        </x-alert-modal>
-    @elseif($showModal == 'show_contract')
-        <x-alert-modal name='title'>
-            <x-slot name='title'>
-                {{ __('forms.contract') }}
-            </x-slot>
-
-            <x-slot name='text'>
-                <x-forms.form-group class='mb-4'>
-                    <x-slot name='label'>
-                        <x-forms.label for='inserted_at' class='default-label'>
-                            {{ __('forms.insertedAtContract') }} *
-                        </x-forms.label>
-                    </x-slot>
-                    <x-slot name='input'>
-                        <x-forms.input
-                            disabled
-                            class='default-input'
-                            value="{{ $contract->inserted_at ?? '' }}"
-                            type='datetime'
-                            id='inserted_at'
-                        />
-                    </x-slot>
-                </x-forms.form-group>
-
-                <x-forms.form-group class='mb-4'>
-                    <x-slot name='label'>
-                        <x-forms.label for='contractor_base' class='default-label'>
-                            {{ __('forms.statusReason') }} *
-                        </x-forms.label>
-                    </x-slot>
-                    <x-slot name='input'>
-                        <x-forms.input
-                            disabled class='default-input'
-                            value="{{ $contract->status_reason ?? '' }}"
-                            type='text'
-                            id='status_reason'
-                        />
-                    </x-slot>
-                </x-forms.form-group>
-
-                <x-forms.form-group class='mb-4'>
-                    <x-slot name='label'>
-                        <x-forms.label for='contractor_base' class='default-label'>
-                            {{ __('forms.contractor_rmsp_amount') }} *
-                        </x-forms.label>
-                    </x-slot>
-                    <x-slot name='input'>
-                        <x-forms.input
-                            disabled class='default-input'
-                            value="{{ $contract->contractor_rmsp_amount ?? '' }}"
-                            type='text'
-                            id='status_reason'
-                        />
-                    </x-slot>
-                </x-forms.form-group>
-            </x-slot>
-
-            <x-slot name='button'>
-                <div class='justify-between items-center pt-0 space-y-4 sm:flex sm:space-y-0'>
-                    <button
-                        type='button'
-                        wire:click='closeModal'
-                        class='py-2 px-4 w-full text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-200 sm:w-auto hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600'
-                    >
-                        {{ __('forms.close') }}
-                    </button>
-                </div>
-            </x-slot>
-        </x-alert-modal>
-    @endif
-    {{--    @include('livewire.employee.parts._employee_form') --}}
 </div>
