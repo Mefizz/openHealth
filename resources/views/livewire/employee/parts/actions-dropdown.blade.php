@@ -2,11 +2,13 @@
     $user = auth()->user();
     $hasActions = false;
 
+    // Type checking
     $isEmployee = $position instanceof \App\Models\Employee\Employee;
     $isRequest = $position instanceof \App\Models\Employee\EmployeeRequest;
     $status = $position->status?->value ?? null;
 
     if ($isEmployee) {
+        // Check permissions specifically for Employee model
         if (
             $user->can('view', $position) ||
             $user->can('update', $position) ||
@@ -17,6 +19,7 @@
     } elseif ($isRequest) {
         if ($status === 'NEW') {
             if (
+                $user->can('view', $position) ||
                 $user->can('update', $position) ||
                 $user->can('delete', $position)
             ) {
@@ -77,6 +80,15 @@
                 <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" @click="open = false">
 
                     @if($status === 'NEW')
+                        @can('view', $position)
+                            <li>
+                                <a href="{{ route('employee-request.show', ['legalEntity' => legalEntity()->id, 'employee_request' => $position->id]) }}" class="flex items-center gap-2 py-2 px-5 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
+                                    <svg class="w-5 h-5 text-gray-500 dark:text-gray-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M21 12c0 1.2-4.03 6-9 6s-9-4.8-9-6c0-1.2 4.03-6 9-6s9 4.8 9 6Z"/><path stroke="currentColor" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+                                    <span>{{ __('forms.view') }}</span>
+                                </a>
+                            </li>
+                        @endcan
+
                         @can('update', $position)
                             <li>
                                 <a href="{{ route('employee-request.edit', ['legalEntity' => legalEntity()->id, 'employee_request' => $position->id]) }}" class="flex items-center gap-2 py-2 px-5 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
@@ -111,4 +123,7 @@
             @endif
         </div>
     </div>
+@else
+{{--     Optional: Debug output to see why actions are hidden--}}
+{{--     <div style="display:none">Actions hidden for {{ $position->id }}. isEmployee: {{ $isEmployee ? 'Y' : 'N' }}. Status: {{ $status }}. Can View: {{ $user->can('view', $position) ? 'Y' : 'N' }}</div>--}}
 @endif

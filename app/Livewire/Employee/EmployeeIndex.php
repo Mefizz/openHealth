@@ -45,7 +45,7 @@ class EmployeeIndex extends EmployeeComponent
 
     // --- Component State for Filters ---
     public string $search = '';
-    public array $status = ['APPROVED', 'NEW'];
+    public array $status = ['APPROVED', 'NEW', 'SIGNED'];
     public array $filter = [
         'phone' => '',
         'email' => '',
@@ -199,12 +199,6 @@ class EmployeeIndex extends EmployeeComponent
                 if (!empty($this->filter['phone'])) {
                     $phoneMatches = $party->phones->contains(fn ($phone) => str_contains($phone->number, $this->filter['phone']));
                     if (!$phoneMatches) {
-                        return false;
-                    }
-                }
-
-                if (in_array('DRACS_DEATH_NOT_VERIFIED', $this->status, true)) {
-                    if ($party->dracs_death_status !== 'NOT_VERIFIED') {
                         return false;
                     }
                 }
