@@ -12,6 +12,8 @@ use App\Traits\ProcessesPartyVerificationResponses;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Queue\Middleware\RateLimited;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class PartyVerificationSync extends EHealthJob
 {
@@ -37,5 +39,17 @@ class PartyVerificationSync extends EHealthJob
     protected function getAdditionalMiddleware(): array
     {
         return [new RateLimited('ehealth-party-verification-get')];
+    }
+
+    /**
+     * Handle a job failure.
+     */
+    public function failed(Throwable|null $exception): void
+    {
+        Log::error('Job [PartyVerificationSync] failed.', [
+            'legal_entity_id' => $this->legalEntity->id ?? 'unknown',
+            'error' => $exception->getMessage(),
+            'trace' => $exception->getTraceAsString(),
+        ]);
     }
 }

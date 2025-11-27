@@ -9,20 +9,15 @@ use App\Models\LegalEntity;
 use App\Models\Relations\Party;
 use App\Notifications\PartyVerificationStatusChanged;
 use Illuminate\Support\Facades\Log;
-use Throwable;
 
 trait ProcessesPartyVerificationResponses
 {
     /**
      * Processes party verification statuses using an optimized upsert approach.
-     * We provide all NOT NULL columns (e.g., last_name, first_name) to the upsert data array.
-     * This prevents 'NOT NULL violation' errors in the edge case where 'upsert'
-     * attempts an INSERT (due to a race condition or other anomaly) instead of an UPDATE.
      *
-     * @param  EHealthResponse  $response  The API response object.
+     * * @param  EHealthResponse  $response  The API response object.
      * @param  LegalEntity  $legalEntity  The legal entity context.
      * @return void
-     * @throws Throwable If the upsert operation fails.
      */
     private function processPartyVerificationResponse(EHealthResponse $response, LegalEntity $legalEntity): void
     {
@@ -54,7 +49,6 @@ trait ProcessesPartyVerificationResponses
         foreach ($eHealthStatuses as $uuid => $newStatusItem) {
             $party = $localParties->get($uuid);
             if ($party) {
-
                 $newStatuses = [
                     'verification_status' => data_get($newStatusItem, 'verification_status'),
                     'drfo_status' => data_get($newStatusItem, 'details.drfo.verification_status'),
@@ -91,30 +85,21 @@ trait ProcessesPartyVerificationResponses
         if (!empty($upsertData)) {
             Log::info("Attempting upsert for " . count($upsertData) . " parties.");
 
-            try {
-                Party::upsert(
-                    values: $upsertData,
-                    uniqueBy: ['uuid'],
-                    update: [
-                                'verification_status',
-                                'drfo_status',
-                                'dracs_death_status',
-                                'mvs_passport_status',
-                                'dms_passport_status',
-                                'dracs_name_change_status',
-                            ]
-                );
+            Party::upsert(
+                values: $upsertData,
+                uniqueBy: ['uuid'],
+                update: [
+                            'verification_status',
+                            'drfo_status',
+                            'dracs_death_status',
+                            'mvs_passport_status',
+                            'dms_passport_status',
+                            'dracs_name_change_status',
+                        ]
+            );
 
-                $successfullyUpdatedCount = count($upsertData);
-                Log::info("[UPSERT SUCCEEDED] Upsert finished (potentially updated {$successfullyUpdatedCount} records).");
-
-            } catch (Throwable $e) {
-                Log::error('[UPSERT FAILED] The upsert call failed.', [
-                    'error' => $e->getMessage(),
-                    'first_item_passed_to_upsert' => $upsertData[0] ?? 'empty'
-                ]);
-                throw $e;
-            }
+            $successfullyUpdatedCount = count($upsertData);
+            Log::info("[UPSERT SUCCEEDED] Upsert finished (potentially updated {$successfullyUpdatedCount} records).");
 
         } else {
             Log::info("No status changes detected. Skipping upsert.");
