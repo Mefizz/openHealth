@@ -44,12 +44,12 @@ if (!function_exists('convertToISO8601')) {
             return '';
         }
 
-        return CarbonImmutable::parse($dateString)->toIso8601String();
+        return CarbonImmutable::parse($dateString)->toIso8601ZuluString();
     }
 }
 
 if (!function_exists('convertToAppDateFormat')) {
-    function convertToAppDateFormat(string $dateString): string
+    function convertToAppDateFormat(?string $dateString): string
     {
         if (empty($dateString)) {
             return '';
