@@ -56,7 +56,7 @@ class EmployeeRequestEdit extends AbstractEmployeeFormManager
         $nestedDataForRevision = $this->mapRevisionData($preparedData);
 
         // ---Ensure employee_uuid is present if linked to an employee ---
-        if ($this->employeeRequest->employee_id && $this->employeeRequest->employee) {
+        if ($this->employeeRequest->employeeId && $this->employeeRequest->employee) {
             $nestedDataForRevision['employee_uuid'] = $this->employeeRequest->employee->uuid;
         }
         // --------------------------------------------------------------------

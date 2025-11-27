@@ -33,7 +33,7 @@ enum Status: string
             self::INACTIVE => __('forms.status.non_active'),
             self::DRAFT => __('forms.status.draft'),
             self::UNSYNCED => __('forms.status.unsynced'),
-            self::STOPPED => __('forms.status.unsynced'),
+            self::STOPPED => __('forms.status.stopped'),
         };
     }
 

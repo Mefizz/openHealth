@@ -330,14 +330,14 @@ class EmployeeForm extends Form
             $this->populatePartyData($employee->party);
         }
         $this->position = $employee->position;
-        $this->employeeType = $employee->employee_type;
-        $this->startDate = convertToAppDateFormat($employee->start_date);
-        $this->endDate = convertToAppDateFormat($employee->end_date);
-        $this->divisionId = $employee->division_id !== null ? (string) $employee->division_id : null;
+        $this->employeeType = $employee->employeeType;
+        $this->startDate = convertToAppDateFormat($employee->startDate);
+        $this->endDate = convertToAppDateFormat($employee->endDate);
+        $this->divisionId = $employee->divisionId !== null ? (string) $employee->divisionId : null;
 
         $this->doctor['educations'] = $employee->educations->map(function ($edu) {
             $data = Arr::toCamelCase($edu->toArray());
-            $data['issuedDate'] = convertToAppDateFormat($edu->issued_date) ?: null;
+            $data['issuedDate'] = convertToAppDateFormat($edu->issuedDate) ?: null;
 
             return $data;
         })->toArray();
@@ -345,15 +345,15 @@ class EmployeeForm extends Form
         $this->doctor['specialities'] = $employee->specialities->map(function ($spec) {
             $data = Arr::toCamelCase($spec->toArray());
             $data['attestationDate'] = convertToAppDateFormat($spec->attestation_date) ?: null;
-            $data['validToDate'] = convertToAppDateFormat($spec->valid_to_date) ?: null;
+            $data['validToDate'] = convertToAppDateFormat($spec->validToDate) ?: null;
 
             return $data;
         })->toArray();
 
         $this->doctor['qualifications'] = $employee->qualifications->map(function ($qual) {
             $data = Arr::toCamelCase($qual->toArray());
-            $data['issuedDate'] = convertToAppDateFormat($qual->issued_date) ?: null;
-            $data['validTo'] = convertToAppDateFormat($qual->valid_to) ?: null;
+            $data['issuedDate'] = convertToAppDateFormat($qual->issuedDate) ?: null;
+            $data['validTo'] = convertToAppDateFormat($qual->validTo) ?: null;
 
             return $data;
         })->toArray();
@@ -525,16 +525,16 @@ class EmployeeForm extends Form
     {
         $formData = $this->all();
 
-        // Root fields
+        // --- 1. Root fields ---
         $formData['startDate'] = convertToISO8601($formData['startDate'] ?? null);
         $formData['endDate'] = convertToISO8601($formData['endDate'] ?? null);
 
-        // Identity (Party)
+        // --- 2. Identity (Party) ---
         if (isset($formData['party']['birthDate'])) {
             $formData['party']['birthDate'] = convertToISO8601($formData['party']['birthDate']);
         }
 
-        // DOCUMENTS
+        // --- 3. Documents ---
         if (!empty($formData['documents'])) {
             foreach ($formData['documents'] as $key => $doc) {
                 if (isset($doc['issuedAt'])) {
@@ -543,12 +543,38 @@ class EmployeeForm extends Form
             }
         }
 
+        // --- 4. Doctor Data ---
+
+        // Educations
         if (!empty($formData['doctor']['educations'])) {
             foreach ($formData['doctor']['educations'] as $key => $edu) {
                 $formData['doctor']['educations'][$key]['issuedDate'] = convertToISO8601($edu['issuedDate'] ?? null);
             }
         }
 
+        // Qualifications
+        if (!empty($formData['doctor']['qualifications'])) {
+            foreach ($formData['doctor']['qualifications'] as $key => $qual) {
+                $formData['doctor']['qualifications'][$key]['issuedDate'] = convertToISO8601($qual['issuedDate'] ?? null);
+                // validTo є nullable, тому перевіряємо null всередині хелпера
+                $formData['doctor']['qualifications'][$key]['validTo'] = convertToISO8601($qual['validTo'] ?? null);
+            }
+        }
+
+        // Science Degree
+        if (!empty($formData['doctor']['scienceDegree']['issuedDate'])) {
+            $formData['doctor']['scienceDegree']['issuedDate'] = convertToISO8601($formData['doctor']['scienceDegree']['issuedDate']);
+        }
+
+        // Specialities
+        if (!empty($formData['doctor']['specialities'])) {
+            foreach ($formData['doctor']['specialities'] as $key => $spec) {
+                $formData['doctor']['specialities'][$key]['attestationDate'] = convertToISO8601($spec['attestationDate'] ?? null);
+                $formData['doctor']['specialities'][$key]['validToDate'] = convertToISO8601($spec['validToDate'] ?? null);
+            }
+        }
+
+        // --- 5. Formatting & Cleanup ---
         $partyData = $formData['party'] ?? [];
         unset($formData['party']);
         $formData = array_merge($formData, $partyData);

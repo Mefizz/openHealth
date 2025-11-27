@@ -19,6 +19,9 @@ class PartyVerificationSyncStatusOnLogin
 {
     use ProcessesPartyVerificationResponses;
 
+    /**
+     * Handle the event using the hybrid sync pattern.
+     */
     public function handle(EHealthUserLogin $event): void
     {
         Log::info('Listener ' . self::class . ' is executing for User ID: ' . $event->user->id);
@@ -26,23 +29,12 @@ class PartyVerificationSyncStatusOnLogin
         $user = $event->user;
         $legalEntity = $event->legalEntity;
 
-        if (!$user->can('party_verification:read')) {
-            return;
-        }
-
         try {
             $token = Crypt::decryptString($event->token);
 
             $response = EHealth::party()->withToken($token)->getMany();
 
-            try {
-                $this->processPartyVerificationResponse($response, $legalEntity);
-            } catch (Throwable $e) {
-                // Catch "The attribute [drfo_status] either does not exist" error
-                Log::warning('Party Verification Trait failed (non-critical): ' . $e->getMessage(), [
-                    'user_id' => $user->id
-                ]);
-            }
+            $this->processPartyVerificationResponse($response, $legalEntity);
 
             if ($response->isNotLast()) {
                 Bus::batch([new PartyVerificationSync($legalEntity, null, false, 2)])
@@ -50,11 +42,13 @@ class PartyVerificationSyncStatusOnLogin
                     ->withOption('legal_entity_id', $legalEntity->id)
                     ->withOption('token', $event->token)
                     ->withOption('user', $user)
-                    ->then(function (Batch $batch) use ($user) {
+                    ->then(function(Batch $batch) use ($user) {
                         $user->notify(new SyncNotification('party_verification', 'completed'));
+                        Log::info('Batch [Party Verification Status Sync] completed.', ['id' => $batch->id]);
                     })
-                    ->catch(function (Batch $batch, Throwable $e) use ($user) {
+                    ->catch(function(Batch $batch, Throwable $e) use ($user) {
                         $user->notify(new SyncNotification('party_verification', 'failed'));
+                        Log::error('Batch [Party Verification Status Sync] failed.', ['id' => $batch->id, 'error' => $e->getMessage()]);
                     })
                     ->onQueue('sync')
                     ->dispatch();
@@ -69,4 +63,5 @@ class PartyVerificationSyncStatusOnLogin
             ]);
         }
     }
+
 }
