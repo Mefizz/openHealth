@@ -294,26 +294,28 @@ class TestUserMigrate extends Seeder
 
                 $this->command->info("\tINFO: A new Employee entry has been successfully inserted into the database");
 
-                EmployeeRequest::create([
-                                            'uuid' => 'c68fa3a4-8b58-4753-a865-5b15314d7b03',
-                                            'division_uuid' => null,
-                                            'legal_entity_uuid' => config('ehealth.test.client_id'),
-                                            'position' => 'P2',
-                                            'start_date' => new Carbon('2024-09-04T21:00:00.000000Z')->format('Y-m-d'),
-                                            'end_date' => null,
-                                            'employee_type' => 'OWNER',
-                                            'inserted_at' => new Carbon('2024-09-05T18:56:03.427768Z'),
-                                            'status' => 'APPROVED',
-                                            'employee_id' => $employeeId,
-                                            'legal_entity_id' => $legalEntityId,
-                                            'email' => 'vitaliybezsh@gmail.com',
-                                            'division_id' => null,
-                                            'user_id' => $ownerUserId,
-                                            'party_id' => $partyId,
-                                            'applied_at' => new Carbon('2024-11-14T10:37:35.000000Z'),
-                                            'created_at' => new Carbon('2024-11-14T10:37:35.000000Z'),
-                                            'updated_at' => new Carbon('2024-11-14T10:37:35.000000Z'),
-                ]);
+                EmployeeRequest::create(
+                    [
+                        'uuid' => 'c68fa3a4-8b58-4753-a865-5b15314d7b03',
+                        'division_uuid' => null,
+                        'legal_entity_uuid' => config('ehealth.test.client_id'),
+                        'position' => 'P2',
+                        'start_date' => new Carbon('2024-09-04T21:00:00.000000Z')->format('Y-m-d'),
+                        'end_date' => null,
+                        'employee_type' => 'OWNER',
+                        'inserted_at' => new Carbon('2024-09-05T18:56:03.427768Z'),
+                        'status' => 'APPROVED',
+                        'employee_id' => $employeeId,
+                        'legal_entity_id' => $legalEntityId,
+                        'email' => 'vitaliybezsh@gmail.com',
+                        'division_id' => null,
+                        'user_id' => $ownerUserId,
+                        'party_id' => $partyId,
+                        'applied_at' => new Carbon('2024-11-14T10:37:35.000000Z'),
+                        'created_at' => new Carbon('2024-11-14T10:37:35.000000Z'),
+                        'updated_at' => new Carbon('2024-11-14T10:37:35.000000Z'),
+                    ]
+                );
 
                 $this->command->info("\tINFO: A new EmployeeRequest entry has been successfully inserted into the database\n");
 
