@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Livewire\Party;
 
 use AllowDynamicProperties;
-use App\Core\Arr;
+use App\Enums\Status;
 use App\Livewire\Employee\AbstractEmployeeFormManager;
+use App\Models\Employee\EmployeeRequest;
 use App\Models\LegalEntity;
 use App\Models\Relations\Party;
 use App\Repositories\Repository;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 
 #[AllowDynamicProperties]
@@ -26,11 +29,31 @@ class PartyEdit extends AbstractEmployeeFormManager
         $this->party = $party;
         $this->partyId = $party->id;
         $this->pageTitle = __('forms.edit_personal_data') . ' - ' . ($party->fullName ?? '');
+
         $employee = $party->employees()->latest('start_date')->first();
-        $this->form->hydrate($employee ?? $party);
+
+        // MERGE STRATEGY
+        $existingDraft = null;
+        if ($employee) {
+            $existingDraft = EmployeeRequest::where('employee_id', $employee->id)
+                ->whereNull('uuid')
+                ->whereNull('applied_at')
+                ->latest()
+                ->first();
+        }
+
+        if ($existingDraft) {
+            $this->employeeRequestId = $existingDraft->id;
+            $this->employeeRequest = $existingDraft;
+            $this->form->hydrate($existingDraft);
+            session()->flash('info', __('forms.draft_loaded_automatically'));
+        } else {
+            // Hydrate from Employee if exists, otherwise Party (standard logic)
+            $this->form->hydrate($employee ?? $party);
+        }
+
         $this->isPartyDataPartiallyLocked = true;
         $this->isPositionDataLocked = true;
-        $this->partyExistingPositions = $party->employees()->with('division')->get();
     }
 
     public function boot(): void
@@ -40,22 +63,51 @@ class PartyEdit extends AbstractEmployeeFormManager
         }
     }
 
-    /**
-     * Similar to employee edit, but focus on Party data,
-     */
-    protected function handleDraftPersistence(): \App\Models\Employee\EmployeeRequest
+    #[Computed]
+    public function partyPositions(): Collection
     {
-        $employee = $this->party->employees()->latest('start_date')->firstOrFail();
+        return $this->party->employees()->with('division')->get();
+    }
+
+    /**
+     * Creates a draft that contains updated personal data (Party/Documents)
+     * AND unchanged position data (from blocked fields).
+     */
+    protected function handleDraftPersistence(): EmployeeRequest
+    {
+        $employee = $this->party->employees()
+            ->where('status', '!=', Status::DISMISSED->value)
+            ->latest('start_date')
+            ->firstOrFail();
 
         $preparedData = $this->form->getPreparedData();
-        $employeeRequestData = Arr::only($preparedData, ['position', 'start_date', 'end_date', 'employee_type', 'division_id', 'email']);
+        $nestedDataForRevision = $this->mapRevisionData($preparedData);
+        $nestedDataForRevision['employee_uuid'] = $employee->uuid;
 
-        $employeeRequestData['user_id'] = $employee->user_id;
-        $employeeRequestData['party_id'] = $this->party->id;
+        // Data for Request Model (System fields)
+        // Since PartyEdit view blocks position fields, preparedData has them from hydrate (which got them from Draft or Employee)
+        $employeeRequestData = [
+            'user_id' => $employee->user_id,
+            'party_id' => $this->party->id,
+            'employee_id' => $employee->id,
+            'position' => $preparedData['position'] ?? $employee->position, // Use form data if present (from merged draft)
+            'employee_type' => $preparedData['employee_type'] ?? $employee->employee_type,
+            'start_date' => $preparedData['start_date'] ?? $employee->start_date?->format('Y-m-d'),
+            'division_id' => $preparedData['division_id'] ?? $employee->division_id,
+            'email' => $employee->user?->email,
+        ];
+
+        if ($this->employeeRequestId) {
+            $existingRequest = EmployeeRequest::find($this->employeeRequestId);
+            if ($existingRequest && is_null($existingRequest->uuid)) {
+                $existingRequest->fill($employeeRequestData)->save();
+                $existingRequest->revision?->update(['data' => $nestedDataForRevision]);
+
+                return $existingRequest;
+            }
+        }
 
         $newRequest = Repository::employee()->createEmployeeRequestDraft($employeeRequestData, legalEntity());
-
-        $nestedDataForRevision = $this->mapRevisionData($preparedData);
         $this->saveRevisionForRequest($newRequest, $nestedDataForRevision);
 
         return $newRequest;

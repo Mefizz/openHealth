@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Livewire\Employee\Forms;
 
 use App\Core\Arr;
+use App\Livewire\Employee\EmployeeCreate;
+use App\Livewire\Party\PartyEdit;
 use App\Models\Employee\BaseEmployee;
 use App\Rules\Cyrillic;
+use App\Rules\DateFormat;
 use App\Rules\DocumentNumber;
 use App\Rules\HasIdentityDocumentRule;
 use App\Rules\UniquePassportRule;
-use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\Form;
 use App\Rules\Name;
@@ -64,10 +66,26 @@ class EmployeeForm extends Form
     {
         $partyRules = $this->partyRules();
 
-        // Merge the potentially modified party rules with the others.
+        // Specific logic for EmployeeCreate
+        if ($component instanceof EmployeeCreate) {
+            $partyRules['party.email'][] = new UniqueEmailInLegalEntity();
+        }
+
+        //
+        // If we are summoned by PartyEdit, we validate ONLY
+        // personal data (party) and documents.
+        if ($component instanceof PartyEdit) {
+            return array_merge(
+                $partyRules,
+                $this->documentsRules()
+            );
+        }
+
+        // Standard behavior for EmployeeCreate, EmployeeEdit, EmployeePositionAdd:
+        // validate everything (position, party, documents, doctor).
         return array_merge(
             $this->rootFieldsRules(),
-            $partyRules, // Use the modified $partyRules variable here
+            $partyRules,
             $this->documentsRules(),
             $this->doctorRules()
         );
@@ -87,8 +105,17 @@ class EmployeeForm extends Form
         return [
             'position' => ['required', 'string', Rule::in(array_keys($this->component->dictionaries['POSITION'] ?? []))],
             'employeeType' => ['required', 'string', Rule::in(array_keys($this->component->dictionaries['EMPLOYEE_TYPE'] ?? []))],
-            'startDate' => ['required', 'date_format:Y-m-d'],
-            'endDate' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:startDate'],
+            'startDate' => ['required', new DateFormat()],
+            'endDate' => [
+                'nullable',
+                Rule::when(
+                    !empty($this->endDate),
+                    [
+                        new DateFormat(),
+                        'after_or_equal:startDate',
+                    ]
+                ),
+            ],
             'divisionId' => [
                 Rule::requiredIf(function () {
                     $pharmacyTypes = config('ehealth.pharmacy_employee_types', []);
@@ -109,7 +136,7 @@ class EmployeeForm extends Form
             'party.firstName' => ['required', new Name()],
             'party.secondName' => ['nullable', 'present', new Name()],
             'party.gender' => ['required', 'string', Rule::in(array_keys($this->component->dictionaries['GENDER'] ?? []))],
-            'party.birthDate' => ['required', 'date_format:Y-m-d', new BirthDate()],
+            'party.birthDate' => ['required', new DateFormat(), new BirthDate()],
             'party.phones' => ['required', 'array', 'min:1', new PhoneDuplicates()],
             'party.phones.*.number' => ['required', new PhoneNumber()],
             'party.phones.*.type' => ['required', 'string', Rule::in(array_keys($this->component->dictionaries['PHONE_TYPE'] ?? []))],
@@ -163,7 +190,7 @@ class EmployeeForm extends Form
                 }
             ],
             'documents.*.issuedBy' => ['present', 'nullable', 'string'],
-            'documents.*.issuedAt' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
+            'documents.*.issuedAt' => ['required', new DateFormat(), 'before_or_equal:today'],
         ];
     }
 
@@ -268,7 +295,7 @@ class EmployeeForm extends Form
         $this->party['firstName'] = $party->first_name;
         $this->party['secondName'] = $party->second_name;
         $this->party['gender'] = $party->gender;
-        $this->party['birthDate'] = $party->birth_date?->format('Y-m-d');
+        $this->party['birthDate'] = convertToAppDateFormat($party->birth_date);
         $this->party['taxId'] = $party->tax_id;
         $this->party['noTaxId'] = (bool)$party->no_tax_id;
         $user = $party->users->first();
@@ -290,7 +317,7 @@ class EmployeeForm extends Form
                     'type' => $doc->type,
                     'number' => $doc->number,
                     'issuedBy' => $doc->issued_by,
-                    'issuedAt' => $doc->issued_at?->format('Y-m-d'),
+                    'issuedAt' => $doc->issued_at
                 ];
             })->toArray();
         }
@@ -303,30 +330,30 @@ class EmployeeForm extends Form
             $this->populatePartyData($employee->party);
         }
         $this->position = $employee->position;
-        $this->employeeType = $employee->employee_type;
-        $this->startDate = $employee->start_date?->format('Y-m-d');
-        $this->endDate = $employee->end_date?->format('Y-m-d');
-        $this->divisionId = $employee->division_id !== null ? (string) $employee->division_id : null;
+        $this->employeeType = $employee->employeeType;
+        $this->startDate = convertToAppDateFormat($employee->startDate);
+        $this->endDate = convertToAppDateFormat($employee->endDate);
+        $this->divisionId = $employee->divisionId !== null ? (string) $employee->divisionId : null;
 
         $this->doctor['educations'] = $employee->educations->map(function ($edu) {
             $data = Arr::toCamelCase($edu->toArray());
-            $data['issuedDate'] = $edu->issued_date ? Carbon::parse($edu->issued_date)->format('Y-m-d') : null;
+            $data['issuedDate'] = convertToAppDateFormat($edu->issuedDate) ?: null;
 
             return $data;
         })->toArray();
 
         $this->doctor['specialities'] = $employee->specialities->map(function ($spec) {
             $data = Arr::toCamelCase($spec->toArray());
-            $data['attestationDate'] = $spec->attestation_date ? Carbon::parse($spec->attestation_date)->format('Y-m-d') : null;
-            $data['validToDate'] = $spec->valid_to_date ? Carbon::parse($spec->valid_to_date)->format('Y-m-d') : null;
+            $data['attestationDate'] = convertToAppDateFormat($spec->attestation_date) ?: null;
+            $data['validToDate'] = convertToAppDateFormat($spec->validToDate) ?: null;
 
             return $data;
         })->toArray();
 
         $this->doctor['qualifications'] = $employee->qualifications->map(function ($qual) {
             $data = Arr::toCamelCase($qual->toArray());
-            $data['issuedDate'] = $qual->issued_date ? Carbon::parse($qual->issued_date)->format('Y-m-d') : null;
-            $data['validTo'] = $qual->valid_to ? Carbon::parse($qual->valid_to)->format('Y-m-d') : null;
+            $data['issuedDate'] = convertToAppDateFormat($qual->issuedDate) ?: null;
+            $data['validTo'] = convertToAppDateFormat($qual->validTo) ?: null;
 
             return $data;
         })->toArray();
@@ -335,56 +362,127 @@ class EmployeeForm extends Form
         if (!empty($scienceDegreeData)) {
             $this->doctor['scienceDegree'] = Arr::toCamelCase($scienceDegreeData);
             if (isset($employee->scienceDegree->issued_date)) {
-                $this->doctor['scienceDegree']['issuedDate'] = Carbon::parse($employee->scienceDegree->issued_date)->format('Y-m-d');
+                $this->doctor['scienceDegree']['issuedDate'] = convertToAppDateFormat($employee->scienceDegree->issued_date);
             }
         }
     }
 
     /**
      * Hydrates the form from an EmployeeRequest model.
+     * Merges original Employee data first, then applies Revision overrides.
      */
     private function hydrateFromEmployeeRequest(EmployeeRequest $request): void
     {
-        $request->loadMissing(['party', 'revision']);
+        $request->loadMissing(['party', 'revision', 'employee']); // Load original employee too
         $revisionData = $request->revision->data ?? [];
 
-        // 1. Base Party data (if exist)
-        if ($request->party) {
+        // 1. BASE: Hydrate from original Employee if exists
+        if ($request->employee) {
+            $this->hydrateFromEmployee($request->employee);
+        } elseif ($request->party) {
             $this->populatePartyData($request->party);
         }
 
-        // 2.add Revision data (draft)
+        // 2. OVERRIDE: Apply Revision data (Draft changes)
 
         // --- position data ---
         if (!empty($revisionData['employee_request_data'])) {
-            $this->position = $revisionData['employee_request_data']['position'] ?? $this->position;
-            $this->employeeType = $revisionData['employee_request_data']['employee_type'] ?? $this->employeeType;
-            $this->startDate = $revisionData['employee_request_data']['start_date'] ?? $this->startDate;
+            $reqData = $revisionData['employee_request_data'];
+
+            if (isset($reqData['position'])) {
+                $this->position = $reqData['position'];
+            }
+
+            if (isset($reqData['employee_type'])) {
+                $this->employeeType = $reqData['employee_type'];
+            }
+
+            if (isset($reqData['start_date'])) {
+                $this->startDate = convertToAppDateFormat($reqData['start_date']);
+            }
+
+            if (isset($reqData['end_date'])) {
+                $this->endDate = convertToAppDateFormat($reqData['end_date']);
+            }
+
+            if (array_key_exists('division_id', $reqData)) {
+                $this->divisionId = $reqData['division_id'] !== null
+                    ? (string) $reqData['division_id']
+                    : null;
+            }
         }
 
         // --- documents ---
         if (!empty($revisionData['documents'])) {
-            $this->documents = Arr::toCamelCase($revisionData['documents']);
+            $docs = Arr::toCamelCase($revisionData['documents']);
+
+            foreach ($docs as &$doc) {
+                if (isset($doc['issuedAt'])) {
+                    $doc['issuedAt'] = convertToAppDateFormat($doc['issuedAt']);
+                }
+            }
+            $this->documents = $docs;
         }
 
         // --- doctor(specialist) data ---
         if (!empty($revisionData['doctor'])) {
             $doctorDataFromRevision = Arr::toCamelCase($revisionData['doctor']);
-            // Using array_merge_recursive, to only update values
-            $this->doctor = array_merge_recursive($this->doctor, $doctorDataFromRevision);
+
+            // Educations
+            if (!empty($doctorDataFromRevision['educations'])) {
+                foreach ($doctorDataFromRevision['educations'] as &$val) {
+                    if (isset($val['issuedDate'])) {
+                        $val['issuedDate'] = convertToAppDateFormat($val['issuedDate']);
+                    }
+                }
+            }
+            // Specialities
+            if (!empty($doctorDataFromRevision['specialities'])) {
+                foreach ($doctorDataFromRevision['specialities'] as &$val) {
+                    if (isset($val['attestationDate'])) {
+                        $val['attestationDate'] = convertToAppDateFormat($val['attestationDate']);
+                    }
+                    if (isset($val['validToDate'])) {
+                        $val['validToDate'] = convertToAppDateFormat($val['validToDate']);
+                    }
+                }
+            }
+            // Qualifications
+            if (!empty($doctorDataFromRevision['qualifications'])) {
+                foreach ($doctorDataFromRevision['qualifications'] as &$val) {
+                    if (isset($val['issuedDate'])) {
+                        $val['issuedDate'] = convertToAppDateFormat($val['issuedDate']);
+                    }
+                    if (isset($val['validTo'])) {
+                        $val['validTo'] = convertToAppDateFormat($val['validTo']);
+                    }
+                }
+            }
+            // Science Degree
+            if (!empty($doctorDataFromRevision['scienceDegree'])) {
+                if (isset($doctorDataFromRevision['scienceDegree']['issuedDate'])) {
+                    $doctorDataFromRevision['scienceDegree']['issuedDate'] = convertToAppDateFormat($doctorDataFromRevision['scienceDegree']['issuedDate']);
+                }
+            }
+
+            // Merge recursive to override specific fields
+            $this->doctor = array_replace_recursive($this->doctor, $doctorDataFromRevision);
         }
 
         // --- Personal data (Party) ---
         if (!empty($revisionData['party'])) {
             $partyDataFromRevision = Arr::toCamelCase($revisionData['party']);
+
+            if (isset($partyDataFromRevision['birthDate'])) {
+                $partyDataFromRevision['birthDate'] = convertToAppDateFormat($partyDataFromRevision['birthDate']);
+            }
+
             $this->party = array_merge($this->party, $partyDataFromRevision);
         }
 
         // --- Phones ---
         if (!empty($revisionData['phones'])) {
             $this->party['phones'] = Arr::toCamelCase($revisionData['phones']);
-        } elseif (empty($this->party['phones'][0]['number'])) {
-            $this->party['phones'] = [['type' => 'MOBILE', 'number' => '']];
         }
     }
 
@@ -400,9 +498,18 @@ class EmployeeForm extends Form
             $latestRequest = $party->employeeRequests()->with('revision')->latest()->first();
             if ($latestRequest && $latestRequest->revision) {
                 $revisionData = $latestRequest->revision->data;
+
                 if (empty($this->documents) && !empty($revisionData['documents'])) {
-                    $this->documents = Arr::toCamelCase($revisionData['documents']);
+                    $docs = Arr::toCamelCase($revisionData['documents']);
+
+                    foreach ($docs as &$doc) {
+                        if (isset($doc['issuedAt'])) {
+                            $doc['issuedAt'] = convertToAppDateFormat($doc['issuedAt']);
+                        }
+                    }
+                    $this->documents = $docs;
                 }
+
                 if (empty($this->party['phones'][0]['number']) && !empty($revisionData['phones'])) {
                     $this->party['phones'] = Arr::toCamelCase($revisionData['phones']);
                 }
@@ -417,6 +524,57 @@ class EmployeeForm extends Form
     public function getPreparedData(): array
     {
         $formData = $this->all();
+
+        // --- 1. Root fields ---
+        $formData['startDate'] = convertToISO8601($formData['startDate'] ?? null);
+        $formData['endDate'] = convertToISO8601($formData['endDate'] ?? null);
+
+        // --- 2. Identity (Party) ---
+        if (isset($formData['party']['birthDate'])) {
+            $formData['party']['birthDate'] = convertToISO8601($formData['party']['birthDate']);
+        }
+
+        // --- 3. Documents ---
+        if (!empty($formData['documents'])) {
+            foreach ($formData['documents'] as $key => $doc) {
+                if (isset($doc['issuedAt'])) {
+                    $formData['documents'][$key]['issuedAt'] = convertToISO8601($doc['issuedAt']);
+                }
+            }
+        }
+
+        // --- 4. Doctor Data ---
+
+        // Educations
+        if (!empty($formData['doctor']['educations'])) {
+            foreach ($formData['doctor']['educations'] as $key => $edu) {
+                $formData['doctor']['educations'][$key]['issuedDate'] = convertToISO8601($edu['issuedDate'] ?? null);
+            }
+        }
+
+        // Qualifications
+        if (!empty($formData['doctor']['qualifications'])) {
+            foreach ($formData['doctor']['qualifications'] as $key => $qual) {
+                $formData['doctor']['qualifications'][$key]['issuedDate'] = convertToISO8601($qual['issuedDate'] ?? null);
+                // validTo є nullable, тому перевіряємо null всередині хелпера
+                $formData['doctor']['qualifications'][$key]['validTo'] = convertToISO8601($qual['validTo'] ?? null);
+            }
+        }
+
+        // Science Degree
+        if (!empty($formData['doctor']['scienceDegree']['issuedDate'])) {
+            $formData['doctor']['scienceDegree']['issuedDate'] = convertToISO8601($formData['doctor']['scienceDegree']['issuedDate']);
+        }
+
+        // Specialities
+        if (!empty($formData['doctor']['specialities'])) {
+            foreach ($formData['doctor']['specialities'] as $key => $spec) {
+                $formData['doctor']['specialities'][$key]['attestationDate'] = convertToISO8601($spec['attestationDate'] ?? null);
+                $formData['doctor']['specialities'][$key]['validToDate'] = convertToISO8601($spec['validToDate'] ?? null);
+            }
+        }
+
+        // --- 5. Formatting & Cleanup ---
         $partyData = $formData['party'] ?? [];
         unset($formData['party']);
         $formData = array_merge($formData, $partyData);
@@ -431,9 +589,6 @@ class EmployeeForm extends Form
         return Arr::toSnakeCase($formData);
     }
 
-    /**
-     * Resets the form to its default state.
-     */
     /**
      * Resets the form to its default state.
      */

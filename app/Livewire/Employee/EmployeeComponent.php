@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Employee;
 
+use App\Enums\Status;
 use App\Models\LegalEntity;
 use App\Traits\FormTrait;
 use Livewire\Attributes\Computed;
@@ -20,6 +21,10 @@ abstract class EmployeeComponent extends Component
     public Form $form;
     public bool $isPersonalDataLocked = false;
     public bool $isPositionDataLocked = false;
+
+    // Locks only IMMUTABLE fields (Position, Type, StartDate)
+    // Allows editing: Division
+    public bool $isCorePositionDataLocked = false;
     #[Locked]
     public ?int $employeeRequestId = null;
     public array $divisions = [];
@@ -111,6 +116,6 @@ abstract class EmployeeComponent extends Component
 
     protected function loadDivisions(LegalEntity $legalEntity): void
     {
-        $this->divisions = $legalEntity->divisions()->where('is_active', true)->get(['id', 'name'])->toArray();
+        $this->divisions = $legalEntity->divisions()->where('status', Status::ACTIVE)->get(['id', 'name'])->toArray();
     }
 }
