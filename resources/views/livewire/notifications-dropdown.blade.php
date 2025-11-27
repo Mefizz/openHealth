@@ -9,7 +9,11 @@
             @icon('bell', 'w-6 h-6')
             @if($notifications->count() > 0)
                 <div class="absolute -top-2 -right-2 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-600 border-2 border-white rounded-full dark:border-gray-800">
-                    {{ $notifications->count() }}
+                    @if($notifications->count() > 99)
+                        99+
+                    @else
+                        {{ $notifications->count() }}
+                    @endif
                 </div>
             @endif
         </div>
