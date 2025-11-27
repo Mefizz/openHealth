@@ -570,7 +570,7 @@ abstract class LegalEntity extends Component
             if (\is_array($itemValue)) {
                 $reformatted = collect($itemValue)->map(function($item) {
                     if (isset($item['date'])) {
-                        $item['date'] = convertToISO8601($item['date']);
+                        $item['date'] = convertToYmd($item['date']);
                     }
 
                     return $item;
@@ -578,7 +578,7 @@ abstract class LegalEntity extends Component
 
                 Arr::set($data, $item, $reformatted);
             } else {
-                Arr::set($data, $item, convertToISO8601($itemValue));
+                Arr::set($data, $item, convertToYmd($itemValue));
             }
         }
 
