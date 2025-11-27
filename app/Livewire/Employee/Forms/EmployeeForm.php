@@ -13,6 +13,7 @@ use App\Rules\DateFormat;
 use App\Rules\DocumentNumber;
 use App\Rules\HasIdentityDocumentRule;
 use App\Rules\UniquePassportRule;
+use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\Form;
 use App\Rules\Name;
@@ -519,26 +520,38 @@ class EmployeeForm extends Form
 
     /**
      * Prepares and returns a FLAT array of all form data for the repository.
-     * The logic for creating a nested structure for the revision is moved to the Trait.
      */
     public function getPreparedData(): array
     {
         $formData = $this->all();
 
+        // 1. Create a local formatter that does not touch the global helper
+        // It converts the date to the format 'YYYY-MM-DD' (without time T00:00:00Z)
+        $toApiDate = static function ($value) {
+            if (empty($value)) {
+                return null;
+            }
+            try {
+                return Carbon::parse($value)->format('Y-m-d');
+            } catch (\Exception $e) {
+                return null;
+            }
+        };
+
         // --- 1. Root fields ---
-        $formData['startDate'] = convertToISO8601($formData['startDate'] ?? null);
-        $formData['endDate'] = convertToISO8601($formData['endDate'] ?? null);
+        $formData['startDate'] = $toApiDate($formData['startDate'] ?? null);
+        $formData['endDate'] = $toApiDate($formData['endDate'] ?? null);
 
         // --- 2. Identity (Party) ---
         if (isset($formData['party']['birthDate'])) {
-            $formData['party']['birthDate'] = convertToISO8601($formData['party']['birthDate']);
+            $formData['party']['birthDate'] = $toApiDate($formData['party']['birthDate']);
         }
 
         // --- 3. Documents ---
         if (!empty($formData['documents'])) {
             foreach ($formData['documents'] as $key => $doc) {
                 if (isset($doc['issuedAt'])) {
-                    $formData['documents'][$key]['issuedAt'] = convertToISO8601($doc['issuedAt']);
+                    $formData['documents'][$key]['issuedAt'] = $toApiDate($doc['issuedAt']);
                 }
             }
         }
@@ -548,29 +561,28 @@ class EmployeeForm extends Form
         // Educations
         if (!empty($formData['doctor']['educations'])) {
             foreach ($formData['doctor']['educations'] as $key => $edu) {
-                $formData['doctor']['educations'][$key]['issuedDate'] = convertToISO8601($edu['issuedDate'] ?? null);
+                $formData['doctor']['educations'][$key]['issuedDate'] = $toApiDate($edu['issuedDate'] ?? null);
             }
         }
 
         // Qualifications
         if (!empty($formData['doctor']['qualifications'])) {
             foreach ($formData['doctor']['qualifications'] as $key => $qual) {
-                $formData['doctor']['qualifications'][$key]['issuedDate'] = convertToISO8601($qual['issuedDate'] ?? null);
-                // validTo є nullable, тому перевіряємо null всередині хелпера
-                $formData['doctor']['qualifications'][$key]['validTo'] = convertToISO8601($qual['validTo'] ?? null);
+                $formData['doctor']['qualifications'][$key]['issuedDate'] = $toApiDate($qual['issuedDate'] ?? null);
+                $formData['doctor']['qualifications'][$key]['validTo'] = $toApiDate($qual['validTo'] ?? null);
             }
         }
 
         // Science Degree
         if (!empty($formData['doctor']['scienceDegree']['issuedDate'])) {
-            $formData['doctor']['scienceDegree']['issuedDate'] = convertToISO8601($formData['doctor']['scienceDegree']['issuedDate']);
+            $formData['doctor']['scienceDegree']['issuedDate'] = $toApiDate($formData['doctor']['scienceDegree']['issuedDate']);
         }
 
         // Specialities
         if (!empty($formData['doctor']['specialities'])) {
             foreach ($formData['doctor']['specialities'] as $key => $spec) {
-                $formData['doctor']['specialities'][$key]['attestationDate'] = convertToISO8601($spec['attestationDate'] ?? null);
-                $formData['doctor']['specialities'][$key]['validToDate'] = convertToISO8601($spec['validToDate'] ?? null);
+                $formData['doctor']['specialities'][$key]['attestationDate'] = $toApiDate($spec['attestationDate'] ?? null);
+                $formData['doctor']['specialities'][$key]['validToDate'] = $toApiDate($spec['validToDate'] ?? null);
             }
         }
 
