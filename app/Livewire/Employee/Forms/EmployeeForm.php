@@ -45,7 +45,7 @@ class EmployeeForm extends Form
     public array $party = [
         'lastName' => '',
         'firstName' => '',
-        'secondName' => '',
+        'secondName' => null,
         'gender' => '',
         'birthDate' => '',
         'phones' => [['type' => '', 'number' => '']],
@@ -292,17 +292,17 @@ class EmployeeForm extends Form
         $party->loadMissing(['phones', 'documents']);
         $this->existingPartyId = $party->id;
 
-        $this->party['lastName'] = $party->last_name;
-        $this->party['firstName'] = $party->first_name;
-        $this->party['secondName'] = $party->second_name;
+        $this->party['lastName'] = $party->lastName;
+        $this->party['firstName'] = $party->firstName;
+        $this->party['secondName'] = $party->secondName;
         $this->party['gender'] = $party->gender;
-        $this->party['birthDate'] = convertToAppDateFormat($party->birth_date);
-        $this->party['taxId'] = $party->tax_id;
-        $this->party['noTaxId'] = (bool)$party->no_tax_id;
+        $this->party['birthDate'] = convertToAppDateFormat($party->birthDate);
+        $this->party['taxId'] = $party->taxId;
+        $this->party['noTaxId'] = (bool)$party->noTaxId;
         $user = $party->users->first();
         $this->party['email'] = $user ? $user->email : null;
-        $this->party['workingExperience'] = $party->working_experience;
-        $this->party['aboutMyself'] = $party->about_myself;
+        $this->party['workingExperience'] = $party->workingExperience;
+        $this->party['aboutMyself'] = $party->aboutMyself;
 
         $phones = $party->phones;
         // Only overwrite phones if the form is empty
@@ -317,8 +317,8 @@ class EmployeeForm extends Form
                 return [
                     'type' => $doc->type,
                     'number' => $doc->number,
-                    'issuedBy' => $doc->issued_by,
-                    'issuedAt' => $doc->issued_at
+                    'issuedBy' => $doc->issuedBy,
+                    'issuedAt' => $doc->issuedAt
                 ];
             })->toArray();
         }
@@ -345,7 +345,7 @@ class EmployeeForm extends Form
 
         $this->doctor['specialities'] = $employee->specialities->map(function ($spec) {
             $data = Arr::toCamelCase($spec->toArray());
-            $data['attestationDate'] = convertToAppDateFormat($spec->attestation_date) ?: null;
+            $data['attestationDate'] = convertToAppDateFormat($spec->attestationDate) ?: null;
             $data['validToDate'] = convertToAppDateFormat($spec->validToDate) ?: null;
 
             return $data;
@@ -362,8 +362,8 @@ class EmployeeForm extends Form
         $scienceDegreeData = $employee->scienceDegree?->toArray() ?? [];
         if (!empty($scienceDegreeData)) {
             $this->doctor['scienceDegree'] = Arr::toCamelCase($scienceDegreeData);
-            if (isset($employee->scienceDegree->issued_date)) {
-                $this->doctor['scienceDegree']['issuedDate'] = convertToAppDateFormat($employee->scienceDegree->issued_date);
+            if (isset($employee->scienceDegree->issuedDate)) {
+                $this->doctor['scienceDegree']['issuedDate'] = convertToAppDateFormat($employee->scienceDegree->issuedDate);
             }
         }
     }
