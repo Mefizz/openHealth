@@ -1,3 +1,4 @@
+import { initFlowbite } from 'flowbite';
 import 'flowbite';
 import './bootstrap';
 import './common';
@@ -197,10 +198,16 @@ if (window.Livewire) {
     document.addEventListener("livewire:load", () => {
         Livewire.hook("message.processed", (message, component) => {
             initUkTimepickers(component?.el || document);
+            initFlowbite();
         });
+    });
+
+    document.addEventListener("livewire:updated", () => {
+        initFlowbite();
     });
 
     document.addEventListener("livewire:navigated", () => {
         initUkTimepickers();
+        initFlowbite();
     });
 }
