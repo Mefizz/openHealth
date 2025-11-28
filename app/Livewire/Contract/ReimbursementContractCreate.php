@@ -20,8 +20,6 @@ class ReimbursementContractCreate extends ContractComponent
 {
     public Form $form;
 
-    public bool $showSignatureModal = false;
-
     protected array $dictionaryNames = [
         'REIMBURSEMENT_CONTRACT_TYPE',
         'REIMBURSEMENT_CONTRACT_CONSENT_TEXT'

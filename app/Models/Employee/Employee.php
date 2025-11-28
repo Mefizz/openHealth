@@ -126,4 +126,14 @@ class Employee extends BaseEmployee
             )
             ->with('party:id,first_name,last_name,second_name');
     }
+
+    #[Scope]
+    protected function contractors(Builder $query, int $legalEntityId): Builder
+    {
+        return $query->whereLegalEntityId($legalEntityId)
+            ->whereIn('employee_type', ['OWNER', 'ADMIN'])
+            ->whereStatus(Status::APPROVED)
+            ->whereIsActive(true)
+            ->with('party:id,first_name,last_name,second_name');
+    }
 }
