@@ -81,7 +81,12 @@ class EquipmentComponent extends Component
         $recorderData = Auth::user()->employees()
             ->activeRecorders($legalEntity->id)
             ->get(['uuid', 'party_id'])
-            ->firstOrFail();
+            ->first();
+
+        if (empty($recorderData)) {
+            abort(403, __('Співробітника з відповідними доступами не знайдено.'));
+        }
+
         $this->recorderFullName = $recorderData->fullName;
         $this->form->recorder = $recorderData->uuid;
     }
