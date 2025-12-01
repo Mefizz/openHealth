@@ -32,8 +32,17 @@ class ReimbursementContractCreate extends ContractComponent
 
     public function create(): void
     {
-        if (Auth::user()?->cannot('initialize', ContractRequest::class)) {
+        if (Auth::user()->cannot('initialize', ContractRequest::class)) {
             Session::flash('error', 'У вас немає дозволу на ініціалізацію запиту на створення контракту');
+
+            return;
+        }
+
+        try {
+            $validated = $this->form->validate($this->form->signingRules());
+        } catch (ValidationException $exception) {
+            Session::flash('error', $exception->validator->errors()->first());
+            $this->setErrorBag($exception->validator->getMessageBag());
 
             return;
         }

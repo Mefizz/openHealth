@@ -40,4 +40,9 @@ abstract class ContractComponent extends Component
         $this->contractorFullName = $contractorData->fullName;
         $this->form->contractorOwnerId = $contractorData->uuid;
     }
+
+    public function openSignatureModal(): void
+    {
+        $this->showSignatureModal = true;
+    }
 }

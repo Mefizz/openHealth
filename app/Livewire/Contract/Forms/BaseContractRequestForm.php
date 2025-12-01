@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Livewire\Contract\Forms;
 
 use App\Core\Arr;
+use App\Core\BaseForm;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\Rule;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
-use Livewire\Form;
 
-abstract class BaseContractRequestForm extends Form
+abstract class BaseContractRequestForm extends BaseForm
 {
     public string $contractorLegalEntityId;
 
@@ -100,19 +100,5 @@ abstract class BaseContractRequestForm extends Form
             });
 
         return removeEmptyKeys(Arr::toSnakeCase($data));
-    }
-
-    /**
-     * List of rules for signing Cipher form.
-     *
-     * @return array[]
-     */
-    public function rulesForSigning(): array
-    {
-        return [
-            'knedp' => ['required', 'string'],
-            'password' => ['required', 'string'],
-            'keyContainerUpload' => ['required', 'file', 'extensions:dat,pfx,pk8,zs2,jks,p7s']
-        ];
     }
 }

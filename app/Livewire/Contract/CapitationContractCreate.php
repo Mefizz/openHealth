@@ -43,34 +43,27 @@ class CapitationContractCreate extends ContractComponent
 
     public function createLocally(): void
     {
-        $this->form->validate();
-
-        dd($this->form);
-    }
-
-    public function show()
-    {
-        $this->showSignatureModal = true;
-    }
-
-    public function sign(): void
-    {
-        // array:3 [▼ // app/Livewire/Contract/CapitationContractCreate.php:51
-        //  "additional_document_url" => "https://storage-preprod-01.ehealth.gov.ua/contract-requests/4b/7e/41/ac/b9/4b0b9001-7ecd-41a0-ac0d-b9030fce6fcb/media/upload_contract_request_additional_documen ▶"
-        //  "id" => "4b0b9001-7ecd-41a0-ac0d-b9030fce6fcb"
-        //  "statute_url" => "https://storage-preprod-01.ehealth.gov.ua/contract-requests/4b/7e/41/ac/b9/4b0b9001-7ecd-41a0-ac0d-b9030fce6fcb/media/upload_contract_request_statute.pdf?X-Amz- ▶"
-        //];
-
         try {
             $validated = $this->form->validate();
-            $validatedCipher = $this->form->validate($this->form->rulesForSigning());
         } catch (ValidationException $exception) {
             Session::flash('error', $exception->validator->errors()->first());
             $this->setErrorBag($exception->validator->getMessageBag());
 
             return;
         }
-//        dd($this->form->formatForApi($validated), $validatedCipher);
+    }
+
+    public function create(): void
+    {
+        try {
+            $validated = $this->form->validate();
+            $validatedCipher = $this->form->validate($this->form->signingRules()());
+        } catch (ValidationException $exception) {
+            Session::flash('error', $exception->validator->errors()->first());
+            $this->setErrorBag($exception->validator->getMessageBag());
+
+            return;
+        }
 
         $signedContent = signatureService()->signData(
             $this->form->formatForApi($validated),
@@ -85,7 +78,6 @@ class CapitationContractCreate extends ContractComponent
             'capitation',
             ['signed_content' => $signedContent, 'signed_content_encoding' => 'base64']
         );
-        dd($response->getData());
     }
 
     public function render(): View

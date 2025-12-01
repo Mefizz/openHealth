@@ -3,8 +3,8 @@
         <x-slot name="title">{{ __('contracts.new') }}</x-slot>
     </x-section-navigation>
 
-    <x-forms.loading/>
-    <x-messages/>
+    <x-forms.loading />
+    <x-messages />
 
     <div class="form" wire:key="{{ time() }}">
         @include('livewire.contract.parts.legal-entity-info')
@@ -16,7 +16,7 @@
         @include('livewire.contract.parts.consent-text')
 
         <div class="mt-6 flex flex-row items-center gap-4 pt-6">
-            <div class="flex items-center space-x-3" x-data="{ showSignatureModal: false }">
+            <div class="flex items-center space-x-3">
                 <a href="{{ route('contract.index', legalEntity()) }}" class="button-minor">
                     {{ __('forms.cancel') }}
                 </a>
@@ -29,12 +29,12 @@
                     {{ __('forms.save') }}
                 </button>
 
-                <button type="button" wire:click="show" class="button-primary">
+                <button type="button" wire:click="openSignatureModal" class="button-primary">
                     {{ __('forms.save_and_send') }}
                 </button>
-
-                @include('livewire.contract.parts.modals._modal_signed_content')
             </div>
         </div>
     </div>
+
+    <x-signature-modal wire:model="showSignatureModal" />
 </div>

@@ -4,9 +4,9 @@
 
     $route = '';
     if (legalEntity()->type->name === LegalEntity::TYPE_PHARMACY) {
-        $route = route('contract-reimbursement.create');
+        $route = route('contract-reimbursement.create', legalEntity());
     } elseif (legalEntity()->type->name === LegalEntity::TYPE_MSP) {
-        $route = route('contract-capitation.create');
+        $route = route('contract-capitation.create', legalEntity());
     }
 @endphp
 
