@@ -1,90 +1,62 @@
 <fieldset class="fieldset">
     <legend class="legend">
-        <h2> {{ __('forms.divisions') }}</h2>
+        <h2>{{ __('forms.divisions') }}</h2>
     </legend>
 
-    <p class="default-p mb-6"> {{ __('contracts.divisions_info') }}</p>
+    <p class="default-p mb-6">{{ __('contracts.divisions_info') }}</p>
 
-    <div id="division-fields-container">
-        <div class="form-row-3 division-input-group">
-            <div class="form-group group">
-                <select wire:model="form.contractorDivisions.0"
-                        type="text"
-                        name="divisionName"
-                        id="divisionName"
-                        class="input-select"
-                >
-                    <option value="" selected>{{ __('forms.select') }}</option>
-                    @foreach($divisions as $division)
-                        <option value="{{ $division['id'] }}"> {{ $division['name'] }}</option>
-                    @endforeach
-                </select>
-                <label for="divisionName" class="label">{{ __('forms.division_name') }}</label>
+    <div x-data="{ divisions: $wire.entangle('form.contractorDivisions') }"
+         x-init="if (!Array.isArray(divisions) || divisions.length === 0) { divisions = [''] }"
+    >
+        <div id="division-fields-container">
+            <template x-for="(divisionId, index) in divisions" :key="index">
+                <div class="form-row-3 division-input-group" :class="{'mt-4': index > 0}">
+                    <div class="form-group group">
+                        <select x-model="divisions[index]"
+                                type="text"
+                                :name="'divisionName_' + index"
+                                :id="'divisionName_' + index"
+                                class="input-select"
+                                :class="{ 'input-error': $wire.errors.has(`form.contractorDivisions.${index}`) }"
+                        >
+                            <option value="" selected>{{ __('forms.select') }}</option>
+                            @foreach($divisions as $division)
+                                <option value="{{ $division['id'] }}"> {{ $division['name'] }}</option>
+                            @endforeach
+                        </select>
+                        <label :for="'divisionName_' + index" class="label">{{ __('forms.division_name') }}</label>
 
-                @error('form.contractorDivisions')
-                <p class="text-error">{{ $message }}</p>
-                @enderror
-            </div>
+                        @error('form.contractorDivisions.*')
+                        <template x-if="$wire.errors.has(`form.contractorDivisions.${index}`)">
+                            <p class="text-error" x-text="$wire.errors.get(`form.contractorDivisions.${index}`)"></p>
+                        </template>
+                        @enderror
+                    </div>
+
+                    <div class="flex items-center space-x-4 justify-start mt-2 md:mt-0">
+                        <template x-if="divisions.length > 1">
+                            <button type="button"
+                                    @click.prevent="divisions.splice(index, 1)"
+                                    class="item-remove text-error ml-2"
+                            >
+                                @icon('delete', 'w-5 h-5 text-red-600')
+                            </button>
+                        </template>
+
+                        <template x-if="index === divisions.length - 1">
+                            <button type="button"
+                                    @click.prevent="divisions.push('')"
+                                    class="item-add"
+                                    id="add-division-button-hidden"
+                            >
+                                {{ __('forms.add_new_division') }}
+                            </button>
+                        </template>
+                    </div>
+
+                </div>
+            </template>
         </div>
-    </div>
-
-    <div class="form-group mt-4">
-        <button type="button" class="item-add" id="add-division-button" onclick="addNewDivision()">
-            {{ __('forms.add_new_division') }}
-        </button>
     </div>
 </fieldset>
 
-<script>
-    let divisionIndex = 1;
-
-    const availableDivisions = [
-            @foreach($divisions as $division)
-        { id: '{{ $division['id'] }}', name: '{{ $division['name'] }}' },
-        @endforeach
-    ];
-
-    const selectPlaceholder = '{{ __('forms.select') }}';
-    const divisionLabel = '{{ __('forms.division_name') }}';
-
-    function addNewDivision() {
-        const container = document.getElementById('division-fields-container');
-        if (!container) return;
-
-        const newGroupContainer = document.createElement('div');
-        newGroupContainer.classList.add('form-row-3', 'division-input-group', 'mt-4');
-
-        const newFieldName = `divisionName_${divisionIndex}`;
-
-        let optionsHtml = `<option value="" selected>${selectPlaceholder}</option>`;
-        availableDivisions.forEach(division => {
-            optionsHtml += `<option value="${division.id}">${division.name}</option>`;
-        });
-
-        newGroupContainer.innerHTML = `
-            <div class="form-group group">
-                <select wire:model="form.contractorDivisions.${divisionIndex}"
-                        type="text"
-                        name="${newFieldName}"
-                        id="${newFieldName}"
-                        class="input-select"
-                >
-                    ${optionsHtml}
-                </select>
-                <label for="${newFieldName}" class="label">${divisionLabel}</label>
-        </div>
-        <button type="button" class="text-error ml-2" onclick="removeDivisionField(this)">
-              @icon('delete', 'w-5 h-5 text-red-600')
-        </button>
-`;
-        container.appendChild(newGroupContainer);
-        divisionIndex++;
-    }
-
-    function removeDivisionField(buttonElement) {
-        const inputGroup = buttonElement.closest('.division-input-group');
-        if (inputGroup) {
-            inputGroup.remove();
-        }
-    }
-</script>
