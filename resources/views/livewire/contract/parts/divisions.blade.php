@@ -10,7 +10,7 @@
     >
         <div id="division-fields-container">
             <template x-for="(divisionId, index) in divisions" :key="index">
-                <div class="form-row-3 division-input-group" :class="{'mt-4': index > 0}">
+                <div class="form-row-3">
                     <div class="form-group group">
                         <select x-model="divisions[index]"
                                 type="text"
@@ -26,7 +26,7 @@
                         </select>
                         <label :for="'divisionName_' + index" class="label">{{ __('forms.division_name') }}</label>
 
-                        @error('form.contractorDivisions.*')
+                        @error('form.contractorDivisions')
                         <template x-if="$wire.errors.has(`form.contractorDivisions.${index}`)">
                             <p class="text-error" x-text="$wire.errors.get(`form.contractorDivisions.${index}`)"></p>
                         </template>
