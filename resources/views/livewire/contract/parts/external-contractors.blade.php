@@ -2,9 +2,128 @@
     <fieldset class="fieldset"
               id="section-external-contractors"
               x-data="{
-                  openModal: false,
-                  externalContractor: { legalEntity: '', number: '', issuedAt: '', expiresAt: '' }
-              }"
+              openModal: false,
+              editingIndex: null,
+              localExternalContractors: @js($externalContractors ?? []),
+              externalContractor: {
+                  legalEntityId: '',
+                  legalEntityName: '',
+                  number: '',
+                  issuedAt: '',
+                  expiresAt: '',
+                  divisionId: '',
+                  divisionName: '',
+                  medicalService: ''
+              },
+              externalContractorFlag: @entangle('form.externalContractorFlag').defer,
+
+              init() {
+                  this.localExternalContractors = this.localExternalContractors.map(contractor => {
+                      if (contractor.legalEntityId) {
+                          return contractor;
+                      }
+                      return {
+                          legalEntityId: contractor.legal_entity?.id || contractor.legalEntityId || '',
+                          legalEntityName: contractor.legal_entity?.name || contractor.legalEntityName || '',
+                          contract: contractor.contract || {},
+                          divisions: contractor.divisions || {}
+                      };
+                  });
+              },
+
+              addExternalContractor() {
+                  if (!this.externalContractor.legalEntityId || !this.externalContractor.number || !this.externalContractor.issuedAt) {
+                      return;
+                  }
+
+                  const contractor = {
+                      legalEntityId: this.externalContractor.legalEntityId,
+                      legalEntityName: this.externalContractor.legalEntityName,
+                      contract: {
+                          number: this.externalContractor.number,
+                          issuedAt: this.externalContractor.issuedAt,
+                          expiresAt: this.externalContractor.expiresAt || ''
+                      },
+                      divisions: {
+                          id: this.externalContractor.divisionId,
+                          name: this.externalContractor.divisionName,
+                          medicalService: this.externalContractor.medicalService
+                      }
+                  };
+
+                  if (this.editingIndex !== null) {
+                      this.localExternalContractors[this.editingIndex] = contractor;
+                      this.editingIndex = null;
+                  } else {
+                      this.localExternalContractors.push(contractor);
+                  }
+
+                  this.resetForm();
+                  this.openModal = false;
+              },
+
+              editExternalContractor(index) {
+                  const contractor = this.localExternalContractors[index];
+                  const legalEntityId = contractor.legalEntityId || contractor.legal_entity?.id || '';
+                  const legalEntityName = contractor.legalEntityName || contractor.legal_entity?.name || '';
+
+                  this.externalContractor = {
+                      legalEntityId: legalEntityId,
+                      legalEntityName: legalEntityName,
+                      number: contractor.contract?.number || '',
+                      issuedAt: contractor.contract?.issuedAt || '',
+                      expiresAt: contractor.contract?.expiresAt || '',
+                      divisionId: contractor.divisions?.id || '',
+                      divisionName: contractor.divisions?.name || '',
+                      medicalService: contractor.divisions?.medicalService || ''
+                  };
+                  this.editingIndex = index;
+                  this.openModal = true;
+              },
+
+              deleteExternalContractor(index) {
+                  this.localExternalContractors.splice(index, 1);
+              },
+
+              resetForm() {
+                  this.externalContractor = {
+                      legalEntityId: '',
+                      legalEntityName: '',
+                      number: '',
+                      issuedAt: '',
+                      expiresAt: '',
+                      divisionId: '',
+                      divisionName: '',
+                      medicalService: ''
+                  };
+                  this.editingIndex = null;
+              },
+
+              openAddModal() {
+                  this.resetForm();
+                  this.openModal = true;
+              },
+
+              updateLegalEntityName() {
+                  const select = document.getElementById('legalEntityData');
+                  const selectedOption = select.options[select.selectedIndex];
+                  if (selectedOption && selectedOption.text) {
+                      this.externalContractor.legalEntityName = selectedOption.text.trim();
+                  }
+              },
+
+              updateDivisionName() {
+                  const select = document.getElementById('divisionName');
+                  const selectedOption = select.options[select.selectedIndex];
+                  if (selectedOption && selectedOption.text) {
+                      this.externalContractor.divisionName = selectedOption.text.trim();
+                  }
+              },
+
+              saveExternalContractorsToServer() {
+                  @this.set('form.externalContractors', this.localExternalContractors);
+              }
+          }"
     >
         <legend class="legend">
             <h2>{{ __('contracts.external_contractor') }}</h2>
@@ -15,7 +134,7 @@
         <div class="form-row">
             <div class="form-group">
                 <input type="checkbox"
-                       wire:model="form.externalContractorFlag"
+                       x-model="externalContractorFlag"
                        class="default-checkbox"
                        id="flag"
                        name="flag"
@@ -26,60 +145,38 @@
             </div>
         </div>
 
-        <table class="table-input w-inherit">
-            <thead class="thead-input">
-            <tr>
-                <th scope="col" class="td-input">{{ __('contracts.legal_entity_name') }}</th>
-                <th scope="col" class="td-input">{{ __('contracts.number') }}</th>
-                <th scope="col" class="td-input">{{ __('contracts.issued_at') }}</th>
-                <th scope="col" class="td-input">{{ __('contracts.expires_at') }}</th>
-                <th scope="col" class="td-input">{{ __('forms.actions') }}</th>
-            </tr>
-            </thead>
-            <tbody>
-            @if(isset($externalContractors) && is_array($externalContractors))
-                @foreach($externalContractors as $key => $externalContractor)
+        <div x-show="externalContractorFlag" x-cloak>
+            <table class="table-input w-inherit">
+                <thead class="thead-input">
+                <tr>
+                    <th scope="col" class="td-input">{{ __('contracts.legal_entity_name') }}</th>
+                    <th scope="col" class="td-input">{{ __('contracts.number') }}</th>
+                    <th scope="col" class="td-input">{{ __('contracts.issued_at') }}</th>
+                    <th scope="col" class="td-input">{{ __('contracts.expires_at') }}</th>
+                    <th scope="col" class="td-input">{{ __('forms.actions') }}</th>
+                </tr>
+                </thead>
+                <tbody>
+                <template x-for="(contractor, index) in localExternalContractors" :key="index">
                     <tr>
-                        <td class="td-input">
-                            {{ $externalContractor['legal_entity']['name'] ?? '' }}
-                        </td>
-                        <td class="td-input">
-                            {{ $externalContractor['contract']['number'] ?? '' }}
-                        </td>
-                        <td class="td-input">
-                            {{ $externalContractor['contract']['issuedAt'] ?? '' }}
-                        </td>
-                        <td class="td-input">
-                            {{ $externalContractor['contract']['expiresAt'] ?? '' }}
-                        </td>
+                        <td class="td-input" x-text="contractor.legalEntityName || contractor.legal_entity?.name || ''"></td>
+                        <td class="td-input" x-text="contractor.contract?.number || ''"></td>
+                        <td class="td-input" x-text="contractor.contract?.issuedAt || ''"></td>
+                        <td class="td-input" x-text="contractor.contract?.expiresAt || ''"></td>
                         <td class="td-input flex flex-row gap-2">
-                            <button wire:click.prevent="editExternalContractors({{ $key }})" class="svg-hover-action">
-                                <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                     width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-linecap="square" stroke-linejoin="round"
-                                          stroke-width="2"
-                                          d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"></path>
-                                </svg>
-                            </button>
-
-                            <button wire:click.prevent="deleteExternalContractors({{ $key }})" class="svg-hover-action">
-                                <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                     width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                          stroke-width="2"
-                                          d="M5 7h14m-9 3v8m-4-8v8m-4-8v8h14m-12 4h10m-10 0a1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1h-10Zm3-11V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2m-4-2h4"></path>
-                                </svg>
+                            <button @click="editExternalContractor(index)" class="svg-hover-action">
+                                @icon('edit-user-outline', 'w-6 h-6 text-gray-800 dark:text-gray-200')
                             </button>
                         </td>
                     </tr>
-                @endforeach
-            @endif
-            </tbody>
-        </table>
+                </template>
+                </tbody>
+            </table>
+        </div>
 
         <button type="button"
                 class="item-add my-5"
-                @click="openModal = true; externalContractor = { legalEntity: '', number: '', issuedAt: '', expiresAt: '' }"
+                @click="openAddModal()"
         >
             <span>{{ __('contracts.add_external_contractor') }}</span>
         </button>
@@ -105,7 +202,7 @@
                          class="modal-content h-fit w-full max-w-6xl rounded-2xl shadow-lg bg-white"
                     >
                         <h3 class="modal-header" :id="$id('modal-title')">
-                            {{ __('contracts.new_external_contractor') }}
+                            <span x-text="editingIndex !== null ? 'Редагувати залучених осіб' : '{{ __('contracts.new_external_contractor') }}'"></span>
                         </h3>
 
                         <form>
@@ -114,7 +211,8 @@
                                     <label for="legalEntityData" class="label-modal">
                                         {{ __('contracts.legal_entity_data') }}
                                     </label>
-                                    <select x-model="externalContractors.legalEntityId"
+                                    <select x-model="externalContractor.legalEntityId"
+                                            @change="updateLegalEntityName()"
                                             type="text"
                                             name="legalEntityData"
                                             id="legalEntityData"
@@ -139,7 +237,7 @@
                                         {{__('contracts.external_contractor_number')}}
                                         <span class="text-red-600"> *</span>
                                     </label>
-                                    <input x-model="externalContractors.contract.number"
+                                    <input x-model="externalContractor.number"
                                            type="text"
                                            id="number"
                                            class="input-modal"
@@ -151,7 +249,8 @@
                                     @enderror
                                 </div>
 
-                                <div class="form-group datepicker-wrapper relative w-full">
+                                <div class="form-group">
+                                    @icon('calendar-month', 'w-5 h-5 svg-input absolute left-1 !top-2/3 transform -translate-y-1/2 pointer-events-none')
                                     <label for="issuedAt" class="label-modal">
                                         {{__('contracts.start_date_label')}}<span class="text-red-600"> *</span>
                                     </label>
@@ -165,7 +264,8 @@
                                     >
                                 </div>
 
-                                <div class="form-group datepicker-wrapper relative w-full">
+                                <div class="form-group">
+                                    @icon('calendar-month', 'w-5 h-5 svg-input absolute left-1 !top-2/3 transform -translate-y-1/2 pointer-events-none')
                                     <label for="expiresAt" class="label-modal">
                                         {{__('contracts.end_date_label')}}<span class="text-red-600"> *</span>
                                     </label>
@@ -183,7 +283,8 @@
                                     <label for="divisionName" class="label-modal">
                                         {{ __('forms.division_name') }}<span class="text-red-600"> *</span>
                                     </label>
-                                    <select x-model="externalContractors.divisions.id"
+                                    <select x-model="externalContractor.divisionId"
+                                            @change="updateDivisionName()"
                                             type="text"
                                             name="divisionName"
                                             id="divisionName"
@@ -204,7 +305,7 @@
                                     <label for="medicalService" class="label-modal">
                                         {{ __('forms.service') }}<span class="text-red-600"> *</span>
                                     </label>
-                                    <select x-model="externalContractors.divisions.medicalService"
+                                    <select x-model="externalContractor.medicalService"
                                             type="text"
                                             name="medicalService"
                                             id="medicalService"
@@ -233,9 +334,9 @@
                                 </button>
 
                                 <button type="submit"
-                                        @click.prevent="$wire.addExternalContractor(externalContractor); openModal = false"
-                                        :class="{ 'opacity-50 cursor-not-allowed': !(externalContractor.legalEntity && externalContractor.number && externalContractor.issuedAt) }"
-                                        :disabled="!(externalContractor.legalEntity && externalContractor.number && externalContractor.issuedAt)"
+                                        @click.prevent="addExternalContractor()"
+                                        :class="{ 'opacity-50 cursor-not-allowed': !(externalContractor.legalEntityId && externalContractor.number && externalContractor.issuedAt) }"
+                                        :disabled="!(externalContractor.legalEntityId && externalContractor.number && externalContractor.issuedAt)"
                                         class="button-primary"
                                 >
                                     {{ __('forms.save') }}
