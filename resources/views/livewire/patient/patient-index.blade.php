@@ -178,43 +178,45 @@
                                                 @if($patient['status'] === 'APPLICATION')
                                                     <div class="py-1" @click="openDropdown = false">
                                                         <button wire:click="removeApplication({{ $patient['id'] }})"
-                                                                class="dropdown-button !flex gap-2"
+                                                                class="dropdown-button !flex gap-2 text-sm text-red-600 hover:bg-red-50"
                                                                 type="button"
                                                         >
-                                                            @icon('delete', 'w-4 h-4')
+                                                            @icon('delete', 'w-5 h-5 text-red-600')
                                                             {{ __('forms.delete') }}
                                                         </button>
                                                     </div>
                                                 @else
-                                                    @can('create', DeclarationRequest::class)
-                                                        <a wire:click="redirectTo('{{ $patient['id'] }}', 'declaration.create')"
-                                                           class="dropdown-button !flex gap-2"
-                                                           @click="openDropdown = false"
-                                                        >
-                                                            @icon('file-text', 'w-4 h-4 text-gray-800 dark:text-white')
-                                                            {{ __('patients.sign_declaration') }}
-                                                        </a>
-                                                    @endcan
+                                                    <div class="py-1">
+                                                        @can('create', DeclarationRequest::class)
+                                                            <a wire:click="redirectTo('{{ $patient['id'] }}', 'declaration.create')"
+                                                               class="dropdown-button !flex gap-2 !text-blue-800 border-b border-gray-100 dark:border-gray-600"
+                                                               @click="openDropdown = false"
+                                                            >
+                                                                @icon('file-text', 'w-4 h-4 text-blue-800 dark:text-white')
+                                                                {{ __('patients.sign_declaration') }}
+                                                            </a>
+                                                        @endcan
 
-                                                    @can('create', DiagnosticReport::class)
-                                                        <a wire:click="redirectTo('{{ $patient['id'] }}', 'diagnostic-report.create')"
-                                                           class="dropdown-button !flex gap-2"
-                                                           @click="openDropdown = false"
-                                                        >
-                                                            @icon('activity', 'w-4 h-4')
-                                                            {{ __('patients.create_diagnostic_report') }}
-                                                        </a>
-                                                    @endcan
+                                                        @can('create', DiagnosticReport::class)
+                                                            <a wire:click="redirectTo('{{ $patient['id'] }}', 'diagnostic-report.create')"
+                                                               class="dropdown-button !flex gap-2 !text-blue-800 border-b border-gray-100 dark:border-gray-600"
+                                                               @click="openDropdown = false"
+                                                            >
+                                                                @icon('activity', 'w-4 h-4')
+                                                                {{ __('patients.create_diagnostic_report') }}
+                                                            </a>
+                                                        @endcan
 
-                                                    @can('create', Procedure::class)
-                                                        <a wire:click="redirectTo('{{ $patient['id'] }}', 'procedure.create')"
-                                                           class="dropdown-button !flex gap-2"
-                                                           @click="openDropdown = false"
-                                                        >
-                                                            @icon('settings', 'w-4 h-4 text-gray-800 dark:text-white')
-                                                            {{ __('patients.create_procedure') }}
-                                                        </a>
-                                                    @endcan
+                                                        @can('create', Procedure::class)
+                                                            <a wire:click="redirectTo('{{ $patient['id'] }}', 'procedure.create')"
+                                                               class="dropdown-button !flex gap-2 !text-blue-800"
+                                                               @click="openDropdown = false"
+                                                            >
+                                                                @icon('settings', 'w-4 h-4 text-blue-800 dark:text-white')
+                                                                {{ __('patients.create_procedure') }}
+                                                            </a>
+                                                        @endcan
+                                                    </div>
                                                 @endif
                                             </div>
                                         </div>
