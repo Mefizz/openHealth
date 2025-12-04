@@ -9,7 +9,7 @@
             </div>
             @include('livewire.patient.parts.search-filter', ['context' => 'confidantPerson'])
 
-            @empty($selectedConfidantPatientId))
+            @empty($selectedConfidantPatientId)
                 <div class="py-4">
                     <button wire:click.prevent="searchForPerson" class="flex items-center gap-2 button-primary">
                         @icon('search', 'w-4 h-4')
@@ -92,3 +92,8 @@
         @endif
     </div>
 </div>
+<style>
+    .breadcrumbs, nav.breadcrumb, [class*="breadcrumb"] {
+        display: none !important;
+    }
+</style>
