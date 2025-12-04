@@ -69,6 +69,8 @@ class EmployeeIndex extends EmployeeComponent
     public ?string $batchId = null;
     public string $dismissalMessageType = 'default';
 
+    public int $refreshTrigger = 0;
+
     private LegalEntity $legalEntity;
 
     public function boot(): void
@@ -463,6 +465,31 @@ class EmployeeIndex extends EmployeeComponent
         }
     }
 
+    /**
+     * Synchronize a specific employee.
+     * Uses the parent syncEmployeeData method.
+     */
+    public function syncOne(int $employeeId): void
+    {
+        $employee = Employee::with(['user', 'party'])->find($employeeId);
+
+        if (!$employee) {
+            $this->dispatch('flashMessage', ['message' => 'Співробітника не знайдено', 'type' => 'error']);
+
+            return;
+        }
+
+        // Call the core logic from EmployeeComponent
+        $success = $this->syncEmployeeData($employee);
+
+        if ($success) {
+            // [NEW] Increment the trigger to change the filterKey
+            // This forces Livewire to discard the old DOM list and render a fresh one,
+            // removing the visual artifact of duplicate entries (draft + real employee).
+            $this->refreshTrigger++;
+        }
+    }
+
     public function confirmRequestDeletion(int $id): void
     {
         $request = EmployeeRequest::with('party')->find($id);
@@ -496,7 +523,8 @@ class EmployeeIndex extends EmployeeComponent
             $this->search .
             implode(',', $this->status) .
             json_encode($this->filter, JSON_THROW_ON_ERROR) .
-            $this->getPage()
+            $this->getPage() .
+            $this->refreshTrigger
         );
 
         return view('livewire.employee.employee-index', [

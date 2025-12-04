@@ -54,4 +54,22 @@ class EmployeePolicy
             ? Response::allow()
             : Response::deny(__('employees.policy.deactivate_denied'));
     }
+
+    /**
+     * Determine whether the user can sync the employee with eHealth.
+     */
+    public function sync(User $user, Employee $employee): Response
+    {
+        if ((int)$employee->legal_entity_id !== (int)legalEntity()->id) {
+            return Response::denyWithStatus(404);
+        }
+
+        if (!$employee->user_id || !$employee->party_id || !$employee->uuid) {
+            return Response::deny(__('employees.policy.sync_missing_data'));
+        }
+
+        return $user->can('employee:write')
+            ? Response::allow()
+            : Response::deny(__('employees.policy.emp.update_denied'));
+    }
 }

@@ -152,6 +152,8 @@ class Employee extends EHealthRequest
             'party.last_name' => 'required|string',
             'party.second_name' => 'nullable|string',
             'party.about_myself' => 'sometimes|nullable|string',
+            'party.working_experience' => 'sometimes|nullable|integer',
+            'party.gender' => 'sometimes|nullable|string',
             'party.birth_date' => 'required|date_format:Y-m-d',
             'party.verification_status' => 'required|string|in:VERIFIED,VERIFICATION_NEEDED,NOT_VERIFIED',
             'party.declaration_count' => 'required|integer',
