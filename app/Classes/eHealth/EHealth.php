@@ -162,4 +162,9 @@ final class EHealth
     {
         return app(MedicalProgram::class);
     }
+
+    public static function medicalProgram(): MedicalProgram
+    {
+        return app(MedicalProgram::class);
+    }
 }
