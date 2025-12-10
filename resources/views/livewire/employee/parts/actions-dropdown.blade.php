@@ -16,6 +16,11 @@
         ) {
             $hasActions = true;
         }
+
+        if ($position->user_id && $position->party_id) {
+            $hasActions = true;
+        }
+
     } elseif ($isRequest) {
         if ($status === 'NEW') {
             if (
@@ -48,6 +53,25 @@
 
             @if($isEmployee)
                 <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" @click="open = false">
+
+                    {{-- SYNC BUTTON --}}
+                    @can('sync', $position)
+                        <li>
+                            <button
+                                type="button"
+                                wire:click="syncOne({{ $position->id }})"
+                                wire:loading.attr="disabled"
+                                class="flex w-full items-center gap-2 py-2 px-5 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200"
+                            >
+                                <svg class="w-5 h-5 text-gray-500 dark:text-gray-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.651 7.65a7.131 7.131 0 0 0-12.68 3.15M18.001 4v4h-4m-7.652 8.35a7.13 7.13 0 0 0 12.68-3.15M6 20v-4h4"/>
+                                </svg>
+                                {{ __('general.sync') }}
+                            </button>
+                        </li>
+                    @endcan
+
+                    {{-- VIEW --}}
                     @can('view', $position)
                         <li>
                             <a href="{{ route('employee.show', ['legalEntity' => legalEntity()->id, 'employee' => $position]) }}"
@@ -63,6 +87,8 @@
                             </a>
                         </li>
                     @endcan
+
+                    {{-- EDIT --}}
                     @can('update', $position)
                         <li>
                             <a href="{{ route('employee.edit', ['legalEntity' => legalEntity()->id, 'employee' => $position]) }}"
@@ -79,6 +105,7 @@
                     @endcan
                 </ul>
 
+                {{-- DISMISS --}}
                 @can('deactivate', $position)
                     @if($status === 'APPROVED')
                         <div class="py-1" @click="open = false">

@@ -9,6 +9,9 @@ use App\Models\LegalEntity;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Illuminate\Support\Collection;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
+use Throwable;
 
 class EmployeeShow extends EmployeeComponent
 {
@@ -35,6 +38,24 @@ class EmployeeShow extends EmployeeComponent
     {
         if ($this->employeeId) {
             $this->employee = Employee::findOrFail($this->employeeId);
+        }
+    }
+
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws Throwable
+     * @throws NotFoundExceptionInterface
+     */
+    public function sync(): void
+    {
+        // Call the parent method using the currently loaded employee
+        $success = $this->syncEmployeeData($this->employee);
+
+        if ($success) {
+            // Specific logic for the "Show" page:
+            // We need to re-hydrate the form so the input fields show the new data immediately
+            $this->employee->refresh();
+            $this->form->hydrate($this->employee);
         }
     }
 
