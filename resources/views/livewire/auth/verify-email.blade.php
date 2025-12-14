@@ -1,6 +1,4 @@
 <div class="fragment">
-    <x-messages />
-
     <x-authentication-card>
         <h2 class="text-lg font-medium text-gray-900 text-center dark:text-gray-100">
             {{  __('forms.email_confirmation') }}
