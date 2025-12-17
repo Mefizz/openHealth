@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\License\Forms;
 
 use App\Core\Arr;
+use App\Models\LegalEntity;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Form;
@@ -92,7 +93,10 @@ class LicenseForm extends Form
     {
         $licenseTypes = dictionary()->getDictionary('LICENSE_TYPE');
 
-        if (legalEntity()->type->name === 'OUTPATIENT' || legalEntity()->type->name === 'PHARMACY') {
+        if (
+            legalEntity()->type->name === LegalEntity::TYPE_OUTPATIENT ||
+            legalEntity()->type->name === LegalEntity::TYPE_PHARMACY
+        ) {
             return ['PHARMACY_DRUGS' => $licenseTypes['PHARMACY_DRUGS']];
         }
 
