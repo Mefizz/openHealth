@@ -19,7 +19,10 @@ class HealthcareServiceView extends HealthcareServiceComponent
 
         $healthcareService->loadMissing(['category.coding', 'type.coding']);
         $this->form->fill($healthcareService);
-        $this->form->availableTime = Arr::toCamelCase($this->form->availableTime);
+
+        if ($this->form->availableTime) {
+            $this->form->availableTime = Arr::toCamelCase($this->form->availableTime);
+        }
     }
 
     public function render(): View

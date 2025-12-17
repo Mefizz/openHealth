@@ -24,7 +24,10 @@ class HealthcareServiceEdit extends HealthcareServiceComponent
         $healthcareService->loadMissing(['category.coding', 'type.coding']);
 
         $this->form->fill(Arr::except($healthcareService->toArray(), ['divisionId']));
-        $this->form->availableTime = Arr::toCamelCase($this->form->availableTime);
+
+        if ($this->form->availableTime) {
+            $this->form->availableTime = Arr::toCamelCase($this->form->availableTime);
+        }
     }
 
     public function create(): void

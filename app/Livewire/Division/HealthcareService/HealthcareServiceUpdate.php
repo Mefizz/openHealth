@@ -51,7 +51,10 @@ class HealthcareServiceUpdate extends Component
         $this->healthcareServiceUuid = $healthcareService->uuid;
 
         $this->form->fill($healthcareService->only(['comment', 'availableTime', 'notAvailable']));
-        $this->form->availableTime = Arr::toCamelCase($this->form->availableTime);
+
+        if ($this->form->availableTime) {
+            $this->form->availableTime = Arr::toCamelCase($this->form->availableTime);
+        }
 
         $this->canUpdate = Auth::user()->can('update', $healthcareService);
     }
