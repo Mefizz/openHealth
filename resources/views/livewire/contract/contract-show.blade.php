@@ -5,16 +5,13 @@
         </x-slot>
     </x-header-navigation>
 
-    <div class="form shift-content space-y-6">
+    <fieldset class="form shift-content space-y-6">
 
         {{-- Status and Reason Section --}}
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow space-y-4">
-            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 border-b pb-2">
-                {{ __('Статус документа') }}
-            </h3>
+        <fieldset class="fieldset">
+            <legend class="legend">{{ __('Статус документа') }}</legend>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label class="label">{{ __('Поточний статус') }}</label>
                     <div class="mt-1">
                         <span class="{{ $contract->status->color() }} text-sm font-bold px-2 py-1 rounded">
                             {{ $contract->status->label() }}
@@ -39,13 +36,11 @@
                     </div>
                 @endif
             </div>
-        </div>
+        </fieldset>
 
         {{-- Main Info --}}
-        <fieldset disabled class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow space-y-6">
-            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 border-b pb-2">
-                {{ __('Основна інформація') }}
-            </h3>
+        <fieldset disabled class="fieldset">
+            <legend class="legend">{{ __('Основна інформація') }}</legend>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -82,10 +77,8 @@
 
         {{-- Medical Programs --}}
         @if(!empty($contract->medical_programs))
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow space-y-4">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 border-b pb-2">
-                    {{ __('Медичні програми') }}
-                </h3>
+            <fieldset disabled class="fieldset">
+                <legend class="legend">{{ __('Медичні програми') }}</legend>
                 <ul class="list-disc pl-5 space-y-1">
                     @foreach($contract->medical_programs as $programId)
                         <li class="text-gray-700 dark:text-gray-300 text-sm font-mono">
@@ -94,14 +87,12 @@
                         </li>
                     @endforeach
                 </ul>
-            </div>
+            </fieldset>
         @endif
 
         {{-- Payment Details --}}
-        <fieldset disabled class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow space-y-6">
-            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 border-b pb-2">
-                {{ __('Реквізити оплати') }}
-            </h3>
+        <fieldset disabled class="fieldset">
+            <legend class="legend">{{ __('Реквізити оплати') }}</legend>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="label">{{ __('Банк') }}</label>
@@ -124,5 +115,6 @@
 
             {{-- Example: Add 'Edit' button logic here if editing is allowed for specific statuses --}}
         </div>
-    </div>
+    </fieldset>
 </div>
+
