@@ -7,8 +7,8 @@ namespace App\Livewire\Person\Forms;
 use App\Core\Arr;
 use App\Core\BaseForm;
 use App\Rules\AlphaNumericWithSymbols;
-use App\Rules\Cyrillic;
 use App\Rules\InDictionary;
+use App\Rules\NameFields;
 use App\Rules\TwoLettersFourToSixDigitsOrComplex;
 use App\Rules\TwoLettersSixDigits;
 use App\Rules\EightDigitsHyphenFiveDigits;
@@ -16,7 +16,6 @@ use App\Rules\Zip;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class PersonForm extends BaseForm
 {
@@ -45,17 +44,20 @@ class PersonForm extends BaseForm
 
     public array $addresses = [];
 
+    public bool $processDisclosureDataConsent = true;
+
+    /**
+     * Mark 'information from the leaflet was communicated to the patient'
+     *
+     * @var bool
+     */
+    public bool $patientSigned = false;
+
     public string $authorizeWith;
 
     public int $verificationCode;
 
     public array $uploadedDocuments;
-
-    public string $knedp;
-
-    public TemporaryUploadedFile $keyContainerUpload;
-
-    public string $password;
 
     private int $personAge;
 
@@ -137,9 +139,9 @@ class PersonForm extends BaseForm
     protected function basicRules(): array
     {
         $rules = [
-            'person.firstName' => ['required', 'min:3', new Cyrillic()],
-            'person.lastName' => ['required', 'min:3', new Cyrillic()],
-            'person.secondName' => ['nullable', 'min:3', new Cyrillic()],
+            'person.firstName' => ['required', 'min:3', new NameFields()],
+            'person.lastName' => ['required', 'min:3', new NameFields()],
+            'person.secondName' => ['nullable', 'min:3', new NameFields()],
             'person.birthDate' => ['required', 'date_format:d.m.Y'],
             'person.birthCountry' => ['required', 'string'],
             'person.birthSettlement' => ['required', 'string'],
@@ -192,11 +194,14 @@ class PersonForm extends BaseForm
             'person.addresses.*.apartment' => ['nullable', 'string', 'max:255'],
             'person.addresses.*.zip' => ['nullable', 'string', new Zip()],
 
-            'person.emergencyContact.firstName' => ['required', 'min:3', new Cyrillic()],
-            'person.emergencyContact.lastName' => ['required', 'min:3', new Cyrillic()],
-            'person.emergencyContact.secondName' => ['nullable', 'min:3', new Cyrillic()],
+            'person.emergencyContact.firstName' => ['required', 'min:3', new NameFields()],
+            'person.emergencyContact.lastName' => ['required', 'min:3', new NameFields()],
+            'person.emergencyContact.secondName' => ['nullable', 'min:3', new NameFields()],
             'person.emergencyContact.phones.*.type' => ['required', 'string', 'distinct'],
-            'person.emergencyContact.phones.*.number' => ['required', 'string', 'regex:/^\+38[0-9]{10}$/', 'distinct']
+            'person.emergencyContact.phones.*.number' => ['required', 'string', 'regex:/^\+38[0-9]{10}$/', 'distinct'],
+
+            'processDisclosureDataConsent' => ['required', 'boolean:strict', Rule::in([true])],
+            'patientSigned' => ['required', 'boolean:strict', Rule::in([false])]
         ];
 
         $this->addNoTaxIdValidation($rules);
@@ -299,9 +304,6 @@ class PersonForm extends BaseForm
             }
         }
 
-        $validatedData['patientSigned'] = false;
-        $validatedData['processDisclosureDataConsent'] = true;
-
         return removeEmptyKeys(Arr::toSnakeCase($validatedData));
     }
 
@@ -334,8 +336,7 @@ class PersonForm extends BaseForm
             $rules["person.documents.$key.number"][] = match ($document['type']) {
                 'PASSPORT', 'REFUGEE_CERTIFICATE', 'COMPLEMENTARY_PROTECTION_CERTIFICATE' => new TwoLettersSixDigits(),
                 'NATIONAL_ID' => 'digits:9',
-                'BIRTH_CERTIFICATE', 'TEMPORARY_PASSPORT', 'CHILD_BIRTH_CERTIFICATE', 'MARRIAGE_CERTIFICATE', 'DIVORCE_CERTIFICATE' => new AlphaNumericWithSymbols(
-                ),
+                'BIRTH_CERTIFICATE', 'TEMPORARY_PASSPORT', 'CHILD_BIRTH_CERTIFICATE', 'MARRIAGE_CERTIFICATE', 'DIVORCE_CERTIFICATE' => new AlphaNumericWithSymbols(),
                 'TEMPORARY_CERTIFICATE' => new TwoLettersFourToSixDigitsOrComplex(),
                 'BIRTH_CERTIFICATE_FOREIGN', 'PERMANENT_RESIDENCE_PERMIT' => 'string',
                 default => null

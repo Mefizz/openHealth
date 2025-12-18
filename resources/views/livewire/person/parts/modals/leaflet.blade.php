@@ -31,7 +31,8 @@
                         </div>
 
                         <button @click="printContent"
-                                class="mb-6 underline font-medium text-sm cursor-pointer dark:text-white">
+                                class="mb-6 underline font-medium text-sm cursor-pointer dark:text-white"
+                        >
                             {{ __('patients.print_leaflet_for_patient') }}
                         </button>
 

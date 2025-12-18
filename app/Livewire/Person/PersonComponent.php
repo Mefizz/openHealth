@@ -95,13 +95,6 @@ class PersonComponent extends Component
     public array $uploadedFiles = [];
 
     /**
-     * Mark 'information from the leaflet was communicated to the patient'.
-     *
-     * @var bool
-     */
-    public bool $isInformed = false;
-
-    /**
      * Is patient incapable or child less than 14 y.o.
      *
      * @var bool
@@ -121,6 +114,8 @@ class PersonComponent extends Component
      * @var int
      */
     public int $resendCooldown = 60;
+
+    public bool $showInformationMessageModal = false;
 
     public bool $showSignatureModal = false;
 
@@ -300,8 +295,14 @@ class PersonComponent extends Component
 
             $this->form->person['id'] = $response->getData()['id'];
             $this->uploadedDocuments = $response->getUrgent()['documents'];
-            $this->viewState = 'new';
+            $this->showInformationMessageModal = true;
         }
+    }
+
+    public function openNewState(): void
+    {
+        $this->showInformationMessageModal = false;
+        $this->viewState = 'new';
     }
 
     /**
@@ -548,7 +549,7 @@ class PersonComponent extends Component
     public function openSignatureModal(): void
     {
         $this->showLeafletModal = false;
-        $this->isInformed = true;
+        $this->form->patientSigned = true;
         $this->showSignatureModal = true;
     }
 
@@ -594,7 +595,7 @@ class PersonComponent extends Component
             return;
         }
 
-        $personRequestData['patient_signed'] = $this->isInformed;
+        $personRequestData['patient_signed'] = $this->form->patientSigned;
 
         $signedContent = signatureService()->signData(
             $personRequestData,
@@ -702,7 +703,7 @@ class PersonComponent extends Component
                     'Content-Type' => $fileMime,
                 ])->withBody($fileContents, $fileMime)->put($uploadUrl);
 
-                if ($uploadResponse->getStatusCode() === 200) {
+                if ($uploadResponse->successful()) {
                     $successCount++;
 
                     $this->uploadedFiles[$key] = true;

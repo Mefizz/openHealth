@@ -53,6 +53,10 @@
         </section>
     @endif
 
+    @if($showInformationMessageModal)
+        @include('livewire.person.parts.modals.information-message')
+    @endif
+
     @if($showLeafletModal)
         @include('livewire.person.parts.modals.leaflet')
     @endif
