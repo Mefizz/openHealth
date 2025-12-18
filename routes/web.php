@@ -17,6 +17,7 @@ use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Auth\VerifyPersonality;
 use App\Livewire\Contract\CapitationContractCreate;
 use App\Livewire\Contract\ContractIndex;
+use App\Livewire\Contract\ContractShow;
 use App\Livewire\Contract\ReimbursementContractCreate;
 use App\Livewire\Dashboard;
 use App\Livewire\Declaration\DeclarationCreate;
@@ -40,6 +41,7 @@ use App\Livewire\Employee\EmployeePositionAdd;
 use App\Livewire\Employee\EmployeeRequestEdit;
 use App\Livewire\Employee\EmployeeRequestShow;
 use App\Livewire\Employee\EmployeeShow;
+use App\Livewire\EmployeeRequest\EmployeeRequestIndex;
 use App\Livewire\EmployeeRole\EmployeeRoleCreate;
 use App\Livewire\EmployeeRole\EmployeeRoleIndex;
 use App\Livewire\Encounter\EncounterCreate;
@@ -191,6 +193,7 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
 
             // --- Group for Employee Requests ---
             Route::prefix('employee-request')->name('employee-request.')->middleware('auth')->group(function () {
+                Route::get('/', EmployeeRequestIndex::class)->name('index');
                 Route::get('/create', EmployeeCreate::class)->name('create');
                 Route::get('/party/{party}/position-add', EmployeePositionAdd::class)->name('position-add');
 
@@ -220,6 +223,9 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                 ->name('contract-capitation.create');
             Route::get('contract/reimbursement/create', ReimbursementContractCreate::class)
                 ->name('contract-reimbursement.create');
+            Route::get('contract/{contract}', ContractShow::class)
+                ->name('contract.show')
+                ->middleware('can:view,contract');
 
             // Routes related to legal entity licenses; primary license can't be edited
             Route::prefix('license')->middleware(['permission:license:read|license:write'])
