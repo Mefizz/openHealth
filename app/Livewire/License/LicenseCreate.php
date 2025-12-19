@@ -45,6 +45,9 @@ class LicenseCreate extends LicenseComponent
             try {
                 $validated = $response->validate();
                 License::create($response->map($validated));
+
+                Session::flash('success', __('licenses.success.created'));
+                $this->redirectRoute('license.index', [legalEntity()], navigate: true);
             } catch (Exception $exception) {
                 $this->logDatabaseErrors($exception, 'Error while creating license');
                 Session::flash('error', 'Виникла помилка. Зверніться до адміністратора.');
