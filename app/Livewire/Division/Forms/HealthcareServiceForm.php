@@ -36,8 +36,8 @@ class HealthcareServiceForm extends Form
 
     public ?string $comment;
 
-    public array $availableTime;
-    public array $notAvailable;
+    public ?array $availableTime = [];
+    public ?array $notAvailable = [];
 
     /**
      * Rules based on: https://e-health-ua.atlassian.net/wiki/spaces/EH/pages/17089101853/Create+healthcare+service#Request-data-validation
