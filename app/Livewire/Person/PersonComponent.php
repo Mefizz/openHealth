@@ -554,6 +554,55 @@ class PersonComponent extends Component
     }
 
     /**
+     * Reject previously created request.
+     *
+     * @return void
+     */
+    public function reject(): void
+    {
+        $personRequest = PersonRequest::whereUuid($this->form->person['id'])->get()->firstOrFail();
+
+        if (Auth::user()->cannot('reject', [PersonRequest::class, $personRequest])) {
+            Session::flash('error', 'У вас немає дозволу на скасування заявки.');
+
+            return;
+        }
+
+        try {
+            $response = EHealth::personRequest()->reject($personRequest->uuid);
+        } catch (ConnectionException $exception) {
+            $this->logConnectionError($exception, 'Error connecting when rejecting person request');
+            Session::flash('error', "Виникла помилка. Відсутній зв'язок із ЕСОЗ");
+
+            return;
+        } catch (EHealthValidationException|EHealthResponseException $exception) {
+            $this->logEHealthException($exception, 'Error connecting when rejecting person request');
+
+            if ($exception instanceof EHealthValidationException) {
+                Session::flash('error', $exception->getFormattedMessage());
+            } else {
+                Session::flash('error', 'Помилка від ЕСОЗ: ' . $exception->getMessage());
+            }
+
+            return;
+        }
+
+        if ($response->successful()) {
+            try {
+                Repository::personRequest()->updateStatusByUuid($response->getData());
+            } catch (Exception|Throwable $exception) {
+                $this->logDatabaseErrors($exception, $exception->getMessage());
+                Session::flash('error', 'Виникла помилка. Зверніться до адміністратора.');
+
+                return;
+            }
+
+            Session::flash('success', 'Заявку успішно відхилено.');
+            $this->redirectRoute('persons.index', [legalEntity()], navigate: true);
+        }
+    }
+
+    /**
      * Build and send API request 'Sign Person v2' and redirect to page if data is validated.
      *
      * @return void

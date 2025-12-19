@@ -176,9 +176,10 @@
                                    @click="open = !open"
                                    :value="
                                        $wire.activeFilter === 'all' ? '{{ __('patients.all') }}' :
-                                       $wire.activeFilter === 'eHEALTH' ? '{{ __('patients.patients') }}' :
-                                       $wire.activeFilter === 'DRAFT' ? '{{ __('patients.applications') }}' :
-                                       ''
+                                       $wire.activeFilter === 'ehealth' ? '{{ __('patients.source.ehealth') }}' :
+                                       $wire.activeFilter === 'local' ? '{{ __('patients.source.local') }}' :
+                                       $wire.activeFilter === 'request' ? '{{ __('patients.applications') }}'
+                                       : ''
                                    "
                                    readonly
                             />
@@ -195,8 +196,9 @@
                                 @php
                                     $filters = [
                                         'all' => __('patients.all'),
-                                        'eHEALTH' => __('patients.patients'),
-                                        'DRAFT' => __('patients.applications')
+                                        'local' => __('patients.source.local'),
+                                        'ehealth' => __('patients.source.ehealth'),
+                                        'request' => __('patients.applications')
                                     ];
                                 @endphp
                                 <ul class="py-2 px-3 space-y-2 text-sm text-gray-700 dark:text-gray-200">

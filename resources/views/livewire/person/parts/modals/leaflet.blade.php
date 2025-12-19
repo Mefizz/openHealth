@@ -37,8 +37,8 @@
                         </button>
 
                         <div class="mb-4.5 flex gap-6 xl:flex-row justify-center items-center">
-                            <button class="button-minor" @click="showLeafletModal = false">
-                                {{ __('forms.back') }}
+                            <button type="button" class="button-danger" wire:click="reject">
+                                {{ __('patients.reject') }}
                             </button>
                             @can('create', PersonRequest::class)
                                 <button wire:click="openSignatureModal" type="button" class="button-primary">

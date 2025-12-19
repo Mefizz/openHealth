@@ -106,7 +106,9 @@ class PersonRequest extends Request
     {
         $this->setDefaultPageSize();
 
-        return $this->get(self::URL, $query);
+        $mergedQuery = array_merge($this->options['query'], $query ?? []);
+
+        return $this->get(self::URL, $mergedQuery);
     }
 
     /**
@@ -161,7 +163,7 @@ class PersonRequest extends Request
             'person.documents.*.number' => ['required', 'string', 'max:255'],
             'person.documents.*.issued_by' => ['required', 'string', 'max:255'],
             'person.documents.*.issued_at' => ['required', 'date'],
-            'person.documents.*.expiration_date' => ['required', 'date'],
+            'person.documents.*.expiration_date' => ['nullable', 'date'],
             'person.emergency_contact.first_name' => ['required', 'string', 'max:255'],
             'person.emergency_contact.last_name' => ['required', 'string', 'max:255'],
             'person.emergency_contact.second_name' => ['nullable', 'string', 'max:255'],

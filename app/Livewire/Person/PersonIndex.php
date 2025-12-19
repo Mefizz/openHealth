@@ -87,8 +87,9 @@ class PersonIndex extends Component
         // Filter by active filter
         $collection = match ($this->activeFilter) {
             'all' => $collection,
-            'DRAFT' => $collection->where('status', 'DRAFT'),
-            'eHEALTH' => $collection->where('status', '!=', 'DRAFT'),
+            'request' => $collection->where('source', 'request'),
+            'local' => $collection->where('source', 'local'),
+            'ehealth' => $collection->where('source', 'ehealth'),
             default => $collection->where('status', $this->activeFilter)
         };
 
@@ -121,43 +122,63 @@ class PersonIndex extends Component
         $phoneNumber = data_get($validated, 'phoneNumber');
         $filters = Arr::except(removeEmptyKeys(Arr::toSnakeCase($validated)), ['phone_number']);
 
-        // Search in our DB
-        $this->originalPatients = Person::with('phones')
+        // Search for persons in our DB
+        $persons = Person::with('phones')
             ->where($filters)
             ->when($phoneNumber, static function ($query) use ($phoneNumber) {
                 $query->whereHas('phones', static function (Builder $query) use ($phoneNumber) {
                     $query->whereNumber($phoneNumber);
                 });
             })
-            ->get(['id', 'uuid', 'gender', 'birth_settlement', 'first_name', 'last_name', 'second_name', 'birth_date', 'tax_id', 'verification_status'])
+            ->get([
+                'id',
+                'uuid',
+                'gender',
+                'birth_settlement',
+                'first_name',
+                'last_name',
+                'second_name',
+                'birth_date',
+                'tax_id',
+                'verification_status'
+            ])
             ->toArray();
 
-        // Search for drafts (person_requests)
+        $persons = $this->setPersonSource($persons, 'local');
+
+        // Search for person_requests
         $personRequests = PersonRequest::with('phones')
             ->where($filters)
-            ->whereIn('status', [Status::DRAFT, Status::NEW, Status::APPROVED])
+            ->whereIn('status', [Status::DRAFT, Status::NEW, Status::APPROVED, Status::REJECTED])
             ->when($phoneNumber, static function ($query) use ($phoneNumber) {
                 $query->whereHas('phones', static function (Builder $query) use ($phoneNumber) {
                     $query->whereNumber($phoneNumber);
                 });
             })
-            ->get(['id', 'status', 'gender', 'birth_settlement', 'first_name', 'last_name', 'second_name', 'birth_date', 'tax_id'])
+            ->get([
+                'id',
+                'status',
+                'gender',
+                'birth_settlement',
+                'first_name',
+                'last_name',
+                'second_name',
+                'birth_date',
+                'tax_id'
+            ])
             ->toArray();
 
+        $personRequests = $this->setPersonSource($personRequests, 'request');
+
         // If found in our DB, show that result
-        if (!empty($this->originalPatients)) {
-            $this->patients = array_merge(
-                $this->setPersonStatus($personRequests, Status::DRAFT->value),
-                $this->originalPatients = array_map(static function (array $patient) {
-                    return array_merge($patient, ['status' => $patient['verificationStatus']]);
-                }, $this->originalPatients)
-            );
+        if (!empty($persons)) {
+            $this->patients = array_merge($persons, $personRequests);
         } else {
             // Otherwise search in eHealth
             $buildSearchRequest = removeEmptyKeys(Arr::toSnakeCase($validated));
             try {
-                $validated = EHealth::person()->searchForPersonByParams($buildSearchRequest)->validate();
-                $this->originalPatients = Arr::toCamelCase($validated);
+                $validatedEhealth = EHealth::person()->searchForPersonByParams($buildSearchRequest)->validate();
+                $validatedEhealth = $this->setPersonSource($validatedEhealth, 'ehealth');
             } catch (ConnectionException $exception) {
                 $this->logConnectionError($exception, 'Error when searching for person');
                 Session::flash('error', "Виникла помилка. Відсутній зв'язок із ЕСОЗ");
@@ -175,10 +196,7 @@ class PersonIndex extends Component
                 return;
             }
 
-            $this->patients = array_merge(
-                $this->setPersonStatus($personRequests, Status::DRAFT->value),
-                $this->originalPatients = $this->setPersonStatus($this->originalPatients, 'eHEALTH'),
-            );
+            $this->patients = array_merge($personRequests, Arr::toCamelCase($validatedEhealth));
         }
     }
 
@@ -296,16 +314,16 @@ class PersonIndex extends Component
     }
 
     /**
-     * Add status to patients.
+     * Add the source where patients were founded.
      *
      * @param  array  $persons
-     * @param  string  $status
+     * @param  string  $source
      * @return array
      */
-    private function setPersonStatus(array $persons, string $status): array
+    private function setPersonSource(array $persons, string $source): array
     {
-        return array_map(static function ($patient) use ($status) {
-            $patient['status'] = $status;
+        return array_map(static function ($patient) use ($source) {
+            $patient['source'] = $source;
 
             return $patient;
         }, $persons);

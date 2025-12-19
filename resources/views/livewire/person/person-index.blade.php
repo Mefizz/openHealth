@@ -95,7 +95,7 @@
                         </div>
 
                         <div class="flex items-center space-x-3">
-                            @if($patient['status'] === Status::DRAFT->value)
+                            @if($patient['source'] === 'request')
                                 <a href="{{ route('persons.edit', [legalEntity(), $patient['id']]) }}"
                                    class="cursor-pointer text-blue-600 hover:text-blue-800 flex items-center gap-1"
                                 >
@@ -104,7 +104,7 @@
                                 </a>
                             @else
                                 @can('view', Person::class)
-                                    <button wire:click="redirectTo('{{ $patient['id'] }}', 'patient.patient-data')"
+                                    <button wire:click="redirectTo('{{ $patient['id'] }}', 'persons.patient-data')"
                                             class="cursor-pointer text-blue-600 hover:text-blue-800 flex items-center gap-1"
                                     >
                                         @icon('file-lines', 'w-4 h-4 text-blue-600 hover:text-blue-800')
@@ -115,8 +115,7 @@
                                     <button wire:click="redirectTo('{{ $patient['id'] }}', 'encounter.create')"
                                             class="cursor-pointer text-blue-600 hover:text-blue-800 flex items-center gap-1"
                                     >
-                                        @icon('plus', 'w-4 h-4 text-blue-600
-                                        hover:text-blue-800')
+                                        @icon('plus', 'w-4 h-4 text-blue-600 hover:text-blue-800')
                                         <span class="text-sm">{{ __('patients.start_interacting') }}</span>
                                     </button>
                                 @endcan
@@ -152,37 +151,22 @@
                                     <td class="td-input whitespace-nowrap overflow-hidden text-ellipsis align-top">
                                         {{ $patient['birthCertificate'] ?? '-' }}
                                     </td>
-
                                     <td class="td-input whitespace-nowrap align-top">
                                         @php
-                                            $statusEnum = VerificationStatus::tryFrom($patient['status']);
-
-                                            if ($statusEnum) {
-                                                $badgeClass = match ($statusEnum) {
-                                                    VerificationStatus::VERIFIED, VerificationStatus::VERIFICATION_NOT_NEEDED => 'badge-green',
-                                                    VerificationStatus::IN_REVIEW, VerificationStatus::VERIFICATION_NEEDED => 'badge-yellow',
-                                                    VerificationStatus::NOT_VERIFIED, VerificationStatus::CHANGES_NEEDED => 'badge-red',
-                                                };
-                                            } else {
-                                                $badgeClass = match ($patient['status']) {
-                                                    'DRAFT' => 'badge-purple',
-                                                    'eHEALTH' => 'badge-green',
-                                                    default => 'badge-gray'
-                                                };
+                                            if ($patient['source'] === 'request') {
+                                                $color = Status::from($patient['status'])->color();
+                                                $label = Status::from($patient['status'])->label();
+                                            } elseif($patient['source'] === 'local') {
+                                                $color = VerificationStatus::from($patient['verificationStatus'])->color();
+                                                $label = VerificationStatus::from($patient['verificationStatus'])->label();
+                                            } elseif($patient['source'] === 'ehealth') {
+                                                $color = 'badge-green';
+                                                $label = __('patients.source.ehealth');
                                             }
-
-                                            $label = $statusEnum?->label() ?? match ($patient['status']) {
-                                                'DRAFT' => 'ЗАЯВКА',
-                                                'eHEALTH' => 'ЕСОЗ',
-                                                default => $patient['status']
-                                            };
                                         @endphp
 
-                                        <span class="{{ $badgeClass }}">
-                                            {{ $label }}
-                                        </span>
+                                        <span class="{{ $color }}">{{ $label }}</span>
                                     </td>
-
                                     <td class="td-input text-center">
                                         <div class="relative"
                                              x-data="{ openDropdown: false }"
@@ -200,7 +184,7 @@
                                                  x-cloak
                                                  class="absolute right-0 z-10 w-48 bg-white rounded shadow dark:bg-gray-700"
                                             >
-                                                @if($patient['status'] === 'DRAFT')
+                                                @if($patient['source'] === 'request')
                                                     <div class="py-1" @click="openDropdown = false">
                                                         <button wire:click="deleteDraft({{ $patient['id'] }})"
                                                                 class="dropdown-button !flex gap-2"
