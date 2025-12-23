@@ -40,25 +40,14 @@
             @error('form.employeeType') <p class="text-error">{{ $message }}</p> @enderror
         </div>
 
-        {{-- 2. Посада - ЗАБЛОКОВАНО (disabled) + Safari fix --}}
         <div class="form-group">
-            <select name="position"
-                    id="position"
-                    class="peer input appearance-none bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400"
-                    required
-                    wire:model="form.position"
-                    x-effect="if (employeeType) $nextTick(() => { $el.value = $wire.form.position })"
-                    disabled>
-
-                <option value="">{{ __('forms.select_position') }}</option>
-
-                <template x-if="employeeType && employeeTypePosition[employeeType]">
+            <select name="position" id="position" class="peer input appearance-none bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400" required wire:model="form.position">
+                <option value="" disabled selected hidden>{{ __('forms.select_position') }}</option>
+                <div x-show="employeeType && employeeTypePosition[employeeType]" x-cloak>
                     <template x-for="(positionName, positionKey) in employeeTypePosition[employeeType]" :key="positionKey">
-                        <option :value="positionKey"
-                                x-text="positionName"
-                                :selected="positionKey == $wire.form.position"></option>
+                        <option :value="positionKey" x-text="positionName"></option>
                     </template>
-                </template>
+                </div>
             </select>
             <label for="position" class="label">{{ __('forms.position') }}</label>
             @error('form.position') <p class="text-error">{{ $message }}</p> @enderror
