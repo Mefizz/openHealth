@@ -2,20 +2,35 @@
           :disabled="$wire.isPositionDataLocked ?? false"
           x-data="{
               employeeType: $wire.entangle('form.employeeType'),
-              employeeTypePosition: @js($this->employeeTypePosition)
+              employeeTypePosition: @js($this->employeeTypePosition),
+              isInitial: true
           }"
-          x-init="$watch('employeeType', (value) => {
-              $wire.set('form.position', '', false);
-              document.getElementById('position').value = '';
-          })"
+          x-init="
+              $nextTick(() => { isInitial = false; });
+
+              $watch('employeeType', (value) => {
+                  if (isInitial) return;
+                  $wire.set('form.position', '', false);
+                  if (document.getElementById('position')) {
+                      document.getElementById('position').value = '';
+                  }
+              })
+          "
 >
     <legend class="legend">
         <h2>{{ __('forms.position') }}</h2>
     </legend>
 
     <div class="form-row-3">
+        {{-- 1. Тип співробітника - ЗАБЛОКОВАНО (disabled) --}}
         <div class="form-group">
-            <select name="employeeType" id="employeeType" class="peer input appearance-none bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400" required wire:model="form.employeeType" x-model="employeeType">
+            <select name="employeeType"
+                    id="employeeType"
+                    class="peer input appearance-none bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                    required
+                    wire:model="form.employeeType"
+                    x-model="employeeType"
+                    disabled>
                 <option value="" disabled selected hidden>{{ __('forms.role_choose') }}</option>
                 @foreach($this->dictionaries['EMPLOYEE_TYPE'] as $k => $employeeTypeOption)
                     <option value="{{ $k }}">{{ $employeeTypeOption }}</option>
@@ -25,12 +40,23 @@
             @error('form.employeeType') <p class="text-error">{{ $message }}</p> @enderror
         </div>
 
+        {{-- 2. Посада - ЗАБЛОКОВАНО (disabled) + Safari fix --}}
         <div class="form-group">
-            <select name="position" id="position" class="peer input appearance-none bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400" required wire:model="form.position">
-                <option value="" disabled selected hidden>{{ __('forms.select_position') }}</option>
+            <select name="position"
+                    id="position"
+                    class="peer input appearance-none bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                    required
+                    wire:model="form.position"
+                    x-effect="if (employeeType) $nextTick(() => { $el.value = $wire.form.position })"
+                    disabled>
+
+                <option value="">{{ __('forms.select_position') }}</option>
+
                 <template x-if="employeeType && employeeTypePosition[employeeType]">
                     <template x-for="(positionName, positionKey) in employeeTypePosition[employeeType]" :key="positionKey">
-                        <option :value="positionKey" x-text="positionName"></option>
+                        <option :value="positionKey"
+                                x-text="positionName"
+                                :selected="positionKey == $wire.form.position"></option>
                     </template>
                 </template>
             </select>
@@ -40,18 +66,23 @@
     </div>
 
     <div class="form-row-3">
+        {{-- 3. Дата початку роботи - ЗАБЛОКОВАНО (disabled) --}}
         <div class="form-group datepicker-wrapper relative w-full">
             <input wire:model="form.startDate"
                    datepicker-format="{{ frontendDateFormat() }}"
                    type="text" name="startDate"
-                   id="startDate" class="peer input pl-10 appearance-none datepicker-input text-gray-500 dark:text-gray-400"
+                   id="startDate"
+                   class="peer input pl-10 appearance-none datepicker-input text-gray-500 dark:text-gray-400"
                    placeholder=" "
                    required
+                   disabled
                    datepicker-autohide
                    datepicker-button="false"/>
             <label for="startDate" class="wrapped-label">{{ __('forms.start_date_work') }}</label>
             @error('form.startDate') <p class="text-error">{{$message}}</p> @enderror
         </div>
+
+        {{-- 4. ПІДРОЗДІЛ - ЗАЛИШЕНО РОЗБЛОКОВАНИМ --}}
         <div class="form-group">
             <select name="division" id="division" class="peer input appearance-none bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400" wire:model="form.divisionId">
                 <option value="">{{ __('forms.select_division') }}</option>
@@ -64,7 +95,7 @@
             @error('form.divisionId') <p class="text-error">{{ $message }}</p> @enderror
         </div>
 
-        {{-- Start of email field --}}
+        {{-- Email field --}}
         @if (!empty($partyUsers))
             <div class="form-group" x-transition wire:key="party-user-email-select">
                 <select name="formEmail" id="formEmail"
@@ -79,6 +110,5 @@
                 @error('formEmail') <p class="text-error">{{ $message }}</p> @enderror
             </div>
         @endif
-        {{-- End of email filed --}}
     </div>
 </fieldset>
