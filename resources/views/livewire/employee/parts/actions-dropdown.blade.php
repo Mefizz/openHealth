@@ -5,12 +5,20 @@
     $status = $position->status?->value ?? null;
     $isEmployeeIndex = request()->routeIs('employee.index');
 
-    // QUICK CHECKS (we take from the array of $permissions that is calculated once in the parent template)
+    // QUICK CHECKS
     $canView = $isEmployee ? ($permissions['employee_view'] ?? false) : ($permissions['request_view'] ?? false);
     $canWrite = $isEmployee ? ($permissions['employee_write'] ?? false) : ($permissions['request_write'] ?? false);
 
+    // Add a check for a user connection for Employee
+    // If it's Employee, check user_id. If it's EmployeeRequest — usually user_id should also be there,
+    // But according to the logic of your request, this applies specifically to existing employees.
+    $hasUserLinked = $isEmployee ? !empty($position->userId) : true;
+
     $showView = $canView;
-    $showEdit = $canWrite && ($isEmployee ? $status !== 'DISMISSED' : $status === 'NEW');
+
+    // Updated logic for $showEdit: added $hasUserLinked
+    $showEdit = $canWrite && $hasUserLinked && ($isEmployee ? $status !== 'DISMISSED' : $status === 'NEW');
+
     $showSync = $canWrite && ($isEmployee ? !empty($position->uuid) : in_array($status, ['NEW', 'SIGNED', 'APPROVED']));
     $showDelete = $isRequest && $canWrite && $status === 'NEW';
     $showDismiss = $isEmployee && $status === 'APPROVED' && ($permissions['employee_deactivate'] ?? false);
@@ -20,15 +28,18 @@
 
 @if ($hasActions)
     <div class="relative flex justify-center" x-data="{ open: false }" @click.outside="open = false">
-        <button @click="open = !open" type="button" class="inline-flex items-center p-2 text-gray-500 hover:text-gray-800 rounded-lg">
+        <button @click="open = !open" type="button"
+                class="inline-flex items-center p-2 text-gray-500 hover:text-gray-800 rounded-lg">
             @icon('edit-user-outline', 'w-6 h-6 text-gray-800 dark:text-white')
         </button>
 
-        <div x-show="open" x-cloak x-transition class="absolute right-0 z-50 w-48 bg-white rounded shadow-lg dark:bg-gray-700" style="display: none;">
+        <div x-show="open" x-cloak x-transition
+             class="absolute right-0 z-50 w-48 bg-white rounded shadow-lg dark:bg-gray-700" style="display: none;">
             <ul class="py-1 text-sm text-gray-700 dark:text-gray-200">
                 @if($showSync)
                     <li>
-                        <button type="button" wire:click="syncOne({{ $position->id }})" class="flex w-full items-center gap-2 py-2 px-5 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                        <button type="button" wire:click="syncOne({{ $position->id }})"
+                                class="flex w-full items-center gap-2 py-2 px-5 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
                             @icon('refresh', 'w-5 h-5 text-blue-500') {{ __('general.sync') }}
                         </button>
                     </li>

@@ -20,7 +20,7 @@ class EmployeePolicy
 
     public function view(User $user, Employee $employee): Response
     {
-        if ((int)$employee->legalEntityId !== (int)legalEntity()->id) {
+        if ((int) $employee->legalEntityId !== (int) legalEntity()->id) {
             return Response::denyWithStatus(404);
         }
 
@@ -31,14 +31,22 @@ class EmployeePolicy
 
     public function update(User $user, Employee $employee): Response
     {
+        // 1. Status check
         if ($employee->status === Status::DISMISSED) {
             return Response::deny(__('employees.policy.emp.dismissed_no_edit'));
         }
 
-        if ((int)$employee->legalEntityId !== (int)legalEntity()->id) {
+        // 2. VERIFICATION: Whether the employee is related to the user
+        if (is_null($employee->user_id)) {
+            return Response::deny(__('employees.policy.no_user_linked'));
+        }
+
+        // 3. Verification of affiliation with the institution (already exists)
+        if ((int) $employee->legalEntityId !== (int) legalEntity()->id) {
             return Response::denyWithStatus(404);
         }
 
+        // 4. Checking user access rights
         return $user->can('employee:write')
             ? Response::allow()
             : Response::deny(__('employees.policy.emp.update_denied'));
@@ -46,7 +54,7 @@ class EmployeePolicy
 
     public function deactivate(User $user, Employee $employee): Response
     {
-        if ((int)$employee->legalEntityId !== (int)legalEntity()->id) {
+        if ((int) $employee->legalEntityId !== (int) legalEntity()->id) {
             return Response::denyWithStatus(404);
         }
 
@@ -61,7 +69,7 @@ class EmployeePolicy
     public function sync(User $user, Employee $employee): Response
     {
         // 1. Verification of affiliation with the current institution
-        if ((int)$employee->legalEntityId !== (int)legalEntity()->id) {
+        if ((int) $employee->legalEntityId !== (int) legalEntity()->id) {
             return Response::denyWithStatus(404);
         }
 
