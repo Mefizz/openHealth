@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Core\Arr;
+use App\Enums\Status;
 use App\Models\LegalEntity;
 use App\Models\Relations\Party;
 use App\Models\Employee\Employee;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use App\Enums\Employee\RequestStatus;
 use App\Models\Employee\EmployeeRequest;
@@ -84,6 +86,61 @@ readonly class EmployeeRepository
         });
 
         return $model;
+    }
+
+    /**
+     * Returns a Query Builder for Parties, sorted by the latest activity date.
+     *
+     * Mechanism:
+     * 1. Aggregates the latest 'updated_at' timestamp from the 'employees' table grouped by party.
+     * 2. Aggregates the latest 'updated_at' timestamp from the 'employee_requests' table grouped by party.
+     * 3. Joins these aggregated subqueries to the main 'parties' query.
+     * 4. Sorts results by the greatest (most recent) timestamp found in either relation.
+     *
+     * @param int $legalEntityId
+     * @return Builder
+     */
+    public function getPartiesWithLatestActivityQuery(int $legalEntityId): Builder
+    {
+        // 1. Subquery: Get the latest update time for Employees grouped by Party
+        $employeesQuery = Employee::selectRaw('party_id, MAX(updated_at) as last_employee_at')
+            ->where('legal_entity_id', $legalEntityId)
+            ->groupBy('party_id');
+
+        // 2. Subquery: Get the latest update time for Employee Requests grouped by Party
+        $requestsQuery = EmployeeRequest::selectRaw('party_id, MAX(updated_at) as last_request_at')
+            ->where('legal_entity_id', $legalEntityId)
+            ->whereNotNull('party_id')
+            ->groupBy('party_id');
+
+        return Party::query()
+            ->select('parties.*')
+            // Add virtual columns for debugging
+            ->addSelect([
+                'emp_stat.last_employee_at',
+                'req_stat.last_request_at'
+            ])
+            // 3. Join the subqueries
+            ->leftJoinSub($employeesQuery, 'emp_stat', 'parties.id', '=', 'emp_stat.party_id')
+            ->leftJoinSub($requestsQuery, 'req_stat', 'parties.id', '=', 'req_stat.party_id')
+
+            // 4. Eager load relations
+            ->with([
+                'phones',
+                'users',
+                'employees' => fn ($q) => $q
+                    ->where('legal_entity_id', $legalEntityId)
+                    ->orderByDesc('updated_at')
+                    ->with(['division', 'user']),
+                'employeeRequests' => fn ($q) => $q
+                    ->where('legal_entity_id', $legalEntityId)
+                    ->whereIn('status', [Status::NEW->value, Status::SIGNED->value, Status::APPROVED->value])
+                    ->orderByDesc('updated_at')
+                    ->with(['revision', 'division'])
+            ])
+
+            // 5. Sorting: Compare dates and pick the most recent
+            ->orderByRaw("GREATEST(COALESCE(emp_stat.last_employee_at, '1970-01-01'), COALESCE(req_stat.last_request_at, '1970-01-01')) DESC");
     }
 
     /**
