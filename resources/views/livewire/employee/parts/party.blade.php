@@ -54,7 +54,7 @@
                 @error('form.party.birthDate') <p class="text-error">{{$message}}</p> @enderror
             </div>
             <div class="form-group">
-                <input wire:model="form.party.workingExperience" type="number" name="workingExperience" id="workingExperience" class="peer input text-gray-500" placeholder=" " required/>
+                <input wire:model="form.party.workingExperience" type="number" name="workingExperience" id="workingExperience" class="peer input text-gray-500" placeholder=" "/>
                 <label for="workingExperience" class="label">{{__('forms.working_experience')}}</label>
                 <p class="text-xs text-blue-500 mt-1">{{ __('forms.workingExperience_hint') }}</p>
                 @error('form.party.workingExperience') <p class="text-error">{{$message}}</p> @enderror
@@ -162,7 +162,7 @@
         {{-- Email & About Myself --}}
         <div class="form-row-3">
             <div class="form-group">
-                <input wire:model="form.party.email" type="email" id="email" name="email" class="peer input text-gray-500" placeholder=" " required/>
+                <input wire:model="form.party.email" type="email" id="email" name="email" class="peer input text-gray-500" placeholder=" "/>
                 <label for="email" class="label">{{ __('forms.email') }}</label>
                 @error('form.party.email') <p class="text-error">{{ $message }}</p> @enderror
             </div>
