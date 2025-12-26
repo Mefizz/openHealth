@@ -39,7 +39,15 @@ class PersonUpdate extends PersonComponent
         $this->uuid = $person->uuid;
         $this->baseMount();
 
-        $this->form->person = Arr::toCamelCase($person->load(['addresses', 'documents', 'phones'])->toArray());
+        $this->form->person = Arr::toCamelCase(
+            $person->load([
+                'addresses',
+                'documents',
+                'phones',
+                'authenticationMethods',
+                'confidantPerson.person:id,uuid,last_name,first_name,second_name,tax_id,unzr'
+            ])->toArray()
+        );
 
         $this->address = $this->form->person['addresses'][0];
 
