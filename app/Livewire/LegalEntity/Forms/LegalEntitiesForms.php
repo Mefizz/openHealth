@@ -91,7 +91,7 @@ class LegalEntitiesForms extends Form
             'owner.email' => ['required','email',new Email()],
             'owner.position' => ['required','string', new InDictionary('POSITION')],
             'email' => ['required','email',new Email()],
-            'website' => ['sometimes', 'regex:/^(https?:\/\/)?(www\.)?([a-z0-9\-]+\.)+[a-z]{2,}$/i'],
+            'website' => ['sometimes', 'regex:/^(https?:\/\/)?(www\.)?[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9]))+$/i'],
             'phones' => 'required|array',
             'phones.*.number' => ['required', 'string', new PhoneNumber()],
             'phones.*.type' => [
