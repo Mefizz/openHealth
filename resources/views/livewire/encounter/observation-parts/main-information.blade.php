@@ -381,9 +381,7 @@
                         {{ __('patients.date') }}
                     </label>
                     <div class="relative flex items-center">
-                        <svg width="20" height="20" class="svg-input absolute left-2.5 pointer-events-none">
-                            <use xlink:href="#svg-calendar-week"></use>
-                        </svg>
+                        @icon('calendar-week', 'svg-input absolute left-2.5 pointer-events-none')
                         <input x-model="modalObservation.valueDate"
                                datepicker-max-date="{{ now()->format('Y-m-d') }}"
                                type="text"
@@ -406,9 +404,7 @@
                     </label>
 
                     <div class="relative flex items-center">
-                        <svg width="20" height="20" class="svg-input absolute left-2.5 pointer-events-none">
-                            <use xlink:href="#svg-clock"></use>
-                        </svg>
+                        @icon('mingcute-time-fill', 'svg-input left-2.5')
                         <input x-model="modalObservation.valueTime"
                                @input="$event.target.blur()"
                                datepicker-max-date="{{ now()->format('Y-m-d') }}"

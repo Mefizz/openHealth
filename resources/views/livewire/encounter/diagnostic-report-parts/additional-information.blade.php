@@ -163,9 +163,7 @@
 
         <div class="form-group group !w-1/2" onclick="document.getElementById('issuedTime').showPicker()">
             <div class="relative flex items-center">
-                <svg width="20" height="20" class="svg-input absolute left-2.5 pointer-events-none">
-                    <use xlink:href="#svg-clock"></use>
-                </svg>
+                @icon('mingcute-time-fill', 'svg-input left-2.5')
                 <input x-model="modalDiagnosticReport.issuedTime"
                        @input="$event.target.blur()"
                        datepicker-max-date="{{ now()->format('Y-m-d') }}"
@@ -210,9 +208,7 @@
 
         <div class="form-group group !w-1/2" onclick="document.getElementById('effectivePeriodStartTime').showPicker()">
             <div class="relative flex items-center">
-                <svg width="20" height="20" class="svg-input absolute left-2.5 pointer-events-none">
-                    <use xlink:href="#svg-clock"></use>
-                </svg>
+                @icon('mingcute-time-fill', 'svg-input left-2.5')
                 <input x-model="modalDiagnosticReport.effectivePeriodStartTime"
                        @input="$event.target.blur()"
                        datepicker-max-date="{{ now()->format('Y-m-d') }}"
@@ -257,9 +253,7 @@
 
         <div class="form-group group !w-1/2" onclick="document.getElementById('effectivePeriodEndTime').showPicker()">
             <div class="relative flex items-center">
-                <svg width="20" height="20" class="svg-input absolute left-2.5 pointer-events-none">
-                    <use xlink:href="#svg-clock"></use>
-                </svg>
+                @icon('mingcute-time-fill', 'svg-input left-2.5')
                 <input x-model="modalDiagnosticReport.effectivePeriodEndTime"
                        @input="$event.target.blur()"
                        datepicker-max-date="{{ now()->format('Y-m-d') }}"

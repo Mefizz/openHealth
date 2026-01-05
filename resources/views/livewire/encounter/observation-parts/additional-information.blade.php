@@ -83,11 +83,7 @@
             </label>
 
             <div class="relative flex items-center mt-7">
-                <svg width="20" height="20"
-                     class="svg-input absolute left-2.5 pointer-events-none"
-                >
-                    <use xlink:href="#svg-clock"></use>
-                </svg>
+                @icon('mingcute-time-fill', 'svg-input left-2.5')
                 <input x-model="modalObservation.effectiveTime"
                        @input="$event.target.blur()"
                        datepicker-max-date="{{ now()->format('Y-m-d') }}"
@@ -129,11 +125,7 @@
             </label>
 
             <div class="relative flex items-center mt-7">
-                <svg width="20" height="20"
-                     class="svg-input absolute left-2.5 pointer-events-none"
-                >
-                    <use xlink:href="#svg-clock"></use>
-                </svg>
+                @icon('mingcute-time-fill', 'svg-input left-2.5')
                 <input x-model="modalObservation.issuedTime"
                        @input="$event.target.blur()"
                        datepicker-max-date="{{ now()->format('Y-m-d') }}"

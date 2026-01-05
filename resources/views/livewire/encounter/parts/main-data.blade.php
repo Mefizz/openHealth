@@ -43,9 +43,7 @@
                 <button wire:click.prevent="searchForReferralNumber"
                         class="flex items-center gap-2 button-primary"
                 >
-                    <svg width="16" height="16">
-                        <use xlink:href="#svg-search"></use>
-                    </svg>
+                    @icon('search', 'w-4 h-4')
                     <span>{{ __('patients.search_for_referral') }}</span>
                 </button>
             </div>

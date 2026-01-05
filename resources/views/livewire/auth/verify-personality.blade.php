@@ -1,5 +1,5 @@
 <div>
-    <livewire:components.x-message :key="now()->timestamp"/>
+    <livewire:components.x-message :key="now()->timestamp" />
 
     <img class="mx-auto" src="{{ Vite::asset('resources/images/logo.webp') }}" alt="OpenHealth Logo">
 
@@ -46,9 +46,10 @@
                        type="file"
                        id="keyContainerUpload"
                        name="keyContainerUpload"
+                       accept=".jpeg,.jpg"
                 >
                 <div wire:loading wire:target="keyContainerUpload" class="text-sm text-gray-500 mt-2">
-                    Uploading...
+                    {{ __('general.loading') }}...
                 </div>
             </div>
 
@@ -90,6 +91,6 @@
         </form>
     </fieldset>
 
-    <x-forms.loading/>
-    <x-messages/>
+    <x-forms.loading />
+    <x-messages />
 </div>

@@ -1,4 +1,4 @@
-<div class="relative" id="immunization-section">
+<div class="relative" id="immunizations-section">
     <fieldset class="fieldset"
               x-data="{
                   immunizations: $wire.entangle('form.immunizations'),

@@ -2,7 +2,7 @@
 @use('App\Enums\Person\VerificationStatus as Status')
 
 <x-layouts.patient :id="$patientId" :patientFullName="$patientFullName">
-    <div class="breadcrumb-form p-4">
+    <div class="breadcrumb-form p-4 shift-content">
         <div class="flex items-center gap-14 mb-10">
             <p class="default-p">
                 {{ __('patients.verification_in_eHealth') }}: {{ Status::from($verificationStatus)->label() }}
