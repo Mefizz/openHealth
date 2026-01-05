@@ -116,7 +116,7 @@
                                             class="cursor-pointer text-blue-600 hover:text-blue-800 flex items-center gap-1.5 font-medium"
                                     >
                                         @icon('plus', 'w-4 h-4')
-                                        <span class="text-sm">+ {{ __('patients.start_interacting') }}</span>
+                                        <span class="text-sm">{{ __('patients.start_interacting') }}</span>
                                     </button>
                                 @endcan
                             @endif
@@ -128,8 +128,8 @@
                             <table class="table-input w-full table-auto">
                                 <thead class="thead-input">
                                 <tr>
-                                    <th scope="col" class="th-input">{{ __('forms.city') ?? 'МІСТО' }}</th>
-                                    <th scope="col" class="th-input">{{ __('forms.rnokpp') }} (ІПН)</th>
+                                    <th scope="col" class="th-input">{{ __('forms.city') }}</th>
+                                    <th scope="col" class="th-input">{{ __('forms.rnokpp') }}</th>
                                     <th scope="col" class="th-input">{{ __('patients.birth_certificate') }}</th>
                                     <th scope="col" class="th-input">{{ __('forms.status.label') }}</th>
                                     <th scope="col" class="th-input text-center">{{ __('forms.actions') }}</th>
@@ -139,7 +139,7 @@
                                 <tbody>
                                 <tr>
                                     <td class="td-input whitespace-nowrap overflow-hidden text-ellipsis align-top font-bold text-gray-900 dark:text-white">
-                                        {{ $patient['address']['city'] ?? $patient['city'] ?? '-' }}
+                                        {{ $patient['birthSettlement'] ?? '-' }}
                                     </td>
                                     <td class="td-input whitespace-nowrap overflow-hidden text-ellipsis align-top font-bold text-gray-900 dark:text-white">
                                         {{ $patient['taxId'] ?? '-' }}
@@ -233,9 +233,24 @@
                     </div>
                 </fieldset>
             @empty
-                <div class="text-center py-16">
-                    <p class="text-gray-500 dark:text-gray-400 text-lg">{{ __('forms.nothing_found') }}</p>
-                </div>
+                <fieldset class="fieldset mx-auto">
+                    <legend class="legend relative -top-5">@icon('nothing-found', 'w-28 h-28')</legend>
+                    <div class="p-4 rounded-lg bg-blue-100 flex items-start mb-4">
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0 mt-0.5">
+                                @icon('alert-circle', 'w-5 h-5 text-blue-500 mr-3 mt-1')
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-bold text-blue-800">
+                                    {{ __('forms.nothing_found') }}
+                                </p>
+                                <p class="text-sm text-blue-600">
+                                    {{ __('forms.changing_search_parameters') }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
             @endforelse
         </div>
 
