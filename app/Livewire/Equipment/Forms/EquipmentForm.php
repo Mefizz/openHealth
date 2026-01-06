@@ -9,14 +9,13 @@ use App\Enums\Equipment\{AvailabilityStatus, Status};
 use App\Enums\Status as BaseStatus;
 use App\Rules\InDictionary;
 use Illuminate\Database\Query\Builder;
-use Illuminate\Support\Fluent;
 use Illuminate\Validation\Rule;
 use Livewire\Form;
 
 class EquipmentForm extends Form
 {
     public array $names = [['name' => '', 'type' => '']];
-    public string|int|null $type = null;
+    public string|null $type = null;
     public ?string $serialNumber;
     public string $status;
     public string $recorder;
@@ -51,11 +50,8 @@ class EquipmentForm extends Form
             'names.*.type' => ['required', 'string', 'max:255', new InDictionary('device_name_type'), 'distinct'],
             'type' => [
                 'required',
-                Rule::when(
-                    static fn (Fluent $value) => is_int($value->type),
-                    ['integer'],
-                    ['string', 'max:255']
-                ),
+                'string',
+                'max:255',
                 new InDictionary('device_definition_classification_type')
             ],
             'serialNumber' => [

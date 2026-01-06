@@ -29,7 +29,6 @@ class Revision extends Model
         'revisionable_id'
     ];
 
-
     protected $casts = [
         'data' => 'array',
         'deleted_at' => 'datetime',
@@ -42,7 +41,7 @@ class Revision extends Model
         return $this->morphTo();
     }
 
-        public function setApplied(): void
+    public function setApplied(): void
     {
         $this->status = RevisionStatus::APPLIED;
         $this->save();

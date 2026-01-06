@@ -26,7 +26,6 @@ class InDictionary implements ValidationRule
      * @param  string  $attribute  The name of the attribute being validated
      * @param  mixed  $value  The value of the attribute being validated
      * @param  Closure(string): PotentiallyTranslatedString  $fail  The callback to invoke if validation fails
-     *
      * @return void
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
@@ -48,6 +47,12 @@ class InDictionary implements ValidationRule
                 $dictionaryKeys = DB::table('icd_10')
                     ->select(['code'])
                     ->pluck('code')
+                    ->toArray();
+            } elseif ($name === 'device_definition_classification_type') {
+                // Convert all keys to string
+                $dictionaryKeys = dictionary()->getDictionary('device_definition_classification_type', false)
+                    ->keys()
+                    ->map(static fn (int|string $key) => (string)$key)
                     ->toArray();
             } else {
                 $dictionaryKeys = array_keys(dictionary()->getDictionary($name));

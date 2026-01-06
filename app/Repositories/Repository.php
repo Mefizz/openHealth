@@ -16,21 +16,6 @@ final class Repository
         return app(PhoneRepository::class);
     }
 
-    public static function document(): DocumentRepository
-    {
-        return app(DocumentRepository::class);
-    }
-
-    public static function authenticationMethod(): AuthenticationMethodRepository
-    {
-        return app(AuthenticationMethodRepository::class);
-    }
-
-    public static function confidantPerson(): ConfidantPersonRepository
-    {
-        return app(ConfidantPersonRepository::class);
-    }
-
     public static function employee(): EmployeeRepository
     {
         return app(EmployeeRepository::class);
@@ -39,26 +24,6 @@ final class Repository
     public static function employeeRole(): EmployeeRoleRepository
     {
         return app(EmployeeRoleRepository::class);
-    }
-
-    public static function education(): EducationRepository
-    {
-        return app(EducationRepository::class);
-    }
-
-    public static function speciality(): SpecialityRepository
-    {
-        return app(SpecialityRepository::class);
-    }
-
-    public static function qualification(): QualificationRepository
-    {
-        return app(QualificationRepository::class);
-    }
-
-    public static function scienceDegree(): ScienceDegreeRepository
-    {
-        return app(ScienceDegreeRepository::class);
     }
 
     public static function division(): DivisionRepository
