@@ -55,17 +55,31 @@ class EmployeeRequest extends EHealthRequest
     public function mapCreate(array $sourceData): array
     {
         $partyData = $sourceData['party'] ?? [];
-        $doctorData = $sourceData['doctor'] ?? [];
+
+        // 1. Determining where professional data lies (Strategy Pattern)
+        // The EHR can return data in one of these keys depending on the type of
+        $professionalData = $sourceData['doctor']
+            ?? $sourceData['med_admin']
+            ?? $sourceData['pharmacist']
+            ?? $sourceData['specialist'] // Just in case, although it is usually a doctor
+            ?? [];
+
+        // 2.  sometimes the API returns education (singular) instead of educations (plural)
+        $educations = $professionalData['educations']
+            ?? $professionalData['education'] // fallback for old/crooked entries
+            ?? [];
 
         return [
             'employee' => Arr::get($sourceData, 'employee_request_data', []),
             'party' => Arr::except($partyData, ['documents', 'phones', 'email']),
             'documents' => $sourceData['documents'] ?? [],
             'phones' => $sourceData['phones'] ?? [],
-            'educations' => $doctorData['educations'] ?? [],
-            'specialities' => $doctorData['specialities'] ?? [],
-            'qualifications' => $doctorData['qualifications'] ?? [],
-            'science_degree' => $doctorData['science_degree'] ?? null,
+
+            // We use the found universal data
+            'educations' => $educations,
+            'specialities' => $professionalData['specialities'] ?? [],
+            'qualifications' => $professionalData['qualifications'] ?? [],
+            'science_degree' => $professionalData['science_degree'] ?? null,
         ];
     }
 
@@ -103,8 +117,7 @@ class EmployeeRequest extends EHealthRequest
      * Retrieves full details of a specific Employee Request by UUID.
      * Essential for obtaining the 'employee_id' field after approval.
      *
-     * @param string $uuid
-     *
+     * @param  string  $uuid
      * @return Response|PromiseInterface
      * @throws ConnectionException
      */
@@ -112,7 +125,6 @@ class EmployeeRequest extends EHealthRequest
     {
         $getEndpoint = '/api/employee_requests';
         $url = $getEndpoint . '/' . $uuid;
-
 
         return $this->get($url);
     }
@@ -205,14 +217,26 @@ class EmployeeRequest extends EHealthRequest
             'party' => $partyPayload,
         ];
 
-        $doctorTypes = config('ehealth.doctors_type', []);
+        $medTypes = config('ehealth.medical_employees', []);
         $employeeType = Arr::get($nestedData, 'employee_request_data.employee_type');
 
-        if (in_array($employeeType, $doctorTypes, true)) {
-            $doctorData = Arr::get($nestedData, 'doctor');
+        if (in_array($employeeType, $medTypes, true)) {
+            // 1. We determine the correct key that eHealth expects
+            $targetKey = match ($employeeType) {
+                'MED_ADMIN' => 'med_admin',
+                'PHARMACIST' => 'pharmacist',
+                'SPECIALIST' => 'specialist',
+                'ASSISTANT' => 'assistant',
+                'LABORANT' => 'laborant',
+                default => 'doctor',
+            };
+
+            // 2.We get the data. They can be keyed 'doctor' (if so saved in the database)
+            $doctorData = Arr::get($nestedData, $targetKey) ?? Arr::get($nestedData, 'doctor');
+
+            // 3.Add to payload only if there is data
             if (!empty($doctorData)) {
-                $payloadKey = strtolower($employeeType);
-                $payload[$payloadKey] = $doctorData;
+                $payload[$targetKey] = $doctorData;
             }
         }
 
