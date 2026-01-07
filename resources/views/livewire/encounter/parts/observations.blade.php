@@ -1,4 +1,4 @@
-<div class="relative" id="observation-section">
+<div class="relative" id="observations-section">
     <fieldset class="fieldset"
               x-data="{
                   observations: $wire.entangle('form.observations'),

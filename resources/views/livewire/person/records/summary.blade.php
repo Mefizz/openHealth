@@ -1,5 +1,5 @@
 <x-layouts.patient :id="$patientId" :patientFullName="$patientFullName">
-    <div class="breadcrumb-form p-4">
+    <div class="breadcrumb-form p-4 shift-content">
         <button wire:click.prevent=""
                 class="button-primary mb-10"
         >
@@ -68,5 +68,5 @@
         </div>
     </div>
 
-    <x-forms.loading/>
+    <x-forms.loading />
 </x-layouts.patient>

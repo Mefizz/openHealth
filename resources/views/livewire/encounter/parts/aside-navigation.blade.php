@@ -5,105 +5,55 @@
         <ul class="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700">
             <li>
                 <a href="#patient-data-section" class="encounter-nav-item">
-                    <svg width="24" height="24" class="text-gray-400 dark:text-white">
-                        <use xlink:href="#svg-chart-pie"></use>
-                    </svg>
+                    @icon('pie-chart', 'w-6 h-6 dark:text-white')
                     <p class="default-p">{{ __('patients.main_data') }}</p>
                 </a>
             </li>
             <li>
                 <a href="#diagnoses-section" class="encounter-nav-item">
-                    <svg width="24" height="24" class="text-gray-400 dark:text-white">
-                        <use xlink:href="#svg-file"></use>
-                    </svg>
+                    @icon('file', 'w-6 h-6 dark:text-white')
                     <p class="default-p">{{ __('patients.diagnoses') }}</p>
                 </a>
             </li>
             <li>
                 <a href="#reasons-section" class="encounter-nav-item">
-                    <svg width="24" height="24" class="dark:text-white">
-                        <use xlink:href="#svg-person"></use>
-                    </svg>
+                    @icon('person', 'w-6 h-6 dark:text-white')
                     <p class="default-p">{{ __('patients.reasons_for_visit') }}</p>
                 </a>
             </li>
             <li>
                 <a href="#actions-section" class="encounter-nav-item">
-                    <svg width="24" height="24" class="dark:text-white">
-                        <use xlink:href="#svg-check-box"></use>
-                    </svg>
+                    @icon('check-box', 'w-6 h-6 dark:text-white')
                     <p class="default-p">{{ __('forms.actions') }}</p>
                 </a>
             </li>
             <li>
-                <a href="#" class="encounter-nav-item">
-                    <svg width="24" height="24" class="dark:text-white">
-                        <use xlink:href="#svg-heart"></use>
-                    </svg>
+                <a href="#observations-section" class="encounter-nav-item">
+                    @icon('heart', 'w-6 h-6 dark:text-white')
                     <p class="default-p">{{ __('patients.observation') }}</p>
                 </a>
             </li>
             <li>
-                <a href="#" class="encounter-nav-item">
-                    <svg width="24" height="24" class="dark:text-white">
-                        <use xlink:href="#svg-shield"></use>
-                    </svg>
+                <a href="#immunizations-section" class="encounter-nav-item">
+                    @icon('shield', 'w-6 h-6 dark:text-white')
                     <p class="default-p">{{ __('patients.vaccinations') }}</p>
                 </a>
             </li>
             <li>
-                <a href="#" class="encounter-nav-item">
-                    <svg width="24" height="24" class="dark:text-white">
-                        <use xlink:href="#svg-book-open"></use>
-                    </svg>
-                    <p class="default-p">{{ __('patients.prescriptions') }}</p>
-                </a>
-            </li>
-            <li>
-                <a href="#" class="encounter-nav-item">
-                    <svg width="24" height="24" class="dark:text-white">
-                        <use xlink:href="#svg-arrow-right-circle"></use>
-                    </svg>
-                    <p class="default-p">{{ __('patients.referrals') }}</p>
-                </a>
-            </li>
-            <li>
-                <a href="#" class="encounter-nav-item">
-                    <svg width="24" height="24" class="dark:text-white">
-                        <use xlink:href="#svg-check-square"></use>
-                    </svg>
-                    <p class="default-p">{{ __('patients.medical_reports') }}</p>
-                </a>
-            </li>
-            <li>
-                <a href="#" class="encounter-nav-item">
-                    <svg width="24" height="24" class="dark:text-white">
-                        <use xlink:href="#svg-settings"></use>
-                    </svg>
+                <a href="#procedures-section" class="encounter-nav-item">
+                    @icon('settings', 'w-6 h-6 dark:text-white')
                     <p class="default-p">{{ __('patients.procedures') }}</p>
                 </a>
             </li>
             <li>
-                <a href="#" class="encounter-nav-item">
-                    <svg width="24" height="24" class="dark:text-white">
-                        <use xlink:href="#svg-file-right"></use>
-                    </svg>
-                    <p class="default-p">{{ __('patients.treatment_plans') }}</p>
-                </a>
-            </li>
-            <li>
-                <a href="#" class="encounter-nav-item">
-                    <svg width="24" height="24" class="dark:text-white">
-                        <use xlink:href="#svg-activity"></use>
-                    </svg>
+                <a href="#diagnostic-reports-section" class="encounter-nav-item">
+                    @icon('activity', 'w-6 h-6 dark:text-white')
                     <p class="default-p">{{ __('patients.diagnostic_reports') }}</p>
                 </a>
             </li>
             <li>
-                <a href="#" class="encounter-nav-item">
-                    <svg width="24" height="24" class="dark:text-white">
-                        <use xlink:href="#svg-check"></use>
-                    </svg>
+                <a href="#clinical-impressions-section" class="encounter-nav-item">
+                    @icon('check', 'w-6 h-6 dark:text-white')
                     <p class="default-p">{{ __('patients.clinical_impressions') }}</p>
                 </a>
             </li>

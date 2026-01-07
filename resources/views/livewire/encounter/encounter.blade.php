@@ -1,11 +1,3 @@
-@php
-    $svgSprite = file_get_contents(resource_path('images/sprite.svg'));
-@endphp
-
-<div aria-hidden="true" class="hidden">
-    {!! $svgSprite !!}
-</div>
-
 <section class="section-form">
     <x-header-navigation class="breadcrumb-form">
         <x-slot name="title">
@@ -39,16 +31,11 @@
                     type="button"
                     class="button-sync flex items-center gap-2"
             >
-                <svg width="16" height="17">
-                    <use xlink:href="#svg-key"></use>
-                </svg>
+                @icon('key', 'w-4 h-4')
                 {{ __('forms.complete_the_interaction_and_sign') }}
-                <svg width="16" height="17">
-                    <use xlink:href="#svg-arrow-right"></use>
-                </svg>
+                @icon('arrow-right', 'w-4 h-4')
             </button>
         </div>
-
     </form>
 
     <x-messages />

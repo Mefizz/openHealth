@@ -31,9 +31,7 @@
 
         <div class="form-row-modal">
             <div class="form-group group" onclick="document.getElementById('periodStart').showPicker()">
-                <svg class="svg-input left-2.5" width="16" height="16">
-                    <use xlink:href="#svg-clock"></use>
-                </svg>
+                @icon('mingcute-time-fill', 'svg-input left-2.5')
                 <input wire:model="form.encounter.period.start"
                        @input="$event.target.blur()"
                        type="time"
@@ -55,9 +53,7 @@
             </div>
 
             <div class="form-group group" onclick="document.getElementById('periodEnd').showPicker()">
-                <svg class="svg-input left-2.5" width="16" height="16">
-                    <use xlink:href="#svg-clock"></use>
-                </svg>
+                @icon('mingcute-time-fill', 'svg-input left-2.5')
                 <input wire:model="form.encounter.period.end"
                        @input="$event.target.blur()"
                        type="time"

@@ -19,26 +19,6 @@
                                wire:model.live="form.uploadedDocuments.{{ $key }}"
                                accept=".jpeg,.jpg"
                         >
-
-                        @if(isset($patientRequest->uploadedDocuments[$key]) && !$errors->has("form.uploadedDocuments.$key"))
-                            @if(!isset($uploadedFiles[$key]) || $uploadedFiles[$key] === false)
-                                <button class="flex items-center gap-1"
-                                        wire:click.prevent="deleteDocument({{ $key }})"
-                                >
-                                    <svg width="14" height="14" class="text-red-600">
-                                        <use xlink:href="#svg-trash"></use>
-                                    </svg>
-                                    <span class="font-medium text-red-600 text-sm">{{ __('forms.delete') }}</span>
-                                </button>
-                            @else
-                                <button class="flex items-center gap-1">
-                                    <svg width="14" height="14">
-                                        <use xlink:href="#svg-check-circle"></use>
-                                    </svg>
-                                    <span class="font-medium text-green-400 text-sm">{{ __('Відправлено') }}</span>
-                                </button>
-                            @endif
-                        @endif
                     </div>
 
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-300">

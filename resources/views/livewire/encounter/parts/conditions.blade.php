@@ -242,7 +242,7 @@
                                         {{ __('forms.nothing_found') }}
                                     </p>
 
-                                    <x-forms.loading/>
+                                    <x-forms.loading />
                                 </div>
 
                                 <div>
@@ -332,11 +332,7 @@
                                 </div>
 
                                 <div class="relative">
-                                    <svg width="20" height="20"
-                                         class="svg-input absolute left-2.5 !top-2/3 transform -translate-y-1/2 pointer-events-none"
-                                    >
-                                        <use xlink:href="#svg-calendar-week"></use>
-                                    </svg>
+                                    @icon('calendar-week', 'svg-input absolute left-2.5 !top-2/3 transform -translate-y-1/2 pointer-events-none')
                                     <label for="onsetDate" class="label-modal">
                                         {{ __('forms.start_date') }}
                                     </label>
@@ -358,11 +354,7 @@
                                 </div>
 
                                 <div class="relative" onclick="document.getElementById('onsetTime').showPicker()">
-                                    <svg width="20" height="20"
-                                         class="svg-input absolute left-2.5 !top-2/3 transform -translate-y-1/2 pointer-events-none"
-                                    >
-                                        <use xlink:href="#svg-clock"></use>
-                                    </svg>
+                                    @icon('mingcute-time-fill', 'svg-input left-2.5 !top-2/3 transform -translate-y-1/2')
                                     <label for="onsetTime" class="label-modal">
                                         {{ __('forms.start_time') }}
                                     </label>
@@ -385,11 +377,7 @@
                                 </div>
 
                                 <div class="relative">
-                                    <svg width="20" height="20"
-                                         class="svg-input absolute left-2.5 !top-2/3 transform -translate-y-1/2 pointer-events-none"
-                                    >
-                                        <use xlink:href="#svg-calendar-week"></use>
-                                    </svg>
+                                    @icon('calendar-week', 'svg-input absolute left-2.5 !top-2/3 transform -translate-y-1/2 pointer-events-none')
                                     <label for="assertedDate" class="label-modal">
                                         {{ __('patients.entry_date') }}
                                     </label>
@@ -405,11 +393,7 @@
                                 </div>
 
                                 <div class="relative" onclick="document.getElementById('assertedTime').showPicker()">
-                                    <svg width="20" height="20"
-                                         class="svg-input absolute left-2.5 !top-2/3 transform -translate-y-1/2 pointer-events-none"
-                                    >
-                                        <use xlink:href="#svg-clock"></use>
-                                    </svg>
+                                    @icon('mingcute-time-fill', 'svg-input left-2.5 !top-2/3 transform -translate-y-1/2')
                                     <label for="assertedTime" class="label-modal">
                                         {{ __('patients.entry_time') }}
                                     </label>

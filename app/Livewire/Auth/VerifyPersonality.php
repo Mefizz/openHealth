@@ -61,8 +61,7 @@ class VerifyPersonality extends Component
          * We no longer check for `whereNull('user_id')` as this column
          * was removed from the 'parties' table during refactoring.
          */
-        $party = Party::query()
-            ->where('tax_id', $taxId)
+        $party = Party::whereTaxId($taxId)
             ->whereRaw('LOWER(TRIM(last_name)) = ?', [mb_strtolower($lastName)])
             ->whereRaw('LOWER(TRIM(first_name)) = ?', [mb_strtolower($firstName)])
             ->whereRaw('LOWER(TRIM(second_name)) = ?', [mb_strtolower($secondName)])
@@ -99,14 +98,14 @@ class VerifyPersonality extends Component
         $legalEntity = LegalEntity::whereUuid($legalEntityUuid)->firstOrFail();
 
         $affectedRows = $party->employees()
-            ->where('legal_entity_id', $legalEntity->id)
+            ->whereLegalEntityId($legalEntity->id)
             ->whereNull('user_id')
             ->update(['user_id' => $user->id]);
 
         if ($affectedRows === 0) {
             $isAlreadyVerified = $party->employees()
-                ->where('legal_entity_id', $legalEntity->id)
-                ->where('user_id', $user->id)
+                ->whereLegalEntityId($legalEntity->id)
+                ->whereUserId($user->id)
                 ->exists();
 
             if (!$isAlreadyVerified) {

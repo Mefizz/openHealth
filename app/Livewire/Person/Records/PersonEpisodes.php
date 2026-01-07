@@ -10,6 +10,6 @@ class PersonEpisodes extends BasePatientComponent
 {
     public function render(): View
     {
-        return view('livewire.person.records.patient-episodes');
+        return view('livewire.person.records.episodes');
     }
 }

@@ -92,8 +92,11 @@ class PersonUpdate extends PersonComponent
         $this->showAuthMethodModal = true;
 
         // Check if all auth methods has IDs
-        $allHaveIdentifier = collect($this->authenticationMethods)
-            ->every(static fn (array $method) => !empty(data_get($method, 'uuid')) || !empty(data_get($method, 'id')));
+        $authMethods = collect($this->authenticationMethods);
+        $allHaveIdentifier = $authMethods->isNotEmpty() &&
+            $authMethods->every(
+                static fn (array $method) => !empty(data_get($method, 'uuid')) || !empty(data_get($method, 'id'))
+            );
 
         // If not, get all and update it
         if (!$allHaveIdentifier) {
