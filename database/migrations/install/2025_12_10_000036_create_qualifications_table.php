@@ -16,8 +16,8 @@ return new class extends Migration
             $table->string('type');
             $table->string('institution_name');
             $table->string('speciality');
-            $table->date('issued_date');
-            $table->string('certificate_number');
+            $table->date('issued_date')->nullable(); // nullable because if
+            $table->string('certificate_number')->nullable();
             $table->date('valid_to')->nullable();
             $table->string('additional_info')->nullable();
             $table->morphs('qualificationable');
