@@ -80,7 +80,7 @@ class EquipmentRepository
         DB::transaction(static function () use ($items) {
 
             $toUpsert = collect($items)->map(static function (array $item) {
-                Arr::except($item, ['names']);
+                unset($item['names']);
                 $item['properties'] = isset($item['properties']) ? json_encode($item['properties']) : null;
                 return $item;
             });
