@@ -189,19 +189,54 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
      */
     protected function mapRevisionData(array $flatData): array
     {
+        // 1.Basic Blocks
         $employeeChunk = Arr::only($flatData, ['position', 'employee_type', 'start_date', 'end_date', 'division_id']);
-        $partyChunk = Arr::only($flatData, ['last_name', 'first_name', 'second_name', 'gender', 'birth_date', 'tax_id', 'no_tax_id', 'email', 'working_experience', 'about_myself']);
+        $partyChunk = Arr::only(
+            $flatData,
+            ['last_name', 'first_name', 'second_name', 'gender', 'birth_date', 'tax_id', 'no_tax_id', 'email', 'working_experience', 'about_myself']
+        );
         $documentsChunk = $flatData['documents'] ?? [];
         $phonesChunk = $flatData['phones'] ?? [];
-        $doctorChunk = $flatData['doctor'] ?? [];
 
-        return [
+        // 2. Professional Data Block (Doctor/Admin)
+        // On the frontend, the data is still in 'doctor', so we take it from there
+        $rawProfessionalData = $flatData['doctor'] ?? [];
+
+        // Determining the right key for eHealth depending on the type of employee
+        $employeeType    = $flatData['employee_type'] ?? '';
+        $professionalKey = match ($employeeType) {
+            'MED_ADMIN' => 'med_admin',
+            'PHARMACIST' => 'pharmacist',
+            default => 'doctor', // For DOCTOR, SPECIALIST, ASSISTANT
+        };
+
+        // Normalize data (arrays instead of objects, educations instead of education)
+        $professionalChunk = [];
+        if (!empty($rawProfessionalData)) {
+            $professionalChunk = [
+                'educations' => array_values(
+                    $rawProfessionalData['educations'] ?? $rawProfessionalData['education'] ?? []
+                ),
+                'specialities' => array_values($rawProfessionalData['specialities'] ?? []),
+                'qualifications' => array_values($rawProfessionalData['qualifications'] ?? []),
+                'science_degree' => $rawProfessionalData['science_degree'] ?? null,
+            ];
+        }
+
+        // 3. Forming the final array
+        $result = [
             'employee_request_data' => $employeeChunk,
             'party' => $partyChunk,
             'documents' => $documentsChunk,
             'phones' => $phonesChunk,
-            'doctor' => $doctorChunk,
         ];
+
+        // Add a professional unit ONLY under the correct key
+        if (!empty($professionalChunk)) {
+            $result[$professionalKey] = $professionalChunk;
+        }
+
+        return $result;
     }
 
     private function handleEHealthResponseException(EHealthResponseException $e): void

@@ -173,7 +173,7 @@ class Employee extends EHealthRequest
         if (!empty($employeeTypeKey)) {
             $rules[$employeeTypeKey] = 'required_if:employee_type,' . $doctorTypes . '|array';
 
-            $rules["{$employeeTypeKey}.specialities"] = "required_with:{$employeeTypeKey}|array|min:1";
+            $rules["{$employeeTypeKey}.specialities"] = "nullable|array";
             $rules["{$employeeTypeKey}.specialities.*.speciality"] = "required|string";
             $rules["{$employeeTypeKey}.specialities.*.speciality_officio"] = "required|boolean";
             $rules["{$employeeTypeKey}.specialities.*.attestation_date"] = "required|date_format:Y-m-d";
@@ -204,7 +204,7 @@ class Employee extends EHealthRequest
             $rules["{$employeeTypeKey}.qualifications.*.type"] = "required_with:{$employeeTypeKey}.qualifications|string";
             $rules["{$employeeTypeKey}.qualifications.*.institution_name"] = "required_with:{$employeeTypeKey}.qualifications|string";
             $rules["{$employeeTypeKey}.qualifications.*.speciality"] = "required_with:{$employeeTypeKey}.qualifications|string";
-            $rules["{$employeeTypeKey}.qualifications.*.issued_date"] = "required_with:{$employeeTypeKey}.qualifications|date_format:Y-m-d";
+            $rules["{$employeeTypeKey}.qualifications.*.issued_date"] = "nullable|date_format:Y-m-d";
             $rules["{$employeeTypeKey}.qualifications.*.certificate_number"] = "required_with:{$employeeTypeKey}.qualifications|string";
             //            $rules["{$employeeTypeKey}.qualifications.*.valid_to"] = "nullable|date_format:Y-m-d|after_or_equal:{$employeeTypeKey}.qualifications.*.issued_date";
             $rules["{$employeeTypeKey}.qualifications.*.valid_to"] = "nullable|date_format:Y-m-d";
