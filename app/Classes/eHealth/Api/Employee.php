@@ -173,13 +173,13 @@ class Employee extends EHealthRequest
         if (!empty($employeeTypeKey)) {
             $rules[$employeeTypeKey] = 'required_if:employee_type,' . $doctorTypes . '|array';
 
-            $rules["{$employeeTypeKey}.specialities"]                      = "nullable|array";
-            $rules["{$employeeTypeKey}.specialities.*.speciality"]         = "required|string";
+            $rules["{$employeeTypeKey}.specialities"] = "nullable|array";
+            $rules["{$employeeTypeKey}.specialities.*.speciality"] = "required|string";
             $rules["{$employeeTypeKey}.specialities.*.speciality_officio"] = "required|boolean";
             $rules["{$employeeTypeKey}.specialities.*.attestation_date"]   = "required|date_format:Y-m-d";
             $rules["{$employeeTypeKey}.specialities.*.attestation_name"]   = "required|string";
             $rules["{$employeeTypeKey}.specialities.*.certificate_number"] = "required|string";
-            $rules["{$employeeTypeKey}.specialities.*.level"]              = "required|string";
+            $rules["{$employeeTypeKey}.specialities.*.level"] = "required|string";
             $rules["{$employeeTypeKey}.specialities.*.qualification_type"] = "required|string";
 
             $rules["{$employeeTypeKey}.educations"] = "required_with:{$employeeTypeKey}|array|min:1";
