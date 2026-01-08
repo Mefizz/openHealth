@@ -60,7 +60,34 @@
                                                     </template>
                                                 </div>
 
-                                                <div class="shrink-0">
+                                                <div class="flex items-center gap-4">
+                                                    <div x-data="{ open: false }" class="relative">
+                                                        <button @click="open = !open" type="button" class="text-blue-600 hover:underline text-sm whitespace-nowrap">
+                                                            {{ __('Змінити') }}
+                                                        </button>
+
+                                                        <div x-show="open"
+                                                             @click.away="open = false"
+                                                             style="display: none"
+                                                             class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl z-50 p-2 border border-gray-100">
+                                                            <button wire:click.prevent="setStep(1)"
+                                                                    @click="open = false"
+                                                                    class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded text-gray-700">
+                                                                Змінити номер телефона
+                                                            </button>
+                                                            <button wire:click.prevent="setStep(4)"
+                                                                    @click="open = false"
+                                                                    class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded text-gray-700">
+                                                                Змінити назву методу
+                                                            </button>
+                                                            <button wire:click.prevent="setStep(3)"
+                                                                    @click="open = false"
+                                                                    class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded text-gray-700">
+                                                                Деактивувати метод
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
                                                     <button wire:click="update"
                                                             class="button-primary whitespace-nowrap"
                                                             @click="selectedMethod = method.id || method.uuid; showAuthMethodModal = false"
@@ -204,10 +231,6 @@
                             <div class="flex justify-between items-center mt-8">
                                 <button type="button" @click="showAuthMethodModal = false" class="button-minor">
                                     {{ __('forms.cancel') }}
-                                </button>
-
-                                <button type="button" wire:click.prevent="setStep(1)" class="button-primary">
-                                    {{ __('Змінити метод автентифікації') }}
                                 </button>
                             </div>
                         </div>
