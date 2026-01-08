@@ -117,8 +117,7 @@ class EmployeeRequest extends EHealthRequest
      * Retrieves full details of a specific Employee Request by UUID.
      * Essential for obtaining the 'employee_id' field after approval.
      *
-     * @param string $uuid
-     *
+     * @param  string  $uuid
      * @return Response|PromiseInterface
      * @throws ConnectionException
      */
@@ -219,14 +218,26 @@ class EmployeeRequest extends EHealthRequest
             'party' => $partyPayload,
         ];
 
-        $doctorTypes = config('ehealth.doctors_type', []);
+        $medTypes = config('ehealth.medical_employees', []);
         $employeeType = Arr::get($nestedData, 'employee_request_data.employee_type');
 
-        if (in_array($employeeType, $doctorTypes, true)) {
-            $doctorData = Arr::get($nestedData, 'doctor');
+        if (in_array($employeeType, $medTypes, true)) {
+            // 1. We determine the correct key that eHealth expects
+            $targetKey = match ($employeeType) {
+                'MED_ADMIN' => 'med_admin',
+                'PHARMACIST' => 'pharmacist',
+                'SPECIALIST' => 'specialist',
+                'ASSISTANT' => 'assistant',
+                'LABORANT' => 'laborant',
+                default => 'doctor',
+            };
+
+            // 2.We get the data. They can be keyed 'doctor' (if so saved in the database)
+            $doctorData = Arr::get($nestedData, $targetKey) ?? Arr::get($nestedData, 'doctor');
+
+            // 3.Add to payload only if there is data
             if (!empty($doctorData)) {
-                $payloadKey = strtolower($employeeType);
-                $payload[$payloadKey] = $doctorData;
+                $payload[$targetKey] = $doctorData;
             }
         }
 

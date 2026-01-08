@@ -285,6 +285,7 @@ return [
             'education_degree' => ['EXPERT', 'MASTER', 'BACHELOR', 'JUNIOR_EXPERT'],
             'qualification_type' => ['INFORMATION_COURSES', 'STAZHUVANNYA'],
             'speciality_level' => ['FIRST', 'SECOND', 'HIGHEST', 'NOT_APPLICABLE'],
+            'speciality_qualification_type' => ['AWARDING', 'DEFENSE'],
         ],
         'NHS_ADMIN' => [
             'position' => ['P27', 'P28', 'P29', 'P30', 'P31', 'P237', 'P238', 'P239'],
