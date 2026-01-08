@@ -55,17 +55,31 @@ class EmployeeRequest extends EHealthRequest
     public function mapCreate(array $sourceData): array
     {
         $partyData = $sourceData['party'] ?? [];
-        $doctorData = $sourceData['doctor'] ?? [];
+
+        // 1. Determining where professional data lies (Strategy Pattern)
+        // The EHR can return data in one of these keys depending on the type of
+        $professionalData = $sourceData['doctor']
+            ?? $sourceData['med_admin']
+            ?? $sourceData['pharmacist']
+            ?? $sourceData['specialist'] // Just in case, although it is usually a doctor
+            ?? [];
+
+        // 2.  sometimes the API returns education (singular) instead of educations (plural)
+        $educations = $professionalData['educations']
+            ?? $professionalData['education'] // fallback for old/crooked entries
+            ?? [];
 
         return [
             'employee' => Arr::get($sourceData, 'employee_request_data', []),
             'party' => Arr::except($partyData, ['documents', 'phones', 'email']),
             'documents' => $sourceData['documents'] ?? [],
             'phones' => $sourceData['phones'] ?? [],
-            'educations' => $doctorData['educations'] ?? [],
-            'specialities' => $doctorData['specialities'] ?? [],
-            'qualifications' => $doctorData['qualifications'] ?? [],
-            'science_degree' => $doctorData['science_degree'] ?? null,
+
+            // We use the found universal data
+            'educations' => $educations,
+            'specialities' => $professionalData['specialities'] ?? [],
+            'qualifications' => $professionalData['qualifications'] ?? [],
+            'science_degree' => $professionalData['science_degree'] ?? null,
         ];
     }
 
