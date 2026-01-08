@@ -133,7 +133,7 @@ class Employee extends EHealthRequest
         $transformedData = self::replaceEHealthPropNames($response->getData());
 
         $employeeTypeKey = strtolower($transformedData['employee_type'] ?? '');
-        $doctorTypes = implode(',', config('ehealth.doctors_type', []));
+        $medTypes = implode(',', config('ehealth.medical_employees', []));
 
         $rules = [
             'uuid' => 'required|uuid',
@@ -171,7 +171,7 @@ class Employee extends EHealthRequest
         ];
 
         if (!empty($employeeTypeKey)) {
-            $rules[$employeeTypeKey] = 'required_if:employee_type,' . $doctorTypes . '|array';
+            $rules[$employeeTypeKey] = 'required_if:employee_type,' . $medTypes . '|array';
 
             $rules["{$employeeTypeKey}.specialities"] = "nullable|array"; // TODO temporary fix for data inconsistency with eHealth
             $rules["{$employeeTypeKey}.specialities.*.speciality"] = "required|string";
