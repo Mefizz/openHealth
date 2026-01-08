@@ -59,11 +59,10 @@ class Employee extends BaseEmployee
         return $this->morphMany(Speciality::class, 'specialityable');
     }
 
-    // --- EMPLOYEE-SPECIFIC SCOPES ---
-
-    public function scopeDoctor(Builder $query): Builder
+    #[Scope]
+    public function doctor(Builder $query): Builder
     {
-        return $query->where('employee_type', 'DOCTOR');
+        return $query->whereEmployeeType('DOCTOR');
     }
 
     public function scopeEmployeeInstance(Builder $query, int $userId, string $legalEntityUUID, array $roles, bool $isInclude = false): void
@@ -91,6 +90,11 @@ class Employee extends BaseEmployee
         return $query->whereIn('uuid', $uuids);
     }
 
+    #[Scope]
+    public function filterByLegalEntityId(Builder $query, int $legalEntityId): Builder
+    {
+        return $query->whereLegalEntityId($legalEntityId);
+    }
 
     #[Scope]
     protected function activeSpecialists(Builder $query, int $legalEntityId): Builder
