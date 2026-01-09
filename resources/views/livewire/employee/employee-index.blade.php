@@ -298,6 +298,7 @@
                                 @php
 
                                     $emailsCollection = $party->employees
+                                        ->where('legal_entity_id', $currentLegalEntityId)
                                         ->map(fn($emp) => $emp->user?->email)
                                         ->filter()
                                         ->unique();
