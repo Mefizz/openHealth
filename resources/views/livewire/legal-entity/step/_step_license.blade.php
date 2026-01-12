@@ -52,7 +52,7 @@
             @endif
 
             <label for="licenseType" class="label z-10">
-                {{ __('licenses.type') }}
+                {{ __('licenses.type.label') }}
             </label>
         </div>
 

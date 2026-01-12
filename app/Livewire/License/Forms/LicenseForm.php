@@ -80,7 +80,7 @@ class LicenseForm extends Form
      */
     protected function validationAttributes(): array
     {
-        return ['type' => __('licenses.type')];
+        return ['type' => __('licenses.type.label')];
     }
 
     /**

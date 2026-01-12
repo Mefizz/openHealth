@@ -66,7 +66,6 @@
                             name="specialityType"
                             id="specialityType"
                             class="input-select @error('form.specialityType') input-error @enderror"
-                            required
                             x-bind:disabled="isDisabled"
                     >
                         <option value="" selected>{{ __('forms.select') }}</option>
@@ -137,7 +136,7 @@
                     >
                         <option value="" selected>{{ __('forms.select') }}</option>
                         @foreach($licenses as $key => $license)
-                            <option value="{{ $license['uuid'] }}">{{ $license['type'] }}</option>
+                            <option value="{{ $license['uuid'] }}">{{ $license['type']->label() }}</option>
                         @endforeach
                     </select>
 

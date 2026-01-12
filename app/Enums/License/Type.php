@@ -17,9 +17,9 @@ enum Type: string
     public function label(): string
     {
         return match ($this) {
-            self::MSP => __('licenses.status.msp'),
-            self::PHARMACY => __('licenses.status.pharmacy'),
-            self::PHARMACY_DRUGS => __('licenses.status.pharmacy_drugs')
+            self::MSP => __('licenses.type.msp'),
+            self::PHARMACY => __('licenses.type.pharmacy'),
+            self::PHARMACY_DRUGS => __('licenses.type.pharmacy_drugs')
         };
     }
 }

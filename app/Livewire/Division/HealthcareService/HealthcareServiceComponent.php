@@ -15,6 +15,7 @@ use App\Traits\FormTrait;
 use App\Traits\WorkTimeUtilities;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
@@ -31,7 +32,7 @@ class HealthcareServiceComponent extends Component
 
     public int $divisionId;
 
-    public array $licenses;
+    public Collection $licenses;
 
     public bool $working = false;
 
@@ -74,7 +75,7 @@ class HealthcareServiceComponent extends Component
         $this->form->divisionId = $division->uuid;
         $this->divisionId = $division->id;
 
-        $this->licenses = $legalEntity->licenses()->get(['id', 'uuid', 'type'])->toArray();
+        $this->licenses = $legalEntity->licenses()->get(['id', 'uuid', 'type']);
     }
 
     /**
