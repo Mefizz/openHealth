@@ -35,7 +35,7 @@
         <div class="form-row-2">
             <div class="form-group group">
                 <label for="type" class="label">
-                    {{ __('licenses.type') }}
+                    {{ __('licenses.type.label') }}
                 </label>
                 <input value="{{ $license->type->label() }}"
                        type="text"

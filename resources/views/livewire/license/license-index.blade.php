@@ -35,7 +35,7 @@
                         class="w-full min-w-[1100px] text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
-                            <th scope="col" class="px-6 py-3">{{ __('licenses.type') }}</th>
+                            <th scope="col" class="px-6 py-3">{{ __('licenses.type.label') }}</th>
                             <th scope="col" class="px-6 py-3">{{ __('licenses.active_from_date_label') }}</th>
                             <th scope="col" class="px-6 py-3">{{ __('licenses.expiry_date_label') }}</th>
                             <th scope="col" class="px-6 py-3">{{ __('licenses.activity') }}</th>

@@ -13,6 +13,7 @@ use App\Rules\InDictionary;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Exists;
 use Illuminate\Validation\ValidationException;
 use Livewire\Form;
 
@@ -49,6 +50,10 @@ class HealthcareServiceForm extends Form
         $categoriesConfigKey = 'healthcare_service_' . strtolower(legalEntity()->type->name) . '_categories';
         $providingConditionConfigKey = 'legal_entity_' . strtolower(legalEntity()->type->name) . '_providing_conditions';
 
+        $categoryCode = Arr::get($this->category, 'coding.0.code');
+        // Check for HEALTHCARE_SERVICE_<$.category>_LICENSE_TYPE, see: https://e-health-ua.atlassian.net/wiki/spaces/EH/pages/17088643146/Configurations+for+Healthcare+services
+        $isLicenseRequiredForType = in_array($categoryCode, [Type::PHARMACY->value, Type::PHARMACY_DRUGS->value], true);
+
         return array_merge([
             'divisionId' => ['required', 'uuid', Rule::exists('divisions', 'uuid')->where('status', Status::ACTIVE)],
             'category' => ['array', 'required'],
@@ -63,7 +68,8 @@ class HealthcareServiceForm extends Form
                 'nullable',
                 'string',
                 new InDictionary('SPECIALITY_TYPE'),
-                'required_if:category.coding.0.code,' . Type::MSP->value
+                'required_if:category.coding.0.code,' . Type::MSP->value,
+                'prohibited_unless:category.coding.0.code,' . Type::MSP->value
             ],
             'providingCondition' => [
                 'required',
@@ -86,7 +92,7 @@ class HealthcareServiceForm extends Form
                 Rule::exists('licenses', 'uuid')->where('is_active', true)
                     ->where(function (QueryBuilder $query) {
                         $query->where('expiry_date', '>=', now())->orWhereNull('expiry_date');
-                    }),
+                    })->when($isLicenseRequiredForType, fn (Exists $rule) => $rule->where('type', $categoryCode)),
                 'required_if:category.coding.0.code,' . Type::PHARMACY->value . ',' . Type::PHARMACY_DRUGS->value,
                 'prohibited_if:category.coding.0.code,' . Type::MSP->value
             ]

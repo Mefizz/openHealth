@@ -74,7 +74,7 @@
                 @endforeach
             </ul>
 
-            <label class="label" for="licenseType">{{ __('licenses.type') }}</label>
+            <label class="label" for="licenseType">{{ __('licenses.type.label') }}</label>
             <input type="hidden" name="licenseType" :value="selected">
 
             @error('form.type')
