@@ -22,7 +22,7 @@
                 >
                     @if($authStep === 0)
                         <div wire:key="auth-step-0">
-                            <legend class="legend mb-8">{{ __('Методи автентифікації') }}</legend>
+                            <legend class="legend mb-8">{{ __('patients.authentication_methods') }}</legend>
 
                             <template x-if="!authenticationMethods || authenticationMethods.length === 0">
                                 <div class="bg-red-100 rounded-lg mb-8">
@@ -69,20 +69,20 @@
                                                         <div x-show="open"
                                                              @click.away="open = false"
                                                              style="display: none"
-                                                             class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl z-50 p-2 border border-gray-100">
-                                                            <button wire:click.prevent="setStep(1)"
-                                                                    @click="open = false"
-                                                                    class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded text-gray-700">
-                                                                Змінити номер телефона
-                                                            </button>
-                                                            <button wire:click.prevent="setStep(4)"
-                                                                    @click="open = false"
-                                                                    class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded text-gray-700">
-                                                                Змінити назву методу
-                                                            </button>
+                                                             class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl z-50 p-2 border border-gray-100"
+                                                        >
+                                                            <template x-if="method.type === 'OTP'">
+                                                                <button wire:click.prevent="setStep(1)"
+                                                                        @click="open = false"
+                                                                        class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded text-gray-700"
+                                                                >
+                                                                    Змінити номер телефона
+                                                                </button>
+                                                            </template>
                                                             <button wire:click.prevent="setStep(3)"
                                                                     @click="open = false"
-                                                                    class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded text-gray-700">
+                                                                    class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded text-gray-700"
+                                                            >
                                                                 Деактивувати метод
                                                             </button>
                                                         </div>
@@ -187,11 +187,11 @@
                                                             <div class="form-row-2">
                                                                 <div class="form-group"
                                                                      x-data="{
-                                                                     documentLabels: @js(__('patients.documents')),
-                                                                     getDocumentLabel(type) {
-                                                                         return this.documentLabels[type?.toLowerCase()] ?? type
-                                                                     }
-                                                                 }"
+                                                                         documentLabels: @js(__('patients.documents')),
+                                                                         getDocumentLabel(type) {
+                                                                             return this.documentLabels[type?.toLowerCase()] ?? type
+                                                                         }
+                                                                     }"
                                                                 >
                                                                     <label for="taxId" class="label-modal">
                                                                         {{ __('forms.document_type') }}

@@ -143,15 +143,35 @@ class Person extends Request
      * Adding an authentication method to an existing person, update authentication method and delete it.
      *
      * @param  string  $id
-     * @param  array  $query
+     * @param  array  $data
      * @return PromiseInterface|EHealthResponse
      * @throws ConnectionException|EHealthValidationException|EHealthResponseException
      *
      * @see https://uaehealthapi.docs.apiary.io/#reference/public.-medical-service-provider-integration-layer/persons/create-authentication-method-request
      */
-    public function createAuthMethod(string $id, array $query): PromiseInterface|EHealthResponse
+    public function createAuthMethod(string $id, array $data): PromiseInterface|EHealthResponse
     {
-        return $this->post(self::URL . "/$id/authentication_method_requests", $query);
+        $this->setValidator($this->validateCreateAuthMethod(...));
+
+        return $this->post(self::URL . "/$id/authentication_method_requests", $data);
+    }
+
+    /**
+     * Approve previously created Authentication method Request.
+     *
+     * @param  string  $id
+     * @param  string  $requestId
+     * @param  array{verification_code?: int}  $data
+     * @return PromiseInterface|EHealthResponse
+     * @throws ConnectionException|EHealthValidationException|EHealthResponseException
+     *
+     * @see https://uaehealthapi.docs.apiary.io/#reference/public.-medical-service-provider-integration-layer/persons/approve-authentication-method-request
+     */
+    public function approveAuthMethod(string $id, string $requestId, array $data): PromiseInterface|EHealthResponse
+    {
+        $this->setValidator($this->validateApproveAuthMethod(...));
+
+        return $this->patch(self::URL . "/$id/authentication_method_requests/$requestId/actions/approve", $data);
     }
 
     /**
@@ -159,15 +179,15 @@ class Person extends Request
      *
      * @param  string  $id
      * @param  string  $requestId
-     * @param  array  $query
+     * @param  array  $data
      * @return PromiseInterface|EHealthResponse
      * @throws ConnectionException|EHealthValidationException|EHealthResponseException
      *
      * @see https://uaehealthapi.docs.apiary.io/#reference/public.-medical-service-provider-integration-layer/persons/resend-authorization-otp-on-authentication-method-request
      */
-    public function resendAuthOtp(string $id, string $requestId, array $query = []): PromiseInterface|EHealthResponse
+    public function resendAuthOtp(string $id, string $requestId, array $data = []): PromiseInterface|EHealthResponse
     {
-        return $this->post(self::URL . "/$id/authentication_method_requests/$requestId/actions/resend_otp", $query);
+        return $this->post(self::URL . "/$id/authentication_method_requests/$requestId/actions/resend_otp", $data);
     }
 
     protected function validateSearch(EHealthResponse $response): array
@@ -210,6 +230,32 @@ class Person extends Request
             '*.value' => ['nullable', 'uuid'],
             '*.phone_number' => ['nullable', 'string', 'max:255']
         ]);
+
+        if ($validator->fails()) {
+            Log::channel('e_health_errors')->error('Validation failed: ' . implode(', ', $validator->errors()->all()));
+        }
+
+        return $validator->validate();
+    }
+
+    protected function validateCreateAuthMethod(EHealthResponse $response): array
+    {
+        $data = $response->getData();
+
+        $validator = Validator::make($data, ['id' => ['required', 'uuid']]);
+
+        if ($validator->fails()) {
+            Log::channel('e_health_errors')->error('Validation failed: ' . implode(', ', $validator->errors()->all()));
+        }
+
+        return $validator->validate();
+    }
+
+    protected function validateApproveAuthMethod(EHealthResponse $response): array
+    {
+        $data = $response->getData();
+
+        $validator = Validator::make($data, ['id' => ['required', 'uuid']]);
 
         if ($validator->fails()) {
             Log::channel('e_health_errors')->error('Validation failed: ' . implode(', ', $validator->errors()->all()));

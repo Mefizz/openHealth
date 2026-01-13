@@ -236,7 +236,6 @@ trait FormTrait
         Log::channel('db_errors')->error($message, [
             'class' => $caller['class'] ?? 'unknown_class',
             'method' => $caller['function'] ?? 'unknown_method',
-            'line' => $caller['line'] ?? 0,
             'error_message' => $exception->getMessage(),
             'file' => $exception->getFile(),
             'line_in_file' => $exception->getLine()

@@ -22,7 +22,7 @@
                      class="modal-content w-full max-w-4xl mx-auto"
                 >
                     <div class="text-end">
-                        <button @click="printContent"
+                        <button @click="printContent()"
                                 class="mb-6 underline font-medium text-sm cursor-pointer dark:text-white"
                         >
                             {{ __('patients.print_leaflet_for_patient') }}
