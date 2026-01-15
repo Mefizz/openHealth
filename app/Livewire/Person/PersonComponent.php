@@ -730,7 +730,7 @@ class PersonComponent extends Component
      *
      * @return void
      */
-    private function uploadDocuments(): void
+    protected function uploadDocuments(): void
     {
         $totalFiles = count($this->form->uploadedDocuments);
         // Check that all provided files were uploaded

@@ -40,29 +40,22 @@
                                     <template x-for="method in authenticationMethods" :key="method.uuid">
                                         <div class="fieldset border dark:border-white p-3 rounded space-y-3">
                                             <div class="flex items-start justify-between">
-                                                <div class="shrink">
-                                                    <template x-if="method.type === 'OFFLINE'">
-                                                        <h3 class="text-gray-900 dark:text-white font-bold">
-                                                            Автентифікація через документи
-                                                        </h3>
-                                                    </template>
-
-                                                    <template x-if="method.type === 'OTP'">
-                                                        <h3 class="text-gray-900 dark:text-white font-bold">
-                                                            Автентифікація через СМС
-                                                        </h3>
-                                                    </template>
-
-                                                    <template x-if="method.type === 'THIRD_PERSON'">
-                                                        <h3 class="text-gray-900 dark:text-white font-bold">
-                                                            Через законного представника
-                                                        </h3>
-                                                    </template>
+                                                <div class="shrink"
+                                                     x-data="{
+                                                         labels: @js(AuthenticationMethod::options()),
+                                                         prefix: '{{ __('forms.authentication') }}'
+                                                     }"
+                                                >
+                                                    <h3 class="text-gray-900 dark:text-white font-bold"
+                                                        x-text="`${prefix} ${labels[method.type] ?? method.type}`"
+                                                    ></h3>
                                                 </div>
 
                                                 <div class="flex items-center gap-4">
                                                     <div x-data="{ open: false }" class="relative">
-                                                        <button @click="open = !open" type="button" class="text-blue-600 hover:underline text-sm whitespace-nowrap">
+                                                        <button @click="open = !open" type="button"
+                                                                class="text-blue-600 hover:underline text-sm whitespace-nowrap"
+                                                        >
                                                             {{ __('Змінити') }}
                                                         </button>
 
@@ -71,7 +64,7 @@
                                                              style="display: none"
                                                              class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl z-50 p-2 border border-gray-100"
                                                         >
-                                                            <template x-if="method.type === 'OTP'">
+                                                            <template x-if="method.type === '{{ AuthenticationMethod::OTP->value }}'">
                                                                 <button wire:click.prevent="setStep(1)"
                                                                         @click="open = false"
                                                                         class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded text-gray-700"
@@ -79,6 +72,16 @@
                                                                     Змінити номер телефона
                                                                 </button>
                                                             </template>
+
+                                                            <template x-if="method.type === '{{ AuthenticationMethod::OFFLINE->value }}'">
+                                                                <button wire:click.prevent="setStep(1)"
+                                                                        @click="open = false"
+                                                                        class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded text-gray-700"
+                                                                >
+                                                                    Замінити метод на СМС
+                                                                </button>
+                                                            </template>
+
                                                             <button wire:click.prevent="setStep(3)"
                                                                     @click="open = false"
                                                                     class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded text-gray-700"
@@ -98,7 +101,7 @@
                                             </div>
 
                                             <div class="space-y-2">
-                                                <template x-if="method.type === 'OTP'">
+                                                <template x-if="method.type === '{{ AuthenticationMethod::OTP->value }}'">
                                                     <div class="space-y-4">
                                                         <label for="phoneNumber" class="label-modal">
                                                             {{ __('forms.phone_number') }}
@@ -114,9 +117,21 @@
                                                     </div>
                                                 </template>
 
-                                                <template x-if="method.type === 'THIRD_PERSON'">
+                                                <template x-if="method.type === '{{ AuthenticationMethod::THIRD_PERSON->value }}'">
                                                     <div class="space-y-4">
                                                         <div class="form-row-2">
+                                                            <div class="form-group">
+                                                                <label for="alias" class="label-modal">
+                                                                    {{ __('patients.alias') }}
+                                                                </label>
+                                                                <input type="text"
+                                                                       :value="method.alias"
+                                                                       class="input-modal"
+                                                                       name="alias"
+                                                                       readonly
+                                                                >
+                                                            </div>
+
                                                             <div class="form-group"
                                                                  x-data="{ endedAt: method.ehealthEndedAt || method.endedAt }"
                                                             >
@@ -138,21 +153,24 @@
                                                                        readonly
                                                                 >
                                                             </div>
+                                                        </div>
 
+                                                        <div class="form-row-2">
                                                             <div class="form-group">
-                                                                <label for="confidantPersonFullName" class="label-modal">
+                                                                <label for="confidantPersonFullName"
+                                                                       class="label-modal"
+                                                                >
                                                                     {{ __('patients.confidant_full_name') }}
                                                                 </label>
                                                                 <input type="text"
                                                                        :value="method.confidantPerson.name"
                                                                        class="input-modal"
+                                                                       id="confidantPersonFullName"
                                                                        name="confidantPersonFullName"
                                                                        readonly
                                                                 >
                                                             </div>
-                                                        </div>
 
-                                                        <div class="form-row-2">
                                                             <div class="form-group">
                                                                 <label for="taxId" class="label-modal">
                                                                     {{ __('forms.rnokpp') }}
@@ -167,7 +185,9 @@
                                                                        readonly
                                                                 >
                                                             </div>
+                                                        </div>
 
+                                                        <div class="form-row-2">
                                                             <div class="form-group">
                                                                 <label for="unzr" class="label-modal">
                                                                     {{ __('patients.unzr') }}
@@ -181,8 +201,8 @@
                                                             </div>
                                                         </div>
 
-                                                        <template x-for="document in method.confidantPerson.documentsPerson"
-                                                                  :key="method.uuid"
+                                                        <template :key="method.uuid"
+                                                                  x-for="document in method.confidantPerson.documentsPerson"
                                                         >
                                                             <div class="form-row-2">
                                                                 <div class="form-group"
@@ -193,14 +213,14 @@
                                                                          }
                                                                      }"
                                                                 >
-                                                                    <label for="taxId" class="label-modal">
+                                                                    <label for="documentType" class="label-modal">
                                                                         {{ __('forms.document_type') }}
                                                                         <span class="text-red-600"></span>
                                                                     </label>
                                                                     <input :value="getDocumentLabel(document.type)"
                                                                            type="text"
-                                                                           name="taxId"
-                                                                           id="taxId"
+                                                                           name="documentType"
+                                                                           id="documentType"
                                                                            class="input-modal"
                                                                            autocomplete="off"
                                                                            readonly
@@ -220,6 +240,23 @@
                                                                 </div>
                                                             </div>
                                                         </template>
+
+                                                        <div class="form-row-2">
+                                                            <div class="form-group">
+                                                                <label for="phoneNumber" class="label-modal">
+                                                                    {{ __('forms.phone_number') }}
+                                                                    <span class="text-red-600"></span>
+                                                                </label>
+                                                                <input :value="method.confidantPerson.phones.number"
+                                                                       type="tel"
+                                                                       name="phoneNumber"
+                                                                       id="phoneNumber"
+                                                                       class="input-modal"
+                                                                       autocomplete="off"
+                                                                       readonly
+                                                                >
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </template>
                                             </div>

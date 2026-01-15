@@ -154,7 +154,8 @@ class PersonUpdate extends PersonComponent
 
         try {
             $response = EHealth::person()->getAuthMethods($this->uuid);
-            $newAuthMethods = $response->validate();
+            $newAuthMethods = collect($response->validate())
+                ->map(fn (array $item) => Arr::except($item, 'confidant_person'));
             $person = Person::whereUuid($this->uuid)->firstOrFail();
             $incomingTypes = collect($newAuthMethods)->pluck('type')->filter()->values();
 
@@ -171,7 +172,7 @@ class PersonUpdate extends PersonComponent
                 );
             }
 
-            $this->authenticationMethods = Arr::toCamelCase($response->getData());
+            $this->authenticationMethods = Arr::toCamelCase($response->map($response->validate()));
         } catch (ConnectionException $exception) {
             $this->logConnectionError($exception, 'Error connecting when getting auth methods');
             Session::flash('error', "Виникла помилка. Відсутній зв'язок із ЕСОЗ");
@@ -324,6 +325,43 @@ class PersonUpdate extends PersonComponent
     }
 
     /**
+     * Approve changing auth method type from OFFLINE to OTP.
+     *
+     * @return void
+     */
+    public function approveChangingType(): void
+    {
+        try {
+            $this->uploadDocuments();
+            $response = EHealth::person()->approveAuthMethod($this->form->person['uuid'], $this->requestId);
+
+            // Update uuid and type with approved
+            Person::whereUuid($this->form->person['uuid'])->firstOrFail()
+                ->authenticationMethods()
+                ->whereType(AuthenticationMethod::OFFLINE)
+                ->update(['uuid' => $response->validate()['id'], 'type' => AuthenticationMethod::OTP]);
+
+            $this->showAuthMethodModal = false;
+            Session::flash('success', __('Метод автентифікації успішно змінений із документів на СМС'));
+        } catch (ConnectionException $exception) {
+            $this->logConnectionError($exception, 'Error when approving auth method request');
+            Session::flash('error', "Виникла помилка. Відсутній зв'язок із ЕСОЗ");
+
+            return;
+        } catch (EHealthValidationException|EHealthResponseException $exception) {
+            $this->logEHealthException($exception, 'Error when approving auth method request');
+
+            if ($exception instanceof EHealthValidationException) {
+                Session::flash('error', $exception->getFormattedMessage());
+            } else {
+                Session::flash('error', 'Помилка від ЕСОЗ: ' . $exception->getMessage());
+            }
+
+            return;
+        }
+    }
+
+    /**
      * Resend code to phone number.
      *
      * @return void
@@ -332,6 +370,7 @@ class PersonUpdate extends PersonComponent
     {
         try {
             EHealth::person()->resendAuthOtp($this->form->person['uuid'], $this->requestId);
+            Session::flash('success', __('Код був повторно надісланий на телефон'));
         } catch (ConnectionException $exception) {
             $this->logConnectionError($exception, 'Error when updating auth method request');
             Session::flash('error', "Виникла помилка. Відсутній зв'язок із ЕСОЗ");
@@ -447,7 +486,16 @@ class PersonUpdate extends PersonComponent
         try {
             $response = EHealth::person()->createAuthMethod($this->form->person['uuid'], $dataForApi);
             $this->requestId = $response->validate()['id'];
-            $this->authStep = 5;
+            $this->uploadedDocuments = $response->validate()['documents'];
+            $isOffline = collect($this->authenticationMethods)
+                ->contains('type', AuthenticationMethod::OFFLINE->value);
+
+            // If the change type from OTP to Offline, then show the step, request to change the phone number
+            if ($isOffline) {
+                $this->authStep = 5;
+            } else {
+                $this->authStep = 6;
+            }
         } catch (ConnectionException $exception) {
             $this->logConnectionError($exception, 'Error when creating auth method request');
             Session::flash('error', "Виникла помилка. Відсутній зв'язок із ЕСОЗ");

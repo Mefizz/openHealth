@@ -92,6 +92,7 @@ class Person extends Request
     public function getAuthMethods(string $id, array $query = []): PromiseInterface|EHealthResponse
     {
         $this->setValidator($this->validateAuthMethods(...));
+        $this->setMapper($this->mapAuthMethods(...));
 
         return $this->get(self::URL . "/$id/authentication_methods", $query);
     }
@@ -167,11 +168,14 @@ class Person extends Request
      *
      * @see https://uaehealthapi.docs.apiary.io/#reference/public.-medical-service-provider-integration-layer/persons/approve-authentication-method-request
      */
-    public function approveAuthMethod(string $id, string $requestId, array $data): PromiseInterface|EHealthResponse
+    public function approveAuthMethod(string $id, string $requestId, array $data = []): PromiseInterface|EHealthResponse
     {
         $this->setValidator($this->validateApproveAuthMethod(...));
 
-        return $this->patch(self::URL . "/$id/authentication_method_requests/$requestId/actions/approve", $data);
+        return $this->patch(
+            self::URL . "/$id/authentication_method_requests/$requestId/actions/approve",
+            $data ?: (object)$data
+        );
     }
 
     /**
@@ -228,7 +232,16 @@ class Person extends Request
             '*.uuid' => ['required', 'uuid'],
             '*.type' => ['nullable', 'string', 'max:255'],
             '*.value' => ['nullable', 'uuid'],
-            '*.phone_number' => ['nullable', 'string', 'max:255']
+            '*.phone_number' => ['nullable', 'string', 'max:255'],
+            '*.confidant_person.documents_person.*.number' => ['nullable', 'string', 'max:255'],
+            '*.confidant_person.documents_person.*.type' => ['nullable', new InDictionary('DOCUMENT_TYPE')],
+            '*.confidant_person.gender' => ['required', new InDictionary('GENDER')],
+            '*.confidant_person.name' => ['required', 'string', 'max:255'],
+            '*.confidant_person.uuid' => ['required', 'uuid'],
+            '*.confidant_person.no_tax_id' => ['required', 'boolean:strict'],
+            '*.confidant_person.phones.number' => ['nullable', 'string'],
+            '*.confidant_person.tax_id' => ['nullable', 'string'],
+            '*.confidant_person.unzr' => ['nullable', 'string']
         ]);
 
         if ($validator->fails()) {
@@ -241,8 +254,14 @@ class Person extends Request
     protected function validateCreateAuthMethod(EHealthResponse $response): array
     {
         $data = $response->getData();
+        $urgent = $response->getUrgent();
+        $forValidate = array_merge($data, $urgent);
 
-        $validator = Validator::make($data, ['id' => ['required', 'uuid']]);
+        $validator = Validator::make($forValidate, [
+            'id' => ['required', 'uuid'],
+            'documents.*.type' => ['nullable', new InDictionary('DOCUMENT_TYPE')],
+            'documents.*.url' => ['nullable', 'url']
+        ]);
 
         if ($validator->fails()) {
             Log::channel('e_health_errors')->error('Validation failed: ' . implode(', ', $validator->errors()->all()));
@@ -272,23 +291,38 @@ class Person extends Request
     {
         $replaced = [];
 
-        foreach ($properties as $index => $item) {
-            if (is_array($item)) {
-                $replacedItem = [];
-                foreach ($item as $key => $value) {
-                    $newKey = match ($key) {
-                        'id' => 'uuid',
-                        'ended_at' => 'ehealth_ended_at',
-                        default => $key
-                    };
-                    $replacedItem[$newKey] = $value;
-                }
-                $replaced[$index] = $replacedItem;
+        foreach ($properties as $key => $value) {
+            $newKey = match ($key) {
+                'id' => 'uuid',
+                'ended_at' => 'ehealth_ended_at',
+                default => $key
+            };
+
+            // Recursive for changing in confidant person id to uuid
+            if (is_array($value)) {
+                $replaced[$newKey] = self::replaceEHealthPropNames($value);
             } else {
-                $replaced[$index] = $item;
+                $replaced[$newKey] = $value;
             }
         }
 
         return $replaced;
+    }
+
+    /**
+     * Map validated data.
+     *
+     * @param  array  $validated
+     * @return array
+     */
+    protected function mapAuthMethods(array $validated): array
+    {
+        return collect($validated)->map(function ($method) {
+            if (!empty($method['ehealth_ended_at'])) {
+                $method['ehealth_ended_at'] = convertToAppDateFormat($method['ehealth_ended_at']);
+            }
+
+            return $method;
+        })->toArray();
     }
 }
