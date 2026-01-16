@@ -529,7 +529,7 @@ input:-webkit-autofill {
 @layer components {
     /* Section Navigation Component */
     .section-card {
-        @apply p-4 bg-white block border-gray-200 lg:mt-1.5 dark:bg-gray-800 dark:border-gray-700
+        @apply p-0 pl-4 bg-white block border-gray-200 lg:mt-1.5 dark:bg-gray-800 dark:border-gray-700
     }
 
     .page-header {
@@ -592,6 +592,58 @@ input:-webkit-autofill {
     .breadcrumb-item-text {
         @apply ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400
     }
+}
+/* SIDEBAR NAVIGATION STYLES */
+
+#drawer-navigation .menu-item {
+    @apply cursor-pointer flex items-center p-2 w-full text-base font-medium text-gray-900 rounded-lg transition-all duration-75 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700;
+}
+
+#drawer-navigation .submenu-item {
+    @apply flex items-center p-2 pl-6 w-full text-sm font-medium text-gray-900 rounded-lg transition-all duration-75 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700;
+}
+
+#drawer-navigation .menu-item-simple {
+    @apply flex items-center p-2 text-base font-medium text-gray-900 rounded-lg transition-all duration-75 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700;
+}
+
+#drawer-navigation .menu-item > svg:not(:last-child),
+#drawer-navigation .menu-item-simple > svg {
+    @apply w-6 h-6 min-w-[1.5rem] min-h-[1.5rem] flex-shrink-0 text-gray-500 transition-all duration-75 dark:text-gray-400;
+}
+
+#drawer-navigation .menu-item:hover > svg:not(:last-child),
+#drawer-navigation .menu-item-simple:hover > svg {
+    @apply text-gray-900 dark:text-white;
+}
+
+#drawer-navigation .submenu-item > svg {
+    @apply w-5 h-5 min-w-[1.25rem] min-h-[1.25rem] flex-shrink-0 text-gray-500 transition-all duration-75 dark:text-gray-400;
+}
+
+#drawer-navigation .submenu-item:hover > svg {
+    @apply text-gray-900 dark:text-white;
+}
+
+#drawer-navigation .menu-item > span {
+    @apply ml-3 whitespace-nowrap;
+}
+
+#drawer-navigation .menu-item > span:first-of-type {
+    @apply flex-1 text-left;
+}
+
+#drawer-navigation .menu-item-simple > span,
+#drawer-navigation .submenu-item > span {
+    @apply ml-3 whitespace-nowrap;
+}
+
+#drawer-navigation .menu-item > svg:last-child {
+    @apply w-6 h-6 min-w-[1.5rem] min-h-[1.5rem] flex-shrink-0 transition-transform duration-200;
+}
+
+#drawer-navigation ul svg {
+    @apply flex-shrink-0;
 }
 
 @media (min-width: 2048px) {

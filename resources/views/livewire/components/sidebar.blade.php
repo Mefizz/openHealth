@@ -16,14 +16,14 @@
                 <li x-data="{ open: false }" class="space-y-2">
                     <button @click="open = !open"
                             type="button"
-                            class="cursor-pointer flex items-center p-2 w-full text-base font-medium text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                            class="menu-item"
                             aria-controls="dropdown-legal-entity"
                             :aria-expanded="open"
                     >
-                        @icon('institution', 'w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white')
-                        <span class="flex-1 ml-3 text-left whitespace-nowrap">{{ __('forms.institution') }}</span>
+                        @icon('institution')
+                        <span>{{ __('forms.institution') }}</span>
 
-                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"
+                        <svg fill="currentColor" viewBox="0 0 20 20"
                              xmlns="http://www.w3.org/2000/svg"
                              :class="{ 'rotate-180': open, 'rotate-0': !open }"
                         >
@@ -46,13 +46,13 @@
                         x-transition:leave-end="transform opacity-0 scale-95"
                     >
                         @if(legalEntity())
-                            @can('viewAny', legalEntity())
+                            @can('access', legalEntity())
                                 <li>
                                     <a href="{{ route('legal-entity.details', [legalEntity()]) }}"
-                                       class="flex items-center p-2 pl-11 w-full text-base font-medium text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                                       class="submenu-item"
                                     >
-                                        @icon('details', 'w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white')
-                                        <span class="ml-3">{{ __('forms.details') }}</span>
+                                        @icon('details')
+                                        <span>{{ __('forms.details') }}</span>
                                     </a>
                                 </li>
                             @endcan
@@ -63,10 +63,10 @@
                                 @can('edit', [LegalEntity::class, legalEntity()])
                                     <li>
                                         <a href="{{ route('legal-entity.edit', [legalEntity()]) }}"
-                                        class="flex items-center p-2 pl-11 w-full text-base font-medium text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                                           class="submenu-item"
                                         >
-                                            @icon('edit2', 'w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white')
-                                            <span class="ml-3">{{ __('forms.edit') }}</span>
+                                            @icon('edit2')
+                                            <span>{{ __('forms.edit') }}</span>
                                         </a>
                                     </li>
                                 @endcan
@@ -77,10 +77,10 @@
                                     <a href="{{ legalEntity()
                                         ? route('legal-entity.create', [legalEntity()->id])
                                         : route('legal-entity.new.create') }}"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-medium text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                                       class="submenu-item"
                                     >
-                                        @icon('create', 'w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white')
-                                        <span class="ml-3">{{ __('forms.create_legal_entity') }}</span>
+                                        @icon('create')
+                                        <span>{{ __('forms.create_legal_entity') }}</span>
                                     </a>
                                 </li>
                             @endcanany
@@ -93,10 +93,10 @@
                 @can('viewAny', Division::class)
                     <li>
                         <a href="{{ route('division.index', [legalEntity()]) }}"
-                           class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                           class="menu-item-simple"
                         >
-                            @icon('divisions', 'w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white')
-                            <span class="ml-3">{{ __('forms.divisions') }}</span>
+                            @icon('divisions')
+                            <span>{{ __('forms.divisions') }}</span>
                         </a>
                     </li>
                 @endcan
@@ -104,63 +104,63 @@
                 @can('viewAny', HealthcareService::class)
                     <li>
                         <a href="{{ route('healthcare-service.index', [legalEntity()]) }}"
-                           class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                           class="menu-item-simple"
                         >
-                            @icon('settings', 'w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white')
-                            <span class="ml-3">{{ __('forms.services') }}</span>
+                            @icon('settings')
+                            <span>{{ __('forms.services') }}</span>
                         </a>
                     </li>
                 @endcan
 
-                    @if(Auth::user()->can('viewAny', Employee::class) || Auth::user()->can('viewAny', EmployeeRequest::class))
-                        <li x-data="{ open: {{ (request()->routeIs('employee.*') || request()->routeIs('party.verification.*')) ? 'true' : 'false' }} }" class="space-y-2">
-                            <button @click="open = !open"
-                                    type="button"
-                                    class="cursor-pointer flex items-center p-2 w-full text-base font-medium text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-                                    aria-controls="dropdown-employees"
-                                    :aria-expanded="open"
-                            >
-                                @icon('employees', 'w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white')
-                                <span class="flex-1 ml-3 text-left whitespace-nowrap">{{ __('forms.employees') }}</span>
+                @if(Auth::user()->can('viewAny', Employee::class) || Auth::user()->can('viewAny', EmployeeRequest::class))
+                    <li x-data="{ open: {{ (request()->routeIs('employee.*') || request()->routeIs('party.verification.*')) ? 'true' : 'false' }} }" class="space-y-2">
+                        <button @click="open = !open"
+                                type="button"
+                                class="menu-item"
+                                aria-controls="dropdown-employees"
+                                :aria-expanded="open"
+                        >
+                            @icon('employees')
+                            <span>{{ __('forms.employees') }}</span>
 
-                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"
-                                     xmlns="http://www.w3.org/2000/svg"
-                                     :class="{ 'rotate-180': open, 'rotate-0': !open }"
+                            <svg fill="currentColor" viewBox="0 0 20 20"
+                                 xmlns="http://www.w3.org/2000/svg"
+                                 :class="{ 'rotate-180': open, 'rotate-0': !open }"
+                            >
+                                <path fill-rule="evenodd"
+                                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                      clip-rule="evenodd"
+                                ></path>
+                            </svg>
+                        </button>
+
+                        <ul id="dropdown-employees"
+                            x-cloak
+                            class="py-2 space-y-2"
+                            x-show="open"
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="transform opacity-100 scale-100"
+                            x-transition:leave-end="transform opacity-0 scale-95"
+                        >
+                            <li>
+                                <a href="{{ route('employee.index', [legalEntity()]) }}"
+                                   class="submenu-item"
                                 >
-                                    <path fill-rule="evenodd"
-                                          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                          clip-rule="evenodd"
-                                    ></path>
-                                </svg>
-                            </button>
-
-                            <ul id="dropdown-employees"
-                                x-cloak
-                                class="py-2 space-y-2"
-                                x-show="open"
-                                x-transition:enter="transition ease-out duration-100"
-                                x-transition:enter-start="transform opacity-0 scale-95"
-                                x-transition:enter-end="transform opacity-100 scale-100"
-                                x-transition:leave="transition ease-in duration-75"
-                                x-transition:leave-start="transform opacity-100 scale-100"
-                                x-transition:leave-end="transform opacity-0 scale-95"
-                            >
-                                <li>
-                                    <a href="{{ route('employee.index', [legalEntity()]) }}"
-                                       class="flex items-center p-2 pl-11 w-full text-base font-medium text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-                                    >
-                                        @icon('positions', 'w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white')
-                                        <span class="ml-3">{{ __('forms.positions') }}</span>
-                                    </a>
-                                </li>
+                                    @icon('positions')
+                                    <span>{{ __('forms.positions') }}</span>
+                                </a>
+                            </li>
 
                                 {{-- Register of applications --}}
                                 @can('viewAny', \App\Models\Employee\EmployeeRequest::class)
                                     <li>
                                         <a href="{{ route('employee-request.index', [legalEntity()]) }}"
-                                           class="flex items-center p-2 pl-11 w-full text-base font-medium text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                                           class="submenu-item"
                                         >
-                                            @icon('pencil-clipboard', 'w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white')
+                                            @icon('pencil-clipboard',)
                                             <span class="ml-3">Реєстр заявок</span>
                                         </a>
                                     </li>
@@ -168,32 +168,32 @@
 
                                     <li>
                                         <a href="{{ route('employee-role.index', [legalEntity()]) }}"
-                                           class="flex items-center p-2 pl-11 w-full text-base font-medium text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                                           class="submenu-item"
                                         >
-                                            @icon('users-roles', 'w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white')
+                                            @icon('users-roles')
                                             <span class="ml-3">{{ __('employee-roles.label') }}</span>
                                         </a>
                                     </li>
 
-                                <li>
-                                    <a href="{{ route('party.verification.index', [legalEntity()]) }}"
-                                       class="flex items-center p-2 pl-11 w-full text-base font-medium text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-                                    >
-                                        @icon('verifications', 'w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white')
-                                        <span class="ml-3">{{ __('forms.verifications') }}</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    @endif
+                            <li>
+                                <a href="{{ route('party.verification.index', [legalEntity()]) }}"
+                                   class="submenu-item"
+                                >
+                                    @icon('verifications')
+                                    <span>{{ __('forms.verifications') }}</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                @endif
 
                 @can('viewAny', Contract::class)
                     <li>
                         <a href="{{ route('contract.index', [legalEntity()]) }}"
-                           class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                           class="menu-item-simple"
                         >
-                            @icon('contracts', 'w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white')
-                            <span class="ml-3">{{ __('forms.contracts') }}</span>
+                            @icon('contracts')
+                            <span>{{ __('forms.contracts') }}</span>
                         </a>
                     </li>
                 @endcan
@@ -201,10 +201,10 @@
                 @can('viewAny', License::class)
                     <li>
                         <a href="{{ route('license.index', [legalEntity()]) }}"
-                           class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                           class="menu-item-simple"
                         >
-                            @icon('licenses', 'w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white')
-                            <span class="ml-3">{{ __('forms.licenses') }}</span>
+                            @icon('licenses')
+                            <span>{{ __('forms.licenses') }}</span>
                         </a>
                     </li>
                 @endcan
@@ -212,10 +212,10 @@
                 @if(Auth::user()->can('viewAny', Declaration::class) || Auth::user()->can('viewAny', DeclarationRequest::class))
                     <li>
                         <a href="{{ route('declaration.index', [legalEntity()]) }}"
-                           class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                           class="menu-item-simple"
                         >
-                            @icon('declaration', 'w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white')
-                            <span class="ml-3">{{ __('forms.declarations') }}</span>
+                            @icon('declaration')
+                            <span>{{ __('forms.declarations') }}</span>
                         </a>
                     </li>
                 @endif
@@ -223,10 +223,10 @@
                 @if(Auth::user()->can('viewAny', Person::class) || Auth::user()->can('viewAny', PersonRequest::class))
                     <li>
                         <a href="{{ route('persons.index', [legalEntity()]) }}"
-                           class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                           class="menu-item-simple"
                         >
-                            @icon('patients', 'w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white')
-                            <span class="ml-3">{{ __('patients.patients') }}</span>
+                            @icon('patients')
+                            <span>{{ __('patients.patients') }}</span>
                         </a>
                     </li>
                 @endif
@@ -234,10 +234,10 @@
                 @can('viewAny', Equipment::class)
                     <li>
                         <a href="{{ route('equipment.index', [legalEntity()]) }}"
-                           class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                           class="menu-item-simple"
                         >
-                            @icon('equipment', 'w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white')
-                            <span class="ml-3">{{ __('equipments.label') }}</span>
+                            @icon('equipment')
+                            <span>{{ __('equipments.label') }}</span>
                         </a>
                     </li>
                 @endcan

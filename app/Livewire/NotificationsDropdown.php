@@ -8,6 +8,7 @@ use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Notifications\DatabaseNotificationCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 class NotificationsDropdown extends Component
@@ -16,7 +17,7 @@ class NotificationsDropdown extends Component
 
     public function mount(): void
     {
-        $this->notifications = Auth::user()->unreadNotifications;
+        $this->notifications = Auth::user()->unreadNotifications->take(4);
     }
 
     /**
@@ -30,10 +31,19 @@ class NotificationsDropdown extends Component
         $notification = Auth::user()?->unreadNotifications()->findOrFail($id);
         if ($notification) {
             $notification->markAsRead();
-            $this->notifications = $this->notifications->reject(
-                static fn (DatabaseNotification $notificationItem) => $notificationItem->id === $id
-            );
+            $this->notifications = Auth::user()->unreadNotifications->take(4);
         }
+    }
+
+    #[Computed]
+    public function totalUnreadCount(): int
+    {
+        return Auth::user()->unreadNotifications->count();
+    }
+
+    public function getNotificationIconType(DatabaseNotification $notification): string
+    {
+        return $notification->data['action'];
     }
 
     public function render(): View
