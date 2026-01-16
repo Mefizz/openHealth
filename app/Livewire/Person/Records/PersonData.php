@@ -6,6 +6,7 @@ namespace App\Livewire\Person\Records;
 
 use App\Classes\eHealth\EHealth;
 use App\Core\Arr;
+use App\Enums\Person\AuthenticationMethodAction;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
 use App\Livewire\Person\Records\Forms\PersonForm as Form;
@@ -171,7 +172,7 @@ class PersonData extends BasePatientComponent
      */
     public function deactivateAuthMethod(array $data): void
     {
-        $this->form->action = 'DEACTIVATE';
+        $this->form->action = AuthenticationMethodAction::DEACTIVATE->value;
         $this->form->authenticationMethod = $data;
 
         try {
@@ -210,7 +211,7 @@ class PersonData extends BasePatientComponent
      */
     public function createAuthMethod(array $data): void
     {
-        $this->form->action = 'INSERT';
+        $this->form->action = AuthenticationMethodAction::INSERT->value;
         $this->form->authenticationMethod = $data;
 
         try {

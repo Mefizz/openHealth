@@ -6,6 +6,7 @@ namespace App\Classes\eHealth\Api;
 
 use App\Classes\eHealth\EHealthRequest as Request;
 use App\Classes\eHealth\EHealthResponse;
+use App\Enums\Person\AuthenticationMethod;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
 use App\Rules\InDictionary;
@@ -92,6 +93,7 @@ class Person extends Request
     public function getAuthMethods(string $id, array $query = []): PromiseInterface|EHealthResponse
     {
         $this->setValidator($this->validateAuthMethods(...));
+        $this->setMapper($this->mapAuthMethods(...));
 
         return $this->get(self::URL . "/$id/authentication_methods", $query);
     }
@@ -143,15 +145,38 @@ class Person extends Request
      * Adding an authentication method to an existing person, update authentication method and delete it.
      *
      * @param  string  $id
-     * @param  array  $query
+     * @param  array  $data
      * @return PromiseInterface|EHealthResponse
      * @throws ConnectionException|EHealthValidationException|EHealthResponseException
      *
      * @see https://uaehealthapi.docs.apiary.io/#reference/public.-medical-service-provider-integration-layer/persons/create-authentication-method-request
      */
-    public function createAuthMethod(string $id, array $query): PromiseInterface|EHealthResponse
+    public function createAuthMethod(string $id, array $data): PromiseInterface|EHealthResponse
     {
-        return $this->post(self::URL . "/$id/authentication_method_requests", $query);
+        $this->setValidator($this->validateCreateAuthMethod(...));
+
+        return $this->post(self::URL . "/$id/authentication_method_requests", $data);
+    }
+
+    /**
+     * Approve previously created Authentication method Request.
+     *
+     * @param  string  $id
+     * @param  string  $requestId
+     * @param  array{verification_code?: int}  $data
+     * @return PromiseInterface|EHealthResponse
+     * @throws ConnectionException|EHealthValidationException|EHealthResponseException
+     *
+     * @see https://uaehealthapi.docs.apiary.io/#reference/public.-medical-service-provider-integration-layer/persons/approve-authentication-method-request
+     */
+    public function approveAuthMethod(string $id, string $requestId, array $data = []): PromiseInterface|EHealthResponse
+    {
+        $this->setValidator($this->validateApproveAuthMethod(...));
+
+        return $this->patch(
+            self::URL . "/$id/authentication_method_requests/$requestId/actions/approve",
+            $data ?: (object)$data
+        );
     }
 
     /**
@@ -159,15 +184,15 @@ class Person extends Request
      *
      * @param  string  $id
      * @param  string  $requestId
-     * @param  array  $query
+     * @param  array  $data
      * @return PromiseInterface|EHealthResponse
      * @throws ConnectionException|EHealthValidationException|EHealthResponseException
      *
      * @see https://uaehealthapi.docs.apiary.io/#reference/public.-medical-service-provider-integration-layer/persons/resend-authorization-otp-on-authentication-method-request
      */
-    public function resendAuthOtp(string $id, string $requestId, array $query = []): PromiseInterface|EHealthResponse
+    public function resendAuthOtp(string $id, string $requestId, array $data = []): PromiseInterface|EHealthResponse
     {
-        return $this->post(self::URL . "/$id/authentication_method_requests/$requestId/actions/resend_otp", $query);
+        return $this->post(self::URL . "/$id/authentication_method_requests/$requestId/actions/resend_otp", $data);
     }
 
     protected function validateSearch(EHealthResponse $response): array
@@ -199,6 +224,7 @@ class Person extends Request
     protected function validateAuthMethods(EHealthResponse $response): array
     {
         $data = $response->getData();
+        $thirdPerson = AuthenticationMethod::THIRD_PERSON->value;
 
         $replaced = self::replaceEHealthPropNames($data);
 
@@ -208,8 +234,49 @@ class Person extends Request
             '*.uuid' => ['required', 'uuid'],
             '*.type' => ['nullable', 'string', 'max:255'],
             '*.value' => ['nullable', 'uuid'],
-            '*.phone_number' => ['nullable', 'string', 'max:255']
+            '*.phone_number' => ['nullable', 'string', 'max:255'],
+            '*.confidant_person.documents_person.*.number' => ['nullable', 'string', 'max:255'],
+            '*.confidant_person.documents_person.*.type' => ['nullable', new InDictionary('DOCUMENT_TYPE')],
+            '*.confidant_person.gender' => ["required_if:*.type,$thirdPerson", new InDictionary('GENDER')],
+            '*.confidant_person.name' => ["required_if:*.type,$thirdPerson", 'string', 'max:255'],
+            '*.confidant_person.uuid' => ["required_if:*.type,$thirdPerson", 'uuid'],
+            '*.confidant_person.no_tax_id' => ["required_if:*.type,$thirdPerson", 'boolean:strict'],
+            '*.confidant_person.phones.number' => ['nullable', 'string'],
+            '*.confidant_person.tax_id' => ['nullable', 'string'],
+            '*.confidant_person.unzr' => ['nullable', 'string']
         ]);
+
+        if ($validator->fails()) {
+            Log::channel('e_health_errors')->error('Validation failed: ' . implode(', ', $validator->errors()->all()));
+        }
+
+        return $validator->validate();
+    }
+
+    protected function validateCreateAuthMethod(EHealthResponse $response): array
+    {
+        $data = $response->getData();
+        $urgent = $response->getUrgent();
+        $forValidate = array_merge($data, $urgent);
+
+        $validator = Validator::make($forValidate, [
+            'id' => ['required', 'uuid'],
+            'documents.*.type' => ['nullable', new InDictionary('DOCUMENT_TYPE')],
+            'documents.*.url' => ['nullable', 'url']
+        ]);
+
+        if ($validator->fails()) {
+            Log::channel('e_health_errors')->error('Validation failed: ' . implode(', ', $validator->errors()->all()));
+        }
+
+        return $validator->validate();
+    }
+
+    protected function validateApproveAuthMethod(EHealthResponse $response): array
+    {
+        $data = $response->getData();
+
+        $validator = Validator::make($data, ['id' => ['required', 'uuid']]);
 
         if ($validator->fails()) {
             Log::channel('e_health_errors')->error('Validation failed: ' . implode(', ', $validator->errors()->all()));
@@ -226,23 +293,38 @@ class Person extends Request
     {
         $replaced = [];
 
-        foreach ($properties as $index => $item) {
-            if (is_array($item)) {
-                $replacedItem = [];
-                foreach ($item as $key => $value) {
-                    $newKey = match ($key) {
-                        'id' => 'uuid',
-                        'ended_at' => 'ehealth_ended_at',
-                        default => $key
-                    };
-                    $replacedItem[$newKey] = $value;
-                }
-                $replaced[$index] = $replacedItem;
+        foreach ($properties as $key => $value) {
+            $newKey = match ($key) {
+                'id' => 'uuid',
+                'ended_at' => 'ehealth_ended_at',
+                default => $key
+            };
+
+            // Recursive for changing in confidant person id to uuid
+            if (is_array($value)) {
+                $replaced[$newKey] = self::replaceEHealthPropNames($value);
             } else {
-                $replaced[$index] = $item;
+                $replaced[$newKey] = $value;
             }
         }
 
         return $replaced;
+    }
+
+    /**
+     * Map validated data.
+     *
+     * @param  array  $validated
+     * @return array
+     */
+    protected function mapAuthMethods(array $validated): array
+    {
+        return collect($validated)->map(function ($method) {
+            if (!empty($method['ehealth_ended_at'])) {
+                $method['ehealth_ended_at'] = convertToAppDateFormat($method['ehealth_ended_at']);
+            }
+
+            return $method;
+        })->toArray();
     }
 }

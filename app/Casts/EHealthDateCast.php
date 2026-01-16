@@ -42,6 +42,11 @@ class EHealthDateCast implements CastsAttributes
             return $value;
         }
 
+        // ISO 8601 + timezone
+        if (preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z$/', $value)) {
+            return $value;
+        }
+
         $format = config('app.date_format');
 
         return Carbon::createFromFormat($format, $value)?->format('Y-m-d');
