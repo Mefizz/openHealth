@@ -85,6 +85,11 @@ class PersonComponent extends Component
      */
     public string $viewState = 'default';
 
+    /**
+     * Additional parameters for search.
+     *
+     * @var bool
+     */
     public bool $showAdditionalParams;
 
     /**
@@ -174,7 +179,7 @@ class PersonComponent extends Component
     public function searchForPerson(): void
     {
         if (Auth::user()->cannot('viewAny', Person::class)) {
-            Session::flash('error', 'У вас немає дозволу на пошук пацієнтів');
+            Session::flash('error', __('patients.policy.view_any'));
 
             return;
         }
@@ -194,19 +199,8 @@ class PersonComponent extends Component
                     ->searchForPersonByParams($this->form->formatForConfidantSearchApi($validated))
                     ->getData()
             );
-        } catch (ConnectionException $exception) {
-            $this->logConnectionError($exception, 'Error when searching for person');
-            Session::flash('error', "Виникла помилка. Відсутній зв'язок із ЕСОЗ");
-
-            return;
-        } catch (EHealthValidationException|EHealthResponseException $exception) {
-            $this->logEHealthException($exception, 'Error when searching for person');
-
-            if ($exception instanceof EHealthValidationException) {
-                Session::flash('error', $exception->getFormattedMessage());
-            } else {
-                Session::flash('error', 'Помилка від ЕСОЗ: ' . $exception->getMessage());
-            }
+        } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
+            $this->handleEHealthExceptions($exception, 'Error when searching for person');
 
             return;
         }
@@ -222,7 +216,7 @@ class PersonComponent extends Component
     public function create(): void
     {
         if (Auth::user()->cannot('create', PersonRequest::class)) {
-            Session::flash('error', 'У вас немає дозволу на створення пацієнта.');
+            Session::flash('error', __('patients.policy.create'));
 
             return;
         }
@@ -249,19 +243,8 @@ class PersonComponent extends Component
 
         try {
             $response = EHealth::personRequest()->create($formatted);
-        } catch (ConnectionException $exception) {
-            $this->logConnectionError($exception, 'Error connecting when creating person request');
-            Session::flash('error', "Виникла помилка. Відсутній зв'язок із ЕСОЗ");
-
-            return;
-        } catch (EHealthValidationException|EHealthResponseException $exception) {
-            $this->logEHealthException($exception, 'Error when creating a person request');
-
-            if ($exception instanceof EHealthValidationException) {
-                Session::flash('error', $exception->getFormattedMessage());
-            } else {
-                Session::flash('error', 'Помилка від ЕСОЗ: ' . $exception->getMessage());
-            }
+        } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
+            $this->handleEHealthExceptions($exception, 'Error when creating a person request');
 
             return;
         }
@@ -313,7 +296,7 @@ class PersonComponent extends Component
     public function createLocally(): void
     {
         if (Auth::user()->cannot('create', PersonRequest::class)) {
-            Session::flash('error', 'У вас немає дозволу на створення пацієнта.');
+            Session::flash('error', __('patients.policy.create'));
 
             return;
         }
@@ -402,7 +385,7 @@ class PersonComponent extends Component
     public function sendFiles(): void
     {
         if (Auth::user()->cannot('create', PersonRequest::class)) {
-            Session::flash('error', 'Виникла помилка. Зверніться до адміністратора.');
+            Session::flash('error', __('patients.policy.send_files'));
 
             return;
         }
@@ -423,19 +406,8 @@ class PersonComponent extends Component
         try {
             $this->approvePersonRequest();
             $this->showLeafletModal = true;
-        } catch (ConnectionException $exception) {
-            $this->logConnectionError($exception, 'Error connecting when approving person request');
-            Session::flash('error', "Виникла помилка. Відсутній зв'язок із ЕСОЗ");
-
-            return;
-        } catch (EHealthValidationException|EHealthResponseException $exception) {
-            $this->logEHealthException($exception, 'Error when approving person request');
-
-            if ($exception instanceof EHealthValidationException) {
-                Session::flash('error', $exception->getFormattedMessage());
-            } else {
-                Session::flash('error', 'Помилка від ЕСОЗ: ' . $exception->getMessage());
-            }
+        } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
+            $this->handleEHealthExceptions($exception, 'Error when approving person request');
 
             return;
         }
@@ -460,7 +432,7 @@ class PersonComponent extends Component
     public function resendSms(): void
     {
         if (Auth::user()->cannot('create', PersonRequest::class)) {
-            Session::flash('error', 'У вас немає дозволу на повторну відправку СМС.');
+            Session::flash('error', __('patients.policy.resend_sms'));
 
             return;
         }
@@ -471,19 +443,8 @@ class PersonComponent extends Component
 
         try {
             $response = EHealth::personRequest()->resendAuthOtp($this->form->person['id']);
-        } catch (ConnectionException $exception) {
-            $this->logConnectionError($exception, 'Error connecting when resending sms to person');
-            Session::flash('error', "Виникла помилка. Відсутній зв'язок із ЕСОЗ");
-
-            return;
-        } catch (EHealthValidationException|EHealthResponseException $exception) {
-            $this->logEHealthException($exception, 'Error when resending sms to person');
-
-            if ($exception instanceof EHealthValidationException) {
-                Session::flash('error', $exception->getFormattedMessage());
-            } else {
-                Session::flash('error', 'Помилка від ЕСОЗ: ' . $exception->getMessage());
-            }
+        } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
+            $this->handleEHealthExceptions($exception, 'Error when resending sms to person');
 
             return;
         }
@@ -502,7 +463,7 @@ class PersonComponent extends Component
     public function approve(): void
     {
         if (Auth::user()->cannot('create', PersonRequest::class)) {
-            Session::flash('error', 'Виникла помилка. Зверніться до адміністратора.');
+            Session::flash('error', __('patients.policy.approve'));
 
             return;
         }
@@ -523,19 +484,8 @@ class PersonComponent extends Component
         try {
             $this->approvePersonRequest(['verification_code' => $validated['verificationCode']]);
             $this->showLeafletModal = true;
-        } catch (ConnectionException $exception) {
-            $this->logConnectionError($exception, 'Error connecting when approving person request');
-            Session::flash('error', "Виникла помилка. Відсутній зв'язок із ЕСОЗ");
-
-            return;
-        } catch (EHealthValidationException|EHealthResponseException $exception) {
-            $this->logEHealthException($exception, 'Error when approving person request');
-
-            if ($exception instanceof EHealthValidationException) {
-                Session::flash('error', $exception->getFormattedMessage());
-            } else {
-                Session::flash('error', 'Помилка від ЕСОЗ: ' . $exception->getMessage());
-            }
+        } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
+            $this->handleEHealthExceptions($exception, 'Error when approving person request');
 
             return;
         }
@@ -563,26 +513,15 @@ class PersonComponent extends Component
         $personRequest = PersonRequest::whereUuid($this->form->person['id'])->get()->firstOrFail();
 
         if (Auth::user()->cannot('reject', [PersonRequest::class, $personRequest])) {
-            Session::flash('error', 'У вас немає дозволу на скасування заявки.');
+            Session::flash('error', __('patients.policy.reject'));
 
             return;
         }
 
         try {
             $response = EHealth::personRequest()->reject($personRequest->uuid);
-        } catch (ConnectionException $exception) {
-            $this->logConnectionError($exception, 'Error connecting when rejecting person request');
-            Session::flash('error', "Виникла помилка. Відсутній зв'язок із ЕСОЗ");
-
-            return;
-        } catch (EHealthValidationException|EHealthResponseException $exception) {
-            $this->logEHealthException($exception, 'Error connecting when rejecting person request');
-
-            if ($exception instanceof EHealthValidationException) {
-                Session::flash('error', $exception->getFormattedMessage());
-            } else {
-                Session::flash('error', 'Помилка від ЕСОЗ: ' . $exception->getMessage());
-            }
+        } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
+            $this->handleEHealthExceptions($exception, 'Error when rejecting person request');
 
             return;
         }
@@ -610,7 +549,7 @@ class PersonComponent extends Component
     public function sign(): void
     {
         if (Auth::user()->cannot('create', PersonRequest::class)) {
-            Session::flash('error', 'У вас немає дозволу на підписання.');
+            Session::flash('error', __('patients.policy.sign'));
 
             return;
         }
@@ -627,19 +566,8 @@ class PersonComponent extends Component
         try {
             $approvedPersonRequest = EHealth::personRequest()->getById($this->form->person['id']);
             $personRequestData = $approvedPersonRequest->getData();
-        } catch (ConnectionException $exception) {
-            $this->logConnectionError($exception, 'Error connecting when getting person request by ID');
-            Session::flash('error', "Виникла помилка. Відсутній зв'язок із ЕСОЗ");
-
-            return;
-        } catch (EHealthValidationException|EHealthResponseException $exception) {
-            $this->logEHealthException($exception, 'Error when getting person request by ID');
-
-            if ($exception instanceof EHealthValidationException) {
-                Session::flash('error', $exception->getFormattedMessage());
-            } else {
-                Session::flash('error', 'Помилка від ЕСОЗ: ' . $exception->getMessage());
-            }
+        } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
+            $this->handleEHealthExceptions($exception, 'Error when getting person request by ID');
 
             return;
         }
@@ -659,19 +587,8 @@ class PersonComponent extends Component
                 ->withHeaders(['msp_drfo' => Auth::user()->party->taxId])
                 ->signed($this->form->person['id'], ['signed_content' => $signedContent]);
             $responseData = $signResponse->getData();
-        } catch (ConnectionException $exception) {
-            $this->logConnectionError($exception, 'Error connecting when sign person request');
-            Session::flash('error', "Виникла помилка. Відсутній зв'язок із ЕСОЗ");
-
-            return;
-        } catch (EHealthValidationException|EHealthResponseException $exception) {
-            $this->logEHealthException($exception, 'Error when sign person request');
-
-            if ($exception instanceof EHealthValidationException) {
-                Session::flash('error', $exception->getFormattedMessage());
-            } else {
-                Session::flash('error', 'Помилка від ЕСОЗ: ' . $exception->getMessage());
-            }
+        } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
+            $this->handleEHealthExceptions($exception, 'Error when sign person request');
 
             return;
         }
@@ -772,6 +689,31 @@ class PersonComponent extends Component
         if ($successCount === $totalFiles) {
             Session::flash('success', 'Всі файли успішно завантажено');
         }
+    }
+
+    /**
+     * Handle exceptions with message.
+     *
+     * @param  ConnectionException|EHealthValidationException|EHealthResponseException  $exception
+     * @param  string  $logMessage
+     * @return void
+     */
+    protected function handleEHealthExceptions(
+        ConnectionException|EHealthValidationException|EHealthResponseException $exception,
+        string $logMessage
+    ): void {
+        if ($exception instanceof ConnectionException) {
+            $this->logConnectionError($exception, $logMessage);
+            Session::flash('error', __('validation.custom.connection_exception'));
+
+            return;
+        }
+
+        $this->logEHealthException($exception, $logMessage);
+        $errorMessage = $exception instanceof EHealthValidationException
+            ? $exception->getFormattedMessage()
+            : 'Помилка від ЕСОЗ: ' . $exception->getMessage();
+        Session::flash('error', $errorMessage);
     }
 
     /**
