@@ -6,6 +6,7 @@ namespace App\Livewire\Person;
 
 use App\Classes\eHealth\EHealth;
 use App\Core\Arr;
+use App\Enums\Person\AuthStep;
 use App\Models\Relations\AuthenticationMethod as AuthenticationMethodModel;
 use App\Enums\Person\AuthenticationMethod;
 use App\Enums\Person\AuthenticationMethodAction;
@@ -30,14 +31,6 @@ use Throwable;
  */
 class PersonUpdate extends PersonComponent
 {
-    // List of constants for navigation by modals for interaction with auth methods
-    private const int AUTH_STEP_INITIAL = 0;
-    private const int AUTH_STEP_VERIFY_PHONE = 2;
-    private const int AUTH_STEP_COMPLETE_VERIFICATION = 4;
-    private const int AUTH_STEP_CHANGE_FROM_OFFLINE = 5;
-    private const int AUTH_STEP_CHANGE_PHONE = 6;
-    private const int AUTH_STEP_UPDATE_ALIAS = 8;
-
     #[Locked]
     public string $uuid;
 
@@ -50,7 +43,7 @@ class PersonUpdate extends PersonComponent
 
     public bool $showAuthMethodModal = false;
 
-    public int $authStep = self::AUTH_STEP_INITIAL;
+    public AuthStep $authStep = AuthStep::INITIAL;
 
     /**
      * Current phone number.
@@ -174,7 +167,7 @@ class PersonUpdate extends PersonComponent
     public function openAuthMethodModal(): void
     {
         $this->showAuthMethodModal = true;
-        $this->authStep = self::AUTH_STEP_INITIAL;
+        $this->authStep = AuthStep::INITIAL;
 
         try {
             $response = EHealth::person()->getAuthMethods($this->uuid);
@@ -209,10 +202,10 @@ class PersonUpdate extends PersonComponent
      *
      * @param  string  $uuid
      * @param  string  $type
-     * @param  int  $step
+     * @param  AuthStep  $step
      * @return void
      */
-    public function selectAuthMethod(string $uuid, string $type, int $step): void
+    public function selectAuthMethod(string $uuid, string $type, AuthStep $step): void
     {
         $this->selectedAuthMethodUuid = $uuid;
         $this->selectedAuthMethodType = $type;
@@ -288,7 +281,14 @@ class PersonUpdate extends PersonComponent
      */
     public function verifyOwnership(): void
     {
-        $validated = $this->validate(['form.phoneNumber' => ['required', new PhoneNumber()]]);
+        try {
+            $validated = $this->validate(['form.phoneNumber' => ['required', new PhoneNumber()]]);
+        } catch (ValidationException $exception) {
+            Session::flash('error', $exception->validator->errors()->first());
+            $this->setErrorBag($exception->validator->getMessageBag());
+
+            return;
+        }
 
         try {
             $response = EHealth::verification()->findByPhoneNumber($validated['form']['phoneNumber']);
@@ -309,7 +309,7 @@ class PersonUpdate extends PersonComponent
             if ($exception->getCode() === 404) {
                 try {
                     EHealth::verification()->initialize(Arr::toSnakeCase($validated));
-                    $this->authStep = self::AUTH_STEP_VERIFY_PHONE;
+                    $this->authStep = AuthStep::VERIFY_PHONE;
                 } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
                     $this->handleEHealthExceptions($exception, 'Error when initialize OTP verification request');
 
@@ -326,11 +326,18 @@ class PersonUpdate extends PersonComponent
      */
     public function completeVerifyingOwnership(): void
     {
-        $validated = $this->validate(['code' => ['required', 'integer']]);
+        try {
+            $validated = $this->validate(['code' => ['required', 'integer']]);
+        } catch (ValidationException $exception) {
+            Session::flash('error', $exception->validator->errors()->first());
+            $this->setErrorBag($exception->validator->getMessageBag());
+
+            return;
+        }
 
         try {
             EHealth::verification()->complete($this->form->phoneNumber, $validated);
-            $this->authStep = self::AUTH_STEP_COMPLETE_VERIFICATION;
+            $this->authStep = AuthStep::COMPLETE_VERIFICATION;
         } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
             $this->handleEHealthExceptions($exception, 'Error when complete OTP verification request');
 
@@ -428,7 +435,7 @@ class PersonUpdate extends PersonComponent
             if ($this->selectedAuthMethodType === AuthenticationMethod::OFFLINE->value) {
                 $this->uploadedDocuments = $response->validate()['documents'];
             }
-            $this->authStep = self::AUTH_STEP_UPDATE_ALIAS;
+            $this->authStep = AuthStep::UPDATE_ALIAS;
         } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
             $this->handleEHealthExceptions($exception, 'Error when updating alias auth method');
 
@@ -509,40 +516,15 @@ class PersonUpdate extends PersonComponent
 
             // If the change type from OTP to Offline, then show the step, request to change the phone number
             if ($this->selectedAuthMethodType === AuthenticationMethod::OFFLINE->value) {
-                $this->authStep = self::AUTH_STEP_CHANGE_FROM_OFFLINE;
+                $this->authStep = AuthStep::CHANGE_FROM_OFFLINE;
             } else {
-                $this->authStep = self::AUTH_STEP_CHANGE_PHONE;
+                $this->authStep = AuthStep::CHANGE_PHONE;
             }
         } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
             $this->handleEHealthExceptions($exception, 'Error when creating auth method request');
 
             return;
         }
-    }
-
-    /**
-     * Handle exceptions with message.
-     *
-     * @param  ConnectionException|EHealthValidationException|EHealthResponseException  $exception
-     * @param  string  $logMessage
-     * @return void
-     */
-    private function handleEHealthExceptions(
-        ConnectionException|EHealthValidationException|EHealthResponseException $exception,
-        string $logMessage
-    ): void {
-        if ($exception instanceof ConnectionException) {
-            $this->logConnectionError($exception, $logMessage);
-            Session::flash('error', __('validation.custom.connection_exception'));
-
-            return;
-        }
-
-        $this->logEHealthException($exception, $logMessage);
-        $errorMessage = $exception instanceof EHealthValidationException
-            ? $exception->getFormattedMessage()
-            : 'Помилка від ЕСОЗ: ' . $exception->getMessage();
-        Session::flash('error', $errorMessage);
     }
 
     public function render(): View

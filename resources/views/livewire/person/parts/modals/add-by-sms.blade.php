@@ -1,3 +1,5 @@
+@use('App\Enums\Person\AuthStep')
+
 <div wire:key="auth-step-add-sms">
     <legend class="legend">
         {{ __('patients.adding_authentication_method_SMS') }}
@@ -25,13 +27,13 @@
                        wire:model="form.methodName"
                        id="add_sms_name"
                 />
-                <label class="label" for="add_sms_name">{{ __('Назва методу автентифікації') }}</label>
+                <label class="label" for="add_sms_name">{{ __('patients.authentication_method_name') }}</label>
             </div>
         </div>
     </div>
 
     <div class="mt-12 flex gap-4">
-        <button type="button" wire:click="setStep(0)" class="button-minor">
+        <button type="button" @click="localStep = {{ AuthStep::INITIAL }}" class="button-minor">
             {{ __('forms.back') }}
         </button>
 

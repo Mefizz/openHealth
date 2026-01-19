@@ -1,23 +1,23 @@
 @use('App\Enums\Person\AuthenticationMethod')
+@use('App\Enums\Person\AuthStep')
 
 <div x-data="{
         showAuthMethodModal: $wire.entangle('showAuthMethodModal'),
         authenticationMethods: $wire.entangle('authenticationMethods'),
         selectedMethod: $wire.entangle('form.authorizeWith'),
-        localStep: 0
+        localStep: $wire.entangle('authStep')
     }"
-     x-init="$watch('showAuthMethodModal', value => { if (!value) localStep = 0 })"
 >
     <template x-teleport="body">
         <div x-show="showAuthMethodModal"
              style="display: none"
-             @keydown.escape.prevent.stop="showAuthMethodModal = false; localStep = 0"
+             @keydown.escape.prevent.stop="showAuthMethodModal = false;"
              role="dialog"
              aria-modal="true"
              class="modal"
         >
             <div x-transition.opacity class="fixed inset-0 bg-black/30"></div>
-            <div x-transition @click="showAuthMethodModal = false; localStep = 0" class="modal-wrapper">
+            <div x-transition @click="showAuthMethodModal = false;" class="modal-wrapper">
                 <div @click.stop
                      x-trap.noscroll.inert="showAuthMethodModal"
                      class="modal-content w-full max-w-4xl mx-auto"
@@ -43,18 +43,24 @@
                                      style="display: none"
                                      class="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl z-50 p-1 border border-gray-100"
                                 >
-                                    <button @click="localStep = 1; openAdd = false"
-                                            class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded text-gray-700 transition-colors">
+                                    <button type="button"
+                                            @click="localStep = 1; openAdd = false"
+                                            class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded text-gray-700 transition-colors"
+                                    >
                                         Автентифікація через СМС
                                     </button>
 
-                                    <button @click="localStep = 5; openAdd = false"
-                                            class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded text-gray-700 transition-colors">
+                                    <button type="button"
+                                            @click="localStep = {{ AuthStep::ADD_NEW_BY_DOCUMENT }}; openAdd = false"
+                                            class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded text-gray-700 transition-colors"
+                                    >
                                         Автентифікація через документи
                                     </button>
 
-                                    <button @click="localStep = 4; openAdd = false"
-                                            class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded text-gray-700 transition-colors">
+                                    <button type="button"
+                                            @click="localStep = 4; openAdd = false"
+                                            class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded text-gray-700 transition-colors"
+                                    >
                                         Автентифікація через третю особу
                                     </button>
                                 </div>
@@ -90,7 +96,8 @@
 
                                             <div class="flex items-center gap-4">
                                                 <div x-data="{ open: false }" class="relative">
-                                                    <button @click="open = !open" type="button"
+                                                    <button @click="open = !open"
+                                                            type="button"
                                                             class="text-blue-600 hover:underline text-sm whitespace-nowrap"
                                                     >
                                                         {{ __('Змінити') }}
@@ -102,25 +109,34 @@
                                                          class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl z-50 p-2 border border-gray-100"
                                                     >
                                                         <template x-if="method.type === '{{ AuthenticationMethod::OTP->value }}'">
-                                                            <button @click="localStep = 1; open = false"
+                                                            <button type="button"
+                                                                    wire:click.prevent="selectAuthMethod(method.uuid, method.type, 1)"
                                                                     class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded text-gray-700"
                                                             >
-                                                                Змінити номер телефона
+                                                                {{ __('patients.change_phone_number') }}
                                                             </button>
                                                         </template>
 
                                                         <template x-if="method.type === '{{ AuthenticationMethod::OFFLINE->value }}'">
-                                                            <button @click="localStep = 1; open = false"
+                                                            <button type="button"
+                                                                    wire:click.prevent="selectAuthMethod(method.uuid, method.type, 1)"
                                                                     class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded text-gray-700"
                                                             >
-                                                                Замінити метод на СМС
+                                                                {{ __('patients.change_method_to_sms') }}
                                                             </button>
                                                         </template>
+
+                                                        <button @click="open = false"
+                                                                wire:click.prevent="selectAuthMethod(method.uuid, method.type, 7)"
+                                                                class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded text-gray-700"
+                                                        >
+                                                            {{ __('patients.change_method_alias') }}
+                                                        </button>
 
                                                         <button @click="localStep = 5; open = false"
                                                                 class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded text-gray-700"
                                                         >
-                                                            Деактивувати метод
+                                                            {{ __('patients.deactivate_method') }}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -300,33 +316,40 @@
                         </template>
 
                         <div class="flex justify-between items-center mt-8">
-                            <button type="button" @click="showAuthMethodModal = false; localStep = 0" class="button-minor">
+                            <button type="button"
+                                    @click="showAuthMethodModal = false; localStep = {{ AuthStep::INITIAL }}"
+                                    class="button-minor"
+                            >
                                 {{ __('forms.cancel') }}
                             </button>
                         </div>
                     </div>
 
-                    <div x-show="localStep === 1" style="display: none">
-                        @include('livewire.person.parts.modals.authentication-from-sms-1')
-                    </div>
+                    @php
+                        $modalSteps = [
+                             AuthStep::CHANGE_PHONE_INITIAL->value => 'livewire.person.parts.modals.init-phone-verification',
+                             AuthStep::VERIFY_PHONE->value => 'livewire.person.parts.modals.complete-otp-verification',
+                             AuthStep::NO_PHONE_ACCESS->value => 'livewire.person.parts.modals.no-phone-access',
+                             AuthStep::COMPLETE_VERIFICATION->value => 'livewire.person.parts.modals.create-new-phone-number',
+                             AuthStep::CHANGE_FROM_OFFLINE->value => 'livewire.person.parts.modals.confirm-by-documents',
+                             AuthStep::CHANGE_PHONE->value => 'livewire.person.parts.modals.confirm-by-sms',
+                             AuthStep::CHANGE_ALIAS->value => 'livewire.person.parts.modals.new-alias-name',
+                             AuthStep::UPDATE_ALIAS->value => 'livewire.person.parts.modals.approve-alias-update',
+                             AuthStep::ADD_NEW_BY_SMS->value => 'livewire.person.parts.modals.add-by-sms',
+                             AuthStep::APPROVE_ADDING_BY_SMS->value => 'livewire.person.parts.modals.approve-adding-by-sms',
+                             AuthStep::ADD_NEW_BY_DOCUMENT->value => 'livewire.person.parts.modals.authentication-from-documents',
+                         ];
+                    @endphp
 
-                    <div x-show="localStep === 2" style="display: none">
-                        @include('livewire.person.parts.modals.authentication-from-sms-2')
-                    </div>
-
-                    <div x-show="localStep === 3" style="display: none">
-                        @include('livewire.person.parts.modals.choose-auth-method-3')
-                    </div>
-
-                    <div x-show="localStep === 4" style="display: none">
-                        @include('livewire.person.parts.modals.choose-auth-method-4')
-                    </div>
-
-                    <div x-show="localStep === 5" style="display: none">
-                        @include('livewire.person.parts.modals.authentication-from-documents')
-                    </div>
+                    @foreach($modalSteps as $step => $view)
+                        <template x-if="localStep === {{ $step }}">
+                            @include($view)
+                        </template>
+                    @endforeach
                 </div>
             </div>
         </div>
     </template>
+
+    <livewire:components.x-message :key="time()" />
 </div>

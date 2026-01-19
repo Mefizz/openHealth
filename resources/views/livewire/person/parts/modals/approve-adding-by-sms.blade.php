@@ -1,3 +1,5 @@
+@use('App\Enums\Person\AuthStep')
+
 <div wire:key="auth-step-add-sms-full">
     <legend class="legend">
         {{ __('patients.adding_authentication_method_SMS') }}
@@ -11,10 +13,10 @@
                            placeholder=" "
                            class="peer input !py-2"
                            wire:model="form.phoneNumber"
-                           id="add_sms_phone"
+                           id="phoneNumber"
                            x-mask="+380999999999"
                     />
-                    <label class="label" for="add_sms_phone">{{ __('+380') }}</label>
+                    <label class="label" for="phoneNumber">{{ __('+380') }}</label>
                 </div>
             </div>
 
@@ -74,11 +76,11 @@
     </div>
 
     <div class="mt-12 flex gap-3">
-        <button type="button" wire:click="setStep(0)" class="button-minor">
+        <button type="button" @click="localStep = {{ AuthStep::INITIAL }}" class="button-minor">
             {{ __('forms.back') }}
         </button>
 
-        <button type="button" wire:click="setStep(0)" class="button-outline-primary">
+        <button type="button" @click="localStep = {{ AuthStep::INITIAL }}" class="button-outline-primary">
             {{ __('patients.to_authentication_methods') }}
         </button>
 
