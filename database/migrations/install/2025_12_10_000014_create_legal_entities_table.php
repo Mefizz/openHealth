@@ -40,10 +40,13 @@ return new class extends Migration
             $table->enum('division_sync_status', JobStatus::values())->nullable();
             $table->enum('hcs_sync_status', JobStatus::values())->nullable();
             $table->enum('employee_sync_status', JobStatus::values())->nullable();
+            $table->enum('employee_role_sync_status', JobStatus::values())->nullable();
+            $table->enum('employee_request_sync_status', JobStatus::values())->nullable();
             $table->enum('license_sync_status', JobStatus::values())->nullable();
             $table->enum('document_sync_status', JobStatus::values())->nullable();
             $table->enum('declaration_sync_status', JobStatus::values())->nullable();
             $table->enum('declaration_request_sync_status', JobStatus::values())->nullable();
+            $table->enum('equipment_sync_status', JobStatus::values())->nullable();
             $table->timestamp('inserted_at')->nullable();
             $table->date('ehealth_inserted_at')->nullable();
             $table->uuid('ehealth_inserted_by')->nullable();

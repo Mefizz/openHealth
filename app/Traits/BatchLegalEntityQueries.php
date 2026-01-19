@@ -67,6 +67,54 @@ trait BatchLegalEntityQueries
     }
 
     /**
+     * Retrieves a failed batch by its name.
+     *
+     * @param string $batchName The name of the batch to retrieve
+     *
+     * @return stdClass|null The failed batch object if found, null otherwise
+     */
+    protected function getFailedBatch(string $batchName): ?stdClass
+    {
+        $batches = $this->findFailedBatchesByLegalEntity(legalEntity()->id, 'ASC') ;
+
+        if ($batches->isEmpty()) {
+            return null;
+        }
+
+        $batches = $batches->filter(fn($batch) => $batch->name === $batchName);
+
+        return $batches->isNotEmpty() ? $batches->first() : null;
+    }
+
+    /**
+     * Restart a failed batch by its batch object
+     *
+     * @param stdClass $batch The failed batch object
+     * @param User $user The user context for the new batch execution
+     * @param string $token Encrypted authentication token for API requests
+     * @param LegalEntity|null $legalEntity The legal entity context for the batch (optional)
+     *
+     * @return void
+     */
+    protected function restartBatch(stdClass $batch, User $user, string $token, ?LegalEntity $legalEntity = null): void
+    {
+        $legalEntity = $legalEntity ?? legalEntity();
+
+        $pendingJobs = $this->extractPendingJobsFromBatches($batch);
+
+        if (empty($pendingJobs)) {
+            // Here do echo only into the job context where legalEntity() is not set
+            if (!legalEntity()) {
+                echo 'No pending jobs found in batch: ' . $batch->name . ' id: ' . $batch->id . PHP_EOL;
+            }
+
+            return;
+        }
+
+        $this->restartFailedBatch($user, $batch, $token, $legalEntity, $pendingJobs);
+    }
+
+    /**
      * Find running (not finished, not cancelled) batches by legal entity ID
      *
      * @param int $legalEntityId
@@ -122,12 +170,18 @@ trait BatchLegalEntityQueries
             ->onQueue('sync')
             ->dispatch();
 
-        echo 'Dispatched new batch: ' . $newBatch->name . ' id: ' . $newBatch->id . PHP_EOL;
+        // Here do echo only into the job context where legalEntity() is not set
+        if (!legalEntity()) {
+         echo 'Dispatched new batch: ' . $newBatch->name . ' id: ' . $newBatch->id . PHP_EOL;
+        }
 
         // Delete the old failed batch to prevent clutter
         app(BatchRepository::class)->delete($batch->id);
 
-        echo 'Deleted old failed batch: ' . $batch->name . ' id: ' . $batch->id . PHP_EOL;
+        // Here do echo only into the job context where legalEntity() is not set
+        if (!legalEntity()) {
+            echo 'Deleted old failed batch: ' . $batch->name . ' id: ' . $batch->id . PHP_EOL;
+        }
     }
 
     /**
@@ -205,7 +259,7 @@ trait BatchLegalEntityQueries
         }
 
         // Here $job is the first job in the chain (or null if no employees)
-        return $job;
+        return $job ?? $previousJob;
     }
 
     /**
@@ -242,7 +296,7 @@ trait BatchLegalEntityQueries
         }
 
         // Here $job is the first job in the chain (or null if no employees)
-        return $job;
+        return $job ?? $previousJob;
     }
 
     /**
@@ -280,7 +334,7 @@ trait BatchLegalEntityQueries
         }
 
         // Here $job is the first job in the chain (or null if no declarations)
-        return $job;
+        return $job ?? $previousJob;
     }
 
     /**
@@ -318,7 +372,7 @@ trait BatchLegalEntityQueries
         }
 
         // Here $job is the first job in the chain (or null if no declarationRequests)
-        return $job;
+        return $job ?? $previousJob;
     }
 
     /**
@@ -355,6 +409,6 @@ trait BatchLegalEntityQueries
         }
 
         // Here $job is the first job in the chain (or null if no employees)
-        return $job;
+        return $job ?? $previousJob;
     }
 }

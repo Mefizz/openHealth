@@ -7,27 +7,28 @@ namespace App\Jobs;
 use App\Core\EHealthJob;
 use GuzzleHttp\Promise\PromiseInterface;
 use App\Classes\eHealth\EHealthResponse;
+use App\Enums\JobStatus;
 
 /**
  * This job is responsible for finalizing a full synchronization operation between different data sources
  *
  * @package App\Jobs
  */
-class CompleteSync extends EHealthJob
+class LegalEntitySync extends EHealthJob
 {
-    public const string BATCH_NAME = 'CompleteSync';
+    public const string BATCH_NAME = 'LegalEntitySync';
 
     /**
      * Execute the job.
      */
     public function handle(): void
     {
-        echo 'Starting CompleteSync for legalEntity : ' . $this->legalEntity->id . PHP_EOL;
+        echo 'Starting LegalEntitySync for legalEntity : ' . $this->legalEntity->id . PHP_EOL;
 
         parent::handle();
 
-        //notify user about completion of sync of other entities (used for manual syncs)
-        $this->sendEntityNotification(null, 'completed');
+        $this->sendEntityNotification('legal_entity', 'completed');
+        $this->setEntityStatus(JobStatus::COMPLETED);
     }
 
     // Get data from EHealth API (here it mostly dummy method)

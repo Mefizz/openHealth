@@ -8,7 +8,10 @@ use Throwable;
 use App\Enums\JobStatus;
 use App\Jobs\EmployeeSync;
 use App\Jobs\DivisionSync;
+use App\Jobs\EquipmentSync;
+use App\Jobs\LegalEntitySync;
 use App\Jobs\DeclarationsSync;
+use App\Jobs\EmployeeRoleSync;
 use App\Events\EHealthUserLogin;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Bus;
@@ -44,14 +47,35 @@ class FirstLoginOwnerSynchronization implements ShouldQueue
         // TODO: remove it after testing
         echo 'First login synchronization started. ' . 'legalEntity:' . $event->legalEntity->id. PHP_EOL;
 
+        // Create a chain of jobs for synchronization
+
+        // This is the last job in the chain
+        $legalEntityJob = new LegalEntitySync(
+            legalEntity: $event->legalEntity,
+            isFirstLogin: true
+        );
+
+        $equipmentJob = new EquipmentSync(
+            legalEntity: $event->legalEntity,
+            nextEntity: $legalEntityJob,
+            isFirstLogin: true
+        );
+
         $declarationJob = new DeclarationsSync(
             legalEntity: $event->legalEntity,
+            nextEntity: $equipmentJob,
+            isFirstLogin: true
+        );
+
+        $employeeRoleJob = new EmployeeRoleSync(
+            legalEntity: $event->legalEntity,
+            nextEntity: $declarationJob,
             isFirstLogin: true
         );
 
         $employeeJob = new EmployeeSync(
             legalEntity: $event->legalEntity,
-            nextEntity: $declarationJob,
+            nextEntity: $employeeRoleJob,
             isFirstLogin: true
         );
 

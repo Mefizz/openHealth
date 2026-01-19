@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\EmployeeRole;
 
+use App\Enums\JobStatus;
 use App\Classes\eHealth\EHealth;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
@@ -31,6 +32,8 @@ class EmployeeRoleIndex extends Component
 {
     use WithPagination;
     use FormTrait;
+
+    protected const string BATCH_NAME = 'EmployeeRoleSync';
 
     /**
      * Full name of employee.
@@ -61,6 +64,64 @@ class EmployeeRoleIndex extends Component
     public array $healthcareServiceSpecialityTypes;
 
     protected array $dictionaryNames = ['SPECIALITY_TYPE', 'PROVIDING_CONDITION'];
+
+    /**
+     * Represents the current synchronization status for the component.
+     *
+     * @var string
+     */
+    public string $syncStatus = '';
+
+    private LegalEntity $legalEntity;
+
+    #[Computed]
+    public function isSync(): bool
+    {
+       return $this->isSyncProcessing();
+    }
+
+    /**
+     * Get the synchronization status of the employee roles.
+     *
+     * @return string The current sync status
+     */
+    protected function getSyncStatus(): string
+    {
+        return legalEntity()?->getEntityStatus(LegalEntity::ENTITY_EMPLOYEE_ROLE) ?? '';
+    }
+
+    /**
+     * Determine if a synchronization process is currently running.
+     *
+     * @return bool True if a sync process is actively processing, false otherwise.
+     */
+    protected function isSyncProcessing(): bool
+    {
+        // Get the sync status for whole Legal Entity
+        $legalEntitySyncStatus = legalEntity()?->getEntityStatus();
+
+        // Set the sync status only for Employee Role
+        $this->syncStatus = $this->getSyncStatus();
+
+        // Determine if either the Legal Entity's sync is in progress
+        $legalEntitySync = $legalEntitySyncStatus !== JobStatus::COMPLETED->value &&
+                           ($legalEntitySyncStatus !== JobStatus::PAUSED->value && !empty($legalEntitySyncStatus));
+
+        // Determine if either the Employee Role's sync is in progress
+        $employeeRoleSync = $this->syncStatus !== JobStatus::COMPLETED->value &&
+                               $this->syncStatus !== JobStatus::PAUSED->value &&
+                               $this->syncStatus !== JobStatus::FAILED->value &&
+                               !empty($this->syncStatus);
+
+        // Return true if either sync is in progress
+        return $legalEntitySync || $employeeRoleSync;
+    }
+
+    public function boot(): void
+    {
+        // This will ensure that the 'isSync' computed property is not cached between requests
+        unset($this->isSync);
+    }
 
     public function mount(LegalEntity $legalEntity): void
     {
@@ -125,6 +186,18 @@ class EmployeeRoleIndex extends Component
 
     public function sync(): void
     {
+        if (Auth::user()->cannot('viewAny', EmployeeRole::class)) {
+            Session::flash('error', 'У вас немає дозволу на синхронізацію ролей співробітників');
+
+            return;
+        }
+
+        if ($this->isSyncProcessing()) {
+            Session::flash('error', 'Синхронізація вже запущена. Будь ласка, зачекайте її завершення.');
+
+            return;
+        }
+
         try {
             $response = EHealth::employeeRole()->getMany();
         } catch (ConnectionException $exception) {
@@ -199,8 +272,10 @@ class EmployeeRoleIndex extends Component
                 $user->notify(new SyncNotification('employee_role', 'failed'));
             })
             ->onQueue('sync')
-            ->name('EmployeeRoleSync')
+            ->name(self::BATCH_NAME)
             ->dispatch();
+
+        legalEntity()?->setEntityStatus(JobStatus::PROCESSING, LegalEntity::ENTITY_EMPLOYEE_ROLE);
     }
 
     public function render(): View

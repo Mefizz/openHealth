@@ -11,6 +11,7 @@ use App\Repositories\Repository;
 use App\Classes\eHealth\EHealth;
 use GuzzleHttp\Promise\PromiseInterface;
 use App\Classes\eHealth\EHealthResponse;
+use App\Models\LegalEntity;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Queue\Middleware\RateLimited;
 use Throwable;
@@ -20,6 +21,8 @@ class EmployeeRoleSync extends EHealthJob
     public const string BATCH_NAME = 'EmployeeRoleSync';
 
     public const string SCOPE_REQUIRED = 'employee_role:read';
+
+    public const string ENTITY = LegalEntity::ENTITY_EMPLOYEE_ROLE;
 
     /**
      * Get data from EHealth API.

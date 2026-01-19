@@ -6,6 +6,7 @@ namespace App\Livewire\Contract;
 
 use App\Classes\eHealth\EHealth;
 use App\Enums\Contract\Type;
+use App\Enums\JobStatus;
 use App\Models\Contract;
 use App\Models\LegalEntity;
 use App\Repositories\Repository;
@@ -88,6 +89,7 @@ class ContractIndex extends Component
             $this->isFiltersApplied = true;
             session()->flash('success', 'Дані успішно синхронізовано (' . count($items) . ' записів).');
 
+            legalEntity()?->setEntityStatus(JobStatus::COMPLETED, LegalEntity::ENTITY_CONTRACT);
         } catch (\Exception $e) {
             session()->flash('error', 'Помилка синхронізації: ' . $e->getMessage());
         }

@@ -8,9 +8,14 @@
         <x-slot name="title">{{ __('forms.declarations') }}</x-slot>
 
         <div class="ml-auto flex items-center gap-2 mt-2 lg:mt-0">
-            <button  wire:click="sync" :key="sync-button" class="button-sync flex items-center gap-2 whitespace-nowrap">
+            <button
+                :key="sync-button"
+                wire:click="{{ !$this->isSync ? 'sync' : '' }}"
+                class="{{ $this->isSync ? 'button-sync-disabled' : 'button-sync' }} flex items-center gap-2 whitespace-nowrap"
+                {{ $this->isSync ? 'disabled' : '' }}
+            >
                 @icon('refresh', 'w-4 h-4')
-                {{ __('forms.synchronise_with_eHealth') }}
+                <span>{{ __('forms.synchronise_with_eHealth') }}</span>
             </button>
         </div>
 

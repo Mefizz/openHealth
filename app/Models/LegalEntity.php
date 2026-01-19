@@ -38,10 +38,13 @@ class LegalEntity extends Model
     public const string ENTITY_DIVISION = 'division_';
     public const string ENTITY_HEALTHCARE_SERVICE = 'hcs_';
     public const string ENTITY_EMPLOYEE = 'employee_';
+    public const string ENTITY_EMPLOYEE_ROLE = 'employee_role_';
+    public const string ENTITY_EMPLOYEE_REQUEST = 'employee_request_';
     public const string ENTITY_LICENSE = 'license_';
-    public const string ENTITY_CONTRACT = 'contract_';
+    public const string ENTITY_CONTRACT = 'document_';
     public const string ENTITY_DECLARATION = 'declaration_';
     public const string ENTITY_DECLARATION_REQUEST = 'declaration_request_';
+    public const string ENTITY_EQUIPMENT = 'equipment_';
 
     protected $fillable = [
         'uuid',

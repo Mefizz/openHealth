@@ -25,7 +25,12 @@
             <div class="mt-3 ml-0 flex flex-col sm:flex-row sm:flex-wrap gap-2 self-start">
                 <a href="{{ route('employee-request.create', ['legalEntity' => $currentLegalEntityId]) }}"
                    class="button-primary">{{ __('forms.new_employee') }}</a>
-                <button wire:click="sync" type="button" class="button-sync flex items-center gap-2 whitespace-nowrap">
+                <button
+                    wire:click="{{ !$this->isSync ? 'sync' : '' }}"
+                    type="button"
+                    class="{{ $this->isSync ? 'button-sync-disabled' : 'button-sync' }} flex items-center gap-2 whitespace-nowrap"
+                    {{ $this->isSync ? 'disabled' : '' }}
+                >
                     @icon('refresh', 'w-4 h-4')
                     {{ __('forms.synchronise_with_eHealth') }}
                 </button>

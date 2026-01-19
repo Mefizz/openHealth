@@ -4,10 +4,14 @@ namespace App\Livewire\LegalEntity;
 
 use Arr;
 use Throwable;
+use App\Enums\JobStatus;
 use App\Models\LegalEntity;
 use App\Classes\eHealth\EHealth;
+use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Repositories\PhoneRepository;
+use App\Repositories\AddressRepository;
 use Spatie\Permission\PermissionRegistrar;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
@@ -22,6 +26,40 @@ class LegalEntityDetails extends LegalEntityComponent
     public array $mainKVED = [];
 
     public array $additionalKVEDs = [];
+
+    #[Computed]
+    public function isSync(): bool
+    {
+       return $this->isSyncProcessing();
+    }
+
+    /**
+     * Determine if a synchronization process is currently running.
+     *
+     * @return bool True if a sync process is actively processing, false otherwise.
+     */
+    protected function isSyncProcessing(): bool
+    {
+        // Get the sync status for whole Legal Entity
+        $legalEntitySyncStatus = legalEntity()?->getEntityStatus();
+
+        // Determine if either the Legal Entity's sync is in progress
+        return $legalEntitySyncStatus !== JobStatus::COMPLETED->value &&
+               $legalEntitySyncStatus !== JobStatus::FAILED->value &&
+               $legalEntitySyncStatus !== JobStatus::PAUSED->value &&
+               !empty($legalEntitySyncStatus);
+    }
+
+    public function boot(
+        AddressRepository $addressRepository,
+        PhoneRepository $phoneRepository
+    ): void
+    {
+        parent::boot($addressRepository, $phoneRepository);
+
+        // This will ensure that the 'isSync' computed property is not cached between requests
+        unset($this->isSync);
+    }
 
     public function mount(?LegalEntity $legalEntity = null): void
     {
@@ -217,6 +255,8 @@ class LegalEntityDetails extends LegalEntityComponent
             return;
         }
 
+        legalEntity()?->setEntityStatus(JobStatus::PROCESSING);
+
         $oldStatus = $this->legalEntity->status;
 
         try {
@@ -233,17 +273,23 @@ class LegalEntityDetails extends LegalEntityComponent
 
             session()->flash('error', __('errors.ehealth.messages.server_error'));
 
+            legalEntity()?->setEntityStatus(JobStatus::FAILED);
+
             return;
         } catch (EHealthValidationException $err) {
             Log::channel('e_health_errors')->error(self::class . ':syncLegalEntity', ['error' => $err->getDetails()]);
 
             session()->flash('error', __('errors.ehealth.messages.server_error'));
 
+            legalEntity()?->setEntityStatus(JobStatus::FAILED);
+
             return;
         } catch (Throwable $err) {
             Log::channel('db_errors')->error(static::class . ': [syncLegalEntity]: ', ['error' => $err->getMessage()]);
 
             session()->flash('error', __('legal-entity.request.sync.errors.fail'));
+
+            legalEntity()?->setEntityStatus(JobStatus::FAILED);
 
             return;
         }
@@ -268,6 +314,8 @@ class LegalEntityDetails extends LegalEntityComponent
         $this->redirect(route('legal-entity.details', [legalEntity()]), navigate: true);
 
         session()->flash('success', __('forms.update_successfull'));
+
+        legalEntity()?->setEntityStatus(JobStatus::COMPLETED);
 
         return;
     }

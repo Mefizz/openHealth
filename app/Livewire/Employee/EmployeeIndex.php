@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 use JsonException;
 use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
@@ -70,9 +71,41 @@ class EmployeeIndex extends EmployeeComponent
 
     private LegalEntity $legalEntity;
 
+   #[Computed]
+    public function isSync(): bool
+    {
+       return $this->isSyncProcessing();
+    }
+
+    /**
+     * Determine if a synchronization process is currently running.
+     *
+     * @return bool True if a sync process is actively processing, false otherwise.
+     */
+    protected function isSyncProcessing(): bool
+    {
+        // Get the sync status for whole Legal Entity
+        $legalEntitySyncStatus = legalEntity()?->getEntityStatus();
+
+        // Get the sync status only for Division
+        $employeeSyncStatus = legalEntity()?->getEntityStatus(LegalEntity::ENTITY_EMPLOYEE);
+
+        // Determine if either the Legal Entity's sync is in progress
+        $legalEntitySync = $legalEntitySyncStatus !== JobStatus::COMPLETED->value && ($legalEntitySyncStatus !== JobStatus::PAUSED->value && !empty($legalEntitySyncStatus));
+
+        // Determine if either the Division's sync is in progress
+        $employeeSync = $employeeSyncStatus !== JobStatus::COMPLETED->value && ($employeeSyncStatus !== JobStatus::PAUSED->value && !empty($employeeSyncStatus));
+
+        // Return true if either sync is in progress
+        return $legalEntitySync || $employeeSync;
+    }
+
     public function boot(): void
     {
         $this->legalEntity = legalEntity();
+
+        // This will ensure that the 'isSync' computed property is not cached between requests
+        unset($this->isSync);
     }
 
     public function mount(LegalEntity $legalEntity): void
@@ -267,6 +300,12 @@ class EmployeeIndex extends EmployeeComponent
      */
     public function sync(): void
     {
+        if ($this->isSyncProcessing()) {
+            Session::flash('error', 'Синхронізація вже запущена. Будь ласка, зачекайте її завершення.');
+
+            return;
+        }
+
         $user = Auth::user();
         $user->notify(new SyncNotification('employee', 'started'));
 
@@ -361,9 +400,14 @@ class EmployeeIndex extends EmployeeComponent
                 ->onQueue('sync')
                 ->name('Employee Full Sync')
                 ->dispatch();
-
-            // $this->batchId = $batch->id;
         }
+
+        legalEntity()?->setEntityStatus(JobStatus::PROCESSING, LegalEntity::ENTITY_EMPLOYEE);
+
+        $this->dispatch('flashMessage', [
+            'message' => "Сторінка 1 оброблена. Решта завантажується фоново.",
+            'type' => 'success'
+        ]);
     }
 
     /**
