@@ -22,8 +22,7 @@
                      x-trap.noscroll.inert="showAuthMethodModal"
                      class="modal-content w-full max-w-4xl mx-auto"
                 >
-                    <!-- Крок 0: Головне меню -->
-                    <div x-show="localStep === 0" wire:key="auth-step-0">
+                    <div x-show="localStep === {{ AuthStep::INITIAL }}" wire:key="auth-step-0">
                         <div class="flex items-center justify-between mb-8">
                             <legend class="legend !mb-0">{{ __('patients.authentication_methods') }}</legend>
 
@@ -43,26 +42,37 @@
                                      style="display: none"
                                      class="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl z-50 p-1 border border-gray-100"
                                 >
-                                    <button type="button"
-                                            @click="localStep = 1; openAdd = false"
-                                            class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded text-gray-700 transition-colors"
-                                    >
-                                        Автентифікація через СМС
-                                    </button>
+                                    {{-- Can add method if none exist --}}
+                                    <template x-if="authenticationMethods.length === 0">
+                                        <button type="button"
+                                                @click="localStep = {{ AuthStep::ADD_NEW_BY_SMS }}; openAdd = false"
+                                                class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded text-gray-700 transition-colors"
+                                        >
+                                            Автентифікація через СМС
+                                        </button>
 
-                                    <button type="button"
-                                            @click="localStep = {{ AuthStep::ADD_NEW_BY_DOCUMENT }}; openAdd = false"
-                                            class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded text-gray-700 transition-colors"
-                                    >
-                                        Автентифікація через документи
-                                    </button>
+                                        <button type="button"
+                                                wire:click.prevent="createOfflineAuthMethod"
+                                                @click="openAdd = false"
+                                                class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded text-gray-700 transition-colors"
+                                        >
+                                            Автентифікація через документи
+                                        </button>
+                                    </template>
 
-                                    <button type="button"
-                                            @click="localStep = 4; openAdd = false"
-                                            class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded text-gray-700 transition-colors"
+                                    {{-- Can add only when for the same auth method --}}
+                                    <template x-if="
+                                                  authenticationMethods.length === 0 ||
+                                                  authenticationMethods.some(method => method.type === '{{ AuthenticationMethod::THIRD_PERSON->value }}')
+                                              "
                                     >
-                                        Автентифікація через третю особу
-                                    </button>
+                                        <button type="button"
+                                                @click="localStep = 4; openAdd = false"
+                                                class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded text-gray-700 transition-colors"
+                                        >
+                                            Автентифікація через третю особу
+                                        </button>
+                                    </template>
                                 </div>
                             </div>
                         </div>

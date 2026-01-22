@@ -11,11 +11,11 @@
                 <input type="tel"
                        placeholder=" "
                        class="peer input !py-2"
-                       wire:model="form.phoneNumber"
-                       id="add_sms_phone"
+                       wire:model="newPhoneNumber"
+                       id="phoneNumber"
                        x-mask="+380999999999"
                 />
-                <label class="label" for="add_sms_phone">{{ __('+380') }}</label>
+                <label class="label" for="phoneNumber">{{ __('+380') }}</label>
             </div>
         </div>
 
@@ -24,10 +24,10 @@
                 <input type="text"
                        placeholder=" "
                        class="peer input !py-2"
-                       wire:model="form.methodName"
-                       id="add_sms_name"
+                       wire:model="alias"
+                       id="alias"
                 />
-                <label class="label" for="add_sms_name">{{ __('patients.authentication_method_name') }}</label>
+                <label class="label" for="alias">{{ __('patients.authentication_method_name') }}</label>
             </div>
         </div>
     </div>
@@ -37,8 +37,8 @@
             {{ __('forms.back') }}
         </button>
 
-        <button type="button" wire:click="submitSmsMethod" class="button-primary">
-            {{ __('patients.confirm') }}
+        <button type="button" wire:click="createOtpAuthMethod" class="button-primary">
+            {{ __('forms.confirm') }}
         </button>
     </div>
 </div>

@@ -38,7 +38,7 @@
             {{ __('forms.back') }}
         </button>
 
-        <button type="button" wire:click="approveChangingType" class="button-primary">
+        <button type="button" wire:click="approveCreatingOffline" class="button-primary">
             {{ __('forms.confirm') }}
         </button>
     </div>
