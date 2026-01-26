@@ -4,26 +4,52 @@
           x-data="{
               authenticationMethods: $wire.entangle('form.person.authenticationMethods'),
               isIncapacitated: $wire.entangle('isIncapacitated'),
+              showAuthDocDrawer: false,
+              smsCode: '',
+              infoConfirmed: false,
+
+              init() {
+                  // Watch for changes to isIncapacitated and reset auth method if needed
+                  this.$watch('isIncapacitated', (newValue) => {
+                      const currentAuthType = this.authenticationMethods[0]?.type;
+                      const availableTypes = this.availableAuthMethods.map(method => method.value);
+
+                      // If current auth method is not available in the new state, reset it
+                      if (currentAuthType && !availableTypes.includes(currentAuthType)) {
+                          this.authenticationMethods[0].type = '';
+                          // Clear phoneNumber if switching away from OTP
+                          if (this.authenticationMethods[0].phoneNumber) {
+                              this.authenticationMethods[0].phoneNumber = '';
+                          }
+                      }
+                  });
+              },
 
               get availableAuthMethods() {
+                  const allMethods = [
+                      {
+                          value: '{{ AuthenticationMethod::OTP->value }}',
+                          label: '{{ __('forms.authentication') }} {{ AuthenticationMethod::OTP->label() }}'
+                      },
+                      {
+                          value: '{{ AuthenticationMethod::OFFLINE->value }}',
+                          label: '{{ __('forms.authentication') }} {{ AuthenticationMethod::OFFLINE->label() }}'
+                      },
+                      {
+                          value: '{{ AuthenticationMethod::THIRD_PERSON->value }}',
+                          label: '{{ __('forms.authentication') }} {{ AuthenticationMethod::THIRD_PERSON->label() }}'
+                      }
+                  ];
+
                   if (this.isIncapacitated) {
-                      return [
-                          {
-                              value: '{{ AuthenticationMethod::THIRD_PERSON->value }}',
-                              label: '{{ __('forms.authentication') }} {{ AuthenticationMethod::THIRD_PERSON->label() }}'
-                          }
-                      ];
+                      // If patient is incapacitated, only show THIRD_PERSON authentication
+                      return allMethods.filter(method => method.value === '{{ AuthenticationMethod::THIRD_PERSON->value }}');
                   } else {
-                      return [
-                          {
-                              value: '{{ AuthenticationMethod::OTP->value }}',
-                              label: '{{ __('forms.authentication') }} {{ AuthenticationMethod::OTP->label() }}'
-                          },
-                          {
-                              value: '{{ AuthenticationMethod::OFFLINE->value }}',
-                              label: '{{ __('forms.authentication') }} {{ AuthenticationMethod::OFFLINE->label() }}'
-                          }
-                      ];
+                      // If patient is not incapacitated, only show OTP and OFFLINE authentication
+                      return allMethods.filter(method =>
+                          method.value === '{{ AuthenticationMethod::OTP->value }}' ||
+                          method.value === '{{ AuthenticationMethod::OFFLINE->value }}'
+                      );
                   }
               }
           }"

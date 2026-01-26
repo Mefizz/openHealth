@@ -15,6 +15,7 @@ use App\Models\Person\PersonRequest;
 use App\Repositories\Repository;
 use App\Traits\Addresses\AddressSearch;
 use App\Traits\FormTrait;
+use Carbon\CarbonImmutable;
 use Exception;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Auth;
@@ -65,13 +66,6 @@ class PersonComponent extends Component
     public string $leafletContent;
 
     /**
-     * Check if the search person's request found someone.
-     *
-     * @var bool
-     */
-    public bool $searchPerformed = false;
-
-    /**
      * ID selected confidant person.
      *
      * @var string|null
@@ -105,6 +99,13 @@ class PersonComponent extends Component
      * @var bool
      */
     public bool $isIncapacitated = false;
+
+    /**
+     * UUID of a person who is younger than 18 y/o.
+     *
+     * @var string|null
+     */
+    public ?string $invalidPersonId = null;
 
     /**
      * KEP key.
@@ -141,20 +142,24 @@ class PersonComponent extends Component
     /**
      * Choose a confidant person from the provided list.
      *
-     * @param  string  $id
+     * @param  array  $personData
      * @return void
      */
-    public function chooseConfidantPerson(string $id): void
+    public function chooseConfidantPerson(array $personData): void
     {
-        $personData = collect($this->confidantPerson)->firstWhere('id', $id);
+        $birthDate = CarbonImmutable::parse($personData['birthDate']);
 
-        if ($personData) {
-            $this->selectedConfidantPersonId = $id;
-            $this->form->person['confidantPerson']['personId'] = $personData['id'];
-            $this->form->person['authenticationMethods'][0]['value'] = $personData['id'];
+        if ($birthDate->age < 18) {
+            $this->invalidPersonId = $personData['id'];
+
+            return;
         }
 
-        $this->searchPerformed = true;
+        $this->invalidPersonId = null;
+
+        $this->selectedConfidantPersonId = $personData['id'];
+        $this->form->person['confidantPerson']['personId'] = $personData['id'];
+        $this->form->person['authenticationMethods'][0]['value'] = $personData['id'];
     }
 
     /**
@@ -168,7 +173,6 @@ class PersonComponent extends Component
 
         $this->form->person['confidantPerson']['personId'] = '';
         $this->selectedConfidantPersonId = null;
-        $this->searchPerformed = false;
     }
 
     /**
@@ -204,8 +208,6 @@ class PersonComponent extends Component
 
             return;
         }
-
-        $this->searchPerformed = true;
     }
 
     /**
