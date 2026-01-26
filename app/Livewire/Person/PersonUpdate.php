@@ -9,7 +9,6 @@ use App\Core\Arr;
 use App\Enums\Person\AuthStep;
 use App\Models\Relations\AuthenticationMethod as AuthenticationMethodModel;
 use App\Enums\Person\AuthenticationMethod;
-use App\Enums\Person\AuthenticationMethodAction;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
 use App\Models\LegalEntity;
@@ -274,6 +273,46 @@ class PersonUpdate extends PersonComponent
         }
     }
 
+    public function createOtpAuthMethod(): void
+    {
+        $this->changePhoneNumber($this->newPhoneNumber);
+    }
+
+    public function createOfflineAuthMethod(): void
+    {
+        try {
+            $response = EHealth::person()->insertAuthMethod($this->uuid, AuthenticationMethod::OFFLINE);
+
+            $this->requestId = $response->validate()['id'];
+            $this->uploadedDocuments = $response->validate()['documents'];
+            $this->authStep = AuthStep::CHANGE_FROM_OFFLINE;
+        } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
+            $this->handleEHealthExceptions($exception, 'Error when creating auth method request');
+
+            return;
+        }
+    }
+
+    public function approveCreatingOffline(): void
+    {
+        try {
+            $this->uploadDocuments();
+            $response = EHealth::person()->approveAuthMethod($this->uuid, $this->requestId);
+
+            // Update uuid and type with approved
+            Person::whereUuid($this->uuid)->firstOrFail()
+                ->authenticationMethods()
+                ->create($response->validate());
+
+            $this->showAuthMethodModal = false;
+            Session::flash('success', __('Метод автентифікації через документи успішно додано'));
+        } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
+            $this->handleEHealthExceptions($exception, 'Error when approving offline auth method');
+
+            return;
+        }
+    }
+
     /**
      * Verify is current phone number belongs to person.
      *
@@ -420,16 +459,12 @@ class PersonUpdate extends PersonComponent
     {
         $validated = $this->validate(['alias' => ['required', 'string', 'max:255']]);
 
-        $payload = [
-            'action' => AuthenticationMethodAction::UPDATE->value,
-            'authentication_method' => [
-                'id' => $this->selectedAuthMethodUuid,
-                'alias' => $validated['alias']
-            ]
-        ];
-
         try {
-            $response = EHealth::person()->createAuthMethod($this->uuid, $payload);
+            $response = EHealth::person()->updateAuthMethod(
+                $this->uuid,
+                $this->selectedAuthMethodUuid,
+                $validated['alias']
+            );
             $this->requestId = $response->validate()['id'];
 
             if ($this->selectedAuthMethodType === AuthenticationMethod::OFFLINE->value) {
@@ -501,16 +536,12 @@ class PersonUpdate extends PersonComponent
             ['newPhoneNumber' => 'required', new PhoneNumber()]
         )->validate();
 
-        $payload = [
-            'action' => AuthenticationMethodAction::INSERT->value,
-            'authentication_method' => [
-                'type' => AuthenticationMethod::OTP->value,
-                'phone_number' => $validated['newPhoneNumber']
-            ]
-        ];
-
         try {
-            $response = EHealth::person()->createAuthMethod($this->uuid, $payload);
+            $response = EHealth::person()->insertAuthMethod(
+                $this->uuid,
+                AuthenticationMethod::OTP,
+                $validated['newPhoneNumber']
+            );
             $this->requestId = $response->validate()['id'];
             $this->uploadedDocuments = $response->validate()['documents'];
 

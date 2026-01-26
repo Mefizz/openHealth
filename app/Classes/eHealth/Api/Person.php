@@ -6,7 +6,9 @@ namespace App\Classes\eHealth\Api;
 
 use App\Classes\eHealth\EHealthRequest as Request;
 use App\Classes\eHealth\EHealthResponse;
+use App\Core\Arr;
 use App\Enums\Person\AuthenticationMethod;
+use App\Enums\Person\AuthenticationMethodAction;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
 use App\Rules\InDictionary;
@@ -154,6 +156,85 @@ class Person extends Request
     public function createAuthMethod(string $id, array $data): PromiseInterface|EHealthResponse
     {
         $this->setValidator($this->validateCreateAuthMethod(...));
+
+        return $this->post(self::URL . "/$id/authentication_method_requests", $data);
+    }
+
+    /**
+     * Deactivation an auth method.
+     *
+     * @param  string  $id  Person UUID
+     * @param  string  $authId  Auth method UUID
+     * @return PromiseInterface|EHealthResponse
+     * @throws ConnectionException|EHealthValidationException|EHealthResponseException
+     *
+     * @see https://uaehealthapi.docs.apiary.io/#reference/public.-medical-service-provider-integration-layer/persons/create-authentication-method-request
+     */
+    public function deactivateAuthMethod(string $id, string $authId): PromiseInterface|EHealthResponse
+    {
+        $data = [
+            'action' => AuthenticationMethodAction::DEACTIVATE->value,
+            'authentication_method' => ['id' => $authId]
+        ];
+
+        return $this->post(self::URL . "/$id/authentication_method_requests", $data);
+    }
+
+    /**
+     * Adding an authentication method to an existing person.
+     *
+     * @param  string  $id
+     * @param  AuthenticationMethod  $type
+     * @param  string|null  $phoneNumber
+     * @param  string|null  $value
+     * @param  string|null  $alias
+     * @return PromiseInterface|EHealthResponse
+     * @throws ConnectionException|EHealthValidationException|EHealthResponseException
+     *
+     * @see https://uaehealthapi.docs.apiary.io/#reference/public.-medical-service-provider-integration-layer/persons/create-authentication-method-request
+     */
+    public function insertAuthMethod(
+        string $id,
+        AuthenticationMethod $type,
+        ?string $phoneNumber = null,
+        ?string $value = null,
+        ?string $alias = null
+    ): PromiseInterface|EHealthResponse {
+        $authenticationMethod = Arr::whereNotNull([
+            'type' => $type->value,
+            'phone_number' => $phoneNumber,
+            'value' => $value,
+            'alias' => $alias
+        ]);
+
+        $data = [
+            'action' => AuthenticationMethodAction::INSERT->value,
+            'authentication_method' => $authenticationMethod
+        ];
+
+        return $this->post(self::URL . "/$id/authentication_method_requests", $data);
+    }
+
+    /**
+     * Update an auth method alias.
+     *
+     * @param  string  $id  Person UUID
+     * @param  string  $authId  Auth method UUID
+     * @param  string  $alias
+     * @return PromiseInterface|EHealthResponse
+     * @throws ConnectionException|EHealthValidationException|EHealthResponseException
+     *
+     * @see https://uaehealthapi.docs.apiary.io/#reference/public.-medical-service-provider-integration-layer/persons/create-authentication-method-request
+     */
+    public function updateAuthMethod(string $id, string $authId, string $alias): PromiseInterface|EHealthResponse
+    {
+        $data = [
+            'action' => AuthenticationMethodAction::UPDATE->value,
+            'authentication_method' => [
+                'id' => $authId,
+                'alias' => $alias
+            ]
+        ];
 
         return $this->post(self::URL . "/$id/authentication_method_requests", $data);
     }
