@@ -8,6 +8,7 @@ use Throwable;
 use App\Models\User;
 use App\Enums\JobStatus;
 use Illuminate\Bus\Batch;
+use App\Jobs\CompleteSync;
 use App\Models\LegalEntity;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
@@ -114,7 +115,9 @@ abstract class EHealthJob implements ShouldQueue
         echo "Start from user: " . ($this->user ? $this->user->id : 'No user found') . PHP_EOL;
         echo "Legal Entity ID: " . ($this->legalEntity ? $this->legalEntity->id : 'No legal entity found') . PHP_EOL;
 
-        $this->setEntityStatus(JobStatus::PROCESSING);
+        if (static::BATCH_NAME !== CompleteSync::BATCH_NAME) {
+            $this->setEntityStatus(JobStatus::PROCESSING);
+        }
 
         $this->token = Crypt::decryptString($this->batch()->options['token'] ?? '');
 
@@ -136,14 +139,16 @@ abstract class EHealthJob implements ShouldQueue
             return;
         }
 
-        echo "Job COMPLETED: " . static::BATCH_NAME . PHP_EOL;
-
-        $this->setEntityStatus(JobStatus::COMPLETED);
-
         $nextJob = $this->getNextEntityJob();
 
         if ($nextJob !== null) {
-            echo "Scheduling next job: " . $nextJob::BATCH_NAME . PHP_EOL;
+            echo "Scheduling next job: " . $nextJob::BATCH_NAME . " from " . static::BATCH_NAME.  PHP_EOL;
+
+            if ($nextJob::BATCH_NAME === CompleteSync::BATCH_NAME || $nextJob::BATCH_NAME !== static::BATCH_NAME) {
+                echo "Job COMPLETED: " . static::BATCH_NAME . PHP_EOL;
+
+                $this->setEntityStatus(JobStatus::COMPLETED);
+            }
 
             Bus::batch([$nextJob])
                 ->name($nextJob::BATCH_NAME)

@@ -20,7 +20,7 @@ class EmployeeRequestsSyncAll extends EHealthJob
 
     public const string BATCH_NAME = 'EmployeeRequestsSyncAll';
     public const string SCOPE_REQUIRED = 'employee_request:read';
-    public const string ENTITY = LegalEntity::ENTITY_EMPLOYEE;
+    public const string ENTITY = LegalEntity::ENTITY_EMPLOYEE_REQUEST;
 
     protected function sendRequest(string $token): PromiseInterface|EHealthResponse
     {
@@ -57,8 +57,10 @@ class EmployeeRequestsSyncAll extends EHealthJob
      */
     protected function getNextEntityJob(): ?EHealthJob
     {
-        return $this->standalone
+        $nextEntity = $this->nextEntity ?? $this->getEmployeeRequestDetailsStartJob($this->legalEntity, $this->nextEntity);
+
+        return $this->standalone || !$nextEntity
             ? new CompleteSync($this->legalEntity, isFirstLogin: $this->isFirstLogin)
-            : $this->getEmployeeRequestDetailsStartJob($this->legalEntity, $this->nextEntity);
+            : $nextEntity;
     }
 }

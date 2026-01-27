@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Division\HealthcareService;
 
 use App\Classes\eHealth\EHealth;
+use App\Enums\JobStatus;
 use App\Enums\Status;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
@@ -58,6 +59,49 @@ class HealthcareServiceIndex extends Component
     public bool $isFiltersApplied = false;
 
     public array $dictionaryNames = ['DIVISION_TYPE', 'SPECIALITY_TYPE', 'PROVIDING_CONDITION'];
+
+    #[Computed]
+    public function isSync(): bool
+    {
+       return $this->isSyncProcessing();
+    }
+
+    /**
+     * Determine if a synchronization process is currently running.
+     *
+     * @return bool True if a sync process is actively processing, false otherwise.
+     */
+    protected function isSyncProcessing(): bool
+    {
+        // Get the sync status for whole Legal Entity
+        $legalEntitySyncStatus = legalEntity()?->getEntityStatus();
+
+        // Get the sync status only for Division
+        $divisionSyncStatus = legalEntity()?->getEntityStatus(LegalEntity::ENTITY_DIVISION);
+
+        // Determine if either the Legal Entity's sync is in progress
+        $legalEntitySync = $legalEntitySyncStatus !== JobStatus::FAILED->value && $legalEntitySyncStatus !== JobStatus::COMPLETED->value && ($legalEntitySyncStatus !== JobStatus::PAUSED->value && !empty($legalEntitySyncStatus));
+
+        // Determine if either the Division's sync is in progress
+        $divisionSync = $divisionSyncStatus !== JobStatus::COMPLETED->value && ($divisionSyncStatus !== JobStatus::PAUSED->value && !empty($divisionSyncStatus));
+
+        // Get the sync status only for Division
+        $hcsSyncStatus = legalEntity()?->getEntityStatus(LegalEntity::ENTITY_HEALTHCARE_SERVICE);
+
+        // Determine if either the Division's sync is in progress
+        $hcsSync = $hcsSyncStatus !== JobStatus::COMPLETED->value && ($hcsSyncStatus !== JobStatus::PAUSED->value && !empty($hcsSyncStatus));
+
+        $isDivisionsPresent = Division::all()->isNotEmpty();
+
+        // Return true if either sync is in progress
+        return $legalEntitySync || $divisionSync || !$isDivisionsPresent || $hcsSync;
+    }
+
+    public function boot(): void
+    {
+        // This will ensure that the 'isSync' computed property is not cached between requests
+        unset($this->isSync);
+    }
 
     public function mount(LegalEntity $legalEntity, Division $division): void
     {
@@ -184,6 +228,12 @@ class HealthcareServiceIndex extends Component
 
     public function sync(): void
     {
+        if ($this->isSyncProcessing()) {
+            Session::flash('error', 'Синхронізація вже запущена. Будь ласка, зачекайте її завершення.');
+
+            return;
+        }
+
         if (Auth::user()->cannot('sync', HealthcareService::class)) {
             Session::flash('error', 'У вас немає дозволу на синхронізацію послуг');
 
@@ -282,6 +332,8 @@ class HealthcareServiceIndex extends Component
             ->onQueue('sync')
             ->name('HealthcareServiceSync')
             ->dispatch();
+
+            legalEntity()?->setEntityStatus(JobStatus::PROCESSING, LegalEntity::ENTITY_HEALTHCARE_SERVICE);
     }
 
     public function render(): View

@@ -18,6 +18,7 @@ use App\Jobs\DeclarationsSync;
 use App\Repositories\Repository;
 use App\Classes\eHealth\EHealth;
 use App\Enums\Declaration\Status;
+use App\Enums\JobStatus;
 use App\Models\Employee\Employee;
 use Livewire\Attributes\Computed;
 use App\Models\DeclarationRequest;
@@ -35,6 +36,7 @@ use Illuminate\Http\Client\ConnectionException;
 use App\Notifications\DeclarationSyncCompleted;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
+use App\Models\User;
 
 class DeclarationIndex extends Component
 {
@@ -42,12 +44,17 @@ class DeclarationIndex extends Component
         WithPagination,
         FormTrait;
 
+    protected const string BATCH_NAME = 'Declarations Full Sync';
+    protected const string SUB_BATCH_NAME = 'DeclarationRequests Full Sync';
+
     /**
      * Search by patient first and last names.
      *
      * @var string
      */
     public string $searchByName = '';
+
+    public string $syncStatus = '';
 
     /**
      * Search by declaration and declaration request number
@@ -95,6 +102,68 @@ class DeclarationIndex extends Component
 
     public bool $isFiltersApplied = false;
 
+    /**
+     * Determine if the declaration is synchronized.
+     *
+     * @return bool True if the declaration is synchronized, false otherwise.
+     */
+    #[Computed]
+    public function isSync(): bool
+    {
+       return $this->isSyncProcessing();
+    }
+
+    /**
+     * Get the synchronization status of the declarations
+     *
+     * @return string The current sync status
+     */
+    protected function getSyncStatus(): string
+    {
+        return legalEntity()?->getEntityStatus(LegalEntity::ENTITY_DECLARATION) ?? '';
+    }
+
+    /**
+     * Determine if a synchronization process is currently running.
+     *
+     * @return bool True if a sync process is actively processing, false otherwise.
+     */
+    protected function isSyncProcessing(): bool
+    {
+        // Get the sync status for whole Legal Entity
+        $legalEntitySyncStatus = legalEntity()?->getEntityStatus();
+
+        // Get the sync status for Declaration Requests
+        $declarationRequestStatus = legalEntity()?->getEntityStatus(LegalEntity::ENTITY_DECLARATION_REQUEST);
+
+        // Set the sync status only for Declaration
+        $this->syncStatus = $this->getSyncStatus();
+
+        // Determine if either the Legal Entity's sync is in progress
+        $legalEntitySync = $legalEntitySyncStatus !== JobStatus::COMPLETED->value && ($legalEntitySyncStatus !== JobStatus::PAUSED->value && !empty($legalEntitySyncStatus));
+
+        // Determine if either the DeclarationRequest's sync is in progress (declarations depends on it)
+        $declarationRequestSync = $declarationRequestStatus !== JobStatus::COMPLETED->value &&
+                                  $declarationRequestStatus !== JobStatus::PAUSED->value &&
+                                  $declarationRequestStatus !== JobStatus::FAILED->value &&
+                                  !empty($declarationRequestStatus);
+
+        // Determine if either the Declaration's sync is in progress
+        $declarationSync = $this->syncStatus !== JobStatus::COMPLETED->value &&
+                               $this->syncStatus !== JobStatus::PAUSED->value &&
+                               $this->syncStatus !== JobStatus::FAILED->value &&
+                               !empty($this->syncStatus);
+
+        // Return true if either sync is in progress
+        return $legalEntitySync || $declarationSync || $declarationRequestSync;
+    }
+
+    public function boot(): void
+    {
+        // This will ensure that the 'isSync' computed property is not cached between requests
+        unset($this->isSync);
+    }
+
     public function mount(LegalEntity $legalEntity): void
     {
         $user = Auth::user();
@@ -106,6 +175,8 @@ class DeclarationIndex extends Component
         } else {
             $this->countActive = Declaration::whereIn('employee_id', $this->employeeIds)->count();
         }
+
+        $this->syncStatus = $this->getSyncStatus();
     }
 
     public function search(): void
@@ -241,9 +312,16 @@ class DeclarationIndex extends Component
             return;
         }
 
+        if ($this->isSyncProcessing()) {
+            Session::flash('error', 'Синхронізація вже запущена. Будь ласка, зачекайте її завершення.');
+
+            return;
+        }
+
         $legalEntity = legalEntity();
 
         $user = Auth::user();
+        $token = session()->get(config('ehealth.api.oauth.bearer_token'));
         $user->notify(new SyncNotification('declaration', 'started'));
 
         // Get declarations from eHealth filtered by legal entity
@@ -280,8 +358,6 @@ class DeclarationIndex extends Component
             return;
         }
 
-        $token = session()->get(config('ehealth.api.oauth.bearer_token'));
-
         // Check if there are more pages to process
         if ($response->isNotLast()) {
             Bus::batch([
@@ -312,9 +388,13 @@ class DeclarationIndex extends Component
                     $user->notify(new DeclarationSyncCompleted($message, 'error'));
                 })
                 ->onQueue('sync')
-                ->name('Declarations Full Sync')
+                ->name(self::BATCH_NAME)
                 ->dispatch();
-        } else {
+
+                legalEntity()?->setEntityStatus(JobStatus::PROCESSING, LegalEntity::ENTITY_DECLARATION);
+
+                session()->flash('success', __('declarations.sync.started'));
+        } else if (!empty($declarations['declarations'])) {
             Bus::batch($this->getDeclarationRequestsStartJob($legalEntity, null))
                 ->withOption('legal_entity_id', $legalEntity->id)
                 ->withOption('token', Crypt::encryptString($token))
@@ -337,11 +417,16 @@ class DeclarationIndex extends Component
                     $user->notify(new DeclarationSyncCompleted($message, 'error'));
                 })
                 ->onQueue('sync')
-                ->name('DeclarationRequest Full Sync')
+                ->name(self::SUB_BATCH_NAME)
                 ->dispatch();
-        }
 
-        session()->flash('success', __('declarations.sync.started'));
+                session()->flash('success', __('declarations.sync.started'));
+        } else {
+            // If there were no declarations to sync, mark the status as completed
+            legalEntity()?->setEntityStatus(JobStatus::COMPLETED, LegalEntity::ENTITY_DECLARATION);
+
+            session()->flash('success', );
+        }
     }
 
     public function approve(int $patientId, int $declarationRequestId): void

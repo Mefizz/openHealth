@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\License;
 
 use App\Classes\eHealth\EHealth;
+use App\Enums\JobStatus;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
 use App\Models\LegalEntity;
@@ -68,6 +69,8 @@ class LicenseIndex extends Component
 
             return;
         }
+
+        legalEntity()?->setEntityStatus(JobStatus::COMPLETED, LegalEntity::ENTITY_LICENSE);
 
         Session::flash('success', __('licenses.success.sync'));
     }

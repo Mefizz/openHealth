@@ -7,6 +7,7 @@ namespace App\Livewire\Equipment;
 use App\Classes\eHealth\EHealth;
 use App\Enums\Equipment\AvailabilityStatus;
 use App\Enums\Equipment\Status;
+use App\Enums\JobStatus;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
 use App\Jobs\EquipmentSync;
@@ -34,6 +35,8 @@ class EquipmentIndex extends Component
 {
     use WithPagination;
     use StatusTrait;
+
+    protected const string BATCH_NAME = 'EquipmentSync';
 
     /**
      * Search by equipment name and inventory number.
@@ -79,11 +82,71 @@ class EquipmentIndex extends Component
 
     public bool $isFiltersApplied = false;
 
+    /**
+     * Represents the current synchronization status for the component.
+     *
+     * @var string
+     */
+    public string $syncStatus = '';
+
+    private LegalEntity $legalEntity;
+
+    #[Computed]
+    public function isSync(): bool
+    {
+       return $this->isSyncProcessing();
+    }
+
+    /**
+     * Get the synchronization status of the equipment entity
+     *
+     * @return string The current sync status
+     */
+    protected function getSyncStatus(): string
+    {
+        return legalEntity()?->getEntityStatus(LegalEntity::ENTITY_EQUIPMENT) ?? '';
+    }
+
+    /**
+     * Determine if a synchronization process is currently running.
+     *
+     * @return bool True if a sync process is actively processing, false otherwise.
+     */
+    protected function isSyncProcessing(): bool
+    {
+        // Get the sync status for whole Legal Entity
+        $legalEntitySyncStatus = legalEntity()?->getEntityStatus();
+
+        // Set the sync status only for Equipment
+        $this->syncStatus = $this->getSyncStatus();
+
+        // Determine if either the Legal Entity's sync is in progress
+        $legalEntitySync = $legalEntitySyncStatus !== JobStatus::COMPLETED->value &&
+                           ($legalEntitySyncStatus !== JobStatus::PAUSED->value && !empty($legalEntitySyncStatus));
+
+        // Determine if either the Equipment's sync is in progress
+        $equipmentSync = $this->syncStatus !== JobStatus::COMPLETED->value &&
+                               $this->syncStatus !== JobStatus::PAUSED->value &&
+                               $this->syncStatus !== JobStatus::FAILED->value &&
+                               !empty($this->syncStatus);
+
+        // Return true if either sync is in progress
+        return $legalEntitySync || $equipmentSync;
+    }
+
+    public function boot(): void
+    {
+        // This will ensure that the 'isSync' computed property is not cached between requests
+        unset($this->isSync);
+    }
+
     public function mount(LegalEntity $legalEntity): void
     {
         $this->divisions = $legalEntity->divisions()->select(['id', 'name'])->get()->toArray();
         $this->statusFilter = Status::values();
         $this->availabilityStatusFilter = AvailabilityStatus::values();
+
+        $this->syncStatus = $this->getSyncStatus();
     }
 
     public function search(): void
@@ -103,6 +166,12 @@ class EquipmentIndex extends Component
     {
         if (Auth::user()->cannot('sync', Equipment::class)) {
             Session::flash('error', 'У вас немає дозволу на синхронізацію обладнань');
+
+            return;
+        }
+
+        if ($this->isSyncProcessing()) {
+            Session::flash('error', 'Синхронізація вже запущена. Будь ласка, зачекайте її завершення.');
 
             return;
         }
@@ -214,8 +283,10 @@ class EquipmentIndex extends Component
                 $user->notify(new SyncNotification('equipment', 'failed'));
             })
             ->onQueue('sync')
-            ->name('EquipmentSync')
+            ->name(self::BATCH_NAME)
             ->dispatch();
+
+        legalEntity()?->setEntityStatus(JobStatus::PROCESSING, LegalEntity::ENTITY_EQUIPMENT);
     }
 
     public function render(): View

@@ -36,7 +36,11 @@
         @if(auth()->getDefaultDriver() === 'ehealth')
             @can('sync', [LegalEntity::class, $le])
                 <div class="flex flex-wrap items-end justify-between gap-4 max-w-6xl">
-                    <button wire:click="sync" class="button-sync flex items-center gap-2">
+                    <button
+                        wire:click="{{ !$this->isSync ? 'sync' : '' }}"
+                        class="{{ $this->isSync ? 'button-sync-disabled' : 'button-sync' }} flex items-center gap-2 whitespace-nowrap"
+                        {{ $this->isSync ? 'disabled' : '' }}
+                    >
                         @icon('refresh', 'w-4 h-4')
                         {{ __('forms.synchronise_with_eHealth') }}
                     </button>

@@ -3,7 +3,6 @@
 namespace App\Listeners;
 
 use Throwable;
-use App\Enums\JobStatus;
 use App\Events\EHealthUserLogin;
 use Illuminate\Support\Facades\Log;
 use App\Notifications\SyncNotification;
@@ -47,19 +46,9 @@ class OnRegularLoginSyncronization implements ShouldQueue
         foreach ($failedBatches as $batch) {
             echo 'Found related batch: ' . $batch->name . ' id: ' . $batch->id . PHP_EOL;
 
-            // Extract pending jobs from the batches
-            $pendingJobs = $this->extractPendingJobsFromBatches($batch);
-
-            if (empty($pendingJobs)) {
-                echo 'No pending jobs found in batch: ' . $batch->name . ' id: ' . $batch->id . PHP_EOL;
-
-                continue;
-            }
-
-            $this->restartFailedBatch($event->user, $batch, $event->token, $event->legalEntity, $pendingJobs);
+            $this->restartBatch($batch, $event->user, $event->token, $event->legalEntity);
         }
 
-        $event->legalEntity->setEntityStatus(JobStatus::PROCESSING);
         $event->user->notify(new SyncNotification('legal_entity', 'resumed'));
     }
 

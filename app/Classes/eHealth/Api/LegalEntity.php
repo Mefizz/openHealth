@@ -158,9 +158,9 @@ class LegalEntity extends Request
             'website' => "nullable|string",
 
             'ehealth_inserted_at' => 'nullable|date',
-            'ehealth_inserted_by' => 'nullable|uuid',
+            'inserted_by' => 'nullable|uuid',
             'ehealth_updated_at' => 'nullable|date',
-            'ehealth_updated_by' => 'nullable|uuid',
+            'updated_by' => 'nullable|uuid',
 
             'public_offer' => 'nullable|array',
             'public_offer.consent_text' => 'required_with:public_offer|string',
@@ -186,9 +186,7 @@ class LegalEntity extends Request
             $newName = match ($name) {
                 'id' => 'uuid',
                 'inserted_at' => 'ehealth_inserted_at',
-                'inserted_by' => 'ehealth_inserted_by',
                 'updated_at' => 'ehealth_updated_at',
-                'updated_by' => 'ehealth_updated_by',
                 default => $name
             };
 

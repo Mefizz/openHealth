@@ -18,7 +18,12 @@
         </x-slot>
 
         <div class="mt-3 ml-0 flex flex-col sm:flex-row sm:flex-wrap gap-2 self-start">
-            <button wire:click="sync" wire:loading.attr="disabled" class="button-sync flex items-center gap-2">
+            <button
+                wire:click="{{ !$this->isSync ? 'sync' : '' }}"
+                wire:loading.attr="disabled"
+                class="{{ $this->isSync ? 'button-sync-disabled' : 'button-sync' }} flex items-center gap-2 whitespace-nowrap"
+                {{ $this->isSync ? 'disabled' : '' }}
+            >
                 <span wire:loading.remove wire:target="sync">@icon('refresh', 'w-4 h-4')</span>
                 <span wire:loading wire:target="sync" class="animate-spin">@icon('refresh', 'w-4 h-4')</span>
                 <span>{{ __('forms.sync_all') }}</span>
@@ -150,6 +155,6 @@
             {{ $requests->links() }}
         </div>
     </div>
-    <x-forms.loading/>
+    <x-forms.loading wire:target="sync"/>
 </div>
 </div>

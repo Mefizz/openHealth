@@ -6,9 +6,11 @@ namespace App\Livewire\Division;
 
 use Throwable;
 use Exception;
+use App\Enums\JobStatus;
 use App\Models\Division;
 use Illuminate\Bus\Batch;
 use App\Jobs\DivisionSync;
+use App\Models\LegalEntity;
 use Livewire\WithPagination;
 use App\Classes\eHealth\EHealth;
 use App\Repositories\Repository;
@@ -20,6 +22,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Session;
 use App\Notifications\SyncNotification;
+use App\Traits\BatchLegalEntityQueries;
 use App\Livewire\Division\Trait\HasAction;
 use Illuminate\Http\Client\ConnectionException;
 use App\Exceptions\EHealth\EHealthResponseException;
@@ -27,25 +30,67 @@ use App\Exceptions\EHealth\EHealthValidationException;
 
 class DivisionIndex extends DivisionComponent
 {
-    use WithPagination;
-    use HasAction;
+    use BatchLegalEntityQueries,
+        WithPagination,
+        HasAction;
+
+    protected const string BATCH_NAME = 'DivisionSync';
+
+    public string $syncStatus = '';
 
     #[Computed]
-    public function tableHeaders(): array
+    public function isSync(): bool
     {
-        return [
-            __('forms.name'),
-            __('forms.type'),
-            __('Телефон'),
-            __('Email'),
-            __('Статус'),
-            __('forms.action'),
-        ];
+       return $this->isSyncProcessing();
+    }
+
+    /**
+     * Get the current synchronization status
+     *
+     * @return string The synchronization status
+     */
+    protected function getSyncStatus(): string
+    {
+        return legalEntity()?->getEntityStatus(LegalEntity::ENTITY_DIVISION) ?? '';
+    }
+
+    /**
+     * Determine if a synchronization process is currently running.
+     *
+     * @return bool True if a sync process is actively processing, false otherwise.
+     */
+    protected function isSyncProcessing(): bool
+    {
+        // Get the sync status for whole Legal Entity
+        $legalEntitySyncStatus = legalEntity()?->getEntityStatus();
+
+        // Get the sync status only for Division
+        $this->syncStatus = $this->getSyncStatus();
+
+        // Determine if either the Legal Entity's sync is in progress
+        $legalEntitySync = $legalEntitySyncStatus !== JobStatus::COMPLETED->value && ($legalEntitySyncStatus !== JobStatus::PAUSED->value && !empty($legalEntitySyncStatus));
+
+        // Determine if either the Division's sync is in progress
+        $divisionSync = $this->syncStatus !== JobStatus::COMPLETED->value &&
+                        $this->syncStatus !== JobStatus::PAUSED->value &&
+                        $this->syncStatus !== JobStatus::FAILED->value &&
+                        !empty($this->syncStatus);
+
+        // Return true if either sync is in progress
+        return $legalEntitySync || $divisionSync;
+    }
+
+    public function boot(): void
+    {
+        // This will ensure that the 'isSync' computed property is not cached between requests
+        unset($this->isSync);
     }
 
     public function mount(): void
     {
         $this->setDictionary();
+
+        $this->syncStatus = $this->getSyncStatus();
     }
 
     /**
@@ -71,6 +116,22 @@ class DivisionIndex extends DivisionComponent
     {
         if (Auth::user()->cannot('viewAny', Division::class)) {
             Session::flash('error', 'У вас немає дозволу на синхронізацію місць надання послуг');
+
+            return;
+        }
+
+        if ($this->isSyncProcessing()) {
+            Session::flash('error', 'Синхронізація вже запущена. Будь ласка, зачекайте її завершення.');
+
+            return;
+        }
+
+        $user = Auth::user();
+        $token = session()->get(config('ehealth.api.oauth.bearer_token'));
+
+        // Try to resume if previous batch failed or was paused
+        if ($this->syncStatus === JobStatus::FAILED->value || $this->syncStatus === JobStatus::PAUSED->value) {
+           $this->resumeSyncronization($user, $token);
 
             return;
         }
@@ -107,9 +168,6 @@ class DivisionIndex extends DivisionComponent
 
         // If there are more pages, dispatch a job to handle the rest
         if ($response->isNotLast()) {
-            $token = session()->get(config('ehealth.api.oauth.bearer_token'));
-            $user = Auth::user();
-
             Bus::batch([
                 new DivisionSync(
                     legalEntity: legalEntity(),
@@ -132,17 +190,15 @@ class DivisionIndex extends DivisionComponent
                     $user->notify(new SyncNotification('division', 'failed'));
                 })
                 ->onQueue('sync')
-                ->name('DivisionSync')
+                ->name(self::BATCH_NAME)
                 ->dispatch();
+
+                legalEntity()?->setEntityStatus(JobStatus::PROCESSING, LegalEntity::ENTITY_DIVISION);
 
                 session()->flash('success', __('Синхронізація запущена у фоновому режимі'));
         } else {
             session()->flash('success', __('Інформацію успішно оновлено'));
         }
-
-        $this->redirect(route('division.index', [legalEntity()]), navigate: true);
-
-        return;
     }
 
     public function render(): View

@@ -4,46 +4,105 @@ declare(strict_types=1);
 
 namespace App\Livewire\EmployeeRequest;
 
-use App\Classes\eHealth\EHealth;
-use App\Enums\Employee\RequestStatus;
-use App\Exceptions\EHealth\EHealthResponseException;
-use App\Jobs\EmployeeRequestsSyncAll;
-use App\Jobs\EmployeeSync;
-use App\Livewire\Employee\EmployeeComponent;
-use App\Models\Employee\EmployeeRequest;
-use App\Models\LegalEntity;
-use App\Notifications\EmployeeRequestSyncCompleted;
-use App\Notifications\EmployeeSyncCompleted;
-use App\Services\Employee\EmployeeRequestProcessor;
-use App\Traits\BatchLegalEntityQueries;
 use Auth;
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Log;
-use Livewire\Attributes\Computed;
-use Livewire\WithPagination;
-use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\Crypt;
+use App\Enums\JobStatus;
 use Illuminate\Bus\Batch;
+use App\Models\LegalEntity;
+use Livewire\WithPagination;
+use App\Classes\eHealth\EHealth;
+use Livewire\Attributes\Computed;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Crypt;
+use App\Enums\Employee\RequestStatus;
+use App\Jobs\EmployeeRequestsSyncAll;
+use Illuminate\Support\Facades\Session;
+use App\Traits\BatchLegalEntityQueries;
+use App\Models\Employee\EmployeeRequest;
+use App\Livewire\Employee\EmployeeComponent;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Http\Client\ConnectionException;
+use App\Notifications\EmployeeRequestSyncCompleted;
+use App\Services\Employee\EmployeeRequestProcessor;
+use App\Exceptions\EHealth\EHealthResponseException;
 
 class EmployeeRequestIndex extends EmployeeComponent
 {
     use WithPagination,
         BatchLegalEntityQueries;
 
+    protected const string BATCH_NAME = 'EmployeeRequest Full Sync';
+    protected const string SUB_BATCH_NAME = 'EmployeeRequestRequests Full Sync';
+
     public string $search = '';
     public string $status = '';
+
+    /**
+     * Represents the current synchronization status for the component.
+     *
+     * @var string
+     */
+    public string $syncStatus = '';
+
     private LegalEntity $legalEntity;
+
+    #[Computed]
+    public function isSync(): bool
+    {
+       return $this->isSyncProcessing();
+    }
+
+    /**
+     * Get the synchronization status of the employee request.
+     *
+     * @return string The current sync status
+     */
+    protected function getSyncStatus(): string
+    {
+        return legalEntity()?->getEntityStatus(LegalEntity::ENTITY_EMPLOYEE_REQUEST) ?? '';
+    }
+
+    /**
+     * Determine if a synchronization process is currently running.
+     *
+     * @return bool True if a sync process is actively processing, false otherwise.
+     */
+    protected function isSyncProcessing(): bool
+    {
+        // Get the sync status for whole Legal Entity
+        $legalEntitySyncStatus = legalEntity()?->getEntityStatus();
+
+        // Set the sync status only for EmployeeRequest
+        $this->syncStatus = $this->getSyncStatus();
+
+        // Determine if either the Legal Entity's sync is in progress
+        $legalEntitySync = $legalEntitySyncStatus !== JobStatus::COMPLETED->value && ($legalEntitySyncStatus !== JobStatus::PAUSED->value && !empty($legalEntitySyncStatus));
+
+        // Determine if either the EmployeeRequest's sync is in progress
+        $employeeRequestSync = $this->syncStatus !== JobStatus::COMPLETED->value &&
+                               $this->syncStatus !== JobStatus::PAUSED->value &&
+                               $this->syncStatus !== JobStatus::FAILED->value &&
+                               !empty($this->syncStatus);
+
+        // Return true if either sync is in progress
+        return $legalEntitySync || $employeeRequestSync;
+    }
 
     public function boot(): void
     {
         $this->legalEntity = legalEntity();
+
+        // This will ensure that the 'isSync' computed property is not cached between requests
+        unset($this->isSync);
     }
 
     public function mount(LegalEntity $legalEntity): void
     {
         $this->legalEntity = $legalEntity;
+
         $this->loadDictionaries();
+
+        $this->syncStatus = $this->getSyncStatus();
     }
 
     public function updatedSearch(): void
@@ -128,7 +187,20 @@ class EmployeeRequestIndex extends EmployeeComponent
      */
     public function sync(EmployeeRequestProcessor $processor): void
     {
+        if (Auth::user()->cannot('viewAny', EmployeeRequest::class)) {
+            session()->flash('error', __('У вас немає дозволу на синхронізацію заявок'));
+
+            return;
+        }
+
+        if ($this->isSyncProcessing()) {
+            Session::flash('error', 'Синхронізація вже запущена. Будь ласка, зачекайте її завершення.');
+
+            return;
+        }
+
         $user = Auth::user();
+        $token = session()->get(config('ehealth.api.oauth.bearer_token'));
 
         // Notify start
         $this->dispatch('flashMessage', [
@@ -159,9 +231,7 @@ class EmployeeRequestIndex extends EmployeeComponent
 
         // 2. Process Page 1 immediately
         $validatedData = $response->validate();
-        $processedCount = $processor->processBatch($validatedData, legalEntity());
-
-        $token = session()->get(config('ehealth.api.oauth.bearer_token'));
+        $processor->processBatch($validatedData, legalEntity());
 
         // 3. Check if there are more pages
         if ($response->isNotLast()) {
@@ -189,7 +259,7 @@ class EmployeeRequestIndex extends EmployeeComponent
                     $user->notify(new EmployeeRequestSyncCompleted($message, 'error'));
                 })
                 ->onQueue('sync')
-                ->name('EmployeeRequest Full Sync')
+                ->name(self::BATCH_NAME)
                 ->dispatch();
         } else {
              Bus::batch($this->getEmployeeRequestDetailsStartJob($this->legalEntity, null))
@@ -208,14 +278,17 @@ class EmployeeRequestIndex extends EmployeeComponent
                     $user->notify(new EmployeeRequestSyncCompleted($message, 'error'));
                 })
                 ->onQueue('sync')
-                ->name('EmployeeRequest Details Full Sync')
+                ->name(self::SUB_BATCH_NAME)
                 ->dispatch();
         }
 
+        legalEntity()?->setEntityStatus(JobStatus::PROCESSING, LegalEntity::ENTITY_EMPLOYEE_REQUEST);
+
         $this->dispatch('flashMessage', [
-                'message' => "Сторінка 1 оброблена ({$processedCount} оновлень). Решта завантажується фоново.",
-                'type' => 'success'
-            ]);
+            'message' => "Сторінка 1 оброблена. Решта завантажується фоново.",
+            'type' => 'success'
+        ]);
+
         // Force refresh of the table
         $this->resetPage();
     }

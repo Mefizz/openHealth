@@ -24,9 +24,13 @@
                 </a>
             @endcan
 
-            <button wire:click="sync" class="button-sync flex items-center gap-2 whitespace-nowrap">
+            <button
+                wire:click="{{ !$this->isSync ? 'sync' : '' }}"
+                class="{{ $this->isSync ? 'button-sync-disabled' : 'button-sync' }} flex items-center gap-2 whitespace-nowrap"
+                {{ $this->isSync ? 'disabled' : '' }}
+            >
                 @icon('refresh', 'w-4 h-4')
-                {{ __('forms.synchronise_with_eHealth') }}
+                <span>{{ __('forms.synchronise_with_eHealth') }}</span>
             </button>
         </div>
     </x-header-navigation>

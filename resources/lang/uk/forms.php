@@ -220,6 +220,7 @@ return [
     'no_positions_found' => 'Посади відсутні',
     'application_register' => 'Реєстр заявок співробітників',
     'sync_all' => 'Синхронізувати всі',
+    'sync_retry' => 'Продовжити синхронізацію',
 
     // Documents
     'documents' => 'Документи',

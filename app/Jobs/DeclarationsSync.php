@@ -19,7 +19,7 @@ class DeclarationsSync extends EHealthJob
 
     public const string SCOPE_REQUIRED = 'declaration:read';
 
-    public const string ENTITY = LegalEntity::ENTITY_EMPLOYEE;
+    public const string ENTITY = LegalEntity::ENTITY_DECLARATION;
 
     /**
      * Get declarations data from EHealth API

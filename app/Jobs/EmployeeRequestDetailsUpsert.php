@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use Throwable;
+use App\Core\Arr;
+use App\Models\User;
 use App\Core\EHealthJob;
 use App\Enums\JobStatus;
 use App\Models\LegalEntity;
@@ -15,10 +17,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Queue\SerializesModels;
 use App\Classes\eHealth\EHealthResponse;
-use App\Core\Arr;
 use App\Enums\Employee\RevisionStatus;
 use App\Models\Employee\EmployeeRequest;
-use App\Models\User;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\Middleware\RateLimited;
@@ -33,7 +33,7 @@ class EmployeeRequestDetailsUpsert extends EHealthJob
 
     public const string SCOPE_REQUIRED = 'employee_request:read';
 
-    public const string ENTITY = LegalEntity::ENTITY_EMPLOYEE;
+    public const string ENTITY = LegalEntity::ENTITY_EMPLOYEE_REQUEST;
 
     protected const int RATE_LIMIT_DELAY = 3;
 
@@ -46,9 +46,9 @@ class EmployeeRequestDetailsUpsert extends EHealthJob
         parent::__construct(legalEntity: $legalEntity, nextEntity: $nextEntity, standalone: $standalone);
     }
 
-    // Get data from EHealth API
-
     /**
+     * Get data from EHealth API
+     *
      * @throws ConnectionException
      */
     protected function sendRequest(string $token): PromiseInterface|EHealthResponse|null
@@ -56,9 +56,9 @@ class EmployeeRequestDetailsUpsert extends EHealthJob
         return EHealth::employeeRequest()->withToken($token)->getDetails($this->employeeRequest->uuid);
     }
 
-    // Store or update data in the database
-
     /**
+     * Store or update data in the database
+     *
      * @throws Throwable
      */
     protected function processResponse(?EHealthResponse $response): void
@@ -68,7 +68,6 @@ class EmployeeRequestDetailsUpsert extends EHealthJob
         Log::info('Processing EmployeeRequestDetailsUpsert for employee_request:' . $this->employeeRequest->id . ', LE:' . ($this->legalEntity->id ?? 'N/A'));
 
         $this->employeeRequest->legalEntityUuid = $this->legalEntity?->uuid;
-
 
         $userEmail = Arr::get($validatedData, 'party.email');
 
