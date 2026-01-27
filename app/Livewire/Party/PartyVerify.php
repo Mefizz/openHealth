@@ -18,6 +18,7 @@ class PartyVerify extends Component
 {
     public Party $party;
     public LegalEntity $legalEntity;
+
     #[Locked]
     public array $verificationDetails = [];
 
@@ -38,18 +39,10 @@ class PartyVerify extends Component
         $this->party = $party;
         $this->loadVerificationDetails();
 
-        $nameChangeStatus = data_get($this->verificationDetails, 'details.dracs_name_change.verification_status');
-
-        if ($nameChangeStatus === 'NOT_VERIFIED') {
-            $this->stream = 'dracs_name_change';
-        } else {
-            $this->stream = 'dracs_death';
-        }
-
         $previous = url()->previous();
         $current = request()->url();
 
-        if ($previous !== $current && str_contains($previous, config('app.url'))) {
+        if ($previous !== $current && str_contains($previous, '/party-verification')) {
             $this->backUrl = $previous;
         } else {
             $this->backUrl = route('party.verification.index', ['legalEntity' => $legalEntity->id]);
@@ -58,159 +51,49 @@ class PartyVerify extends Component
 
     /**
      * Determines if there is any problem that can be solved manually.
-     * If so, the button will be active.
      */
     #[Computed]
     public function canUpdateVerification(): bool
     {
+        // 1. Getting the current death status
         $deathStatus = data_get($this->verificationDetails, 'details.dracs_death.verification_status');
-        $nameChangeStatus = data_get($this->verificationDetails, 'details.dracs_name_change.verification_status');
 
-        return $deathStatus === 'NOT_VERIFIED' || $nameChangeStatus === 'NOT_VERIFIED';
-    }
-
-    #[Computed]
-    public function drfoNotVerified(): bool
-    {
-        return data_get($this->verificationDetails, 'details.drfo.verification_status') === 'NOT_VERIFIED';
-    }
-
-    #[Computed]
-    public function dracsDeathNotVerified(): bool
-    {
-        return data_get($this->verificationDetails, 'details.dracs_death.verification_status') === 'NOT_VERIFIED';
-    }
-
-    #[Computed]
-    public function hasVerificationWarnings(): bool
-    {
-        return $this->drfoNotVerified || $this->dracsDeathNotVerified;
-    }
-
-    /**
-     * Since showUpdateModal is now Locked, we cannot modify it from JS.
-     * We need a method to close.
-     */
-    public function closeUpdateModal(): void
-    {
-        $this->showUpdateModal = false;
-    }
-
-    /**
-     * This method is automatically called by Livewire when the $stream changes.
-     * We need to clear $reason so as not to send "Confirmed death" for "Name change".
-     */
-    public function updatedStream(): void
-    {
-        $this->reason = '';
-    }
-
-    /**
-     * Returns a list of available reasons depending on the thread selected.
-     */
-    #[Computed]
-    public function availableReasons(): array
-    {
-        if ($this->stream === 'dracs_name_change') {
-            return ['MANUAL'];
-        }
-
-        return [
-            'MANUAL_CONFIRMED',
-            'MANUAL_NOT_CONFIRMED',
-        ];
+        // 2. Allow the button ONLY if the status is 'NOT_VERIFIED'
+        // All other statuses (VERIFIED, VERIFICATION_NEEDED, etc.) will be false and the button will be gray.
+        return $deathStatus === 'NOT_VERIFIED';
     }
 
     public function loadVerificationDetails(): void
     {
         try {
+            // 1. Get and validate data
             $response = EHealth::party()->getDetails($this->party->uuid);
-            $this->verificationDetails = $response->validate();
+            $data = $response->validate();
+
+            // 7.4.2: Filter to allow only specific scopes for display
+            $allowedScopes = ['drfo', 'dracs_death'];
+
+            if (isset($data['details']) && is_array($data['details'])) {
+                $data['details'] = array_filter(
+                    $data['details'],
+                    static fn($key) => in_array($key, $allowedScopes, true),
+                    ARRAY_FILTER_USE_KEY
+                );
+            }
+
+            $this->verificationDetails = $data;
+
         } catch (\Exception $e) {
             $this->dispatch('flashMessage', [
                 'message' => __('forms.verification_data_upload_error'),
                 'type' => 'error'
             ]);
             Log::error('Failed to load verification details', ['error' => $e->getMessage()]);
+
+            $this->verificationDetails = [];
         }
     }
 
-    /**
-     * Handles the form submission to update the verification status.
-     */
-    public function updateStatus(): void
-    {
-        $this->validate(
-            [
-                'stream' => 'required|string|in:dracs_death,dracs_name_change',
-                'status' => 'required|string',
-                'reason' => 'required|string',
-                'comment' => 'required|string|min:5',
-            ]
-        );
-
-        $payload = [
-            $this->stream => [
-                'verification_status' => $this->status,
-                'verification_reason' => $this->reason,
-                'verification_comment' => $this->comment,
-            ]
-        ];
-
-        try {
-            EHealth::party()->update($this->party->uuid, $payload);
-
-            $this->dispatch('flashMessage', [
-                'message' => __('party_verification.messages.update_success') ?? 'Статус успішно оновлено.',
-                'type' => 'success'
-            ]);
-
-            $this->loadVerificationDetails();
-            $this->closeUpdateModal();
-
-        } catch (EHealthValidationException $e) {
-            Log::error('[PARTY UPDATE DEBUG] eHealth API returned a validation error.', [
-                'party_uuid' => $this->party->uuid,
-                'payload_sent' => $payload,
-                'validation_errors' => $e->getErrors(),
-            ]);
-
-            $this->dispatch('flashMessage', [
-                'message' => 'Помилка валідації від ЕСОЗ: ' . $e->getTranslatedMessage(),
-                'type' => 'error'
-            ]);
-
-        } catch (EHealthResponseException $e) {
-            Log::error('[PARTY UPDATE DEBUG] eHealth API returned an error response.', [
-                'party_uuid' => $this->party->uuid,
-                'status_code' => $e->getCode(),
-                'error_message' => $e->getMessage(),
-            ]);
-
-            $this->dispatch('flashMessage', [
-                'message' => 'Помилка від ЕСОЗ: ' . $e->getMessage(),
-                'type' => 'error',
-                'persistent' => true
-            ]);
-            $this->dispatch('status-updated-close-modal');
-
-        } catch (\Exception $e) {
-            Log::error('[PARTY UPDATE DEBUG] Request failed with a generic error.', [
-                'party_uuid' => $this->party->uuid,
-                'error_message' => $e->getMessage(),
-            ]);
-
-            $this->dispatch('flashMessage', [
-                'message' => 'Виникла неочікувана помилка: ' . $e->getMessage(),
-                'type' => 'error'
-            ]);
-            $this->dispatch('status-updated-close-modal');
-        }
-    }
-
-    /**
-     * Checks if verification update is allowed.
-     */
     public function checkAndOpenModal(): void
     {
         if ($this->canUpdateVerification) {
@@ -223,6 +106,76 @@ class PartyVerify extends Component
                 'message' => $message,
                 'type' => 'error'
             ]);
+        }
+    }
+
+    public function closeUpdateModal(): void
+    {
+        $this->showUpdateModal = false;
+        $this->reset(['status', 'reason', 'comment']);
+        $this->resetErrorBag();
+    }
+
+    public function updateStatus(): void
+    {
+        $this->validate([
+            'stream' => 'required|string',
+            'status' => 'required|string',
+            'reason' => 'required|string',
+            'comment' => 'nullable|string|max:3000',
+        ]);
+
+        try {
+            $data = [
+                'verification_status' => $this->status,
+                'verification_reason' => $this->reason,
+                'verification_comment' => $this->comment,
+            ];
+
+            // Wrap the data in the stream key
+            $payload = [
+                $this->stream => $data
+            ];
+
+            EHealth::party()->update($this->party->uuid, $payload);
+
+            $this->loadVerificationDetails();
+            $this->closeUpdateModal();
+
+            $this->dispatch('flashMessage', [
+                'message' => __('forms.data_saved_successfully'),
+                'type' => 'success'
+            ]);
+
+        } catch (EHealthResponseException|EHealthValidationException $e) {
+            // We log the details for the developer, but do not display them to the user
+            Log::error('[PARTY UPDATE ERROR]', [
+                'party_uuid' => $this->party->uuid,
+                'message' => $e->getMessage(),
+                'details' => method_exists($e, 'getDetails') ? $e->getDetails() : [],
+            ]);
+
+            // Displaying a general understandable message
+            // Or you can use $e->getFormattedMessage() if you have it well configured
+            $this->dispatch('flashMessage', [
+                'message' => 'Помилка оновлення в ЕСОЗ: ' . $e->getMessage(),
+                'type' => 'error',
+                'persistent' => true
+            ]);
+
+            $this->dispatch('status-updated-close-modal');
+
+        } catch (\Throwable $e) {
+            Log::error('[PARTY UPDATE SYSTEM ERROR]', [
+                'party_uuid' => $this->party->uuid,
+                'message' => $e->getMessage()
+            ]);
+
+            $this->dispatch('flashMessage', [
+                'message' => __('errors.generic_error') ?? 'Виникла технічна помилка.',
+                'type' => 'error'
+            ]);
+            $this->dispatch('status-updated-close-modal');
         }
     }
 
