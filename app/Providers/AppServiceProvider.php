@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Jobs\EmployeeRoleSync;
 use App\Jobs\EquipmentSync;
 use App\Jobs\HealthcareServiceSync;
+use App\Rules\TranslatedDateValidator;
 use Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider;
 use Illuminate\Bus\BatchRepository;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -52,6 +53,16 @@ class AppServiceProvider extends ServiceProvider
 
         Model::shouldBeStrict($this->app->isLocal());
         DB::prohibitDestructiveCommands($this->app->isProduction());
+
+        $this->app['validator']->resolver(
+            static fn ($translator, $data, $rules, $messages, $customAttributes) => new TranslatedDateValidator(
+                $translator,
+                $data,
+                $rules,
+                $messages,
+                $customAttributes
+            )
+        );
 
         RateLimiter::for('ehealth-employee-get', function (object $job) {
             echo "Rate limiter set for user: " . $job->user->id . PHP_EOL; // TODO: remove it after testing
