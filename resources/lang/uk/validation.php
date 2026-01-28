@@ -119,11 +119,18 @@ return [
     'url' => 'Формат поля :attribute неправильний.',
     'uuid' => 'Поле :attribute повинно містити коректний UUID.',
 
+    // See: https://laravel.com/docs/12.x/validation#specifying-values-in-language-files
     'values' => [
         'today' => 'сьогодні',
         'tomorrow' => 'завтра',
         'yesterday' => 'вчора',
         'now' => 'зараз',
+        'status' => [
+            'entered_in_error' => __('equipments.status.entered_in_error')
+        ],
+        'type' => [
+            'PHARMACY_DRUGS' => __('licenses.type.pharmacy_drugs')
+        ]
     ],
 
     /*
