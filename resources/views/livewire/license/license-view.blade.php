@@ -32,20 +32,14 @@
             </div>
         </div>
 
-        <div class="form-row-2">
+        <div class="form-row-2 items-end">
             <div class="form-group group">
-                <label for="type" class="label">
+                <span class="label">
                     {{ __('licenses.type.label') }}
-                </label>
-                <input value="{{ $license->type->label() }}"
-                       type="text"
-                       name="type"
-                       id="type"
-                       class="input peer"
-                       placeholder=" "
-                       disabled
-                       autocomplete="off"
-                />
+                </span>
+                <div class="input !h-auto min-h-[42px] py-2.5 break-words whitespace-normal text-sm">
+                    {{ $license->type->label() }}
+                </div>
             </div>
 
             <div class="form-group group">
@@ -64,7 +58,7 @@
             </div>
         </div>
 
-        <div class="form-row-2">
+        <div class="form-row-2 items-end">
             <div class="form-group group">
                 <label for="issuedBy" class="label">
                     {{ __('licenses.issued_by') }}
