@@ -34,13 +34,12 @@
 
         <div class="form-row-2 items-end">
             <div class="form-group group">
-                <label for="type" class="label">
+                <span class="label">
                     {{ __('licenses.type.label') }}
-                </label>
-                <div id="type" class="input !h-auto min-h-[42px] py-2.5 break-words whitespace-normal text-sm">
+                </span>
+                <div class="input !h-auto min-h-[42px] py-2.5 break-words whitespace-normal text-sm">
                     {{ $license->type->label() }}
                 </div>
-                <input type="hidden" name="type" value="{{ $license->type->label() }}">
             </div>
 
             <div class="form-group group">
@@ -64,20 +63,30 @@
                 <label for="issuedBy" class="label">
                     {{ __('licenses.issued_by') }}
                 </label>
-                <div id="issuedBy" class="input !h-auto min-h-[42px] py-2.5 break-words whitespace-normal text-sm">
-                    {{ $license->issuedBy }}
-                </div>
-                <input type="hidden" name="issuedBy" value="{{ $license->issuedBy }}">
+                <input value="{{ $license->issuedBy }}"
+                       type="text"
+                       name="issuedBy"
+                       id="issuedBy"
+                       class="input peer"
+                       placeholder=" "
+                       disabled
+                       autocomplete="off"
+                />
             </div>
 
             <div class="form-group group">
                 <label for="whatLicensed" class="label">
                     {{ __('licenses.what_licensed') }}
                 </label>
-                <div id="whatLicensed" class="input !h-auto min-h-[42px] py-2.5 break-words whitespace-normal text-sm">
-                    {{ $license->whatLicensed }}
-                </div>
-                <input type="hidden" name="whatLicensed" value="{{ $license->whatLicensed }}">
+                <input value="{{ $license->whatLicensed }}"
+                       type="text"
+                       name="whatLicensed"
+                       id="whatLicensed"
+                       class="input peer"
+                       placeholder=" "
+                       disabled
+                       autocomplete="off"
+                />
             </div>
         </div>
 
