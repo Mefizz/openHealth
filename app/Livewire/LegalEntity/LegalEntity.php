@@ -227,6 +227,30 @@ abstract class LegalEntity extends Component
     }
 
     /**
+     * Livewire lifecycle hook triggered when the beneficiary field is updated.
+     *
+     * @param  mixed  $value  The new value of the beneficiary field
+     *
+     * @return void
+     */
+    public function updatedLegalEntityFormBeneficiary($value)
+    {
+        $this->legalEntityForm->onBeneficiaryUpdated($value);
+    }
+
+    /**
+     * Livewire lifecycle hook triggered when the receiverFundsCode field is updated.
+     *
+     * @param  mixed  $value  The new value of the receiverFundsCode field
+     *
+     * @return void
+     */
+    public function updatedLegalEntityFormReceiverFundsCode($value)
+    {
+        $this->legalEntityForm->onReceiverFundsCodeUpdated($value);
+    }
+
+    /**
      * Step 8 for handling sign legal entity  submission.
      *
      * @throws ValidationException
@@ -545,7 +569,13 @@ abstract class LegalEntity extends Component
         // Converting archive to array
         $data['archive'] = $data['archivation_show'] ? $data['archive'] : [];
 
-        Arr::forget($data, ['archivation_show', 'accreditation_show']);
+        Arr::forget($data, [
+            'archivation_show',
+            'accreditation_show',
+            'beneficiary_show',
+            'receiver_funds_code_show'
+            ]
+        );
 
         $data = removeEmptyKeys($data);
 
@@ -813,6 +843,16 @@ abstract class LegalEntity extends Component
 
             if (empty($data['data']['archive'])) {
                 $this->legalEntity->archive = null;
+            }
+
+            if (empty($data['data']['beneficiary']) || !$this->legalEntityForm->beneficiaryShow) {
+                $this->legalEntity->beneficiary = null;
+                unset($data['data']['beneficiary']);
+            }
+
+            if (empty($data['data']['receiver_funds_code']) || !$this->legalEntityForm->receiverFundsCodeShow) {
+                $this->legalEntity->receiverFundsCode = null;
+                unset($data['data']['receiver_funds_code']);
             }
 
             // Fill the object with data
