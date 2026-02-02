@@ -113,7 +113,8 @@ class PersonUpdate extends PersonComponent
                 'documents',
                 'phones',
                 'authenticationMethods',
-                'confidantPerson.person:id,uuid,last_name,first_name,second_name,tax_id,unzr'
+                'confidantPerson.person:id,uuid,last_name,first_name,second_name,tax_id,unzr',
+                'confidantPerson.person.documents'
             ])->toArray()
         );
 

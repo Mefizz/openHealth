@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Core\EHealthJob;
+use App\Enums\User\Role;
 use App\Models\LegalEntity;
 use App\Classes\eHealth\EHealth;
 use App\Repositories\Repository;
@@ -34,7 +35,7 @@ class DeclarationsSync extends EHealthJob
         $query = ['page' => $this->page];
 
         // If user is doctor, get only his declarations
-        if ($this->user->hasRole('DOCTOR') && !$this->user->hasRole('OWNER')) {
+        if ($this->user->hasRole(Role::DOCTOR) && !$this->user->hasRole(Role::OWNER)) {
             $query['employee_id'] = $this->user
                 ->employees()
                 ->forParty($this->user->party->id)

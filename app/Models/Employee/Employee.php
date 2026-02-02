@@ -7,6 +7,7 @@ namespace App\Models\Employee;
 use App\Casts\EHealthDateCast;
 use App\Enums\Party\VerificationStatus;
 use App\Enums\Status;
+use App\Enums\User\Role;
 use App\Models\Declaration;
 use App\Models\Relations\Education;
 use App\Models\Relations\Qualification;
@@ -130,7 +131,7 @@ class Employee extends BaseEmployee
     protected function contractors(Builder $query, int $legalEntityId): Builder
     {
         return $query->whereLegalEntityId($legalEntityId)
-            ->whereIn('employee_type', ['OWNER', 'ADMIN'])
+            ->whereIn('employee_type', [Role::OWNER, Role::ADMIN])
             ->whereStatus(Status::APPROVED)
             ->whereIsActive(true)
             ->with('party:id,first_name,last_name,second_name');
@@ -143,7 +144,7 @@ class Employee extends BaseEmployee
     public function activeOwners(Builder $query, int $legalEntityId): Builder
     {
         return $query->where('legal_entity_id', $legalEntityId)
-            ->where('employee_type', 'OWNER')
+            ->where('employee_type', Role::OWNER)
             ->where('status', Status::APPROVED)
             ->where('is_active', true);
     }

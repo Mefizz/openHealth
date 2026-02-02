@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Declaration;
 
+use App\Enums\User\Role;
 use Throwable;
 use Exception;
 use Livewire\Component;
@@ -169,7 +170,7 @@ class DeclarationIndex extends Component
 
         $this->employeeIds = $user->employees()->filterByLegalEntityId($legalEntity->id)->pluck('id')->all();
 
-        if ($user->hasRole('OWNER')) {
+        if ($user->hasRole(Role::OWNER)) {
             $this->doctors = $this->getDoctors();
         } else {
             $this->countActive = Declaration::query()->forEmployees($this->employeeIds)->count();
@@ -210,7 +211,7 @@ class DeclarationIndex extends Component
                 'employee.party:id,first_name,last_name,second_name'
             ])
                 ->when(
-                    !$user->hasRole('OWNER'),
+                    !$user->hasRole(Role::OWNER),
                     fn (Builder $query) => $query->forEmployees($this->employeeIds)
                 )
                 ->filterByLegalEntityId(legalEntity()->id)
@@ -219,7 +220,7 @@ class DeclarationIndex extends Component
         }
 
         // Don't show declaration requests for OWNER
-        if (!$user->hasRole('OWNER') && $user->can('viewAny', DeclarationRequest::class)) {
+        if (!$user->hasRole(Role::OWNER) && $user->can('viewAny', DeclarationRequest::class)) {
             $declarationRequests = DeclarationRequest::with([
                 'person:id,first_name,last_name,second_name,birth_date',
                 'employee:id,party_id',
@@ -326,7 +327,7 @@ class DeclarationIndex extends Component
         $query = ['legal_entity_id' => $legalEntity->uuid];
 
         // If user is doctor, get only his declarations
-        if ($user->hasRole('DOCTOR') && !$user->hasRole('OWNER')) {
+        if ($user->hasRole(Role::DOCTOR) && !$user->hasRole(Role::OWNER)) {
             $query['employee_id'] = Auth::user()
                 ->employees()
                 ->forParty(Auth::user()->party->id)
