@@ -36,13 +36,12 @@ use Illuminate\Http\Client\ConnectionException;
 use App\Notifications\DeclarationSyncCompleted;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
-use App\Models\User;
 
 class DeclarationIndex extends Component
 {
-    use BatchLegalEntityQueries,
-        WithPagination,
-        FormTrait;
+    use BatchLegalEntityQueries;
+    use WithPagination;
+    use FormTrait;
 
     protected const string BATCH_NAME = 'Declarations Full Sync';
     protected const string SUB_BATCH_NAME = 'DeclarationRequests Full Sync';
@@ -110,7 +109,7 @@ class DeclarationIndex extends Component
     #[Computed]
     public function isSync(): bool
     {
-       return $this->isSyncProcessing();
+        return $this->isSyncProcessing();
     }
 
     /**
@@ -144,15 +143,15 @@ class DeclarationIndex extends Component
 
         // Determine if either the DeclarationRequest's sync is in progress (declarations depends on it)
         $declarationRequestSync = $declarationRequestStatus !== JobStatus::COMPLETED->value &&
-                                  $declarationRequestStatus !== JobStatus::PAUSED->value &&
-                                  $declarationRequestStatus !== JobStatus::FAILED->value &&
-                                  !empty($declarationRequestStatus);
+            $declarationRequestStatus !== JobStatus::PAUSED->value &&
+            $declarationRequestStatus !== JobStatus::FAILED->value &&
+            !empty($declarationRequestStatus);
 
         // Determine if either the Declaration's sync is in progress
         $declarationSync = $this->syncStatus !== JobStatus::COMPLETED->value &&
-                               $this->syncStatus !== JobStatus::PAUSED->value &&
-                               $this->syncStatus !== JobStatus::FAILED->value &&
-                               !empty($this->syncStatus);
+            $this->syncStatus !== JobStatus::PAUSED->value &&
+            $this->syncStatus !== JobStatus::FAILED->value &&
+            !empty($this->syncStatus);
 
         // Return true if either sync is in progress
         return $legalEntitySync || $declarationSync || $declarationRequestSync;
@@ -173,7 +172,7 @@ class DeclarationIndex extends Component
         if ($user->hasRole('OWNER')) {
             $this->doctors = $this->getDoctors();
         } else {
-            $this->countActive = Declaration::whereIn('employee_id', $this->employeeIds)->count();
+            $this->countActive = Declaration::query()->forEmployees($this->employeeIds)->count();
         }
 
         $this->syncStatus = $this->getSyncStatus();
@@ -205,31 +204,31 @@ class DeclarationIndex extends Component
         $declarationRequests = collect();
 
         if ($user->can('viewAny', Declaration::class)) {
-            $declarations = Declaration::where('legal_entity_id', legalEntity()->id)
-                ->select(['id', 'person_id', 'employee_id', 'legal_entity_id', 'declaration_number', 'status'])
+            $declarations = Declaration::with([
+                'person:id,first_name,last_name,second_name,birth_date',
+                'employee:id,uuid,party_id',
+                'employee.party:id,first_name,last_name,second_name'
+            ])
                 ->when(
                     !$user->hasRole('OWNER'),
-                    fn (Builder $query) => $query->whereIn('employee_id', $this->employeeIds)
-                )->with([
-                    'person:id,first_name,last_name,second_name,birth_date',
-                    'employee:id,uuid,party_id',
-                    'employee.party:id,first_name,last_name,second_name'
-                ])
-                ->get()
+                    fn (Builder $query) => $query->forEmployees($this->employeeIds)
+                )
+                ->filterByLegalEntityId(legalEntity()->id)
+                ->get(['id', 'person_id', 'employee_id', 'legal_entity_id', 'declaration_number', 'status'])
                 ->each->setAttribute('type', 'declaration');
         }
 
         // Don't show declaration requests for OWNER
         if (!$user->hasRole('OWNER') && $user->can('viewAny', DeclarationRequest::class)) {
-            $declarationRequests = DeclarationRequest::where('legal_entity_id', legalEntity()->id)
-                ->select(['id', 'uuid', 'person_id', 'employee_id', 'declaration_number', 'status'])
+            $declarationRequests = DeclarationRequest::with([
+                'person:id,first_name,last_name,second_name,birth_date',
+                'employee:id,party_id',
+                'employee.party:id,first_name,last_name,second_name'
+            ])
+                ->filterByLegalEntityId(legalEntity()->id)
+                ->forEmployees($this->employeeIds)
                 ->whereNotIn('status', [Status::SIGNED->value])
-                ->with([
-                    'person:id,first_name,last_name,second_name,birth_date',
-                    'employee:id,party_id',
-                    'employee.party:id,first_name,last_name,second_name'
-                ])
-                ->get()
+                ->get(['id', 'uuid', 'person_id', 'employee_id', 'declaration_number', 'status'])
                 ->each->setAttribute('type', 'request');
         }
 
@@ -303,11 +302,10 @@ class DeclarationIndex extends Component
         );
     }
 
-
     public function sync(): void
     {
         if (Auth::user()->cannot('sync', Declaration::class)) {
-            session()->flash('error', __('У вас немає дозволу на синхронізацію декларацій'));
+            Session::flash('error', __('declarations.policy.sync'));
 
             return;
         }
@@ -321,7 +319,7 @@ class DeclarationIndex extends Component
         $legalEntity = legalEntity();
 
         $user = Auth::user();
-        $token = session()->get(config('ehealth.api.oauth.bearer_token'));
+        $token = Session::get(config('ehealth.api.oauth.bearer_token'));
         $user->notify(new SyncNotification('declaration', 'started'));
 
         // Get declarations from eHealth filtered by legal entity
@@ -331,7 +329,7 @@ class DeclarationIndex extends Component
         if ($user->hasRole('DOCTOR') && !$user->hasRole('OWNER')) {
             $query['employee_id'] = Auth::user()
                 ->employees()
-                ->where('party_id', Auth::user()->party->id)
+                ->forParty(Auth::user()->party->id)
                 ->first()->uuid;
         }
 
@@ -391,47 +389,49 @@ class DeclarationIndex extends Component
                 ->name(self::BATCH_NAME)
                 ->dispatch();
 
-                legalEntity()?->setEntityStatus(JobStatus::PROCESSING, LegalEntity::ENTITY_DECLARATION);
+            legalEntity()?->setEntityStatus(JobStatus::PROCESSING, LegalEntity::ENTITY_DECLARATION);
 
-                session()->flash('success', __('declarations.sync.started'));
-        } else if (!empty($declarations['declarations'])) {
-            Bus::batch($this->getDeclarationRequestsStartJob($legalEntity, null))
-                ->withOption('legal_entity_id', $legalEntity->id)
-                ->withOption('token', Crypt::encryptString($token))
-                ->withOption('user', $user)
-                ->then(function (Batch $batch) use ($user) {
-                    $message = __('declarationRequests.sync.completed', [
-                        'processed' => $batch->processedJobs,
-                        'total' => $batch->totalJobs,
-                    ]);
-
-                    $user->notify(new DeclarationSyncCompleted($message, 'success'));
-                })->catch(callback: function (Batch $batch, Throwable $err) use ($user) {
-                    $message = __('declarationRequests.sync.failed');
-
-                    Log::error('DeclarationRequest sync batch failed.', [
-                        'batch_id' => $batch->id,
-                        'exception' => $err
-                    ]);
-
-                    $user->notify(new DeclarationSyncCompleted($message, 'error'));
-                })
-                ->onQueue('sync')
-                ->name(self::SUB_BATCH_NAME)
-                ->dispatch();
-
-                session()->flash('success', __('declarations.sync.started'));
+            Session::flash('success', __('declarations.sync.started'));
         } else {
-            // If there were no declarations to sync, mark the status as completed
-            legalEntity()?->setEntityStatus(JobStatus::COMPLETED, LegalEntity::ENTITY_DECLARATION);
+            if (!empty($declarations['declarations'])) {
+                Bus::batch($this->getDeclarationRequestsStartJob($legalEntity, null))
+                    ->withOption('legal_entity_id', $legalEntity->id)
+                    ->withOption('token', Crypt::encryptString($token))
+                    ->withOption('user', $user)
+                    ->then(function (Batch $batch) use ($user) {
+                        $message = __('declarations.sync.completed', [
+                            'processed' => $batch->processedJobs,
+                            'total' => $batch->totalJobs,
+                        ]);
 
-            session()->flash('success', );
+                        $user->notify(new DeclarationSyncCompleted($message, 'success'));
+                    })->catch(callback: function (Batch $batch, Throwable $err) use ($user) {
+                        $message = __('declarations.sync.failed');
+
+                        Log::error('DeclarationRequest sync batch failed.', [
+                            'batch_id' => $batch->id,
+                            'exception' => $err
+                        ]);
+
+                        $user->notify(new DeclarationSyncCompleted($message, 'error'));
+                    })
+                    ->onQueue('sync')
+                    ->name(self::SUB_BATCH_NAME)
+                    ->dispatch();
+
+                Session::flash('success', __('declarations.sync.started'));
+            } else {
+                // If there were no declarations to sync, mark the status as completed
+                legalEntity()?->setEntityStatus(JobStatus::COMPLETED, LegalEntity::ENTITY_DECLARATION);
+
+                Session::flash('success');
+            }
         }
     }
 
     public function approve(int $patientId, int $declarationRequestId): void
     {
-        if (!$this->ensureAbility('approve', 'У вас немає дозволу на підтвердження заявки на подання декларації')) {
+        if (!$this->ensureAbility('approve', __('declarations.policy.approve'))) {
             return;
         }
 
@@ -446,7 +446,7 @@ class DeclarationIndex extends Component
 
     public function sign(int $patientId, int $declarationRequestId): void
     {
-        if (!$this->ensureAbility('sign', 'У вас немає дозволу на підписання заявки на подання декларації')) {
+        if (!$this->ensureAbility('sign', __('declarations.policy.sign'))) {
             return;
         }
 
@@ -462,7 +462,7 @@ class DeclarationIndex extends Component
 
     public function reject(string $declarationUuid): void
     {
-        if (!$this->ensureAbility('reject', 'У вас немає дозволу на відхилення заявки на подання декларації')) {
+        if (!$this->ensureAbility('reject', __('declarations.policy.reject'))) {
             return;
         }
 
@@ -504,7 +504,7 @@ class DeclarationIndex extends Component
     public function delete(DeclarationRequest $declarationRequest): void
     {
         if (Auth::user()->cannot('delete', $declarationRequest)) {
-            Session::flash('error', 'У вас немає дозволу на видалення заявки на подання декларації');
+            Session::flash('error', __('declarations.policy.delete'));
 
             return;
         }

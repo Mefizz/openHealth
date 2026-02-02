@@ -64,6 +64,12 @@ class Employee extends BaseEmployee
         return $query->whereEmployeeType('DOCTOR');
     }
 
+    #[Scope]
+    protected function forParty(Builder $query, int $partyId): Builder
+    {
+        return $query->wherePartyId($partyId);
+    }
+
     public function scopeEmployeeInstance(Builder $query, int $userId, string $legalEntityUUID, array $roles, bool $isInclude = false): void
     {
         $query->where('user_id', $userId)
@@ -81,7 +87,7 @@ class Employee extends BaseEmployee
             ->where('status', $status)
             ->where('user_id', $userId)
             ->where('legal_entity_id', $legalEntityId)
-            ->where('party_id', $partyId);
+            ->forParty($partyId);
     }
 
     public function scopeFilterByUuids(Builder $query, array $uuids): Builder

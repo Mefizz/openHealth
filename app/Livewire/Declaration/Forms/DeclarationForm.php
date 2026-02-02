@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Declaration\Forms;
 
+use App\Core\BaseForm;
 use App\Enums\Declaration\Status;
 use App\Models\Declaration;
 use App\Models\Employee\Employee;
@@ -12,10 +13,8 @@ use Closure;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Validation\Rule;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
-use Livewire\Form;
 
-class DeclarationForm extends Form
+class DeclarationForm extends BaseForm
 {
     public string $personId;
 
@@ -31,12 +30,6 @@ class DeclarationForm extends Form
 
     public array $uploadedDocuments;
 
-    public string $knedp;
-
-    public TemporaryUploadedFile $keyContainerUpload;
-
-    public string $password;
-
     /**
      * List of rules for creating.
      *
@@ -48,9 +41,8 @@ class DeclarationForm extends Form
             'personId' => [
                 'required',
                 'uuid',
-                Rule::exists('persons', 'uuid')->where(
-                    fn (QueryBuilder $query) => $query->whereNot('verification_status', 'NOT_VERIFIED')
-                )
+                Rule::exists('persons', 'uuid')
+                    ->where(fn (QueryBuilder $query) => $query->whereNot('verification_status', 'NOT_VERIFIED'))
             ],
             'employeeId' => [
                 'required',
@@ -88,20 +80,6 @@ class DeclarationForm extends Form
     public function rulesForUploadingDocuments(): array
     {
         return ['uploadedDocuments.*' => ['required', 'file', 'mimes:jpeg,jpg', 'max:10000']];
-    }
-
-    /**
-     * List of rules for signing Cipher form.
-     *
-     * @return array[]
-     */
-    public function rulesForSigning(): array
-    {
-        return [
-            'knedp' => ['required', 'string'],
-            'password' => ['required', 'string'],
-            'keyContainerUpload' => ['required', 'file', 'extensions:dat,pfx,pk8,zs2,jks,p7s']
-        ];
     }
 
     /**

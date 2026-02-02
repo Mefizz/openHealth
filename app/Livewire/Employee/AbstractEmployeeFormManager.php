@@ -385,7 +385,7 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
             if ($partyId) {
                 // We use the Scope activeOwners, which we added to the Employee model
                 $isOwnerContext = Employee::query()
-                    ->where('party_id', $partyId)
+                    ->forParty($partyId)
                     ->activeOwners(legalEntity()->id)
                     ->exists();
             }
