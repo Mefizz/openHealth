@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use App\Models\Contract;
+use App\Models\Contracts\Contract;
+use App\Models\Employee\Employee;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
@@ -15,6 +16,15 @@ class ContractPolicy
      */
     public function viewAny(User $user): Response
     {
+        // Check if user is an active OWNER
+        $isOwner = Employee::where('user_id', $user->id)
+            ->activeOwners(legalEntity()->id)
+            ->exists();
+
+        if ($isOwner) {
+            return Response::allow();
+        }
+
         if ($user->cannot('contract_request:read') && $user->cannot('contract:read')) {
             return Response::denyWithStatus(404);
         }
@@ -23,8 +33,7 @@ class ContractPolicy
     }
 
     /**
-     * Determine whether the user can view a specific contract.
-     * Fixes 403 Forbidden error on "Show" page.
+     * Determine whether the user can view a specific signed contract.
      */
     public function view(User $user, Contract $contract): Response
     {
@@ -33,7 +42,16 @@ class ContractPolicy
             return Response::denyWithStatus(404);
         }
 
-        // 2. Permission check
+        // 2. OWNER Check
+        $isOwner = Employee::where('user_id', $user->id)
+            ->activeOwners(legalEntity()->id)
+            ->exists();
+
+        if ($isOwner) {
+            return Response::allow();
+        }
+
+        // 3. Permission check
         if ($user->cannot('contract_request:read') && $user->cannot('contract:read')) {
             return Response::deny(__('contracts.policy.view_denied'));
         }
@@ -46,11 +64,15 @@ class ContractPolicy
      */
     public function create(User $user): Response
     {
-        if ($user->cannot('contract_request:create')) {
-            return Response::denyWithStatus(404);
+        $isOwner = Employee::where('user_id', $user->id)
+            ->activeOwners(legalEntity()->id)
+            ->exists();
+
+        if ($isOwner || $user->can('contract_request:create')) {
+            return Response::allow();
         }
 
-        return Response::allow();
+        return Response::denyWithStatus(404);
     }
 
     /**
@@ -58,11 +80,18 @@ class ContractPolicy
      */
     public function sync(User $user): Response
     {
+        $isOwner = Employee::where('user_id', $user->id)
+            ->activeOwners(legalEntity()->id)
+            ->exists();
+
+        if ($isOwner) {
+            return Response::allow();
+        }
+
         if ($user->cannot('contract_request:read')) {
             return Response::deny(__('contracts.policy.sync_denied'));
         }
 
         return Response::allow();
     }
-
 }
