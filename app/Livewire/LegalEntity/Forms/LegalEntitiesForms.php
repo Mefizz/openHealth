@@ -40,6 +40,10 @@ class LegalEntitiesForms extends Form
 
     public ?array $residenceAddress = [];
 
+    public bool $beneficiaryShow = false;
+
+    public bool $receiverFundsCodeShow = false;
+
     public bool $archivationShow = false;
 
     public bool $accreditationShow = false;
@@ -115,12 +119,12 @@ class LegalEntitiesForms extends Form
             'license.orderNo' => 'required|string',
             'license.licenseNumber' => ['nullable', 'string', 'regex:/^(?!.*[ЫЪЭЁыъэё@$^#])[a-zA-ZА-ЯҐЇІЄа-яґїіє0-9№\"!\^\*)\]\[(&._-].*$/'],
             'receiverFundsCode' => [
-                legalEntity()?->receiverFundsCode ? 'required' : 'nullable',
+                'nullable',
                 'string',
                 'regex:/^[0-9]+$/'
             ],
             'beneficiary' => [
-                legalEntity()?->beneficiary ? 'required' : 'nullable',
+                'nullable',
                 'string',
                 new Cyrillic(),
                 "regex:/^(?!.*[ЫЪЭЁыъэё@%&$^#])[А-ЯҐЇІЄа-яґїіє’\'\- ]+$/u",
@@ -360,5 +364,29 @@ class LegalEntitiesForms extends Form
             new PhoneDuplicates($this->phones),
             new PhoneDuplicates($this->owner['phones'])
         ];
+    }
+
+    /**
+     * Handles updates to the beneficiary value.
+     *
+     * @param string $value The updated beneficiary value.
+     *
+     * @return void
+     */
+    public function onBeneficiaryUpdated(string $value): void
+    {
+        $this->beneficiaryShow = !empty($value);
+    }
+
+    /**
+     * Handle updates to the receiver funds code value.
+     *
+     * @param string $value The updated receiver funds code.
+     *
+     * @return void
+     */
+    public function onReceiverFundsCodeUpdated(string $value): void
+    {
+        $this->receiverFundsCodeShow = !empty($value);
     }
 }

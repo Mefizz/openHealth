@@ -109,6 +109,8 @@ class LegalEntityDetails extends LegalEntityComponent
         $this->getArchiveForm(); // Get the archive form data
         $this->getOwnerLegalEntity(); // Get the owner's legal entity data
         $this->getAccreditationForm(); // Get the accreditation form data status
+        $this->getBeneficiaryForm(); // Get the beneficiary form data status
+        $this->getReceiverFundsCodeForm(); // Get the receiver funds code form data status
 
         $this->legalEntityForm->residenceAddress = $this->address;
     }
@@ -159,6 +161,26 @@ class LegalEntityDetails extends LegalEntityComponent
     {
         if (!empty($this->legalEntityForm->accreditation) && $this->legalEntityForm->accreditation['category'] !== null) {
             $this->legalEntityForm->accreditationShow = true;
+        }
+    }
+
+    /**
+     * If the legal entity has an beneficiary, the 'beneficiaryShow' property is set to true
+     */
+    protected function getBeneficiaryForm(): void
+    {
+        if (!empty($this->legalEntityForm->beneficiary)) {
+            $this->legalEntityForm->beneficiaryShow = true;
+        }
+    }
+
+    /**
+     * If the legal entity has an beneficiary, the 'receiverFundsCodeShow' property is set to true
+     */
+    protected function getReceiverFundsCodeForm(): void
+    {
+        if (!empty($this->legalEntityForm->receiverFundsCode)) {
+            $this->legalEntityForm->receiverFundsCodeShow = true;
         }
     }
 
