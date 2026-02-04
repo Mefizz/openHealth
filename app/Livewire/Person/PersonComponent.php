@@ -127,6 +127,8 @@ class PersonComponent extends Component
 
     public bool $showLeafletModal = false;
 
+    public array $selectedConfidantPersonData;
+
     public array $dictionaryNames = [
         'DOCUMENT_TYPE',
         'DOCUMENT_RELATIONSHIP_TYPE',
@@ -158,8 +160,12 @@ class PersonComponent extends Component
         $this->invalidPersonId = null;
 
         $this->selectedConfidantPersonId = $personData['id'];
-        $this->form->person['confidantPerson']['personId'] = $personData['id'];
-        $this->form->person['authenticationMethods'][0]['value'] = $personData['id'];
+
+        if (!$this instanceof PersonUpdate) {
+            $this->form->person['confidantPerson']['personId'] = $personData['id'];
+            $this->selectedConfidantPersonData = $personData;
+            $this->form->person['authenticationMethods'][0]['value'] = $personData['id'];
+        }
     }
 
     /**

@@ -133,14 +133,15 @@ class Person extends Request
      * Create new Confidant Person relationship request.
      *
      * @param  string  $id
+     * @param  array{confidant_person_id: string, documents_relationship: array}  $data
      * @return PromiseInterface|EHealthResponse
      * @throws ConnectionException|EHealthValidationException|EHealthResponseException
      *
      * @see https://uaehealthapi.docs.apiary.io/#reference/public.-medical-service-provider-integration-layer/persons/create-new-confidant-person-relationship-request
      */
-    public function createConfidantRelationship(string $id): PromiseInterface|EHealthResponse
+    public function createConfidantRelationship(string $id, array $data): PromiseInterface|EHealthResponse
     {
-        return $this->post(self::URL . "/$id/confidant_person_relationship_requests");
+        return $this->post(self::URL . "/$id/confidant_person_relationship_requests", $data);
     }
 
     /**
@@ -171,7 +172,26 @@ class Person extends Request
         string $id,
         array $query = []
     ): PromiseInterface|EHealthResponse {
-        return $this->get(self::URL . "/$id/confidant_person_relationships", $query);
+        return $this->get(self::URL . "/$id/confidant_person_relationship_requests", $query);
+    }
+
+    /**
+     * Get list of previously created Confidant Person relationship requests.
+     *
+     * @param  string  $id
+     * @param  string  $confidantPersonRelationshipRequestId,
+     * @param  array{status?: \App\Enums\Person\ConfidantPersonRelationshipRequestStatus::class, page?: int, page_size?: int}  $query
+     * @return PromiseInterface|EHealthResponse
+     * @throws ConnectionException|EHealthValidationException|EHealthResponseException
+     *
+     * @see https://uaehealthapi.docs.apiary.io/#reference/public.-medical-service-provider-integration-layer/persons/get-confidant-person-relationship-requests-list
+     */
+    public function getConfidantPersonRelationshipRequestById(
+        string $id,
+        string $confidantPersonRelationshipRequestId,
+        array $query = []
+    ): PromiseInterface|EHealthResponse {
+        return $this->get(self::URL . "/$id/confidant_person_relationship_requests/$confidantPersonRelationshipRequestId", $query);
     }
 
     /**

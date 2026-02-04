@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Livewire\Person;
 
+use App\Classes\Cipher\Api\CipherRequest;
+use App\Classes\Cipher\Exceptions\CipherApiException;
 use App\Classes\eHealth\EHealth;
+use App\Classes\eHealth\EHealthApiFormatter;
 use App\Core\Arr;
 use App\Enums\Person\AuthStep;
 use App\Models\Relations\AuthenticationMethod as AuthenticationMethodModel;
@@ -14,14 +17,18 @@ use App\Exceptions\EHealth\EHealthValidationException;
 use App\Models\LegalEntity;
 use App\Models\Person\Person;
 use App\Models\Person\PersonRequest;
+use App\Models\Relations\ConfidantPerson;
 use App\Repositories\Repository;
 use App\Rules\PhoneNumber;
+use Exception;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use JsonException;
 use Livewire\Attributes\Locked;
 use Throwable;
 
@@ -101,6 +108,23 @@ class PersonUpdate extends PersonComponent
      */
     public string $alias;
 
+    public array $newConfidantPerson;
+
+    public string $confidantPersonRelationshipRequestId;
+
+    public string $confidantPersonId;
+
+    public array $documentsRelationship = [];
+
+    public bool $showSignatureDrawer = false;
+
+    /**
+     * Data for signing confidant person relationship.
+     *
+     * @var array
+     */
+    public array $approvedData;
+
     public function mount(LegalEntity $legalEntity, Person $person): void
     {
         $this->personId = $person->id;
@@ -113,8 +137,10 @@ class PersonUpdate extends PersonComponent
                 'documents',
                 'phones',
                 'authenticationMethods',
-                'confidantPerson.person:id,uuid,gender,last_name,first_name,second_name,tax_id,unzr',
-                'confidantPerson.documentsRelationship'
+                'confidantPersons.person:id,uuid,gender,last_name,first_name,second_name,tax_id,unzr',
+                'confidantPersons.documentsRelationship',
+                'confidantPersons.person.phones',
+                'confidantPersons.person.documents'
             ])->toArray()
         );
 
@@ -130,16 +156,8 @@ class PersonUpdate extends PersonComponent
 
         $authenticationMethods = $person->authenticationMethods->toArray();
 
-        if ($person->confidantPerson) {
-            $this->selectedConfidantPersonId = $person->confidantPerson->person->uuid;
-            $confidantPersonData = $person->confidantPerson->person;
-
-            // Change id to uuid value
-            $confidantPerson = $confidantPersonData->toArray();
-            $confidantPerson['id'] = $confidantPerson['uuid'];
-            unset($confidantPerson['uuid']);
-
-            $this->confidantPerson = [$confidantPerson];
+        if ($person->confidantPersons) {
+            $confidantPersonData = $person->confidantPersons->first()->person;
 
             $modifiedMethods = collect($authenticationMethods)->map(
                 function (array $method) use ($confidantPersonData) {
@@ -526,6 +544,176 @@ class PersonUpdate extends PersonComponent
             Session::flash('success', __('Код був повторно надісланий на телефон'));
         } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
             $this->handleEHealthExceptions($exception, 'Error when resending SMS');
+
+            return;
+        }
+    }
+
+    public bool $showAuthDrawer = false;
+
+    public function createNewConfidantPersonRelationshipRequest(): void
+    {
+        if (Auth::user()->cannot('create', ConfidantPerson::class)) {
+            Session::flash('error', __('patients.policy.create_confidant'));
+
+            return;
+        }
+
+        // Set the properties that validation expects
+        $this->confidantPersonId = $this->selectedConfidantPersonId ?? '';
+        $this->documentsRelationship = $this->newConfidantPerson['documentsRelationship'] ?? [];
+
+        try {
+            $validated = $this->validate($this->form->rulesForCreateNewConfidantPersonRelationshipRequest());
+        } catch (ValidationException $exception) {
+            Session::flash('error', $exception->validator->errors()->first());
+            $this->setErrorBag($exception->validator->getMessageBag());
+
+            return;
+        }
+
+        try {
+            $response = EHealth::person()->createConfidantRelationship(
+                $this->uuid,
+                EHealthApiFormatter::format($validated)
+            );
+
+            $this->confidantPersonRelationshipRequestId = $response->getData()['id'];
+            $this->uploadedDocuments = $response->getUrgent()['documents'];
+        } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
+            $this->handleEHealthExceptions($exception, 'Error when creating confidant person relationship');
+
+            return;
+        }
+
+        $this->showAuthDrawer = true;
+    }
+
+    public function resendCodeOnConfidantPersonRelationship(): void
+    {
+        if (Auth::user()->cannot('create', ConfidantPerson::class)) {
+            Session::flash('error', __('patients.policy.resend_sms'));
+
+            return;
+        }
+
+        try {
+            EHealth::person()->resendAuthOtpOnConfidantPersonRelationship(
+                $this->uuid,
+                $this->confidantPersonRelationshipRequestId
+            );
+            Session::flash('success', __('Код був повторно надісланий на телефон'));
+        } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
+            $this->handleEHealthExceptions($exception, 'Error when resending SMS');
+
+            return;
+        }
+    }
+
+    public function approveConfidantPersonRelationshipRequest(): void
+    {
+        if (Auth::user()->cannot('create', ConfidantPerson::class)) {
+            Session::flash('error', __('patients.policy.approve_confidant'));
+
+            return;
+        }
+
+        try {
+            $validated = $this->form->validate($this->form->rulesForApprove());
+        } catch (ValidationException $exception) {
+            Session::flash('error', $exception->validator->errors()->first());
+            $this->setErrorBag($exception->validator->getMessageBag());
+
+            return;
+        }
+
+        try {
+            $this->uploadDocuments();
+
+            $response = EHealth::person()->approveConfidantPersonRelationshipRequest(
+                $this->uuid,
+                $this->confidantPersonRelationshipRequestId,
+                Arr::toSnakeCase($validated)
+            );
+
+            $this->approvedData = $response->getData();
+        } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
+            $this->handleEHealthExceptions($exception, 'Error when approving confidant person relationship');
+
+            return;
+        }
+
+        $this->showSignatureDrawer = true;
+    }
+
+    public function signConfidantPersonRelationship(): void
+    {
+        if (Auth::user()->cannot('create', ConfidantPerson::class)) {
+            Session::flash('error', __('patients.policy.sign_confidant'));
+
+            return;
+        }
+
+        try {
+            $validated = $this->form->validate($this->form->signingRules());
+        } catch (ValidationException $exception) {
+            Session::flash('error', $exception->validator->errors()->first());
+            $this->setErrorBag($exception->validator->getMessageBag());
+
+            return;
+        }
+
+        try {
+            $signedContent = new CipherRequest()->signData(
+                $this->approvedData,
+                $validated['knedp'],
+                $validated['keyContainerUpload'],
+                $validated['password'],
+                Auth::user()->party->taxId
+            );
+        } catch (ConnectionException $exception) {
+            $this->logConnectionError($exception, 'Error connecting to Cipher when signing data');
+            Session::flash('error', __('validation.custom.connection_exception'));
+
+            return;
+        } catch (CipherApiException $exception) {
+            $this->logCipherError($exception, 'Cipher API error when signing data');
+            Session::flash('error', $exception->getMessage());
+
+            return;
+        } catch (JsonException $exception) {
+            $this->logDatabaseErrors($exception, 'JSON encoding error when signing data');
+            Session::flash('error', 'Помилка обробки даних. Зверніться до адміністратора.');
+
+            return;
+        }
+
+        try {
+            $response = EHealth::person()->signConfidantPersonRelationshipRequest(
+                $this->uuid,
+                $this->confidantPersonRelationshipRequestId,
+                ['signed_content' => $signedContent->getBase64Data()]
+            );
+
+            // Save confidant person relationship to database using repository
+            try {
+                $personData = collect($this->confidantPerson)->firstWhere('id', $this->selectedConfidantPersonId);
+                Repository::confidantPerson()->createFromSignedResponse($response->getData(), $this->uuid, $personData);
+
+                $this->showSignatureDrawer = false;
+                Session::flash('success', __('Нового законного представника успішно додано.'));
+            } catch (Exception $exception) {
+                Log::error('Failed to create confidant person relationship', [
+                    'message' => $exception->getMessage(),
+                    'uuid' => $this->uuid,
+                    'response_data' => $response->getData()
+                ]);
+                Session::flash('error', 'Виникла помилка при збереженні. Зверніться до адміністратора.');
+
+                return;
+            }
+        } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
+            $this->handleEHealthExceptions($exception, 'Error when signing confidant person relationship');
 
             return;
         }

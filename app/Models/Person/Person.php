@@ -61,10 +61,10 @@ class Person extends BasePerson
     /**
      * Who is MY confidant person.
      *
-     * @return HasOne
+     * @return HasMany
      */
-    public function confidantPerson(): HasOne
+    public function confidantPersons(): HasMany
     {
-        return $this->hasOne(ConfidantPerson::class, 'subject_person_id');
+        return $this->hasMany(ConfidantPerson::class, 'subject_person_id');
     }
 }
