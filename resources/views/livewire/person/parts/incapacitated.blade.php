@@ -14,6 +14,7 @@
               selectedConfidantIndex: null,
               documentRelationshipTypes: @js($this->dictionaries['DOCUMENT_RELATIONSHIP_TYPE']),
               documentTypes: @js($this->dictionaries['DOCUMENT_TYPE']),
+              phoneTypes: @js($this->dictionaries['PHONE_TYPE']),
               newDocument: {
                   type: '',
                   typeLabel: '',
@@ -139,13 +140,13 @@
         <div class="mb-6">
             <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                    {{ __('patients.legal_representatives') }}
+                    {{ __('patients.confidant_persons') }}
                 </h3>
 
                 @if($this instanceof PersonUpdate)
-                    <button type="button" class="button-sync">
+                    <button type="button" class="button-sync" wire:click.prevent="syncConfidantPersons">
                         @icon('refresh', 'w-4 h-4 mr-2')
-                        {{ __('patients.sync_legal_representatives') }}
+                        {{ __('patients.sync_confidant_persons') }}
                     </button>
                 @endif
             </div>
@@ -158,12 +159,13 @@
                         <th scope="col" class="th-input">{{ __('forms.personal_data') }}</th>
                         <th scope="col" class="th-input">{{ __('forms.document') }}</th>
                         <th scope="col" class="th-input">{{ __('forms.phone') }}</th>
-                        <th scope="col" class="th-input">{{ __('patients.relationship_active_until') }}</th>
+                        <th scope="col" class="th-input">{{ __('patients.relationship_active_to') }}</th>
                         <th scope="col" class="th-input">{{ __('patients.relationship_confirmation_document') }}</th>
                         <th scope="col" class="th-input text-center">{{ __('forms.action') }}</th>
                     </tr>
                     </thead>
                     <tbody>
+
                     @if($this instanceof PersonUpdate)
                     {{-- PersonUpdate: Multiple confidant persons --}}
                     <template x-for="(confidantPerson, confidantIndex) in confidantPersons"
@@ -176,9 +178,7 @@
                                 {{-- Personal Data - only show on first row for each confidant --}}
                                 <td class="td-input align-top" x-show="docIndex === 0">
                                     <div class="font-bold text-gray-900 dark:text-white">
-                                        <span x-text="confidantPerson.person.lastName"></span>
-                                        <span x-text="confidantPerson.person.firstName"></span>
-                                        <span x-text="confidantPerson.person.secondName || ''"></span>
+                                        <span x-text="confidantPerson.person.name || (confidantPerson.person.lastName + ' ' + confidantPerson.person.firstName + ' ' + (confidantPerson.person.secondName || ''))"></span>
                                     </div>
                                     <div class="text-sm text-gray-500 dark:text-gray-400">
                                         <span
@@ -223,7 +223,7 @@
                                               x-for="(phone, phoneIndex) in (confidantPerson?.person?.phones || [])"
                                     >
                                         <div>
-                                            <div class="text-gray-900 dark:text-white" x-text="phone.type || '-'"></div>
+                                            <div class="text-gray-900 dark:text-white" x-text="phoneTypes[phone.type] || '-'"></div>
                                             <div class="text-sm text-gray-500 dark:text-gray-400"
                                                  x-text="phone.number || '-'"
                                             ></div>
@@ -232,7 +232,7 @@
                                 </td>
                                 {{-- Relationship Active Until - one per relationship document --}}
                                 <td class="td-input align-top">
-                                    <div class="text-gray-900 dark:text-white" x-text="doc.activeTo || '-'"></div>
+                                    <div class="text-gray-900 dark:text-white" x-text="confidantPerson.activeTo || '-'"></div>
                                 </td>
                                 {{-- Relationship Confirmation Document - one per relationship document --}}
                                 <td class="td-input align-top">

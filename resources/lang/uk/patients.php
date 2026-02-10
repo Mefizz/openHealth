@@ -147,23 +147,19 @@ return [
     'add_representative' => 'Додати представника',
     'authentication_methods' => 'Методи автентифікації',
 
-    // Legal representatives section
-    'legal_representatives' => 'Законні представники',
-    'sync_legal_representatives' => 'Синхронізувати дані про законних представників ЕСОЗ',
-    'relationship_active_until' => "Дата, до якої зв'язок активний",
+    // Confidant persons
+    'confidant_persons' => 'Законні представники',
+    'sync_confidant_persons' => 'Синхронізувати дані про законних представників ЕСОЗ',
+    'relationship_active_to' => "Дата, до якої зв'язок активний",
     'relationship_confirmation_document' => "Документ підтвердження зв'язку",
     'deactivate_relationship' => "Деактивувати зв'язок",
     'activate_relationship' => "Активувати зв'язок",
-    'passport' => 'Паспорт',
-    'mobile' => 'Мобільний',
 
     // Requests section
-    'relationship_requests' => "Запити на створення зв'язків з законним представником",
+    'relationship_requests' => "Запити на створення зв'язків із законним представником",
     'sync_requests' => 'Синхронізувати дані про запити',
     'channel' => 'Канал',
-    'confirm_action' => 'Підтвердити',
     'cancel_request' => 'Скасувати запит',
-    'status_new' => 'Новий',
 
     // Summary record
     'summary' => 'Зведені дані',

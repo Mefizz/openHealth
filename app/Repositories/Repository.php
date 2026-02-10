@@ -16,6 +16,11 @@ final class Repository
         return app(PhoneRepository::class);
     }
 
+    public static function document(): DocumentRepository
+    {
+        return app(DocumentRepository::class);
+    }
+
     public static function employee(): EmployeeRepository
     {
         return app(EmployeeRepository::class);

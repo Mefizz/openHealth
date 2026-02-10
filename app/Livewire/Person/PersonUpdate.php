@@ -118,6 +118,8 @@ class PersonUpdate extends PersonComponent
 
     public bool $showSignatureDrawer = false;
 
+    public bool $showAuthDrawer = false;
+
     /**
      * Data for signing confidant person relationship.
      *
@@ -156,7 +158,7 @@ class PersonUpdate extends PersonComponent
 
         $authenticationMethods = $person->authenticationMethods->toArray();
 
-        if ($person->confidantPersons) {
+        if ($person->confidantPersons->isNotEmpty()) {
             $confidantPersonData = $person->confidantPersons->first()->person;
 
             $modifiedMethods = collect($authenticationMethods)->map(
@@ -549,7 +551,47 @@ class PersonUpdate extends PersonComponent
         }
     }
 
-    public bool $showAuthDrawer = false;
+    public function syncConfidantPersons(): void
+    {
+        try {
+            $response = EHealth::person()->getConfidantPersonRelationships($this->uuid);
+        } catch (ConnectionException $exception) {
+            $this->logConnectionError($exception, 'Error when getting auth methods');
+            Session::flash('error', "Виникла помилка. Відсутній зв'язок із ЕСОЗ");
+
+            return;
+        } catch (EHealthValidationException|EHealthResponseException $exception) {
+            $this->logEHealthException($exception, 'Error when getting auth methods');
+
+            if ($exception instanceof EHealthValidationException) {
+                Session::flash('error', $exception->getFormattedMessage());
+            } else {
+                Session::flash('error', 'Помилка від ЕСОЗ: ' . $exception->getMessage());
+            }
+
+            return;
+        }
+
+        // Map the API response to the form structure
+        $confidantPersonsData = collect($response->getData())->map(function ($relationship) {
+            $person = $relationship['confidant_person'];
+            $person['documents'] = $relationship['confidant_person']['documents_person'];
+
+            return [
+                'person' => $person,
+                'documentsRelationship' => $relationship['documents_relationship'],
+                'activeTo' => $relationship['active_to']
+            ];
+        })->toArray();
+
+        // Assign to the form
+        $this->form->person['confidantPersons'] = $confidantPersonsData;
+
+        // Sync to database
+        Repository::confidantPerson()->syncFromApiResponse($response->getData(), $this->uuid);
+
+        Session::flash('success', __('Дані про законних представників успішно синхронізовано.'));
+    }
 
     public function createNewConfidantPersonRelationshipRequest(): void
     {

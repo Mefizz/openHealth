@@ -12,7 +12,7 @@
     <table class="table-input w-full">
         <thead class="thead-input">
         <tr>
-            <th scope="col" class="th-input">ID</th>
+            <th scope="col" class="th-input">{{ __('ID') }}</th>
             <th scope="col" class="th-input">{{ __('forms.status.label') }}</th>
             <th scope="col" class="th-input">{{ __('forms.action') }}</th>
             <th scope="col" class="th-input">{{ __('patients.channel') }}</th>
@@ -52,7 +52,7 @@
                                         class="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200"
                                         @click="openRequestDropdown = false"
                                 >
-                                    {{ __('patients.confirm_action') }}
+                                    {{ __('forms.confirm') }}
                                 </button>
                                 <button type="button"
                                         class="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-red-600 dark:text-red-400"
