@@ -203,6 +203,15 @@ class EmployeeRequest extends EHealthRequest
      */
     protected function validateMany(EHealthResponse $response): array
     {
+        Log::info('[EHealth API] Received EmployeeRequest list structure:', [
+            'count' => count($response->getData()),
+            'raw_payload' => $response->json()
+        ]);
+
+        $transformedData = [];
+        foreach ($response->getData() as $item) {
+            $transformedData[] = self::replaceEHealthPropNames($item);
+        }
         $transformedData = [];
         foreach ($response->getData() as $item) {
             $transformedData[] = self::replaceEHealthPropNames($item);

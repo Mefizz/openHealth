@@ -239,16 +239,38 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
         return $result;
     }
 
-    private function handleEHealthResponseException(EHealthResponseException $e): void
+    protected function handleEHealthResponseException(EHealthResponseException $e): void
     {
-        $this->dispatch('flashMessage', ['message' => $e->getMessage(), 'type' => 'error', 'persistent' => true]);
-        Log::error(
-            'EHealth response error: ' . $e->getMessage(),
-            [
-                'details' => $e->getDetails(),
-                'trace' => $e->getTraceAsString(),
-            ]
-        );
+        $errorCode = $e->getCode(); // HTTP Code (409, 422)
+        $errorMessage = $e->getMessage(); // Текст помилки від eHealth JSON
+
+        // Looking for the details of the error inside the exception, if there are any
+        // (Assuming EHealthResponseException has a getErrors() method or similar,
+        // if not, we are based on $e->getMessage())
+
+        $translatedMessage = match (true) {
+            // Owner creation error
+            str_contains($errorMessage, 'Forbidden to create OWNER')
+            => __('errors.ehealth.forbidden_create_owner'), // "It is forbidden to create a user with the type Owner. Such a user already exists or the action is not available."
+
+            // Two main specialties
+            str_contains($errorMessage, 'employee have more than one speciality with active speciality_officio')
+            => __('errors.ehealth.multiple_primary_specialities'), // "An employee cannot have more than one specialty marked 'Main'."
+
+            // Other common mistakes
+            $errorCode === 422 && str_contains($errorMessage, 'tax_id')
+            => __('errors.ehealth.tax_id_exists'),
+
+            default => $e->getTranslatedMessage() // Default transfer if it has already been implemented
+        };
+
+        $this->dispatch('flashMessage', [
+            'message' => $translatedMessage,
+            'type' => 'error',
+            'persistent' => true
+        ]);
+
+        Log::error('EHealth Error Handled: ' . $errorMessage);
     }
 
     /**
