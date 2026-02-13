@@ -12,6 +12,7 @@ use App\Models\Relations\Party;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 
 class PartyVerify extends Component
@@ -22,14 +23,18 @@ class PartyVerify extends Component
     #[Locked]
     public array $verificationDetails = [];
 
-    public string $stream = 'dracs_death';
+    public string $verificationStream = 'dracs_death';
 
     #[Locked]
     public bool $showUpdateModal = false;
 
-    // Form fields
+    #[Validate('required|string|in:VERIFIED,NOT_VERIFIED')]
     public string $status = '';
+
+    #[Validate('required_if:status,NOT_VERIFIED|string|max:255')]
     public string $reason = '';
+
+    #[Validate('nullable|string|max:1000')]
     public string $comment = '';
     public string $backUrl = '';
 
@@ -63,33 +68,44 @@ class PartyVerify extends Component
         return $deathStatus === 'NOT_VERIFIED';
     }
 
+    /**
+     * Loads and filters verification details for the party from the eHealth API.
+     *
+     * This method retrieves the party details and strictly filters the verification streams
+     * to include only the allowed directions ('drfo' and 'dracs_death') as required by the
+     * MIS/PIS UI documentation. It handles variations in the API response structure and
+     * updates the $verificationDetails property. In case of an API failure or exception,
+     * the details are safely defaulted to an empty array.
+     *
+     * @return void
+     */
     public function loadVerificationDetails(): void
     {
         try {
-            // 1. Get and validate data
+            //Getting data
             $response = EHealth::party()->getDetails($this->party->uuid);
-            $data = $response->validate();
+            $data = is_array($response) ? $response : $response->json();
 
-            // 7.4.2: Filter to allow only specific scopes for display
-            $allowedScopes = ['drfo', 'dracs_death'];
+            // We leave ONLY drfo and dracs_death as required by the documentation
+            $allowedStreams = ['drfo', 'dracs_death'];
 
-            if (isset($data['details']) && is_array($data['details'])) {
+            if (!empty($data['data']['details']) && is_array($data['data']['details'])) {
+                $data['data']['details'] = array_filter(
+                    $data['data']['details'],
+                    static fn($key) => in_array($key, $allowedStreams, true),
+                    ARRAY_FILTER_USE_KEY
+                );
+            } elseif (!empty($data['details']) && is_array($data['details'])) {
                 $data['details'] = array_filter(
                     $data['details'],
-                    static fn($key) => in_array($key, $allowedScopes, true),
+                    static fn($key) => in_array($key, $allowedStreams, true),
                     ARRAY_FILTER_USE_KEY
                 );
             }
 
-            $this->verificationDetails = $data;
+            $this->verificationDetails = $data['data'] ?? $data;
 
-        } catch (\Exception $e) {
-            $this->dispatch('flashMessage', [
-                'message' => __('forms.verification_data_upload_error'),
-                'type' => 'error'
-            ]);
-            Log::error('Failed to load verification details', ['error' => $e->getMessage()]);
-
+        } catch (\Throwable $e) {
             $this->verificationDetails = [];
         }
     }
@@ -134,7 +150,11 @@ class PartyVerify extends Component
 
             // Wrap the data in the stream key
             $payload = [
-                $this->stream => $data
+                $this->verificationStream => [
+                    'status' => $this->status,
+                    'reason' => $this->reason,
+                    'comment' => $this->comment,
+                ]
             ];
 
             EHealth::party()->update($this->party->uuid, $payload);

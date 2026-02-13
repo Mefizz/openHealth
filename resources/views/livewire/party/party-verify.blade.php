@@ -155,13 +155,12 @@
                 </div>
 
                 <div class="p-6 space-y-6">
-
                     {{-- 1. Subject of verification --}}
                     <div class="form-group group">
-                        <select wire:model.live="stream" id="stream" class="input peer px-4 py-2">
+                        <select wire:model.live="verificationStream" id="verificationStream" class="input peer px-4 py-2">
                             <option value="dracs_death">{{ __('party_verification.types.dracs_death') }}</option>
                         </select>
-                        <label for="stream" class="label">{{ __('party_verification.subject_verification') }}</label>
+                        <label for="verificationStream" class="label">{{ __('party_verification.subject_verification') }}</label>
                     </div>
 
                     {{-- 2. Status --}}
