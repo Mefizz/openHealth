@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models\Person;
 
+use App\Models\ConfidantPersonRelationshipRequest;
 use App\Models\Declaration;
 use App\Models\Employee\Employee;
 use App\Models\MedicalEvents\Sql\Encounter;
@@ -59,12 +60,22 @@ class Person extends BasePerson
     }
 
     /**
-     * Who is MY confidant person.
+     * Who is MY confidant persons.
      *
      * @return HasMany
      */
     public function confidantPersons(): HasMany
     {
         return $this->hasMany(ConfidantPerson::class, 'subject_person_id');
+    }
+
+    /**
+     * List of requests for adding confidant person.
+     *
+     * @return HasMany
+     */
+    public function confidantPersonRelationshipRequests(): HasMany
+    {
+        return $this->hasMany(ConfidantPersonRelationshipRequest::class, 'person_id');
     }
 }

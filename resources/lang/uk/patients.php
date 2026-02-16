@@ -156,7 +156,7 @@ return [
     'activate_relationship' => "Активувати зв'язок",
 
     // Requests section
-    'relationship_requests' => "Запити на створення зв'язків із законним представником",
+    'confidant_relationship_requests' => "Запити на створення зв'язків із законним представником",
     'sync_requests' => 'Синхронізувати дані про запити',
     'channel' => 'Канал',
     'cancel_request' => 'Скасувати запит',

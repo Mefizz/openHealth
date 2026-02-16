@@ -9,6 +9,7 @@ use App\Classes\eHealth\EHealthResponse;
 use App\Core\Arr;
 use App\Enums\Person\AuthenticationMethod;
 use App\Enums\Person\AuthenticationMethodAction;
+use App\Enums\Person\ConfidantPersonRelationshipRequestStatus;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
 use App\Rules\InDictionary;
@@ -18,6 +19,7 @@ use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class Person extends Request
 {
@@ -141,6 +143,8 @@ class Person extends Request
      */
     public function createConfidantRelationship(string $id, array $data): PromiseInterface|EHealthResponse
     {
+        $this->setValidator($this->validateCreateConfidantRelationship(...));
+
         $data = $this->format($data, ['activeTo', 'issuedAt']);
 
         return $this->post(self::URL . "/$id/confidant_person_relationship_requests", $data);
@@ -149,22 +153,37 @@ class Person extends Request
     /**
      * Deactivate new Confidant Person relationship request.
      *
-     * @param  string  $id
+     * @param  string  $id  Person identifier
+     * @param  string  $relationshipId  Identifier of person relationship that will be deactivated
+     * @param  array  $documentsRelationship
+     * @param  string|null  $authorizeWith  Identifier of person's auth method
      * @return PromiseInterface|EHealthResponse
      * @throws ConnectionException|EHealthValidationException|EHealthResponseException
      *
      * @see https://uaehealthapi.docs.apiary.io/#reference/public.-medical-service-provider-integration-layer/persons/deactivate-confidant-person-relationship-request
      */
-    public function deactivateConfidantRelationship(string $id): PromiseInterface|EHealthResponse
-    {
-        return $this->post(self::URL . "/$id/confidant_person_relationship_requests/deactivate");
+    public function deactivateConfidantRelationship(
+        string $id,
+        string $relationshipId,
+        array $documentsRelationship,
+        ?string $authorizeWith
+    ): PromiseInterface|EHealthResponse {
+        $payload = [
+            'confidant_person_relationship' => [
+                'id' => $relationshipId,
+                'documents_relationship' => $documentsRelationship
+            ],
+            'authorize_with' => $authorizeWith
+        ];
+
+        return $this->post(self::URL . "/$id/confidant_person_relationship_requests/deactivate", $payload);
     }
 
     /**
      * Get list of previously created Confidant Person relationship requests.
      *
      * @param  string  $id
-     * @param  array{status?: \App\Enums\Person\ConfidantPersonRelationshipRequestStatus::class, page?: int, page_size?: int}  $query
+     * @param  array{status?: ConfidantPersonRelationshipRequestStatus::class, page?: int, page_size?: int}  $query
      * @return PromiseInterface|EHealthResponse
      * @throws ConnectionException|EHealthValidationException|EHealthResponseException
      *
@@ -174,15 +193,17 @@ class Person extends Request
         string $id,
         array $query = []
     ): PromiseInterface|EHealthResponse {
+        $this->setValidator($this->validateConfidantePersonRequests(...));
+
         return $this->get(self::URL . "/$id/confidant_person_relationship_requests", $query);
     }
 
     /**
-     * Get list of previously created Confidant Person relationship requests.
+     * Get details of previously created Confidant Person relationship requests.
      *
      * @param  string  $id
-     * @param  string  $confidantPersonRelationshipRequestId,
-     * @param  array{status?: \App\Enums\Person\ConfidantPersonRelationshipRequestStatus::class, page?: int, page_size?: int}  $query
+     * @param  string  $confidantPersonRelationshipRequestId
+     * @param  array{status?: ConfidantPersonRelationshipRequestStatus::class, page?: int, page_size?: int}  $query
      * @return PromiseInterface|EHealthResponse
      * @throws ConnectionException|EHealthValidationException|EHealthResponseException
      *
@@ -193,7 +214,10 @@ class Person extends Request
         string $confidantPersonRelationshipRequestId,
         array $query = []
     ): PromiseInterface|EHealthResponse {
-        return $this->get(self::URL . "/$id/confidant_person_relationship_requests/$confidantPersonRelationshipRequestId", $query);
+        return $this->get(
+            self::URL . "/$id/confidant_person_relationship_requests/$confidantPersonRelationshipRequestId",
+            $query
+        );
     }
 
     /**
@@ -485,6 +509,16 @@ class Person extends Request
         return $validator->validate();
     }
 
+    protected function validateCreateConfidantRelationship(EHealthResponse $response): array
+    {
+        return $this->validateConfidantRelationshipData($response, false);
+    }
+
+    protected function validateConfidantePersonRequests(EHealthResponse $response): array
+    {
+        return $this->validateConfidantRelationshipData($response, true);
+    }
+
     /**
      * Replace eHealth property names with the ones used in the application.
      * E.g., id => uuid.
@@ -526,5 +560,27 @@ class Person extends Request
 
             return $method;
         })->toArray();
+    }
+
+    private function validateConfidantRelationshipData(EHealthResponse $response, bool $isArray): array
+    {
+        $data = $response->getData();
+        $replaced = self::replaceEHealthPropNames($data);
+
+        $prefix = $isArray ? '*.' : '';
+        $rules = [
+            $prefix . 'uuid' => ['required', 'uuid'],
+            $prefix . 'action' => ['required', 'string'],
+            $prefix . 'status' => ['required', Rule::in(ConfidantPersonRelationshipRequestStatus::values())],
+            $prefix . 'channel' => ['required', 'string']
+        ];
+
+        $validator = Validator::make($replaced, $rules);
+
+        if ($validator->fails()) {
+            Log::channel('e_health_errors')->error('Validation failed: ' . implode(', ', $validator->errors()->all()));
+        }
+
+        return $validator->validate();
     }
 }

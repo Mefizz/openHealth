@@ -1,9 +1,9 @@
 <div class="mt-8">
     <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-            {{ __('patients.relationship_requests') }}
+            {{ __('patients.confidant_relationship_requests') }}
         </h3>
-        <button type="button" class="button-sync">
+        <button wire:click.prevent="syncConfidantPersonRelationshipRequestsList" type="button" class="button-sync">
             @icon('refresh', 'w-4 h-4 mr-2')
             {{ __('patients.sync_requests') }}
         </button>
@@ -20,16 +20,20 @@
         </tr>
         </thead>
         <tbody>
-        @forelse($relationshipRequests ?? [] as $index => $request)
+        @foreach($this->confidantPersonRelationshipRequests as $index => $request)
             <tr>
-                <td class="td-input text-sm text-gray-600 dark:text-gray-400">{{ $request['id'] ?? '-' }}</td>
+                <td class="td-input text-sm text-gray-600 dark:text-gray-400">{{ $request->uuid }}</td>
                 <td class="td-input">
-                    <span class="text-gray-700 dark:text-gray-300">{{ $request['status'] ?? '-' }}</span>
+                    <span class="text-gray-700 dark:text-gray-300">
+                        {{ $request->status->label() }}
+                    </span>
                 </td>
                 <td class="td-input text-gray-700 dark:text-gray-300">
-                    {{ ($request['action'] ?? '') === 'activate' ? __('patients.activate_relationship') : __('patients.deactivate_relationship') }}
+                    {{ $request->action === 'INSERT' ? __('patients.activate_relationship') : __('patients.deactivate_relationship') }}
                 </td>
-                <td class="td-input text-gray-700 dark:text-gray-300">{{ $request['channel'] ?? '-' }}</td>
+                <td class="td-input text-gray-700 dark:text-gray-300">
+                    {{ $request->channel === 'MIS' ? __('МІС') : $request->channel }}
+                </td>
                 <td class="td-input text-center">
                     <div class="relative"
                          x-data="{ openRequestDropdown: false }"
@@ -56,7 +60,7 @@
                                 </button>
                                 <button type="button"
                                         class="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-red-600 dark:text-red-400"
-                                        @click="openRequestDropdown = false"
+                                        wire:click.prevent="deactivateConfidantPersonRelationshipRequest('{{ $request->uuid }}')"
                                 >
                                     {{ __('patients.cancel_request') }}
                                 </button>
@@ -65,8 +69,7 @@
                     </div>
                 </td>
             </tr>
-        @empty
-        @endforelse
+        @endforeach
         </tbody>
     </table>
 </div>
