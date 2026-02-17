@@ -6,7 +6,7 @@ namespace App\Livewire\ContractRequest;
 
 use App\Classes\eHealth\EHealth;
 use App\Enums\JobStatus;
-use App\Exceptions\EHealth\EHealthResponseException;
+use App\Jobs\ContractRequestDetailsUpsert;
 use App\Jobs\ContractRequestSync;
 use App\Models\Contracts\ContractRequest;
 use App\Models\LegalEntity;
@@ -14,7 +14,6 @@ use App\Notifications\SyncNotification;
 use App\Repositories\Repository;
 use Auth;
 use Illuminate\Bus\Batch;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Crypt;
 use Livewire\Component;
@@ -117,6 +116,46 @@ class ContractRequestIndex extends Component
         }
 
         $this->dispatch('flashMessage', ['message' => $msg, 'type' => 'success']);
+    }
+
+    /**
+     * Synchronize a single contract request by its UUID
+     */
+    public function syncOne(string $uuid): void
+    {
+        $contractRequestModel = ContractRequest::where('uuid', $uuid)->firstOrFail();
+
+        // Optimistic UI update
+        $contractRequestModel->update(['sync_status' => JobStatus::PROCESSING->value]);
+
+        $userAuth = Auth::user();
+        $bearerToken = session()->get(config('ehealth.api.oauth.bearer_token'));
+
+        Bus::batch([
+            new ContractRequestDetailsUpsert(
+                contractRequestModel: $contractRequestModel,
+                legalEntity: legalEntity(),
+                standalone: true
+            )
+        ])
+            ->withOption('legal_entity_id', legalEntity()->id)
+            ->withOption('token', Crypt::encryptString($bearerToken))
+            ->withOption('user', $userAuth)
+            ->then(function (Batch $batch) use ($userAuth) {
+                $userAuth->notify(new SyncNotification('contract_request', 'completed'));
+            })
+            ->catch(function (Batch $batch, \Throwable $e) use ($userAuth) {
+                Log::error('Single ContractRequest sync failed.', ['error' => $e->getMessage()]);
+                $userAuth->notify(new SyncNotification('contract_request', 'failed'));
+            })
+            ->onQueue('sync')
+            ->name('Sync Single Contract Request')
+            ->dispatch();
+
+        $this->dispatch('flashMessage', [
+            'message' => __('forms.synchronisation_started'),
+            'type' => 'success'
+        ]);
     }
 
     public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\View\View

@@ -7,6 +7,7 @@ namespace App\Jobs;
 use App\Classes\eHealth\Api\ContractRequest as ApiContractRequest;
 use App\Classes\eHealth\EHealthResponse;
 use App\Core\EHealthJob;
+use App\Enums\JobStatus;
 use App\Models\LegalEntity;
 use App\Models\User;
 use App\Repositories\Repository;
@@ -59,14 +60,16 @@ class ContractRequestSync extends EHealthJob
     }
 
     /**
-     * Store or update data in the database.
+     * Inside ContractRequestSync.php -> processResponse()
      */
     protected function processResponse(?EHealthResponse $response): void
     {
-        $data = $response?->validate();
+        $validatedData = $response?->validate();
 
-        if (!empty($data)) {
-            foreach ($data as $item) {
+        if (!empty($validatedData)) {
+            foreach ($validatedData as $item) {
+                // Add PARTIAL status to the item before saving
+                $item['sync_status'] = JobStatus::PARTIAL->value;
                 Repository::contractRequest()->saveFromEHealth($item, $this->contractType);
             }
         }
@@ -84,9 +87,12 @@ class ContractRequestSync extends EHealthJob
      * 1. If current is CAPITATION -> Next is REIMBURSEMENT.
      * 2. If current is REIMBURSEMENT -> Finish (or go to nextEntity).
      */
+    /**
+     * Inside ContractRequestSync.php -> getNextEntityJob()
+     */
     protected function getNextEntityJob(): ?EHealthJob
     {
-        // If now CAPITATION - run the next REIMBURSEMENT
+        // 1. If we still have types to process (e.g., CAPITATION -> REIMBURSEMENT)
         if ($this->contractType === 'CAPITATION') {
             return new self(
                 $this->legalEntity,
@@ -97,7 +103,7 @@ class ContractRequestSync extends EHealthJob
             );
         }
 
-        // If the REIMBURSEMENT is completed, we go further along the chain
+        // 2. If all types are fetched, start fetching details for PARTIAL records
         return $this->standalone
             ? new CompleteSync($this->legalEntity, isFirstLogin: $this->isFirstLogin)
             : $this->nextEntity;

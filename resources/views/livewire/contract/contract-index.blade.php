@@ -39,11 +39,16 @@
                             <tr wire:key="contract-{{ $item->uuid }}">
                                 <td class="index-table-td">
                                     <div class="text-sm text-gray-900 font-medium">
-                                        {{ $item->contract_number }}
+                                        {{-- Display contract_number or translated 'missing' text --}}
+                                        {{ $item->contract_number ?: __('contracts.missing') }}
                                     </div>
-                                    <div class="text-xs text-gray-500 mt-0.5">
-                                        {{ $item->contractor_legal_entity_id }}
-                                    </div>
+
+                                    {{-- Show status_reason if exists, as required by eHealth TZ --}}
+                                    @if($item->status_reason)
+                                        <div class="text-xs text-red-500 mt-1" title="{{ __('contracts.status_reason') }}">
+                                            {{ str($item->status_reason)->limit(60) }}
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="index-table-td">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">

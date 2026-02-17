@@ -233,10 +233,7 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
             Route::prefix('contract-request')->name('contract-request.')->group(function () {
                 Route::get('/', ContractRequestIndex::class)->name('index');
                 Route::get('/{contract}', ContractRequestShow::class)->name('show');
-
-                // 2. ADD THIS ROUTE
                 Route::get('/{contract}/edit', ContractRequestEdit::class)->name('edit');
-
                 Route::get('/create/capitation', CapitationContractCreate::class)->name('capitation.create');
                 Route::get('/create/reimbursement', ReimbursementContractCreate::class)->name('reimbursement.create');
             });

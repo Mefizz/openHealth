@@ -90,6 +90,18 @@ return [
     'period' => 'Період дії',
     'created_at' => 'Дата створення',
     'view' => 'Перегляд',
+    'missing' => 'Відсутній',
+    'edit' => 'Редагувати',
+    'actions' => 'Дії',
+    'date_added' => 'Дата додавання',
+    'status_reason' => 'Причина статусу',
+
+    // Types of contracts
+    'capitation' => 'Капітація',
+    'reimbursement' => 'Реімбурсація',
+
+    // Table headers (if you don't have them yet)
+    'requests_list' => 'Список заявок',
 
     'status' => [
         'requests' => 'Заявки на договір',
