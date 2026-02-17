@@ -305,7 +305,13 @@
 
                                 {{-- Email --}}
                                 @php
-                                    $emailsCollection = $party->users->pluck('email')->filter()->unique();
+
+                                    $emailsCollection = $party->employees
+                                        ->where('legal_entity_id', $currentLegalEntityId)
+                                        ->map(fn($emp) => $emp->user?->email)
+                                        ->filter()
+                                        ->unique();
+
                                     $visibleEmail = $emailsCollection->first();
                                     $hiddenEmails = $emailsCollection->slice(1);
                                     $hiddenCount = $hiddenEmails->count();

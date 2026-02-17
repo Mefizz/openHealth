@@ -127,7 +127,6 @@ readonly class EmployeeRepository
             // 4. Eager load relations
             ->with([
                 'phones',
-                'users',
                 'employees' => fn ($q) => $q
                     ->where('legal_entity_id', $legalEntityId)
                     ->orderByDesc('updated_at')
