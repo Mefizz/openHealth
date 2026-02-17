@@ -54,8 +54,8 @@ class DivisionForm extends Form
             'sun' => [[Division::WORKING_TIME_DEFAULT_START, Division::WORKING_TIME_DEFAULT_END]]
         ],
         'location' => [
-            Division::WORKING_TIME_DEFAULT_START,
-            Division::WORKING_TIME_DEFAULT_END
+            'latitude' => Division::LOCATION_DEFAULT_LATITUDE,
+            'longitude' => Division::LOCATION_DEFAULT_LONGITUDE
         ],
         'phones' => []
     ];
