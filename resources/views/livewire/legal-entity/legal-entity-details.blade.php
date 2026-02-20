@@ -111,121 +111,110 @@
                 <span class="ms-1">{{ $edrStatuses[$edrStatus] ?? __('forms.status.unknown') }}</span>
             </div>
 
-            <div class="flex flex-col lg:flex-row lg:gap-x-1">
-                {{-- NAME --}}
-                <div class="flex-grow">
-                    <div class="form-row-2">
-                        <div class="form-group">
-                            <input
-                                id="edrName"
-                                type="text"
-                                placeholder=" "
-                                name="nameLegalEntity"
-                                class="peer input"
-                                value="{{ __($le->edr['name'] ?? '') }}"
-                                x-bind:disabled="isDisabled"
-                            />
+            <div class="flex flex-col lg:flex-row lg:gap-x-8">
+                <div class="flex-grow lg:max-w-[60%] lg:min-w-0">
+                    {{-- NAME --}}
+                    <div class="form-group">
+                        <input
+                            id="edrName"
+                            type="text"
+                            placeholder=" "
+                            name="nameLegalEntity"
+                            class="peer input"
+                            value="{{ __($le->edr['name'] ?? '') }}"
+                            x-bind:disabled="isDisabled"
+                        />
 
-                            <label
-                                for="edrName"
-                                class="label"
-                            >
-                                {{ __('forms.full_name_division') }}
-                            </label>
-                        </div>
+                        <label
+                            for="edrName"
+                            class="label"
+                        >
+                            {{ __('forms.full_name_division') }}
+                        </label>
                     </div>
 
                     {{-- PUBLIC NAME --}}
-                    <div class="form-row-2">
-                        <div class="form-group">
-                            <input
-                                id="publicName"
-                                type="text"
-                                placeholder=" "
-                                class="peer input"
-                                name="publicName"
-                                value="{{ __($le->edr['public_name'] ?? '') }}"
-                                x-bind:disabled="isDisabled"
-                            />
+                    <div class="form-group">
+                        <input
+                            id="publicName"
+                            type="text"
+                            placeholder=" "
+                            class="peer input"
+                            name="publicName"
+                            value="{{ __($le->edr['public_name'] ?? '') }}"
+                            x-bind:disabled="isDisabled"
+                        />
 
-                            <label
-                                for="publicName"
-                                class="label"
-                            >
-                                {{ __('forms.public_name') }}
-                            </label>
-                        </div>
+                        <label
+                            for="publicName"
+                            class="label"
+                        >
+                            {{ __('forms.public_name') }}
+                        </label>
                     </div>
 
                     {{-- SHORT NAME --}}
-                    <div class="form-row-2">
-                        <div class="form-group">
-                            <input
-                                id="shortName"
-                                type="text"
-                                placeholder=" "
-                                class="peer input"
-                                name="shortName"
-                                value="{{ __($le->edr['short_name'] ?? '') }}"
-                                x-bind:disabled="isDisabled"
-                            />
+                    <div class="form-group">
+                        <input
+                            id="shortName"
+                            type="text"
+                            placeholder=" "
+                            class="peer input"
+                            name="shortName"
+                            value="{{ __($le->edr['short_name'] ?? '') }}"
+                            x-bind:disabled="isDisabled"
+                        />
 
-                            <label
-                                for="shortName"
-                                class="label"
-                            >
-                                {{ __('forms.abbreviated_name') }}
-                            </label>
-                        </div>
+                        <label
+                            for="shortName"
+                            class="label"
+                        >
+                            {{ __('forms.abbreviated_name') }}
+                        </label>
                     </div>
 
                     {{-- ORGANIZATIONAL LEGAL FORM --}}
-                    <div class="form-row-2">
-                        <div class="form-group">
-                            <input
-                                id="legalForm"
-                                type="text"
-                                placeholder=" "
-                                class="peer input"
-                                name="legalForm"
-                                value="{{ __($edrLegalForms[$le->edr['legal_form']] ?? '') }}"
-                                x-bind:disabled="isDisabled"
-                            />
+                    <div class="form-group">
+                        <input
+                            id="legalForm"
+                            type="text"
+                            placeholder=" "
+                            class="peer input"
+                            name="legalForm"
+                            value="{{ __($edrLegalForms[$le->edr['legal_form']] ?? '') }}"
+                            x-bind:disabled="isDisabled"
+                        />
 
-                            <label
-                                for="legalForm"
-                                class="label"
-                            >
-                                {{ __('forms.organizational_legal_form') }}
-                            </label>
-                        </div>
+                        <label
+                            for="legalForm"
+                            class="label"
+                        >
+                            {{ __('forms.organizational_legal_form') }}
+                        </label>
                     </div>
 
                     {{-- ADDRESS REGISTRATION NMP --}}
-                    <div class="form-row-2">
-                        <div class="form-group">
-                            <input
-                                id="addressRegistrationNMP"
-                                type="text"
-                                placeholder=" "
-                                class="peer input"
-                                name="addressRegistrationNMP"
-                                value="{{ __($le->edr['registration_address']['address'] ?? '') }}"
-                                x-bind:disabled="isDisabled"
-                            />
+                    <div class="form-group">
+                        <input
+                            id="addressRegistrationNMP"
+                            type="text"
+                            placeholder=" "
+                            class="peer input"
+                            name="addressRegistrationNMP"
+                            value="{{ __($le->edr['registration_address']['address'] ?? '') }}"
+                            x-bind:disabled="isDisabled"
+                        />
 
-                            <label
-                                for="addressRegistrationNMP"
-                                class="label"
-                            >
-                                {{ __('forms.address_registration_NMP') }}
-                            </label>
-                        </div>
+                        <label
+                            for="addressRegistrationNMP"
+                            class="label"
+                        >
+                            {{ __('forms.address_registration_NMP') }}
+                        </label>
                     </div>
-
                 </div>
 
-                <div class=" lg:mt-0 lg:min-w-[280px] lg:-ml-6 space-y-4">
+                <div class="lg:mt-0 lg:min-w-[280px] lg:flex-shrink-0 space-y-4">
                 <p class="text-base font-semibold text-gray-900 dark:text-gray-200 mb-4">{{ __('Список КВЕДів:') }}</p>
 
                     <div class="text-sm text-gray-900 dark:text-gray-200 space-y-4">
