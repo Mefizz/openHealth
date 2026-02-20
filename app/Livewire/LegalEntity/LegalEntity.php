@@ -30,6 +30,7 @@ use App\Traits\Addresses\AddressSearch;
 use App\Repositories\AddressRepository;
 use App\Models\Employee\EmployeeRequest;
 use App\Repositories\EmployeeRepository;
+use App\Enums\License\Type as LicenseType;
 use Illuminate\Validation\ValidationException;
 use App\Models\LegalEntity as LegalEntityModel;
 use App\Livewire\LegalEntity\Forms\LegalEntitiesForms;
@@ -43,7 +44,14 @@ abstract class LegalEntity extends Component
     use WithFileUploads;
     use AddressSearch;
 
-    protected const STEP_PATH = 'views/livewire/legal-entity/step';
+    protected const string STEP_PATH = 'views/livewire/legal-entity/step';
+
+    protected const array LICENSE_TYPE_MAP = [
+        LegalEntityModel::TYPE_PRIMARY_CARE => LicenseType::MSP->value,
+        LegalEntityModel::TYPE_OUTPATIENT => LicenseType::MSP->value,
+        LegalEntityModel::TYPE_EMERGENCY => LicenseType::MSP->value,
+        LegalEntityModel::TYPE_PHARMACY => LicenseType::PHARMACY->value,
+    ];
 
     /**
      * @var string
@@ -498,6 +506,25 @@ abstract class LegalEntity extends Component
     }
 
     /**
+     * Prepares available license types for use in a select input.
+     *
+     * Optionally filters or adjusts the prepared list based on the provided type,
+     * and returns the result in string form suitable for UI rendering/binding.
+     *
+     * @param string $type License type discriminator used to tailor the select options.
+     *
+     * @return string Prepared license type options representation for the select field.
+     */
+    public function getLicenseTypesByLegalEntityType(?string $type = null): string
+    {
+        if (empty($type) || !\array_key_exists($type, self::LICENSE_TYPE_MAP)) {
+            return '';
+        }
+
+        return self::LICENSE_TYPE_MAP[$type];
+    }
+
+    /**
      * Prepares the data for the request by converting documents to an array, tax_id to no_tax_id, and archive to an array.
      *
      * @param  array  $data  The data to be prepared for the request
@@ -940,7 +967,7 @@ abstract class LegalEntity extends Component
 
         $license = License::firstOrNew(['uuid' => $data['uuid']]);
         $license->fill($data);
-        $license->is_primary = $data['type'] === LegalEntityModel::TYPE_MSP || $data['type'] === LegalEntityModel::TYPE_PHARMACY;
+        $license->is_primary = $data['type'] === LicenseType::MSP->value || $data['type'] === LicenseType::PHARMACY->value;
 
         if (isset($this->legalEntity)) {
             $this->legalEntity->licenses()->save($license);

@@ -11,6 +11,7 @@ use App\Models\Employee\Employee;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use App\Enums\License\Type as LicenseType;
 use App\Models\LegalEntity as LegalEntityModel;
 
 class EditLegalEntity extends LegalEntity
@@ -69,7 +70,7 @@ class EditLegalEntity extends LegalEntity
         $licenses = $this->legalEntity->licenses()->get();
 
         $license = $licenses->filter(function ($item) {
-            return $item->type->name === LegalEntityModel::TYPE_MSP || $item->type->name === LegalEntityModel::TYPE_PHARMACY;
+            return $item->type->name === LicenseType::MSP->value || $item->type->name === LicenseType::PHARMACY->value;
         })->first();
 
         if ($license) {

@@ -39,7 +39,7 @@
                 <option value="_placeholder_" selected hidden>-- {{ __('forms.select') }} --</option>
 
                 @foreach($dictionaries['LICENSE_TYPE'] as $k => $license_type)
-                    <option value="{{ $k }}" {{ $k === 'MSP' ? 'selected' : '' }}>
+                    <option value="{{ $k }}" @selected($k == $this->getLicenseTypesByLegalEntityType($legalEntityForm->type))>
                         {{ $license_type }}
                     </option>
                 @endforeach

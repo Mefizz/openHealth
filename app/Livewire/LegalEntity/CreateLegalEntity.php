@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Cache;
 use App\Repositories\PhoneRepository;
 use App\Repositories\AddressRepository;
 use Illuminate\Support\Facades\Redirect;
+use App\Enums\License\Type as LicenseType;
 use Illuminate\Validation\ValidationException;
 use App\Models\LegalEntity as LegalEntityModel;
 
@@ -135,6 +136,11 @@ class CreateLegalEntity extends LegalEntity
     {
         if ($this->checkOwnerChanges()) {
             Cache::put($this->ownerCacheKey, $this->legalEntityForm->owner, now()->days(90));
+        }
+
+        if ($this->checkLegalEntityTypeChanges()) {
+            // Set the license type based on the legal entity type for the license step
+            $this->legalEntityForm->license['type'] = $this->getLicenseTypesByLegalEntityType($this->legalEntityForm->type);
         }
 
         $this->putLegalEntityInCache();
@@ -322,9 +328,29 @@ class CreateLegalEntity extends LegalEntity
     }
 
     /**
-     * Check if the Legal Entity owner has changed.
+     * Check if the legal entity type has changed and validate the change.
+     * (true if LegalEntity type has changed, false otherwise)
      *
-     * @return bool Returns true if the Legal Entity owner has changed, false otherwise.
+     * @return bool
+     */
+    protected function checkLegalEntityTypeChanges(): bool
+    {
+        $cachedLegalEntity = Cache::get($this->entityCacheKey);
+
+        if (!$cachedLegalEntity) {
+            return !empty($this->legalEntityForm->type); // No cached Legal Entity to compare with
+        }
+
+        $currentType = $cachedLegalEntity ? LegalEntityType::firstWhere('name', $this->legalEntityForm->type) : '';
+        $cachedType = $cachedLegalEntity ? LegalEntityType::find($cachedLegalEntity->type_id) : '';
+
+        return $currentType !== $cachedType;
+    }
+
+    /**
+     * Check if the LegalEntity owner has changed.
+     *
+     * @return bool Returns true if the LegalEntity owner has changed, false otherwise.
      */
     private function checkOwnerChanges(): bool
     {
@@ -392,7 +418,7 @@ class CreateLegalEntity extends LegalEntity
     // Step #6 Create/Update License
     private function stepLicense(): void
     {
-        $this->legalEntityForm->license['type'] = 'MSP';
+        $this->legalEntityForm->license['type'] = LicenseType::tryFrom($this->legalEntityForm->license['type'])?->value ?? LicenseType::MSP->value;
 
         $this->legalEntityForm->rulesForLicense();
     }

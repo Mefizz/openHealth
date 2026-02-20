@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Session;
 use App\Repositories\AddressRepository;
 use App\Traits\BatchLegalEntityQueries;
 use Spatie\Permission\PermissionRegistrar;
+use App\Enums\License\Type as LicenseType;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
 use App\Livewire\LegalEntity\LegalEntity as LegalEntityComponent;
@@ -151,7 +152,7 @@ class LegalEntityDetails extends LegalEntityComponent
         $licenses = $this->legalEntity->licenses()->get();
 
         $license = $licenses->filter(function ($item) {
-            return $item->type->name === LegalEntity::TYPE_MSP || $item->type->name === LegalEntity::TYPE_PHARMACY;
+            return $item->type->name === LicenseType::MSP->value || $item->type->name === LicenseType::PHARMACY->value;
         })->first();
 
         if ($license) {
