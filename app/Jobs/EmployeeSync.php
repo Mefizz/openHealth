@@ -32,7 +32,6 @@ class EmployeeSync extends EHealthJob
             ->getMany(['legal_entity_id' => $this->legalEntity->uuid], $this->page);
     }
 
-    // Store or update data in the database
     /**
      * Store or update data in the database.
      * * @param EHealthResponse|null $response

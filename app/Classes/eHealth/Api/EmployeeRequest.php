@@ -212,10 +212,6 @@ class EmployeeRequest extends EHealthRequest
         foreach ($response->getData() as $item) {
             $transformedData[] = self::replaceEHealthPropNames($item);
         }
-        $transformedData = [];
-        foreach ($response->getData() as $item) {
-            $transformedData[] = self::replaceEHealthPropNames($item);
-        }
 
         $validator = Validator::make($transformedData, [
             '*' => 'required|array',

@@ -239,29 +239,35 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
         return $result;
     }
 
+    /**
+     * Handles specific EHealth API response exceptions and maps them to localized messages.
+     *
+     * Maps the following specific API error messages:
+     * - 'Forbidden to create OWNER': It is forbidden to create a user with the type Owner.
+     * Such a user already exists or the action is not available.
+     * - 'employee have more than one speciality with active speciality_officio':
+     * An employee cannot have more than one specialty marked 'Main'.
+     * - 422 with 'tax_id': The provided Tax ID already exists in the system.
+     *
+     * @param EHealthResponseException $e
+     * @return void
+     */
     protected function handleEHealthResponseException(EHealthResponseException $e): void
     {
-        $errorCode = $e->getCode(); // HTTP Code (409, 422)
-        $errorMessage = $e->getMessage(); // Текст помилки від eHealth JSON
-
-        // Looking for the details of the error inside the exception, if there are any
-        // (Assuming EHealthResponseException has a getErrors() method or similar,
-        // if not, we are based on $e->getMessage())
+        $errorCode = $e->getCode();
+        $errorMessage = $e->getMessage();
 
         $translatedMessage = match (true) {
-            // Owner creation error
             str_contains($errorMessage, 'Forbidden to create OWNER')
-            => __('errors.ehealth.forbidden_create_owner'), // "It is forbidden to create a user with the type Owner. Such a user already exists or the action is not available."
+            => __('errors.ehealth.forbidden_create_owner'),
 
-            // Two main specialties
             str_contains($errorMessage, 'employee have more than one speciality with active speciality_officio')
-            => __('errors.ehealth.multiple_primary_specialities'), // "An employee cannot have more than one specialty marked 'Main'."
+            => __('errors.ehealth.multiple_primary_specialities'),
 
-            // Other common mistakes
             $errorCode === 422 && str_contains($errorMessage, 'tax_id')
             => __('errors.ehealth.tax_id_exists'),
 
-            default => $e->getTranslatedMessage() // Default transfer if it has already been implemented
+            default => $e->getTranslatedMessage()
         };
 
         $this->dispatch('flashMessage', [

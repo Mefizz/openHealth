@@ -286,9 +286,6 @@ class EmployeeRequestProcessor
 
         $localPendingRequests = EmployeeRequest::query()
             ->where('legal_entity_id', $legalEntity->id)
-            // Optimization: Removed hard check for SIGNED to allow processing stuck requests,
-            // or keep it if strictly business logic requires
-            // ->where('status', LocalStatus::SIGNED)
             ->whereNull('applied_at')
             ->whereIn('uuid', $eHealthRequests->keys())
             ->with(['revision', 'employee', 'party', 'division'])
@@ -296,11 +293,8 @@ class EmployeeRequestProcessor
 
         $approvedCount = 0;
 
-        // [EN: Process each local request]
         foreach ($localPendingRequests as $localRequest) {
-            /** @var EmployeeRequest $localRequest */
 
-            // Renamed variable to avoid overwriting the main $eHealthData argument
             $remoteRequestData = $eHealthRequests->get($localRequest->uuid);
 
             if (!$remoteRequestData) {
@@ -363,7 +357,6 @@ class EmployeeRequestProcessor
 
         $employeeRequestsUpsertData = [];
 
-        // Now $eHealthData is still the full array because we didn't overwrite it
         foreach ($eHealthData as $ehealthEmployeeRequest) {
             if (in_array($ehealthEmployeeRequest['uuid'], $localEmployeeRequestUuids) || $ehealthEmployeeRequest['status'] !== Status::APPROVED->value) {
                 continue;
