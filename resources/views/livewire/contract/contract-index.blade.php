@@ -37,21 +37,19 @@
                         <tbody class="index-table-tbody">
                         @foreach($contracts as $item)
                             <tr wire:key="contract-{{ $item->uuid }}">
-                                <td class="index-table-td">
-                                    <div class="text-sm text-gray-900 font-medium">
-                                        {{-- Display contract_number or translated 'missing' text --}}
-                                        {{ $item->contract_number ?: __('contracts.missing') }}
-                                    </div>
+                                <td class="index-table-td text-sm text-gray-500 dark:text-gray-400">
+                                    {{-- Display contract_number or translated 'missing' text --}}
+                                    {{ $item->contract_number ?: __('contracts.missing') }}
 
                                     {{-- Show status_reason if exists, as required by eHealth TZ --}}
                                     @if($item->status_reason)
-                                        <div class="text-xs text-red-500 mt-1" title="{{ __('contracts.status_reason') }}">
+                                        <div class="text-xs text-red-500 dark:text-red-400 mt-1" title="{{ __('contracts.status_reason') }}">
                                             {{ str($item->status_reason)->limit(60) }}
                                         </div>
                                     @endif
                                 </td>
                                 <td class="index-table-td">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <span class="badge-yellow">
                                         {{ $item->type }}
                                     </span>
                                 </td>

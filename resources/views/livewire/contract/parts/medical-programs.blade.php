@@ -4,7 +4,7 @@
             <legend class="legend">{{ __('contracts.medical_programs') }}</legend>
             <div class="flex flex-wrap gap-2">
                 @foreach($data['medical_programs'] as $program)
-                    <span class="badge-blue">
+                    <span class="text-gray-900 dark:text-white">
                         {{ is_array($program) ? ($program['name'] ?? $program['id']) : $program }}
                     </span>
                 @endforeach
