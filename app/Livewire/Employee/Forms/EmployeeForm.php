@@ -146,7 +146,7 @@ class EmployeeForm extends Form
             'start_date' => __('forms.start_date'),
         ];
 
-        // Додаємо атрибути для динамічних полів документів та телефонів
+        // Add attributes for dynamic fields of documents and phones
         if (!empty($this->party['phones'])) {
             foreach ($this->party['phones'] as $index => $phone) {
                 $attributes["party.phones.{$index}.number"] = __('forms.phone_number') . ' #' . ($index + 1);
